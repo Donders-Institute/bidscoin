@@ -606,15 +606,15 @@ def test_updatemetadata(dcm_file, tmp_path):
     # Create the user metadata
     usermeta = {'PatientName':       'UserTest',
                 'DynamicName':       '<<(0010, 0010)>>',
-                'B0FieldSource':     'Source_<<session>>',
-                'B0FieldIdentifier': ['Identifier_<<session>>', 'Identifier']}
+                'B0FieldSource':     'Source<<session:[-2:2]>>',
+                'B0FieldIdentifier': ['Identifier<<session>>', 'Identifier']}
 
     # Test if the user metadata takes precedence
     metadata = bids.updatemetadata(extdatasource, sidecar, usermeta, ['.json'])
     assert metadata['PatientName']       == 'UserTest'
     assert metadata['DynamicName']       == 'CompressedSamples^MR1'
-    assert metadata['B0FieldSource']     == 'Source_01'
-    assert metadata['B0FieldIdentifier'] == ['Identifier_01', 'Identifier']
+    assert metadata['B0FieldSource']     == 'Source<<ses01:[-2:2]>>'
+    assert metadata['B0FieldIdentifier'] == ['Identifier<<ses01>>', 'Identifier']
     assert not (outfolder/sourcefile.with_suffix('.jsn').name).is_file()
 
     # Test if the source metadata takes precedence

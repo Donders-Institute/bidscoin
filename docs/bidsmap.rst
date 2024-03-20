@@ -66,12 +66,25 @@ In case duplicated field maps are acquired (e.g. when a scan failed or a session
 
 Fieldmaps: B0FieldIdentifier/B0FieldSource
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-According to the BIDS specification, within a subject folder, fieldmaps and their target scans can also be associated by way of `B0FieldIdentifier and B0FieldSource <https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/01-magnetic-resonance-imaging-data.html#using-b0fieldidentifier-metadata>`__ tags. However, in practice if you acquire multiple scan session, fieldmaps are only associated with targets that were acquired within the same scan session. To achieve that you can add a special ``<<session>>`` dynamic value to your tags, which will be replaced with the session label during bidscoiner runtime. So for instance, if you have ``{B0FieldIdentifier: pepolar_<<session>>}`` in your bidsmap metadata, then your actual output metadata in your ``ses-01`` subfolder will be ``{B0FieldIdentifier: pepolar_01}`` and in your ``ses-02`` subfolder it will be ``{B0FieldIdentifier: pepolar_02}``.
+According to the BIDS specification, within a subject folder, fieldmaps and their target scans can also be associated by way of `B0FieldIdentifier and B0FieldSource <https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/01-magnetic-resonance-imaging-data.html#using-b0fieldidentifier-metadata>`__ tags. However, in practice if you acquire multiple scan session, fieldmaps are only associated with targets that were acquired within the same scan session. To achieve that you can add a special ``<<session>>`` dynamic value to your tags, which will be replaced with the session label during bidscoiner runtime. And similar to the IntendedFor value, you can append a colon-separated "bounding" term to the session tag, e.g. ``<<session:[0:3]>>`` to uniquely tag the fieldmap and three subsequent associated runs. So for instance, if you have ``{B0FieldIdentifier: pepolar_<<session>>}`` in your bidsmap metadata, then your actual output metadata in your ``ses-01`` subfolder will be ``{B0FieldIdentifier: pepolar_01}`` and in your ``ses-02`` subfolder it will be ``{B0FieldIdentifier: pepolar_02}``. Here is an example with a single fieldmap and three subsequent functional runs that was interrupted after two runs and re-scanned, the B0FieldIdentifier/Source is value is ``mytag<<session:[0:3]>>``::
+
+    |-- fmap
+    |   |-- sub-001_ses-01_run-1_magnitude1.json      <- {B0FieldIdentifier: mytag<<ses01_1>>}  (SeriesNumber = 01)
+    |   |-- sub-001_ses-01_run-1_magnitude2.json      <- {B0FieldIdentifier: mytag<<ses01_1>>}  (SeriesNumber = 01)
+    |   |-- sub-001_ses-01_run-1_phasediff.json       <- {B0FieldIdentifier: mytag<<ses01_1>>}  (SeriesNumber = 01)
+    |   |-- sub-001_ses-01_run-2_magnitude1.json      <- {B0FieldIdentifier: mytag<<ses01_2>>}  (SeriesNumber = 08)
+    |   |-- sub-001_ses-01_run-2_magnitude2.json      <- {B0FieldIdentifier: mytag<<ses01_2>>}  (SeriesNumber = 08)
+    |   `-- sub-001_ses-01_run-2_phasediff.json       <- {B0FieldIdentifier: mytag<<ses01_2>>}  (SeriesNumber = 08)
+    |
+    `-- func
+        |-- sub-001_ses-01_task-rest_run-1_bold.json  <- {B0FieldSource: mytag<<ses01_1>>}      (SeriesNumber = 02)
+        |-- sub-001_ses-01_task-rest_run-2_bold.json  <- {B0FieldSource: mytag<<ses01_1>>}      (SeriesNumber = 03)
+        |-- sub-001_ses-01_task-rest_run-3_bold.json  <- {B0FieldSource: mytag<<ses01_2>>}      (SeriesNumber = 09)
+        |-- sub-001_ses-01_task-rest_run-4_bold.json  <- {B0FieldSource: mytag<<ses01_2>>}      (SeriesNumber = 10)
+        `-- sub-001_ses-01_task-rest_run-5_bold.json  <- {B0FieldSource: mytag<<ses01_2>>}      (SeriesNumber = 11)
 
 .. note::
-
-   The ``IntendedFor`` field is a legacy way to deal with field maps. Instead, it is recommended to use the ``B0FieldIdentifier`` and ``B0FieldSource`` fields that were introduced with BIDS 1.7. If you neither specify IntendedFor nor B0FieldIdentifier/Source values then your fieldmaps are most likely not going to be used by any BIDS application
-
+   The ``IntendedFor`` field is a legacy way to deal with field maps. Instead, it is recommended to use the ``B0FieldIdentifier`` and ``B0FieldSource`` fields that were introduced with BIDS 1.7, or use both. If you neither specify IntendedFor nor B0FieldIdentifier/Source values then your fieldmaps are most likely not going to be used by any BIDS application
 
 BIDS value lists
 ^^^^^^^^^^^^^^^^

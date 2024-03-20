@@ -22,6 +22,7 @@ CMRR
 CSA
 CSV
 Changelog
+CONFIGDIR
 DCCN
 DICOM
 DICOMDIR
@@ -125,6 +126,7 @@ anonymization
 anonymized
 apptainer
 args
+avwutils
 backported
 bcoin
 behaviour
@@ -189,6 +191,7 @@ fmap
 fmriprep
 fninf
 fnmatch
+fsl
 fslmaths
 fullmatch
 fullpath
@@ -196,6 +199,7 @@ func
 github
 gz
 hardcoded
+hoc
 importlib
 inputimage
 iso
@@ -204,6 +208,7 @@ jitter
 jneumeth
 json
 libEGL
+libvis
 logfiles
 lookup
 magnitude1
@@ -256,6 +261,7 @@ pydeface
 pydicom
 pypi
 qsub
+qt5
 rawfolder
 rawmapper
 rebranded
@@ -297,11 +303,13 @@ tempdir
 tooltip
 tooltips
 tsv
+underspecified
 unhandled
 unevaluated
 url
 v1
 v3
+v4
 v7
 validator
 versa

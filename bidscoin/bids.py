@@ -12,11 +12,11 @@ import re
 import shutil
 import tempfile
 import warnings
-import fnmatch
 import pandas as pd
 import ast
 import datetime
 import jsonschema
+from fnmatch import fnmatch
 from functools import lru_cache
 from pathlib import Path
 from typing import List, Set, Tuple, Union, Dict, Any, Iterable, NewType
@@ -1314,7 +1314,7 @@ def check_ignore(entry: str, bidsignore: Union[str,list], datatype: str= 'dir') 
         if datatype == 'file'    and item.endswith('/'): continue
         if item.endswith('/'):
             item = item[0:-1]
-        if fnmatch.fnmatch(entry, item):
+        if fnmatch(entry, item):
             ignore = True
             break
 
@@ -1461,7 +1461,7 @@ def get_run(bidsmap: Bidsmap, datatype: str, suffix_idx: Union[int, str], dataso
                 metavalue = copy.copy(metavalue)
                 if metakey == 'IntendedFor':
                     run_['meta'][metakey] = metavalue
-                elif metakey in ('B0FieldSource', 'B0FieldIdentifier') and '<<session>>' in str(metavalue):
+                elif metakey in ('B0FieldSource', 'B0FieldIdentifier') and fnmatch(str(metavalue), '*<<session*>>*'):
                     run_['meta'][metakey] = metavalue
                 else:
                     run_['meta'][metakey] = datasource.dynamicvalue(metavalue, cleanup=False)
@@ -1769,7 +1769,7 @@ def get_matching_run(datasource: DataSource, bidsmap: Bidsmap, runtime=False) ->
                 # Replace the dynamic meta values, except the IntendedFor value (e.g. <<task>>)
                 if metakey == 'IntendedFor':
                     run_['meta'][metakey] = metavalue
-                elif metakey in ('B0FieldSource', 'B0FieldIdentifier') and '<<session>>' in str(metavalue):
+                elif metakey in ('B0FieldSource', 'B0FieldIdentifier') and fnmatch(str(metavalue), '*<<session*>>*'):
                     run_['meta'][metakey] = metavalue
                 else:
                     run_['meta'][metakey] = datasource.dynamicvalue(metavalue, cleanup=False, runtime=runtime)
@@ -2111,7 +2111,7 @@ def updatemetadata(datasource: DataSource, targetmeta: Path, usermeta: Meta, ext
 
     # Add all the metadata to the metadict. NB: the dynamic `IntendedFor` value is handled separately later
     for metakey, metaval in usermeta.items():
-        if metakey != 'IntendedFor' and not (metakey in ('B0FieldSource', 'B0FieldIdentifier') and '<<session>>' in str(metaval)):
+        if metakey != 'IntendedFor' and not (metakey in ('B0FieldSource', 'B0FieldIdentifier') and fnmatch(str(metaval), '*<<session*>>*')):
             metaval = datasource.dynamicvalue(metaval, cleanup=False, runtime=True)
             try:
                 metaval = ast.literal_eval(str(metaval))  # E.g. convert stringified list or int back to list or int
@@ -2123,16 +2123,16 @@ def updatemetadata(datasource: DataSource, targetmeta: Path, usermeta: Meta, ext
             LOGGER.debug(f"Adding '{metakey}: {metaval}' to: {targetmeta}")
         metapool[metakey] = metaval or None
 
-    # Update B0FieldIdentifiers / Sources
+    # Update <<session>> in B0FieldIdentifiers/Sources. NB: Leave range specifiers (<<session:[-2:2]>>) untouched (-> bidscoiner)
     for key in ('B0FieldSource', 'B0FieldIdentifier'):
 
         # Replace <<session>> with the actual session label
-        if '<<session>>' in str(metapool.get(key)):
+        if fnmatch(str(metapool.get(key)), '*<<session*>>*'):
             ses = get_bidsvalue(targetmeta, 'ses')
             if isinstance(metapool[key], str):
-                metapool[key] = metapool[key].replace('<<session>>', ses)
+                metapool[key] = metapool[key].replace('<<session', f"<<ses{ses}")
             elif isinstance(metapool[key], list):
-                metapool[key] = [item.replace('<<session>>', ses) for item in metapool[key]]
+                metapool[key] = [item.replace('<<session', f"<<ses{ses}") for item in metapool[key]]
 
         # Remove unused (but added from the template) B0FieldIdentifiers / Sources
         if not metapool.get(key):

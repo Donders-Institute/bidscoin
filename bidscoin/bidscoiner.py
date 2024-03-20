@@ -15,6 +15,8 @@ import json
 import logging
 import shutil
 import urllib.request, urllib.error
+from typing import List, Set
+from fnmatch import fnmatch
 from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 from pathlib import Path
@@ -311,6 +313,62 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
     bcoin.reporterrors()
 
 
+def limitmatches(fmap: str, matches: List[str], limits: str, niifiles: Set[str], scans_table: pd.DataFrame):
+    """
+    Helper function for addmetadata() to check if there are multiple fieldmap runs and get the lower- and upperbound from
+    the AcquisitionTime to bound the grand list of matches to adjacent runs. The resulting list is appended to niifiles
+
+    :param fmap:        The fieldmap (relative to the session folder)
+    :param matches:     The images (relative to the session folder) associated with the fieldmap
+    :param limits:      The bounding limits from the dynamic value: '[lowerlimit:upperlimit]'
+    :param niifiles:    The list to which the bounded results are appended
+    :param scans_table: The scans table with the acquisition times
+    :return:
+    """
+
+    # Check the input
+    if limits == '[]':
+        limits = '[:]'
+
+    # Set fallback upper and lower bounds if parsing the scans-table is not possible
+    fmaptime   = dateutil.parser.parse('1925-01-01')    # Use the BIDS stub acquisition time
+    lowerbound = fmaptime.replace(year=1900)            # Use an ultra-wide lower limit for the search
+    upperbound = fmaptime.replace(year=2100)            # Idem for the upper limit
+
+    # There may be more fieldmaps, hence try to limit down the matches to the adjacent acquisitions
+    try:
+        fmaptime = dateutil.parser.parse(scans_table.loc[fmap, 'acq_time'])
+        runindex = bids.get_bidsvalue(fmap, 'run')
+        prevfmap = bids.get_bidsvalue(fmap, 'run', str(int(runindex) - 1))
+        nextfmap = bids.get_bidsvalue(fmap, 'run', str(int(runindex) + 1))
+        if prevfmap in scans_table.index:
+            lowerbound = dateutil.parser.parse(scans_table.loc[prevfmap, 'acq_time'])  # Narrow the lower search limit down to the preceding fieldmap
+        if nextfmap in scans_table.index:
+            upperbound = dateutil.parser.parse(scans_table.loc[nextfmap, 'acq_time'])  # Narrow the upper search limit down to the succeeding fieldmap
+    except (TypeError, ValueError, KeyError, dateutil.parser.ParserError) as acqtimeerror:
+        pass  # Raise this only if there are limits and matches, i.e. below
+
+    # Limit down the matches if the user added a range specifier/limits
+    if limits and matches:
+        try:
+            limits     = limits[1:-1].split(':', 1)     # limits: '[lowerlimit:upperlimit]' -> ['lowerlimit', 'upperlimit']
+            lowerlimit = int(limits[0]) if limits[0].strip() else float('-inf')
+            upperlimit = int(limits[1]) if limits[1].strip() else float('inf')
+            acqtimes   = []
+            for match in set(matches):
+                acqtimes.append((dateutil.parser.parse(scans_table.loc[match, 'acq_time']), match))  # Time + filepath relative to the session-folder
+            acqtimes.sort(key=lambda acqtime: acqtime[0])
+            offset = sum([acqtime[0] < fmaptime for acqtime in acqtimes])  # The nr of preceding runs
+            for nr, acqtime in enumerate(acqtimes):
+                if (lowerbound < acqtime[0] < upperbound) and (lowerlimit <= nr-offset <= upperlimit):
+                    niifiles.add(acqtime[1])
+        except Exception as matcherror:
+            LOGGER.error(f"Could not bound the fieldmaps using <*:{limits}> as it requires a *_scans.tsv file with acq_time values for: {fmap}\n{matcherror}")
+            niifiles.update(matches)
+    else:
+        niifiles.update(matches)
+
+
 def addmetadata(bidsses: Path, subid: str, sesid: str) -> None:
     """
     Adds the special fieldmap metadata (IntendedFor, TE, etc.)
@@ -343,50 +401,17 @@ def addmetadata(bidsses: Path, subid: str, sesid: str) -> None:
             intendedfor = jsondata.get('IntendedFor')
             if intendedfor and isinstance(intendedfor, str):
 
-                # Check if there are multiple runs and get the lower- and upperbound from the AcquisitionTime to limit down the IntendedFor search
-                fmaptime   = dateutil.parser.parse('1925-01-01')                                    # If nothing, use the BIDS stub acquisition time
-                lowerbound = fmaptime.replace(year=1900)                                            # If nothing, use an ultra-wide lower limit for the IntendedFor search
-                upperbound = fmaptime.replace(year=2100)                                            # Idem for the upper limit
-                try:                                                                                # There may be more fieldmaps, hence try to limit down the search to the adjacently acquired data
-                    fmaptime = dateutil.parser.parse(scans_table.loc[fmap, 'acq_time'])
-                    runindex = bids.get_bidsvalue(fmap, 'run')
-                    prevfmap = bids.get_bidsvalue(fmap, 'run', str(int(runindex) - 1))
-                    nextfmap = bids.get_bidsvalue(fmap, 'run', str(int(runindex) + 1))
-                    if prevfmap in fmaps:
-                        lowerbound = dateutil.parser.parse(scans_table.loc[prevfmap, 'acq_time'])   # Narrow the lower search limit down to the preceding fieldmap
-                    if nextfmap in fmaps:
-                        upperbound = dateutil.parser.parse(scans_table.loc[nextfmap, 'acq_time'])   # Narrow the upper search limit down to the succeeding fieldmap
-                except (TypeError, ValueError, KeyError, dateutil.parser.ParserError) as acqtimeerror:
-                    pass                                                                            # Raise this only if there are limits and matches, i.e. below
-
-                # Search with multiple patterns for matching NIfTI-files in all runs and store the relative path to the session folder
-                niifiles = []
+                # Search with multiple patterns for matching NIfTI-files in all runs and store the relative paths to the session folder
+                niifiles = set()
                 if intendedfor.startswith('<') and intendedfor.endswith('>'):
                     intendedfor = intendedfor[2:-2].split('><')
                 elif not isinstance(intendedfor, list):
                     intendedfor = [intendedfor]
                 for part in intendedfor:
-                    limits  = part.split(':',1)[1].strip() if ':' in part else ''   # part = 'pattern: [lowerlimit:upperlimit]'
-                    pattern = part.split(':',1)[0].strip()
+                    pattern = part.split(':',1)[0].strip()          # part = 'pattern: [lowerlimit:upperlimit]'
+                    limits  = part.split(':',1)[1].strip() if ':' in part else ''
                     matches = [niifile.relative_to(bidsses).as_posix() for niifile in sorted(bidsses.rglob(f"*{pattern}*")) if pattern and '.nii' in niifile.suffixes]
-                    if limits and matches:
-                        try:
-                            limits     = limits[1:-1].split(':',1)                  # limits: '[lowerlimit:upperlimit]' -> ['lowerlimit', 'upperlimit']
-                            lowerlimit = int(limits[0]) if limits[0].strip() else float('-inf')
-                            upperlimit = int(limits[1]) if limits[1].strip() else float('inf')
-                            acqtimes   = []
-                            for match in matches:
-                                acqtimes.append((dateutil.parser.parse(scans_table.loc[match,'acq_time']), match))      # Time + filepath relative to the session-folder
-                            acqtimes.sort(key = lambda acqtime: acqtime[0])
-                            offset = sum([acqtime[0] < fmaptime for acqtime in acqtimes])  # The nr of preceding series
-                            for n, acqtime in enumerate(acqtimes):
-                                if lowerbound < acqtime[0] < upperbound and lowerlimit <= n-offset < upperlimit:
-                                    niifiles.append(acqtime[1])
-                        except Exception as intendedforerror:
-                            LOGGER.error(f"Could not bound the <{part}> IntendedFor search as it requires a *_scans.tsv file with acq_time values for: {fmap}\n{intendedforerror}")
-                            niifiles.extend(matches)
-                    else:
-                        niifiles.extend(matches)
+                    limitmatches(fmap, matches, limits, niifiles, scans_table)
 
                 # Add the IntendedFor data. NB: The BIDS URI paths need to use forward slashes and be relative to the bids root folder
                 if niifiles:
@@ -402,6 +427,43 @@ def addmetadata(bidsses: Path, subid: str, sesid: str) -> None:
             # Work-around because the bids-validator (v1.8) cannot handle `null` values / unused IntendedFor fields
             if not jsondata.get('IntendedFor'):
                 jsondata.pop('IntendedFor', None)
+
+            # Bound all matching B0FieldIdentifier/Source files
+            b0fieldtag = jsondata.get('B0FieldIdentifier') or ''
+            if fnmatch(b0fieldtag, '*<<*:[*]>>*'):                      # b0fieldtag = 'tag<<session:[lowerlimit:upperlimit]>>tag'
+
+                # Search in all runs for the b0fieldtag and store the relative paths to the session folder
+                niifiles = set()
+                matches  = []
+                dynamic  = b0fieldtag.split('<<')[1].split('>>')[0]         # dynamic = 'session:[lowerlimit:upperlimit]'
+                limits   = dynamic.split(':',1)[1].strip()                  # limits = '[lowerlimit:upperlimit]'
+                for match in sorted(bidsses.rglob(f"sub-*.nii*")):
+                    if match.with_suffix('').with_suffix('.json').is_file():
+                        with match.with_suffix('').with_suffix('.json').open('r') as sidecar:
+                            metadata = json.load(sidecar)
+                        if metadata.get('B0FieldIdentifier') == b0fieldtag or metadata.get('B0FieldSource') == b0fieldtag:
+                            matches.append(match.relative_to(bidsses).as_posix())
+                limitmatches(fmap, matches, limits, niifiles, scans_table)
+
+                # In the b0fieldtags, replace the limits with fieldmap runindex
+                newfieldtag = b0fieldtag.replace(':'+limits, '_'+bids.get_bidsvalue(fmap,'run'))
+                for niifile in niifiles:
+                    metafile = (bidsses/niifile).with_suffix('').with_suffix('.json')
+                    LOGGER.debug(f"Updating the b0fieldtag ({b0fieldtag} -> {newfieldtag}) for: {metafile}")
+                    if niifile == fmap:
+                        metadata = jsondata
+                    elif metafile.is_file():
+                        with metafile.open('r') as sidecar:
+                            metadata = json.load(sidecar)
+                    else:
+                        continue
+                    if 'B0FieldIdentifier' in metadata:
+                        metadata['B0FieldIdentifier'] = newfieldtag
+                    if 'B0FieldSource' in metadata:
+                        metadata['B0FieldSource'] = newfieldtag
+                    if niifile != fmap:
+                        with metafile.open('w') as sidecar:
+                            json.dump(metadata, sidecar, indent=4)
 
             # Extract the echo times from magnitude1 and magnitude2 and add them to the phasediff json-file
             if jsonfile.name.endswith('phasediff.json'):
