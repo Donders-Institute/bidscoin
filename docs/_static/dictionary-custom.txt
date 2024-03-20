@@ -9,6 +9,7 @@ API
 AcquisitionDate
 AcquisitionTime
 Apptainer
+B0
 B0FieldIdentifier
 B0FieldSource
 BEP024

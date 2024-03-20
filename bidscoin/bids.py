@@ -988,7 +988,7 @@ def load_bidsmap(yamlfile: Path=Path(), folder: Path=templatefolder, plugins:Ite
                         if part == 'bidscoin' and provenance.parts[n+1] == 'provenance':
                             store = folder/provenance.relative_to(*provenance.parts[0:n+1])
                             if store.is_file():
-                                LOGGER.debug(f"Updating provenance: {provenance} -> {store}")
+                                LOGGER.bcdebug(f"Updating provenance: {provenance} -> {store}")
                                 run['provenance'] = str(store)
 
                 # Add missing run dictionaries (e.g. "meta" or "properties")
@@ -1497,7 +1497,7 @@ def find_run(bidsmap: Bidsmap, provenance: str, dataformat: str='', datatype: st
                 if Path(run['provenance']) == Path(provenance):
                     return run
 
-    LOGGER.debug(f"Could not find this [{dataformat}][{datatype}] run: '{provenance}")
+    LOGGER.bcdebug(f"Could not find this [{dataformat}][{datatype}] run: '{provenance}")
     return Run({})
 
 
@@ -1776,7 +1776,7 @@ def get_matching_run(datasource: DataSource, bidsmap: Bidsmap, runtime=False) ->
 
             # Stop searching the bidsmap if we have a match
             if match:
-                LOGGER.debug(f"Bidsmap match: {run['provenance']} -> {run_['provenance']}")
+                LOGGER.bcdebug(f"Bidsmap match: {run['provenance']} -> {run_['provenance']}")
                 return run_, run['provenance']
 
     # We don't have a match (all tests failed, so datatype should be the *last* one, e.g. unknowndatatype)
@@ -2100,7 +2100,7 @@ def updatemetadata(datasource: DataSource, targetmeta: Path, usermeta: Meta, ext
                     if metapool.get(metakey) and metapool.get(metakey) != metaval:
                         LOGGER.info(f"Overruling {metakey} sourcefile values in {targetmeta}: {metapool[metakey]} -> {metaval}")
                     else:
-                        LOGGER.debug(f"Adding '{metakey}: {metaval}' to: {targetmeta}")
+                        LOGGER.bcdebug(f"Adding '{metakey}: {metaval}' to: {targetmeta}")
                     metapool[metakey] = metaval or None
 
             # Or just copy over the metadata file
@@ -2120,7 +2120,7 @@ def updatemetadata(datasource: DataSource, targetmeta: Path, usermeta: Meta, ext
         if metapool.get(metakey) and metapool.get(metakey) != metaval:
             LOGGER.info(f"Overruling {metakey} bidsmap values in {targetmeta}: {metapool[metakey]} -> {metaval}")
         else:
-            LOGGER.debug(f"Adding '{metakey}: {metaval}' to: {targetmeta}")
+            LOGGER.bcdebug(f"Adding '{metakey}: {metaval}' to: {targetmeta}")
         metapool[metakey] = metaval or None
 
     # Update <<session>> in B0FieldIdentifiers/Sources. NB: Leave range specifiers (<<session:[-2:2]>>) untouched (-> bidscoiner)
@@ -2252,7 +2252,7 @@ def bidsprov(sesfolder: Path, source: Path, runid: str='', datatype: str='unknow
 
     # Write the provenance data
     if source.name:
-        LOGGER.debug(f"Writing provenance data to: {provfile}")
+        LOGGER.bcdebug(f"Writing provenance data to: {provfile}")
         provdata.loc[str(source)] = [runid, datatype, ', '.join([f"{target.parts[1]+':' if target.parts[0]=='derivatives' else ''}{target.name}" for target in targets])]
         provdata.sort_index().to_csv(provfile, sep='\t')
 

@@ -51,9 +51,9 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     templatefile   = Path(templatefile)
     bidscoinfolder = bidsfolder/'code'/'bidscoin'
     if [char for char in subprefix or '' if char in ('^', '$', '+', '{', '}', '[', ']', '\\', '|', '(', ')')]:
-        LOGGER.debug(f"Regular expression metacharacters found in {subprefix}, this may cause errors later on...")
+        LOGGER.bcdebug(f"Regular expression metacharacters found in {subprefix}, this may cause errors later on...")
     if [char for char in sesprefix or '' if char in ('^', '$', '+', '{', '}', '[', ']', '\\', '|', '(', ')')]:
-        LOGGER.debug(f"Regular expression metacharacters found in {sesprefix}, this may cause errors later on...")
+        LOGGER.bcdebug(f"Regular expression metacharacters found in {sesprefix}, this may cause errors later on...")
     if not rawfolder.is_dir():
         print(f"Rawfolder '{rawfolder}' not found")
         return {}
@@ -63,7 +63,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
         try:
             (bidscoinfolder/'bidsmapper.log').unlink(missing_ok=True)
         except (IOError, OSError) as unlinkerr:
-            LOGGER.debug(f"Could not delete: {bidscoinfolder/'bidsmapper.log'}\n{unlinkerr}")
+            LOGGER.bcdebug(f"Could not delete: {bidscoinfolder/'bidsmapper.log'}\n{unlinkerr}")
     bcoin.setup_logging(bidscoinfolder/'bidsmapper.log')
     LOGGER.info('')
     LOGGER.info('-------------- START BIDSmapper ------------')

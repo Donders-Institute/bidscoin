@@ -9,7 +9,7 @@
 - Slicereport support for all nibabel file-formats
 
 ### Changed
-- The range specifier for IntendedFor and B0Field tags now includes the final limit, e.g. `<<task:[0:2]>>` includes two runs aquired after the fieldmap instead of one
+- The range specifier for IntendedFor and B0-field tags now includes the final limit, e.g. `<<task:[0:2]>>` includes two runs acquired after the fieldmap instead of one
 
 ## [4.3.0] - 2024-02-16
 

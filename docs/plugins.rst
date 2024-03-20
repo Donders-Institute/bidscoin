@@ -217,6 +217,6 @@ As can be seen in the API code snippet below (but also see the default plugins f
        :return:            A dictionary with personal data for the participants.tsv file (such as sex or age)
        """
 
-       LOGGER.debug(f'This is a bidscoiner demo-plugin working on: {session} -> {bidsfolder}')
+       LOGGER.bcdebug(f'This is a bidscoiner demo-plugin working on: {session} -> {bidsfolder}')
 
 *The README plugin placeholder code*

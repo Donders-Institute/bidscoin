@@ -387,12 +387,11 @@ def addmetadata(bidsses: Path, subid: str, sesid: str) -> None:
         else:
             scans_table = pd.DataFrame(columns=['acq_time'])
 
-        fmaps = [fmap.relative_to(bidsses).as_posix() for fmap in sorted((bidsses/'fmap').glob('sub-*.nii*'))]
-        for fmap in fmaps:
+        for fmap in [fmap.relative_to(bidsses).as_posix() for fmap in sorted((bidsses/'fmap').glob('sub-*.nii*'))]:
 
             # Load the existing meta-data
             jsondata = {}
-            jsonfile = bidsses/Path(fmap).with_suffix('').with_suffix('.json')
+            jsonfile = (bidsses/fmap).with_suffix('').with_suffix('.json')
             if jsonfile.is_file():
                 with jsonfile.open('r') as sidecar:
                     jsondata = json.load(sidecar)
@@ -430,7 +429,7 @@ def addmetadata(bidsses: Path, subid: str, sesid: str) -> None:
 
             # Bound all matching B0FieldIdentifier/Source files
             b0fieldtag = jsondata.get('B0FieldIdentifier') or ''
-            if fnmatch(b0fieldtag, '*<<*:[*]>>*'):                      # b0fieldtag = 'tag<<session:[lowerlimit:upperlimit]>>tag'
+            if fnmatch(b0fieldtag, '*<<*:[[]*[]]>>*'):                  # b0fieldtag = 'tag<<session:[lowerlimit:upperlimit]>>tag'
 
                 # Search in all runs for the b0fieldtag and store the relative paths to the session folder
                 niifiles = set()
@@ -449,7 +448,7 @@ def addmetadata(bidsses: Path, subid: str, sesid: str) -> None:
                 newfieldtag = b0fieldtag.replace(':'+limits, '_'+bids.get_bidsvalue(fmap,'run'))
                 for niifile in niifiles:
                     metafile = (bidsses/niifile).with_suffix('').with_suffix('.json')
-                    LOGGER.debug(f"Updating the b0fieldtag ({b0fieldtag} -> {newfieldtag}) for: {metafile}")
+                    LOGGER.bcdebug(f"Updating the b0fieldtag ({b0fieldtag} -> {newfieldtag}) for: {metafile}")
                     if niifile == fmap:
                         metadata = jsondata
                     elif metafile.is_file():

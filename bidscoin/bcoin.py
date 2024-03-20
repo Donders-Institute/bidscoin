@@ -386,7 +386,7 @@ def import_plugin(plugin: Union[Path,str], functions: tuple=()) -> module_from_s
         return
 
     # Load the plugin-module
-    LOGGER.debug(f"Importing plugin: '{plugin}'")
+    LOGGER.bcdebug(f"Importing plugin: '{plugin}'")
     try:
         spec   = spec_from_file_location('bidscoin.plugin.' + plugin.stem, plugin)
         module = module_from_spec(spec)
