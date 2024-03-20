@@ -35,11 +35,11 @@ If you do not have git (or any other version control system) installed you can `
 
    $ pip install ./bidscoin[dcm2niix2bids]
 
-If you are installing BIDScoin on an older system and you are getting Qt6 errors, you can try to install a ``+qt5`` build, e.g. for version 4.3.0:
+If you are installing BIDScoin on an older system and you are getting Qt6 errors, you can try to install a ``+qt5`` build, e.g. for version 4.3.1:
 
 .. code-block:: console
 
-   $ pip install bidscoin[dcm2niix2bids]@git+https://github.com/Donders-Institute/bidscoin@v4.3.0+qt5
+   $ pip install bidscoin[dcm2niix2bids]@git+https://github.com/Donders-Institute/bidscoin@v4.3.1+qt5
 
 Updating BIDScoin
 ^^^^^^^^^^^^^^^^^
@@ -92,7 +92,7 @@ An alternative for installing Python, BIDScoin and it's dependencies yourself is
 The current Apptainer image includes:
 
 * Debian stable,
-* The latest stable release (v4.3.0+qt5) of BIDScoin
+* The latest stable release (v4.3.1+qt5) of BIDScoin
 * The latest versions of dcm2niix, pydeface, spec2nii
 
 This image does not include FreeSurfer/synthstrip (needed for ``skullstrip``)
@@ -148,7 +148,7 @@ If the Apptainer container is not working for you, it is also possible to use a 
 The current Docker image includes the same as the Apptainer image:
 
 * Debian stable,
-* The latest stable release of BIDScoin (v4.3.0+qt5)
+* The latest stable release of BIDScoin (v4.3.1+qt5)
 * The latest versions of dcm2niix, pydeface, spec2nii and some FSL tools
 
 Likewise, the current image does not include FreeSurfer/synthstrip (needed for ``skullstrip``)

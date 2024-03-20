@@ -12,7 +12,7 @@ This document describes how to prepare a new BIDScoin release from within the DC
 6. Manually run the bidscoin, bidsmapper, bidscoiner, bids-validator and other integration tests
 7. Run tox@DCCN::
 
-    VERSION="4.3.0"
+    VERSION="4.3.1"
     cd ~/python/bidscoin
     git checkout v${VERSION}+qt5
     module load bidscoin/dev
