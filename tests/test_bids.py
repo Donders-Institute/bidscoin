@@ -208,6 +208,9 @@ def test_load_bidsmap(study_bidsmap):
     assert bidsmap != {}
     assert filepath == study_bidsmap
     assert bidsmap['DICOM']['anat'][0]['provenance'] == '/Users/galassiae/Projects/bidscoin/bidscointutorial/raw/sub-001/ses-01/007-t1_mprage_sag_ipat2_1p0iso/00001_1.3.12.2.1107.5.2.43.66068.2020042808523182387402502.IMA'
+    assert bidsmap['DICOM']['func'][0]['bids']['part'] == ['', 'mag', 'phase', 'real', 'imag', 0]
+    assert bidsmap['DICOM']['func'][1]['bids']['part'] == ['', 'mag', 'phase', 'real', 'imag', 3]
+    assert bidsmap['DICOM']['func'][2]['bids']['part'] == ['', 'mag', 'phase', 'real', 'imag', 0]
 
     # Test loading with fullpath argument
     bidsmap, _ = bids.load_bidsmap(study_bidsmap)

@@ -151,7 +151,7 @@ DICOM:
       rec:
       run: <<>>
       echo: '1'
-      part: *id001
+      part: 'real'
       chunk:
       suffix: bold
     meta:
@@ -188,7 +188,7 @@ DICOM:
       rec:
       run: <<>>
       echo: '1'
-      part: *id001
+      part:
       chunk:
     meta:
       TaskName:
