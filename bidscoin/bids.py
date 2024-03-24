@@ -1010,6 +1010,11 @@ def load_bidsmap(yamlfile: Path=Path(), folder: Path=templatefolder, plugins:Ite
                             if entitykey not in run['bids'] and entitykey not in ('sub','ses'):
                                 LOGGER.info(f"Adding missing {dataformat}>{datatype}>{suffix} bidsmap entity key: {entitykey}")
                                 run['bids'][entitykey] = ''
+                            if entitykey == 'part' and not isinstance(run['bids']['part'], list):
+                                if run['bids']['part'] in ('', 'mag', 'phase', 'real', 'imag', None):
+                                    run['bids']['part'] = ['', 'mag', 'phase', 'real', 'imag', ('','mag','phase','real','imag').index(run['bids']['part'] or '')]
+                                else:
+                                    run['bids']['part'] = ['', 'mag', 'phase', 'real', 'imag', run['bids']['part'], 5]
 
     # Validate the bidsmap entries
     check_bidsmap(bidsmap, checks)
