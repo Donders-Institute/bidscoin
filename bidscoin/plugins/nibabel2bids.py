@@ -140,6 +140,8 @@ def bidsmapper_plugin(session: Path, bidsmap_new: Bidsmap, bidsmap_old: Bidsmap,
             # Communicate with the user if the run was not present in bidsmap_old or in template, i.e. that we found a new sample
             if not match:
                 LOGGER.info(f"Discovered '{datasource.datatype}' {datasource.dataformat} sample: {sourcefile}")
+            else:
+                LOGGER.bcdebug(f"Known '{datasource.datatype}' {datasource.dataformat} sample: {sourcefile}")
 
             # Now work from the provenance store
             if store:
@@ -151,6 +153,9 @@ def bidsmapper_plugin(session: Path, bidsmap_new: Bidsmap, bidsmap_old: Bidsmap,
 
             # Copy the filled-in run over to the new bidsmap
             bids.append_run(bidsmap_new, run)
+
+        else:
+            LOGGER.bcdebug(f"Existing/duplicate '{datasource.datatype}' {dataformat} sample: {sourcefile}")
 
 
 def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> None:

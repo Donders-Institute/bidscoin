@@ -198,7 +198,7 @@ def bidsmapper_plugin(session: Path, bidsmap_new: Bidsmap, bidsmap_old: Bidsmap,
             bids.append_run(bidsmap_new, run)
 
         else:
-            LOGGER.exception(f"Unexpected duplicate '{datasource.datatype}' {dataformat} sample: {sourcefile}\nPlease report this issue to the developers")
+            LOGGER.bcdebug(f"Existing/duplicate '{datasource.datatype}' {dataformat} sample: {sourcefile}")
 
 
 @due.dcite(Doi('10.1016/j.jneumeth.2016.03.001'), description='dcm2niix: DICOM to NIfTI converter', tags=['reference-implementation'])

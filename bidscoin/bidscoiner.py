@@ -396,7 +396,7 @@ def addmetadata(bidsses: Path, subid: str, sesid: str) -> None:
                 with jsonfile.open('r') as sidecar:
                     jsondata = json.load(sidecar)
 
-            # Search for the imaging files that match the IntendedFor search criteria
+            # Populate the dynamic IntendedFor values
             intendedfor = jsondata.get('IntendedFor')
             if intendedfor and isinstance(intendedfor, str):
 
@@ -427,7 +427,7 @@ def addmetadata(bidsses: Path, subid: str, sesid: str) -> None:
             if not jsondata.get('IntendedFor'):
                 jsondata.pop('IntendedFor', None)
 
-            # Bound all matching B0FieldIdentifier/Source files
+            # Populate the dynamic B0FieldIdentifier/Source values with a run-index string if they contain a range specifier
             b0fieldtag = jsondata.get('B0FieldIdentifier') or ''
             if fnmatch(b0fieldtag, '*<<*:[[]*[]]>>*'):                  # b0fieldtag = 'tag<<session:[lowerlimit:upperlimit]>>tag'
 
