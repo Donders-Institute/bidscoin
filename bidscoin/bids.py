@@ -1781,10 +1781,11 @@ def get_matching_run(datasource: DataSource, bidsmap: Bidsmap, runtime=False) ->
 
             # Stop searching the bidsmap if we have a match
             if match:
-                LOGGER.bcdebug(f"Bidsmap match: {run['provenance']} -> {run_['provenance']}")
+                LOGGER.bcdebug(f"Found bidsmap match: {run['provenance']} -> {run_['provenance']}")
                 return run_, run['provenance']
 
     # We don't have a match (all tests failed, so datatype should be the *last* one, e.g. unknowndatatype)
+    LOGGER.bcdebug(f"Found no bidsmap match for: {run_['provenance']}")
     return run_, ''
 
 

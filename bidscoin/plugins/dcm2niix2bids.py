@@ -157,10 +157,11 @@ def bidsmapper_plugin(session: Path, bidsmap_new: Bidsmap, bidsmap_old: Bidsmap,
 
         # If not, see if we can find a matching run in the template
         if not match:
+            LOGGER.bcdebug('No match found in the study bidsmap, now trying the template bidsmap')
             run, _ = bids.get_matching_run(datasource, template)
 
         # See if we have collected the run somewhere in our new bidsmap
-        if not bids.exist_run(bidsmap_new, '', run):
+        if not bids.exist_run(bidsmap_new, datasource.datatype, run):
 
             # Communicate with the user if the run was not present in bidsmap_old or in template, i.e. that we found a new sample
             if not match:
@@ -182,6 +183,9 @@ def bidsmapper_plugin(session: Path, bidsmap_new: Bidsmap, bidsmap_old: Bidsmap,
                     if run['bids']['part'][-1]:
                         LOGGER.verbose(f"Updated {dataformat}/{datasource.datatype} entity: 'part' -> '{run['bids']['part'][run['bids']['part'][-1]]}' ({imagetype})")
 
+            else:
+                LOGGER.bcdebug(f"Known '{datasource.datatype}' {dataformat} sample: {sourcefile}")
+
             # Now work from the provenance store
             if store:
                 targetfile             = store['target']/sourcefile.relative_to(store['source'])
@@ -192,6 +196,9 @@ def bidsmapper_plugin(session: Path, bidsmap_new: Bidsmap, bidsmap_old: Bidsmap,
 
             # Copy the filled-in run over to the new bidsmap
             bids.append_run(bidsmap_new, run)
+
+        else:
+            LOGGER.exception(f"Unexpected duplicate '{datasource.datatype}' {dataformat} sample: {sourcefile}\nPlease report this issue to the developers")
 
 
 @due.dcite(Doi('10.1016/j.jneumeth.2016.03.001'), description='dcm2niix: DICOM to NIfTI converter', tags=['reference-implementation'])
