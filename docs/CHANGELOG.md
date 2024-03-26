@@ -7,6 +7,7 @@
 ### Added
 - Update B0FieldIdentifier/Source when having multiple fieldmap runs (Github issue [#198](https://github.com/Donders-Institute/bidscoin/issues/198))
 - Slicereport support for all nibabel file-formats
+- The `BIDSCOIN_TRACKUSAGE` environment variable for setting trackusage on the fly (see `bidscoin --trackusage show`)
 
 ### Changed
 - The range specifier for IntendedFor and B0-field tags now includes the final limit, e.g. `<<task:[0:2]>>` includes two runs acquired after the fieldmap instead of one

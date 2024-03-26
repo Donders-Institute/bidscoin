@@ -150,7 +150,8 @@ def trackusage(event: str, dryrun: bool=False) -> dict:
             'hostid':   hashlib.md5(platform.node().encode('utf8')).hexdigest()}
 
     # Check if the user allows tracking or if it is a dry/test run
-    if not config['bidscoin'].get('trackusage', 'yes') == 'yes' or dryrun or "PYTEST_CURRENT_TEST" in os.environ:
+    if not (os.getenv('BIDSCOIN_TRACKUSAGE') or config['bidscoin'].get('trackusage','yes')).upper() in ('1', 'TRUE', 'Y', 'YES') \
+            or dryrun or "PYTEST_CURRENT_TEST" in os.environ:
         return data
 
     # Check if we are not asleep

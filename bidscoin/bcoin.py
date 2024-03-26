@@ -5,6 +5,7 @@ A BIDScoin library and application with utilities to perform generic management 
 @author: Marcel Zwiers
 """
 
+import os
 import coloredlogs
 import inspect
 import logging
@@ -636,7 +637,8 @@ def settracking(value: str) -> None:
     if value == 'show':
         data = trackusage('bidscoin', dryrun=True)
         show = '{\n' + '\n'.join([f"   {key}:\t{val}" for key, val in data.items()]) + '\n}'
-        LOGGER.info(f"trackusage = '{setting}'\t# Upload anonymous usage data if 'yes' (maximally 1 upload every {tracking['sleep']} hour)\n"
+        LOGGER.info(f"\ntrackusage          = {setting}\t# Upload anonymous usage data if this config setting is 'yes' (maximally 1 upload every {tracking['sleep']} hour)\n"
+                    f"BIDSCOIN_TRACKUSAGE = {os.getenv('BIDSCOIN_TRACKUSAGE','  ')}\t# Same as trackusage, but this environment variable takes precedence if set\n\n"
                     f"Data upload example: -> {tracking['url']}\n{show}")
         print('\nNB: As you can see above, BIDScoin does NOT upload any identifying details about you nor information about the data. '
               'Uploaded data is used to generate usage and error statistics, and helps the developers to improve BIDScoin\n')
