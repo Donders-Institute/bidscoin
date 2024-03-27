@@ -459,14 +459,12 @@ def addmetadata(bidsses: Path, subid: str, sesid: str) -> None:
                             metadata = json.load(sidecar)
                     else:
                         continue
-                    if 'B0FieldIdentifier' in metadata:
-                        metadata['B0FieldIdentifier'] = newb0fieldtag
-                    if 'B0FieldSource' in metadata:
-                        sourcetags = metadata.get('B0FieldSource')
-                        if isinstance(sourcetags, str):
-                            metadata['B0FieldSource'] = newb0fieldtag
-                        elif isinstance(sourcetags, list):
-                            metadata['B0FieldSource'][sourcetags.index(b0fieldtag)] = newb0fieldtag
+                    for b0fieldkey in ('B0FieldSource', 'B0FieldIdentifier'):
+                        b0fieldtags = metadata.get(b0fieldkey)
+                        if b0fieldtag == b0fieldtags:
+                            metadata[b0fieldkey] = newb0fieldtag
+                        elif isinstance(b0fieldtags, list) and b0fieldtag in b0fieldtags:
+                            metadata[b0fieldkey][b0fieldtags.index(b0fieldtag)] = newb0fieldtag
                     if niifile != fmap:
                         with metafile.open('w') as sidecar:
                             json.dump(metadata, sidecar, indent=4)
