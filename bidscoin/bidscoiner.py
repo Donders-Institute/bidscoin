@@ -428,7 +428,7 @@ def addmetadata(bidsses: Path, subid: str, sesid: str) -> None:
                 jsondata.pop('IntendedFor', None)
 
             # Populate the dynamic B0FieldIdentifier/Source values with a run-index string if they contain a range specifier
-            b0fieldtag = jsondata.get('B0FieldIdentifier')              # TODO: Refactor the code below to deal with b0fieldtag lists instead of assuming it's a string
+            b0fieldtag = jsondata.get('B0FieldIdentifier')              # TODO: Refactor the code below to deal with B0FieldIdentifier lists (anywhere) instead of assuming it's a string (inside the fmap folder)
             if isinstance(b0fieldtag, str) and fnmatch(b0fieldtag, '*<<*:[[]*[]]>>*'):  # b0fieldtag = 'tag<<session:[lowerlimit:upperlimit]>>tag'
 
                 # Search in all runs for the b0fieldtag and store the relative paths to the session folder
@@ -440,7 +440,10 @@ def addmetadata(bidsses: Path, subid: str, sesid: str) -> None:
                     if match.with_suffix('').with_suffix('.json').is_file():
                         with match.with_suffix('').with_suffix('.json').open('r') as sidecar:
                             metadata = json.load(sidecar)
-                        if metadata.get('B0FieldIdentifier') == b0fieldtag or metadata.get('B0FieldSource') == b0fieldtag:
+                        b0fieldtags = metadata.get('B0FieldSource')
+                        if isinstance(b0fieldtags, str):
+                            b0fieldtags = [b0fieldtags]
+                        if b0fieldtag == metadata.get('B0FieldIdentifier') or b0fieldtag in b0fieldtags:
                             matches.append(match.relative_to(bidsses).as_posix())
                 limitmatches(fmap, matches, limits, niifiles, scans_table)
 
@@ -459,7 +462,11 @@ def addmetadata(bidsses: Path, subid: str, sesid: str) -> None:
                     if 'B0FieldIdentifier' in metadata:
                         metadata['B0FieldIdentifier'] = newfieldtag
                     if 'B0FieldSource' in metadata:
-                        metadata['B0FieldSource'] = newfieldtag
+                        b0fieldtags = metadata.get('B0FieldSource')
+                        if isinstance(b0fieldtags, str):
+                            metadata['B0FieldSource'] = newfieldtag
+                        elif isinstance(b0fieldtags, list):
+                            metadata['B0FieldSource'][b0fieldtags.index(b0fieldtag)] = newfieldtag
                     if niifile != fmap:
                         with metafile.open('w') as sidecar:
                             json.dump(metadata, sidecar, indent=4)
