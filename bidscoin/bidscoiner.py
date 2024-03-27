@@ -436,7 +436,7 @@ def addmetadata(bidsses: Path, subid: str, sesid: str) -> None:
                 matches  = []
                 dynamic  = b0fieldtag.split('<<')[1].split('>>')[0]         # dynamic = 'session:[lowerlimit:upperlimit]'
                 limits   = dynamic.split(':',1)[1].strip()                  # limits = '[lowerlimit:upperlimit]'
-                for match in sorted(bidsses.rglob(f"sub-*.nii*")):
+                for match in bidsses.rglob(f"sub-*.nii*"):
                     if match.with_suffix('').with_suffix('.json').is_file():
                         with match.with_suffix('').with_suffix('.json').open('r') as sidecar:
                             metadata = json.load(sidecar)
