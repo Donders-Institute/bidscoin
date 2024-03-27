@@ -237,7 +237,6 @@ nibabel
 nibabel2bids
 nr
 optimizations
-overearly
 p2
 parsable
 parsers

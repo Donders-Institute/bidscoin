@@ -4,6 +4,8 @@
 
 ## [dev]
 
+## [4.3.1] - 2024-03-27
+
 ### Added
 - Update B0FieldIdentifier/Source when having multiple fieldmap runs (Github issue [#198](https://github.com/Donders-Institute/bidscoin/issues/198))
 - Slicereport support for all nibabel file-formats
@@ -436,7 +438,8 @@ A first stable release of BIDScoin :-)
 ### To do
 - Add support for non-imaging data
 
-[dev]: https://github.com/Donders-Institute/bidscoin/compare/4.3.0...HEAD
+[dev]: https://github.com/Donders-Institute/bidscoin/compare/4.3.1...HEAD
+[4.3.1]: https://github.com/Donders-Institute/bidscoin/compare/4.3.0...4.3.1
 [4.3.0]: https://github.com/Donders-Institute/bidscoin/compare/4.2.1...4.3.0
 [4.2.1]: https://github.com/Donders-Institute/bidscoin/compare/4.2.0...4.2.1
 [4.2.0]: https://github.com/Donders-Institute/bidscoin/compare/4.1.1...4.2.0

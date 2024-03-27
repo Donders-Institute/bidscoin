@@ -6,7 +6,7 @@ This document describes how to prepare a new BIDScoin release from within the DC
 
 1. Inspect the git history and update the release notes (including the links)
 2. Delete the the bidscoin config folder
-3. Update the version string everywhere (i.e. search without word matching)
+3. Update the version string everywhere (i.e. search without word matching), COPYRIGHT and cli help texts
 4. Add a git version tag
 5. Backport to PyQt5 in a v4.#.#+qt5 branch
 6. Manually run the bidscoin, bidsmapper, bidscoiner, bids-validator and other integration tests
