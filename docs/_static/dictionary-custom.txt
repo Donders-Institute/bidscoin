@@ -11,6 +11,7 @@ AcquisitionTime
 Apptainer
 B0
 B0FieldIdentifier
+B0FieldIdentifiers
 B0FieldSource
 BEP024
 BIDSCOIN
@@ -237,7 +238,6 @@ nibabel
 nibabel2bids
 nr
 optimizations
-overearly
 p2
 parsable
 parsers
@@ -303,6 +303,7 @@ task2
 tempdir
 tooltip
 tooltips
+trackusage
 tsv
 underspecified
 unhandled

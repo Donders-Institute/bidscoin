@@ -63,7 +63,7 @@ Step 1a: Running the bidsmapper
                             your subject folders do not have a prefix. Default: the value of the
                             study/template bidsmap, e.g. 'sub-'
       -m SESPREFIX, --sesprefix SESPREFIX
-                            The prefix common for all the source session-folders (e.g. `M_` is the
+                            The prefix common for all the source session-folders (e.g. 'M_' is the
                             subprefix if session folders are named 'M_pre', 'M_post', ..). Use '*' when
                             your session folders do not have a prefix. Default: the value of the
                             study/template bidsmap, e.g. 'ses-'
@@ -215,7 +215,7 @@ Step 2: Running the bidscoiner
       -n NATIVESPEC, --nativespec NATIVESPEC
                             Opaque DRMAA argument with native specifications for submitting bidscoiner
                             jobs to the HPC cluster. NB: Use quotes and include at least one space
-                            character to prevent overearly parsing (default: -l walltime=00:30:00,mem=4gb)
+                            character to prevent premature parsing (default: -l walltime=00:30:00,mem=4gb)
 
     examples:
       bidscoiner myproject/raw myproject/bids

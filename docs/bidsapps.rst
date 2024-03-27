@@ -62,7 +62,8 @@ Before sharing or pre-processing their images, users may want to deface their an
                   [-a ARGS] [-f]
                   bidsfolder pattern
 
-    A wrapper around the 'pydeface' defacing tool (https://github.com/poldracklab/pydeface).
+    A wrapper around the 'pydeface' defacing tool (https://github.com/poldracklab/pydeface). Pydeface
+    requires an existing installation of FSL flirt
 
     Except for BIDS inheritances and IntendedFor usage, this wrapper is BIDS-aware (a 'bidsapp')
     and writes BIDS compliant output
@@ -93,7 +94,7 @@ Before sharing or pre-processing their images, users may want to deface their an
       -n NATIVESPEC, --nativespec NATIVESPEC
                             Opaque DRMAA argument with native specifications for submitting deface jobs
                             to the HPC cluster (NB: Use quotes and include at least one space character
-                            to prevent overearly parsing) (default: -l walltime=00:30:00,mem=2gb)
+                            to prevent premature parsing) (default: -l walltime=00:30:00,mem=2gb)
       -a ARGS, --args ARGS  Additional arguments (in dict/json-style) that are passed to pydeface (NB:
                             Use quotes). See examples for usage (default: {})
       -f, --force           Deface all images, regardless if they have already been defaced (i.e. if
@@ -118,7 +119,7 @@ This utility is very similar to the `deface <#defacing>`__ utility above, except
 
     A wrapper around the 'pydeface' defacing tool (https://github.com/poldracklab/pydeface) that
     computes a defacing mask on a (temporary) echo-combined image and then applies it to each
-    individual echo-image.
+    individual echo-image. Pydeface requires an existing installation of FSL flirt
 
     Except for BIDS inheritances and IntendedFor usage, this wrapper is BIDS-aware (a 'bidsapp')
     and writes BIDS compliant output
@@ -153,7 +154,7 @@ This utility is very similar to the `deface <#defacing>`__ utility above, except
       -n NATIVESPEC, --nativespec NATIVESPEC
                             Opaque DRMAA argument with native specifications for submitting deface jobs
                             to the HPC cluster (NB: Use quotes and include at least one space character
-                            to prevent overearly parsing) (default: -l walltime=00:30:00,mem=2gb)
+                            to prevent premature parsing) (default: -l walltime=00:30:00,mem=2gb)
       -a ARGS, --args ARGS  Additional arguments (in dict/json-style) that are passed to pydeface (NB:
                             Use quotes). See examples for usage (default: {})
       -f, --force           Process all images, regardless if images have already been defaced (i.e. if
@@ -211,13 +212,13 @@ The ``skullstrip``-tool is a wrapper around the synthstrip tool that writes BIDS
       -f, --force           Process images, regardless whether images have already been skullstripped
                             (i.e. if {'SkullStripped': True} in the json sidecar file) (default: False)
       -a ARGS, --args ARGS  Additional arguments that are passed to synthstrip (NB: Use quotes and
-                            include at least one space character to prevent overearly parsing) (default:)
+                            include at least one space character to prevent premature parsing) (default:)
       -c, --cluster         Use the DRMAA library to submit the skullstrip jobs to a high-performance
                             compute (HPC) cluster (default: False)
       -n NATIVESPEC, --nativespec NATIVESPEC
                             Opaque DRMAA argument with native specifications for submitting skullstrip
                             jobs to the HPC cluster (NB: Use quotes and include at least one space
-                            character to prevent overearly parsing) (default: -l walltime=0:05:00,mem=8gb)
+                            character to prevent premature parsing) (default: -l walltime=0:05:00,mem=8gb)
 
     examples:
       skullstrip myproject/bids anat/*_T1w*
@@ -235,20 +236,21 @@ Quality control
     usage: slicereport [-h] [-o OUTLINEPATTERN] [-i OUTLINEIMAGE]
                        [-p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]] [-r REPORTFOLDER]
                        [-x XLINKFOLDER [XLINKFOLDER ...]] [-q QCSCORES [QCSCORES ...]]
-                       [-c {torque,slurm}] [--operations OPERATIONS] [--suboperations SUBOPERATIONS]
-                       [--options OPTIONS [OPTIONS ...]] [--outputs OUTPUTS [OUTPUTS ...]]
-                       [--suboptions SUBOPTIONS [SUBOPTIONS ...]]
+                       [-c {torque,slurm}] [-m MEM] [--operations OPERATIONS]
+                       [--suboperations SUBOPERATIONS] [--options OPTIONS [OPTIONS ...]]
+                       [--outputs OUTPUTS [OUTPUTS ...]] [--suboptions SUBOPTIONS [SUBOPTIONS ...]]
                        [--suboutputs SUBOUTPUTS [SUBOUTPUTS ...]]
                        bidsfolder pattern
 
-    A wrapper around the 'slicer' imaging tool (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Miscvis)
-    to generate a web page with a row of image slices for each subject in the BIDS repository, as
-    well as individual sub-pages displaying more detailed information. The input images are
-    selectable using wildcards, and the output images are configurable via various user options,
-    allowing you to quickly create a custom 'slicer' report to do visual quality control on any
-    3D/4D imagetype in your repository.
+    A wrapper around the 'fslmaths' (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Fslutils) and 'slicer'
+    imaging tools (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Miscvis) to generate a web page with a
+    row of image slices for each subject in the BIDS repository, as well as individual sub-pages
+    displaying more detailed information. The input images are selectable using wildcards (all
+    nibabel image formats are supported), and the output images are configurable via various user
+    options, allowing you to quickly create a custom 'slicer' report to do visual quality control
+    on any 3D/4D imagetype in your repository.
 
-    Requires an existing installation of FSL
+    Requires an existing installation of FSL tools (i.e. fsl-libvis, fsl-avwutils and fsl-flirt)
 
     Set the environment variable BIDSCOIN_DEBUG=TRUE to save intermediate data
 
@@ -282,11 +284,12 @@ Quality control
       -c {torque,slurm}, --cluster {torque,slurm}
                             Use `torque` or `slurm` to submit the slicereport jobs to a high-performance
                             compute (HPC) cluster
+      -m MEM, --mem MEM     The amount of requested memory in GB for the cluster jobs
       --operations OPERATIONS
                             One or more fslmaths operations that are performed on the input image (before
                             slicing it for the report). OPERATIONS is opaquely passed as is: `fslmaths
                             inputimage OPERATIONS reportimage`. NB: Use quotes and include at least one
-                            space character to prevent overearly parsing, e.g. " -Tmean" or "-Tstd -s 3"
+                            space character to prevent premature parsing, e.g. " -Tmean" or "-Tstd -s 3"
                             (default: -Tmean)
       --suboperations SUBOPERATIONS
                             The same as OPERATIONS but then for the sub-report instead of the main
@@ -305,7 +308,7 @@ Quality control
 
     OPTIONS:
       L                  : Label slices with slice number.
-      l [LUT]            : Use a different colour map from that specified in the header.
+      l [LUT]            : Use a different colour map from that specified in the header (see $FSLDIR/etc/luts)
       i [MIN] [MAX]      : Specify intensity min and max for display range.
       e [THR]            : Use the specified threshold for edges (if > 0 use this proportion of max-min,
                            if < 0, use the absolute value)
