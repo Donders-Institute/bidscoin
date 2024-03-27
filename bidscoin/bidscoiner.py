@@ -428,8 +428,8 @@ def addmetadata(bidsses: Path, subid: str, sesid: str) -> None:
                 jsondata.pop('IntendedFor', None)
 
             # Populate the dynamic B0FieldIdentifier/Source values with a run-index string if they contain a range specifier
-            b0fieldtag = jsondata.get('B0FieldIdentifier') or ''
-            if fnmatch(b0fieldtag, '*<<*:[[]*[]]>>*'):                  # b0fieldtag = 'tag<<session:[lowerlimit:upperlimit]>>tag'
+            b0fieldtag = jsondata.get('B0FieldIdentifier')              # TODO: Refactor the code below to deal with b0fieldtag lists instead of assuming it's a string
+            if isinstance(b0fieldtag, str) and fnmatch(b0fieldtag, '*<<*:[[]*[]]>>*'):  # b0fieldtag = 'tag<<session:[lowerlimit:upperlimit]>>tag'
 
                 # Search in all runs for the b0fieldtag and store the relative paths to the session folder
                 niifiles = set()
