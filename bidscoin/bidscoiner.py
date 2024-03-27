@@ -440,11 +440,10 @@ def addmetadata(bidsses: Path, subid: str, sesid: str) -> None:
                     if match.with_suffix('').with_suffix('.json').is_file():
                         with match.with_suffix('').with_suffix('.json').open('r') as sidecar:
                             metadata = json.load(sidecar)
-                        sourcetags = metadata.get('B0FieldSource')
-                        if isinstance(sourcetags, str):
-                            sourcetags = [sourcetags]
-                        if b0fieldtag == metadata.get('B0FieldIdentifier') or b0fieldtag in sourcetags:
-                            matches.append(match.relative_to(bidsses).as_posix())
+                        for b0fieldkey in ('B0FieldSource', 'B0FieldIdentifier'):
+                            b0fieldtags = metadata.get(b0fieldkey)
+                            if b0fieldtag == b0fieldtags or (isinstance(b0fieldtags, list) and b0fieldtag in b0fieldtags):
+                                matches.append(match.relative_to(bidsses).as_posix())
                 limitmatches(fmap, matches, limits, niifiles, scans_table)
 
                 # In the b0fieldtags, replace the limits with fieldmap runindex
