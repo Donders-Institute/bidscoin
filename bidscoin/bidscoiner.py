@@ -440,18 +440,18 @@ def addmetadata(bidsses: Path, subid: str, sesid: str) -> None:
                     if match.with_suffix('').with_suffix('.json').is_file():
                         with match.with_suffix('').with_suffix('.json').open('r') as sidecar:
                             metadata = json.load(sidecar)
-                        b0fieldtags = metadata.get('B0FieldSource')
-                        if isinstance(b0fieldtags, str):
-                            b0fieldtags = [b0fieldtags]
-                        if b0fieldtag == metadata.get('B0FieldIdentifier') or b0fieldtag in b0fieldtags:
+                        sourcetags = metadata.get('B0FieldSource')
+                        if isinstance(sourcetags, str):
+                            sourcetags = [sourcetags]
+                        if b0fieldtag == metadata.get('B0FieldIdentifier') or b0fieldtag in sourcetags:
                             matches.append(match.relative_to(bidsses).as_posix())
                 limitmatches(fmap, matches, limits, niifiles, scans_table)
 
                 # In the b0fieldtags, replace the limits with fieldmap runindex
-                newfieldtag = b0fieldtag.replace(':'+limits, '_'+bids.get_bidsvalue(fmap,'run'))
+                newb0fieldtag = b0fieldtag.replace(':'+limits, '_'+bids.get_bidsvalue(fmap,'run'))
                 for niifile in niifiles:
                     metafile = (bidsses/niifile).with_suffix('').with_suffix('.json')
-                    LOGGER.bcdebug(f"Updating the b0fieldtag ({b0fieldtag} -> {newfieldtag}) for: {metafile}")
+                    LOGGER.bcdebug(f"Updating the b0fieldtag ({b0fieldtag} -> {newb0fieldtag}) for: {metafile}")
                     if niifile == fmap:
                         metadata = jsondata
                     elif metafile.is_file():
@@ -460,13 +460,13 @@ def addmetadata(bidsses: Path, subid: str, sesid: str) -> None:
                     else:
                         continue
                     if 'B0FieldIdentifier' in metadata:
-                        metadata['B0FieldIdentifier'] = newfieldtag
+                        metadata['B0FieldIdentifier'] = newb0fieldtag
                     if 'B0FieldSource' in metadata:
-                        b0fieldtags = metadata.get('B0FieldSource')
-                        if isinstance(b0fieldtags, str):
-                            metadata['B0FieldSource'] = newfieldtag
-                        elif isinstance(b0fieldtags, list):
-                            metadata['B0FieldSource'][b0fieldtags.index(b0fieldtag)] = newfieldtag
+                        sourcetags = metadata.get('B0FieldSource')
+                        if isinstance(sourcetags, str):
+                            metadata['B0FieldSource'] = newb0fieldtag
+                        elif isinstance(sourcetags, list):
+                            metadata['B0FieldSource'][sourcetags.index(b0fieldtag)] = newb0fieldtag
                     if niifile != fmap:
                         with metafile.open('w') as sidecar:
                             json.dump(metadata, sidecar, indent=4)

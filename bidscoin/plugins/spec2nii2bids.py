@@ -179,11 +179,11 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
 
     # Get the subject identifiers and the BIDS root folder from the bidsses folder
     if bidsses.name.startswith('ses-'):
-        subid      = bidsses.parent.name
-        sesid      = bidsses.name
+        subid = bidsses.parent.name
+        sesid = bidsses.name
     else:
-        subid      = bidsses.name
-        sesid      = ''
+        subid = bidsses.name
+        sesid = ''
 
     # Get started and see what dataformat we have
     options     = bidsmap['Options']['plugins']['spec2nii2bids']
