@@ -14,3 +14,7 @@ Please visit the `Neurodesk website <https://www.neurodesk.org/>`__ for more inf
 .. figure:: ./_static/neurodesktop.png
 
    The Neurodesk interface with menu items for launching a bash terminal in which you can run your BIDScoin commands.
+
+.. tip::
+
+   If you don't have the latest BIDScoin version in your Neurodesk menu, then click on the ``Update`` menu item (depicted in the bottom of the screenshot above)
