@@ -140,7 +140,7 @@ def bidsmapper_plugin(session: Path, bidsmap_new: Bidsmap, bidsmap_old: Bidsmap,
             run, _ = bids.get_matching_run(datasource, template)
 
         # See if we have collected the run somewhere in our new bidsmap
-        if not bids.exist_run(bidsmap_new, datasource.datatype, run):
+        if not bids.exist_run(bidsmap_new, '', run):
 
             # Communicate with the user if the run was not present in bidsmap_old or in template, i.e. that we found a new sample
             if not match:
