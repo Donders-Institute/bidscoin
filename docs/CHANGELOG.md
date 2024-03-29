@@ -4,6 +4,11 @@
 
 ## [dev]
 
+## [4.3.2] - 2024-03-29
+
+### Fixed
+- A regression was introduced when fixing Github issue #229 (now reverted)
+
 ## [4.3.1] - 2024-03-27
 
 ### Added
@@ -438,7 +443,8 @@ A first stable release of BIDScoin :-)
 ### To do
 - Add support for non-imaging data
 
-[dev]: https://github.com/Donders-Institute/bidscoin/compare/4.3.1...HEAD
+[dev]: https://github.com/Donders-Institute/bidscoin/compare/4.3.2...HEAD
+[4.3.2]: https://github.com/Donders-Institute/bidscoin/compare/4.3.1...4.3.2
 [4.3.1]: https://github.com/Donders-Institute/bidscoin/compare/4.3.0...4.3.1
 [4.3.0]: https://github.com/Donders-Institute/bidscoin/compare/4.2.1...4.3.0
 [4.2.1]: https://github.com/Donders-Institute/bidscoin/compare/4.2.0...4.2.1
