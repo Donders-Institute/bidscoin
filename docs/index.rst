@@ -5,6 +5,7 @@
    :hidden:
    :caption: Getting started
 
+   play
    installation
    preparation
 

@@ -54,6 +54,7 @@ InjectedMass
 IntendedFor
 Jitter
 JSON
+JupyterLab
 MPRAGE
 MRAcquisitionType
 MRIcroGL
@@ -63,6 +64,7 @@ Multi
 NIfTI
 NeuroStars
 Neurodesk
+Neurodesktop
 Neuroinformatics
 Nibabel2bids
 Oostenveld
@@ -86,6 +88,7 @@ Qt5
 Qt6
 R013
 R015
+RDP
 README
 Radboud
 Refactored
@@ -233,6 +236,8 @@ multiraid
 mylabel
 myproject
 nativespec
+neurodesk
+neurodesktop
 neuroimaging
 nibabel
 nibabel2bids

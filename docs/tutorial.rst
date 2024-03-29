@@ -14,7 +14,7 @@ The tutorial below was written with the DCCN user in mind that wants to convert 
 1. Setting up the environment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Depending on how BIDScoin was installed, you may have to set your Python environment settings before you can run BIDScoin commands from your command-line interface / shell. In the DCCN compute cluster example below it is assumed that an `environment module <https://modules.sourceforge.net/>`__ is used to load your Linux Anaconda Python installation and that BIDScoin is installed in a `conda environment <https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands>`__ named "bidscoin". Run or adjust these commands to your computer system if needed:
+Depending on how BIDScoin was installed, you may have to set your Python environment settings before you can run BIDScoin commands from your command-line interface/shell. This is already done for you when you run a `BIDScoin play <./play.html>`__ instance in the cloud. In the DCCN compute cluster example below it is assumed that an `environment module <https://modules.sourceforge.net/>`__ is used to load your Linux Anaconda Python installation and that BIDScoin is installed in a `conda environment <https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands>`__ named "bidscoin". Run or adjust these commands to your computer system if needed:
 
 .. code-block:: console
 
