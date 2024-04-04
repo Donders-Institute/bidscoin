@@ -5,6 +5,7 @@ convert the DICOM and PAR source data to NIfTI and create BIDS sidecar files. Pe
 (e.g. Age, Sex) is added to the BIDS participants.tsv file."""
 
 import logging
+import re
 import dateutil.parser
 import pandas as pd
 import json
@@ -386,6 +387,9 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
 
                     # Patch the echo entity in the newbidsname with the dcm2niix echo info                     # NB: We can't rely on the bids-entity info here because manufacturers can e.g. put multiple echos in one series / run-folder
                     if 'echo' in run['bids'] and postfix.startswith('e'):
+                        if not re.fullmatch('e[0-9]*', postfix):                                        # A false match, e.g. postfix = 'echo-1' (see Github issue #232)
+                            LOGGER.bcdebug(f"Skipping false positive postfix: {postfix} in {dcm2niixfile}")
+                            continue
                         echonr = f"_{postfix}".replace('_e','')                                                 # E.g. postfix='e1'
                         if not echonr:
                             echonr = '1'
