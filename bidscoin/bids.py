@@ -1786,6 +1786,8 @@ def get_matching_run(datasource: DataSource, bidsmap: Bidsmap, runtime=False) ->
 
     # We don't have a match (all tests failed, so datatype should be the *last* one, e.g. unknowndatatype)
     LOGGER.bcdebug(f"Found no bidsmap match for: {run_['provenance']}")
+    if not datasource.datatype in unknowndatatypes:
+        LOGGER.warning(f"Datatype was expected to be in {unknowndatatypes}, instead it is {datasource.datatype} -> {run_['provenance']}")
     return run_, ''
 
 
