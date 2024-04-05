@@ -380,7 +380,7 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
             for dcm2niixfile in dcm2niixfiles:
 
                 # Filter out false-positive (-> glob) dcm2niixfiles, e.g. postfix = 'echo-1' (see Github issue #232)
-                if not re.match(r'.*_echo-[0-9]*\.nii', str(dcm2niixfile)):
+                if re.match(r'.*_echo-[0-9]*\.nii', str(dcm2niixfile)):
                     LOGGER.bcdebug(f"Skipping false positive dcm2niixfile: {dcm2niixfile}")
                     continue
 
