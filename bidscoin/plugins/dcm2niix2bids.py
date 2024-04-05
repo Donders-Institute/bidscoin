@@ -379,6 +379,11 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
 
             for dcm2niixfile in dcm2niixfiles:
 
+                # Filter out false-positive (-> glob) dcm2niixfiles, e.g. postfix = 'echo-1' (see Github issue #232)
+                if not re.match(r'.*_echo-[0-9]*\.nii', str(dcm2niixfile)):
+                    LOGGER.bcdebug(f"Skipping false positive dcm2niixfile: {dcm2niixfile}")
+                    continue
+
                 # Strip each dcm2niix postfix and assign it to bids entities in a newly constructed bidsname
                 ext         = ''.join(dcm2niixfile.suffixes)
                 postfixes   = dcm2niixfile.name.split(bidsname)[1].rsplit(ext)[0].split('_')[1:]
@@ -387,9 +392,6 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
 
                     # Patch the echo entity in the newbidsname with the dcm2niix echo info                     # NB: We can't rely on the bids-entity info here because manufacturers can e.g. put multiple echos in one series / run-folder
                     if 'echo' in run['bids'] and postfix.startswith('e'):
-                        if not re.fullmatch('e[0-9]*', postfix):                                        # A false match, e.g. postfix = 'echo-1' (see Github issue #232)
-                            LOGGER.bcdebug(f"Skipping false positive postfix: {postfix} in {dcm2niixfile}")
-                            continue
                         echonr = f"_{postfix}".replace('_e','')                                                 # E.g. postfix='e1'
                         if not echonr:
                             echonr = '1'
