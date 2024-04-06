@@ -373,18 +373,16 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
                     LOGGER.verbose(f"Found dcm2niix _Crop_ postfix, replacing original file\n{dcm2niixfile} ->\n{newbidsfile}")
                     dcm2niixfile.replace(newbidsfile)
 
-            # Rename all files that got additional postfixes from dcm2niix. See: https://github.com/rordenlab/dcm2niix/blob/master/FILENAMING.md
-            dcm2niixpostfixes = ('_c', '_i', '_Eq', '_real', '_imaginary', '_MoCo', '_t', '_Tilt', '_e', '_ph', '_ADC', '_fieldmaphz')      #_c%d, _e%d and _ph (and any combination of these in that order) are for multi-coil data, multi-echo data and phase data
-            dcm2niixfiles     = sorted(set([dcm2niixfile for dcm2niixpostfix in dcm2niixpostfixes for dcm2niixfile in outfolder.glob(f"{bidsname}*{dcm2niixpostfix}*.nii*")]))
+            # Check if there are files that got additional postfixes from dcm2niix. See: https://github.com/rordenlab/dcm2niix/blob/master/FILENAMING.md
+            dcm2niixpostfixes = ('_c', '_i', '_Eq', '_real', '_imaginary', '_MoCo', '_t', '_Tilt', '_e', '_ph', '_ADC', '_fieldmaphz')              #_c%d, _e%d and _ph (and any combination of these in that order) are for multi-coil data, multi-echo data and phase data
+            dcm2niixfiles = sorted(set([dcm2niixfile for dcm2niixpostfix in dcm2niixpostfixes for dcm2niixfile in outfolder.glob(f"{bidsname}*{dcm2niixpostfix}*.nii*")]))
+            dcm2niixfiles = [dcm2niixfile for dcm2niixfile in dcm2niixfiles if not (re.match(r'sub-.*_echo-[0-9]*\.nii',      dcm2niixfile.name) or
+                                                                                    re.match(r'sub-.*_phase(diff|[12])\.nii', dcm2niixfile.name))]   # Skip false-positive (-> glob) dcm2niixfiles, e.g. postfix = 'echo-1' (see Github issue #232)
 
+            # Rename all dcm2niix files that got additional postfixes (i.e. store the postfixes in the bidsname)
             for dcm2niixfile in dcm2niixfiles:
 
-                # Filter out false-positive (-> glob) dcm2niixfiles, e.g. postfix = 'echo-1' (see Github issue #232)
-                if re.match(r'.*_echo-[0-9]*\.nii', str(dcm2niixfile)):
-                    LOGGER.bcdebug(f"Skipping false positive dcm2niixfile: {dcm2niixfile}")
-                    continue
-
-                # Strip each dcm2niix postfix and assign it to bids entities in a newly constructed bidsname
+                # Strip each dcm2niix postfix and assign it to the proper bids entity in the new bidsname (else assign it to the fallback entity)
                 ext         = ''.join(dcm2niixfile.suffixes)
                 postfixes   = dcm2niixfile.name.split(bidsname)[1].rsplit(ext)[0].split('_')[1:]
                 newbidsname = bids.insert_bidskeyval(dcm2niixfile.name, 'run', runindex, ignore)        # Restart the run-index. NB: Unlike bidsname, newbidsname has a file extension
