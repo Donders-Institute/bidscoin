@@ -31,7 +31,7 @@ BIDSCOIN_LOGO    = Path(__file__).parent/'bidscoin_logo.png'
 BIDSCOIN_ICON    = Path(__file__).parent/'bidscoin.ico'
 RIGHTARROW       = Path(__file__).parent/'rightarrow.png'
 
-MAIN_HELP_URL    = f"https://bidscoin.readthedocs.io/en/{__version__}"
+MAIN_HELP_URL    = f"https://bidscoin.readthedocs.io/en/{__version__.split('+')[0]}"
 HELP_URL_DEFAULT = f"https://bids-specification.readthedocs.io/en/v{bidsversion()}"
 HELP_URLS        = {
     'anat': f"{HELP_URL_DEFAULT}/04-modality-specific-files/01-magnetic-resonance-imaging-data.html#anatomy-imaging-data",
