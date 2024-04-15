@@ -155,7 +155,7 @@ def bidsmapper_plugin(session: Path, bidsmap_new: Bidsmap, bidsmap_old: Bidsmap,
             bids.append_run(bidsmap_new, run)
 
         else:
-            LOGGER.bcdebug(f"Existing/duplicate '{datasource.datatype}' {dataformat} sample: {sourcefile}")
+            LOGGER.bcdebug(f"Existing/duplicate '{datasource.datatype}' {datasource.dataformat} sample: {sourcefile}")
 
 
 def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> None:
