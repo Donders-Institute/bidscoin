@@ -548,7 +548,7 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
 
     Another hack is to get 'PhaseEncodingDirection` (see https://neurostars.org/t/determining-bids-phaseencodingdirection-from-dicom/612/10)
 
-    :param tagname:     DICOM attribute name (e.g. 'SeriesNumber') or Pydicom-style tag number (e.g. '0x00200011', '(0x20,0x11)', '(0020, 0011)', '(20, 11)', '20,11')
+    :param tagname:     DICOM attribute name (e.g. 'SeriesNumber') or Pydicom-style tag number (e.g. '0x00200011', '(0x20,0x11)', '(0020, 0011)')
     :param dicomfile:   The full pathname of the dicom-file
     :return:            Extracted tag-values as a flat string
     """
@@ -604,18 +604,21 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
                         elif dicomdata.get('Manufacturer','').upper().startswith('GE'):
                             value = dicomdata.get('RectilinearPhaseEncodeReordering')           # = LINEAR or REVERSE_LINEAR
 
-                    # XA-20 enhanced DICOM hack: Catch missing EchoNumbers from ice-dims
-                    if tagname == 'EchoNumbers' and not value:
-                        ice_dims = dicomdata.get((0x21, 1106)) or ''
-                        if '_' in ice_dims:
-                            value = ice_dims.split('_')[1]
+                    # XA enhanced DICOM hack: Catch missing EchoNumbers from the private ICE_Dims field (0x21, 0x1106)
+                    if tagname in ('EchoNumber', 'EchoNumbers') and not value:
+                        for elem in dicomdata.iterall():
+                            if elem.tag == (0x21, 0x1106):
+                                value = elem.value.split('_')[1] if '_' in elem.value else ''
+                                LOGGER.bcdebug(f"Parsed `EchoNumber(s)` from Siemens ICE_Dims `{elem.value}` as: {value}")
+                                break
 
-                    # Try reading the Siemens CSA header. For V* versions the CSA header tag is (0029,1020), for XA versions (0021,1019). TODO: see if dicom_parser is supporting this
+                    # Try reading the Siemens CSA header. For VA/VB-versions the CSA header tag is (0029,1020), for XA-versions (0021,1019). TODO: see if dicom_parser is supporting this
                     if not value and value != 0 and 'SIEMENS' in dicomdata.get('Manufacturer').upper() and csareader.get_csa_header(dicomdata):
 
                         if find_spec('dicom_parser'):
                             from dicom_parser import Image
 
+                            LOGGER.bcdebug(f"Parsing {tagname} using `dicom_parser`")
                             for csa in ('CSASeriesHeaderInfo', 'CSAImageHeaderInfo'):
                                 value = value if (value or value==0) else Image(dicomfile).header.get(csa)
                                 for csatag in tagname.split('.'):           # E.g. CSA tagname = 'SliceArray.Slice.instance_number.Position.Tra'
@@ -628,6 +631,7 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
 
                         else:
 
+                            LOGGER.bcdebug(f"Parsing {tagname} using `nibabel`")
                             for modality in ('Series', 'Image'):
                                 value = value if (value or value==0) else csareader.get_csa_header(dicomdata, modality)['tags']
                                 for csatag in tagname.split('.'):           # NB: Currently MrPhoenixProtocol is not supported

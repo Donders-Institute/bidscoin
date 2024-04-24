@@ -132,6 +132,13 @@ def test_get_dicomfield(dcm_file_csa):
     value = bids.get_dicomfield('SeriesDescription', dcm_file_csa)
     assert value == 'CBU_DTI_64D_1A'
 
+    # -> The pydicom-style tag number
+    value = bids.get_dicomfield('SeriesNumber', dcm_file_csa)
+    assert value == 12
+    assert value == bids.get_dicomfield('0x00200011', dcm_file_csa)
+    assert value == bids.get_dicomfield('(0x20,0x11)', dcm_file_csa)
+    assert value == bids.get_dicomfield('(0020, 0011)', dcm_file_csa)
+
     # -> The special PhaseEncodingDirection tag
     value = bids.get_dicomfield('PhaseEncodingDirection', dcm_file_csa)
     assert value == 'AP'
