@@ -531,14 +531,17 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
 
     # Collect personal data for the participants.tsv file
     if dataformat == 'DICOM':                               # PAR does not contain personal info
-        personals = {}
-        age       = datasource.attributes('PatientAge')     # A string of characters with one of the following formats: nnnD, nnnW, nnnM, nnnY
-        if   age.endswith('D'): age = float(age.rstrip('D')) / 365.2524
-        elif age.endswith('W'): age = float(age.rstrip('W')) / 52.1775
-        elif age.endswith('M'): age = float(age.rstrip('M')) / 12
-        elif age.endswith('Y'): age = float(age.rstrip('Y'))
-        if age and options.get('anon','y') in ('y','yes'):
-            age = int(float(age))
+        age = datasource.attributes('PatientAge')           # A string of characters with one of the following formats: nnnD, nnnW, nnnM, nnnY
+        try:
+            if   age.endswith('D'): age = float(age.rstrip('D')) / 365.2524
+            elif age.endswith('W'): age = float(age.rstrip('W')) / 52.1775
+            elif age.endswith('M'): age = float(age.rstrip('M')) / 12
+            elif age.endswith('Y'): age = float(age.rstrip('Y'))
+            if age and options.get('anon','y') in ('y','yes'):
+                age = int(float(age))
+        except Exception as exc:
+            LOGGER.warning(f"Could not parse age from: {datasource.path}\n{exc}")
+        personals           = {}
         personals['age']    = str(age)
         personals['sex']    = datasource.attributes('PatientSex')
         personals['size']   = datasource.attributes('PatientSize')

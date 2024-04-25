@@ -317,15 +317,18 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
         try:
             age = dateutil.parser.parse(datasource.attributes('rhr_rh_scan_date')) - dateutil.parser.parse(datasource.attributes('rhe_dateofbirth'))
             age = str(age.days) + 'D'
-        except dateutil.parser.ParserError as dateerror:
+        except dateutil.parser.ParserError as exc:
             pass
-    if   age.endswith('D'): age = float(age.rstrip('D')) / 365.2524
-    elif age.endswith('W'): age = float(age.rstrip('W')) / 52.1775
-    elif age.endswith('M'): age = float(age.rstrip('M')) / 12
-    elif age.endswith('Y'): age = float(age.rstrip('Y'))
-    if age:
-        if options.get('anon',OPTIONS['anon']) in ('y','yes'):
-            age = int(float(age))
-        personals['age'] = str(age)
+    try:
+        if   age.endswith('D'): age = float(age.rstrip('D')) / 365.2524
+        elif age.endswith('W'): age = float(age.rstrip('W')) / 52.1775
+        elif age.endswith('M'): age = float(age.rstrip('M')) / 12
+        elif age.endswith('Y'): age = float(age.rstrip('Y'))
+        if age:
+            if options.get('anon',OPTIONS['anon']) in ('y','yes'):
+                age = int(float(age))
+            personals['age'] = str(age)
+    except Exception as exc:
+        LOGGER.warning(f"Could not parse age from: {datasource.path}\n{exc}")
 
     return personals
