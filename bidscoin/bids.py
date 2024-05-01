@@ -494,16 +494,17 @@ def get_datasource(sourcedir: Path, plugins: Dict[str, Plugin], recurse: int=8) 
     """Gets a data source from the sourcedir inputfolder and its recursive subfolders"""
 
     datasource = DataSource()
-    for item in sorted(sourcedir.iterdir()):
-        if item.name.startswith('.'):
-            LOGGER.verbose(f"Ignoring hidden data-source: {item}")
-            continue
-        if item.is_dir() and recurse:
-            datasource = get_datasource(item, plugins, recurse-1)
-        elif item.is_file():
-            datasource = DataSource(item, plugins)
-        if datasource.dataformat:
-            return datasource
+    if sourcedir.is_dir():
+        for item in sorted(sourcedir.iterdir()):
+            if item.name.startswith('.'):
+                LOGGER.verbose(f"Ignoring hidden data-source: {item}")
+                continue
+            if item.is_dir() and recurse:
+                datasource = get_datasource(item, plugins, recurse-1)
+            elif item.is_file():
+                datasource = DataSource(item, plugins)
+            if datasource.dataformat:
+                return datasource
 
     return datasource
 
@@ -2244,8 +2245,8 @@ def addmetadata(bidsses: Path) -> None:
                 jsondata['EchoTime2'] = jsondata.get('EchoTime2') or echotime[1]
                 if None in (jsondata['EchoTime1'], jsondata['EchoTime2']):
                     LOGGER.error(f"Cannot find and add valid EchoTime1={jsondata['EchoTime1']} and EchoTime2={jsondata['EchoTime2']} data to: {jsonfile}")
-                elif echotime[0] > echotime[1]:
-                    LOGGER.error(f"Found invalid EchoTime1={echotime[0]} > EchoTime2={echotime[1]} for: {jsonfile}")
+                elif jsondata['EchoTime1'] > jsondata['EchoTime2']:
+                    LOGGER.error(f"Found invalid EchoTime1={jsondata['EchoTime1']} > EchoTime2={jsondata['EchoTime2']} for: {jsonfile}")
                 else:
                     LOGGER.verbose(f"Adding EchoTime1: {jsondata['EchoTime1']} and EchoTime2: {jsondata['EchoTime2']} to {jsonfile}")
 
@@ -2281,29 +2282,30 @@ def updatemetadata(datasource: DataSource, targetmeta: Path, usermeta: Meta, ext
             metapool = json.load(json_fid)
 
     # Add the source metadata to the metadict or copy it over
-    for ext in set(extensions):
-        for sourcefile in sourcemeta.parent.glob(sourcemeta.with_suffix('').with_suffix(ext).name):
-            LOGGER.verbose(f"Copying source data from: '{sourcefile}''")
+    if sourcemeta.name:
+        for ext in set(extensions):
+            for sourcefile in sourcemeta.parent.glob(sourcemeta.with_suffix('').with_suffix(ext).name):
+                LOGGER.verbose(f"Copying source data from: '{sourcefile}''")
 
-            # Put the metadata in metadict
-            if ext == '.json':
-                with sourcefile.open('r') as json_fid:
-                    metadata = json.load(json_fid)
-                if not isinstance(metadata, dict):
-                    LOGGER.error(f"Skipping unexpectedly formatted meta-data in: {sourcefile}")
-                    continue
-                for metakey, metaval in metadata.items():
-                    if metapool.get(metakey) and metapool.get(metakey) != metaval:
-                        LOGGER.info(f"Overruling {metakey} sourcefile values in {targetmeta}: {metapool[metakey]} -> {metaval}")
-                    else:
-                        LOGGER.bcdebug(f"Adding '{metakey}: {metaval}' to: {targetmeta}")
-                    metapool[metakey] = metaval or None
+                # Put the metadata in metadict
+                if ext == '.json':
+                    with sourcefile.open('r') as json_fid:
+                        metadata = json.load(json_fid)
+                    if not isinstance(metadata, dict):
+                        LOGGER.error(f"Skipping unexpectedly formatted meta-data in: {sourcefile}")
+                        continue
+                    for metakey, metaval in metadata.items():
+                        if metapool.get(metakey) and metapool.get(metakey) != metaval:
+                            LOGGER.info(f"Overruling {metakey} sourcefile values in {targetmeta}: {metapool[metakey]} -> {metaval}")
+                        else:
+                            LOGGER.bcdebug(f"Adding '{metakey}: {metaval}' to: {targetmeta}")
+                        metapool[metakey] = metaval or None
 
-            # Or just copy over the metadata file
-            else:
-                targetfile = targetmeta.parent/sourcefile.name
-                if not targetfile.is_file():
-                    shutil.copyfile(sourcefile, targetfile)
+                # Or just copy over the metadata file
+                else:
+                    targetfile = targetmeta.parent/sourcefile.name
+                    if not targetfile.is_file():
+                        shutil.copyfile(sourcefile, targetfile)
 
     # Add all the metadata to the metadict. NB: the dynamic `IntendedFor` value is handled separately later
     for metakey, metaval in usermeta.items():
