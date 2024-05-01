@@ -206,9 +206,11 @@ class MainWindow(QMainWindow):
         menu    = QtWidgets.QMenu(self)
         compare = menu.addAction('Compare')
         compare.setEnabled(len(rowindex) > 1)
+        compare.setToolTip('Compare the BIDS mappings of multiple run-items')
         edit    = menu.addAction('Edit')
-        edit.setToolTip('Edit individual items in detail or change the data type')
+        edit.setToolTip('Edit a single run-item in detail or edit the data type of multiple run-items')
         delete  = menu.addAction('Remove')
+        delete.setToolTip('Delete run-items from the bidsmap (expert usage)')
         action  = menu.exec(table.viewport().mapToGlobal(pos))
 
         if action == delete:

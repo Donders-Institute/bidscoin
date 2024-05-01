@@ -169,13 +169,9 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> None:
     :return:            Nothing
     """
 
-    # Get the subject identifiers and the BIDS root folder from the bidsses folder
-    if bidsses.name.startswith('ses-'):
-        subid = bidsses.parent.name
-        sesid = bidsses.name
-    else:
-        subid = bidsses.name
-        sesid = ''
+    # Get the subject identifiers from the bidsses folder
+    subid = bidsses.name if bidsses.name.startswith('sub-') else bidsses.parent.name
+    sesid = bidsses.name if bidsses.name.startswith('ses-') else ''
 
     # Get started
     options     = bidsmap['Options']['plugins']['nibabel2bids']

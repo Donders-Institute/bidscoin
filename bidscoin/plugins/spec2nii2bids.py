@@ -177,13 +177,9 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
     :return:            A dictionary with personal data for the participants.tsv file (such as sex or age)
     """
 
-    # Get the subject identifiers and the BIDS root folder from the bidsses folder
-    if bidsses.name.startswith('ses-'):
-        subid = bidsses.parent.name
-        sesid = bidsses.name
-    else:
-        subid = bidsses.name
-        sesid = ''
+    # Get the subject identifiers from the bidsses folder
+    subid = bidsses.name if bidsses.name.startswith('sub-') else bidsses.parent.name
+    sesid = bidsses.name if bidsses.name.startswith('ses-') else ''
 
     # Get started and see what dataformat we have
     options     = bidsmap['Options']['plugins']['spec2nii2bids']

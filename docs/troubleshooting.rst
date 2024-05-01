@@ -53,7 +53,7 @@ Normally the list of items in the bidsmap is a shortlist that represents the dif
 
 I have duplicate run-items in my bidsmap
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-There shouldn't be exact duplicates, i.e. there is probably a small difference in the properties or attributes that identify your run-items. To investigate this, you can compare these run-items by selecting their BIDS output names (use shift-/control-click), then right-click them and choose ``compare`` from the context menu
+Exact duplicates should not exist, i.e. there is probably a small difference in the properties or attributes that identify your run-items. To investigate this, you can compare these run-items by selecting their BIDS output names (use shift-/control-click), then right-click them and choose ``compare`` from the context menu
 
 My subject/session labels are wrong
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -11,7 +11,7 @@ from pathlib import Path
 from nibabel.testing import data_path
 from pydicom.data import get_testdata_file
 from bidscoin import bcoin, bids, bidsmap_template
-from bidscoin.bids import Run, Plugin
+from bidscoin.bids import Run, Plugin, Meta
 
 bcoin.setup_logging()
 
@@ -614,10 +614,10 @@ def test_updatemetadata(dcm_file, tmp_path):
         json.dump({'PatientName': 'SidecarTest'}, fid)
 
     # Create the user metadata
-    usermeta = {'PatientName':       'UserTest',
-                'DynamicName':       '<<(0010, 0010)>>',
-                'B0FieldSource':     'Source<<session:[-2:2]>>',
-                'B0FieldIdentifier': ['Identifier<<session>>', 'Identifier']}
+    usermeta = Meta({'PatientName':       'UserTest',
+                     'DynamicName':       '<<(0010, 0010)>>',
+                     'B0FieldSource':     'Source<<session:[-2:2]>>',
+                     'B0FieldIdentifier': ['Identifier<<session>>', 'Identifier']})
 
     # Test if the user metadata takes precedence
     metadata = bids.updatemetadata(extdatasource, sidecar, usermeta, ['.json'])
@@ -628,10 +628,10 @@ def test_updatemetadata(dcm_file, tmp_path):
     assert not (outfolder/sourcefile.with_suffix('.jsn').name).is_file()
 
     # Test if the source metadata takes precedence
-    metadata = bids.updatemetadata(extdatasource, sidecar, {}, ['.jsn', '.json'], sourcefile)
+    metadata = bids.updatemetadata(extdatasource, sidecar, Meta({}), ['.jsn', '.json'], sourcefile)
     assert metadata['PatientName'] == 'SourceTest'
     assert (outfolder/sourcefile.with_suffix('.jsn').name).is_file()
 
     # Test if the sidecar metadata takes precedence
-    metadata = bids.updatemetadata(extdatasource, sidecar, {}, [])
+    metadata = bids.updatemetadata(extdatasource, sidecar, Meta({}), [])
     assert metadata['PatientName'] == 'SidecarTest'
