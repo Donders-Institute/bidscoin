@@ -61,7 +61,7 @@ command: Command to run dcm2niix from the terminal, such as:
     module add dcm2niix/v1.0.20210317; dcm2niix (if you use a module system)
     PATH=/opt/dcm2niix/bin:$PATH; dcm2niix (prepend the path to your executable)
     /opt/dcm2niix/bin/dcm2niix (specify the fullpath to the executable)
-    \C:\\"Program Files"\\dcm2niix\\dcm2niix.exe (use quotes to deal with whitespaces in your fullpath)
+    C:\\"Program Files"\\dcm2niix\\dcm2niix.exe (use quotes to deal with whitespaces in your fullpath)
     
 args: Argument string that is passed to dcm2niix. Click [Test] and see the terminal output for usage
     Tip: SPM users may want to use '-z n', which produces unzipped NIfTI's
@@ -188,32 +188,105 @@ class MainWindow(QMainWindow):
         # Get the activated row-data
         dataformat = self.tabwidget.widget(self.tabwidget.currentIndex()).objectName()
         table      = self.samples_table[dataformat]
-        rowindex   = table.currentRow()
         colindex   = table.currentColumn()
+        rowindex   = [index.row() for index in table.selectedIndexes() if index.column() == colindex]
         if colindex in (-1, 0, 4):      # User clicked the index, the edit-button or elsewhere (i.e. not on an activated widget)
             return
+        runs       = []
+        subid      = []
+        sesid      = []
+        for index in rowindex:
+            datatype   = table.item(index, 2).text()
+            provenance = table.item(index, 5).text()
+            runs.append(bids.find_run(self.output_bidsmap, provenance, dataformat, datatype))
+            subid.append(bids.get_bidsvalue(table.item(index, 3).text(), 'sub'))
+            sesid.append(bids.get_bidsvalue(table.item(index, 3).text(), 'ses'))
 
         # Pop-up the context-menu
-        menu       = QtWidgets.QMenu(self)
-        delete_run = menu.addAction('Remove')
-        edit_run   = menu.addAction('Edit')
-        action     = menu.exec(table.viewport().mapToGlobal(pos))
-        datatype   = table.item(rowindex, 2).text()
-        provenance = table.item(rowindex, 5).text()
+        menu    = QtWidgets.QMenu(self)
+        compare = menu.addAction('Compare')
+        compare.setEnabled(len(rowindex) > 1)
+        edit    = menu.addAction('Edit')
+        edit.setToolTip('Edit individual items in detail or change the data type')
+        delete  = menu.addAction('Remove')
+        action  = menu.exec(table.viewport().mapToGlobal(pos))
 
-        if action == delete_run:
+        if action == delete:
             answer = QMessageBox.question(self, f"Remove {dataformat} mapping",
                                           f'Only delete mappings for obsolete data (unless you are an expert user). Do you really want to remove this mapping"?',
                                           QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel, QMessageBox.StandardButton.Cancel)
             if answer == QMessageBox.StandardButton.Yes:
-                LOGGER.warning(f"Expert usage: User has removed run-item {dataformat}[{datatype}]: {provenance}")
-                bids.delete_run(self.output_bidsmap, bids.find_run(self.output_bidsmap, provenance, dataformat, datatype))
+                for index in rowindex:
+                    datatype   = table.item(index, 2).text()
+                    provenance = table.item(index, 5).text()
+                    LOGGER.warning(f"Expert usage: User has removed run-item {dataformat}[{datatype}]: {provenance}")
+                    bids.delete_run(self.output_bidsmap, bids.find_run(self.output_bidsmap, provenance, dataformat, datatype))
                 self.update_subses_samples(self.output_bidsmap, dataformat)
-                table.setRowCount(table.rowCount() - 1)
+                table.setRowCount(table.rowCount() - len(rowindex))
                 self.datachanged = True
 
-        elif action == edit_run:
-            self.open_editwindow(provenance, datatype)
+        elif action == compare:
+            self.comparewindow = CompareWindow(runs, subid, sesid)
+            self.comparewindow.show()
+
+        elif action == edit:
+            if len(rowindex) == 1:
+                datatype   = table.item(table.currentRow(), 2).text()
+                provenance = table.item(table.currentRow(), 5).text()
+                self.open_editwindow(provenance, datatype)
+            else:
+                newdatatype = self.ask_datatype([datatype for datatype in self.template_bidsmap[dataformat] if datatype not in ('subject', 'session')])
+                if not newdatatype:
+                    return
+
+                # Change the datatype for the selected run-items
+                for index in rowindex:
+                    datatype   = table.item(index, 2).text()
+                    provenance = table.item(index, 5).text()
+                    if not Path(provenance).is_file():
+                        QMessageBox.warning(self, 'Edit BIDS mapping', f"Cannot reliably change the datatype and/or suffix because the source file '{provenance}' can no longer be found.\n\nPlease restore the source data or use the `bidsmapper -s` option to solve this issue")
+                        continue
+
+                    # Get the new run from the template
+                    oldrun = bids.find_run(self.output_bidsmap, provenance, dataformat, datatype)
+                    newrun = bids.get_run(self.template_bidsmap, newdatatype, 0, oldrun['datasource'])
+                    if not newrun:
+                        QMessageBox.warning(self, 'Edit BIDS mapping', f"Cannot find the '{newdatatype}' data type in your template")
+                        continue
+
+                    # Insert the new run in our output bidsmap
+                    bids.update_bidsmap(self.output_bidsmap, datatype, newrun)
+                    LOGGER.verbose(f"User has set run-item {dataformat}[{datatype} -> {newdatatype}]: {provenance}")
+
+                self.update_subses_samples(self.output_bidsmap, dataformat)
+                self.datachanged = True
+
+    def ask_datatype(self, datatypes: List[str]):
+        """Helper function for asking the user for a data type"""
+
+        # Set-up a datatype dropdown menu
+        label    = QLabel('Select the new data type for your run-items')
+        dropdown = QComboBox()
+        dropdown.addItems(datatypes)
+
+        # Set-up OK/Cancel buttons
+        buttonbox = QDialogButtonBox()
+        buttonbox.setStandardButtons(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
+        buttonbox.button(QDialogButtonBox.StandardButton.Ok).setToolTip('Change the data type of the selected run items')
+
+        # Set up the dialog window and wait till the user has selected a plugin
+        layout = QVBoxLayout()
+        layout.addWidget(label)
+        layout.addWidget(dropdown)
+        layout.addWidget(buttonbox)
+        qdialog = QDialog(modal=True)
+        qdialog.setLayout(layout)
+        qdialog.setWindowTitle('Edit data types')
+        qdialog.setWindowIcon(QtGui.QIcon(str(BIDSCOIN_ICON)))
+        buttonbox.accepted.connect(qdialog.accept)
+        buttonbox.rejected.connect(qdialog.reject)
+
+        return dropdown.currentText() if qdialog.exec() else ''
 
     def set_menu_statusbar(self):
         """Set up the menu and statusbar"""
@@ -482,7 +555,6 @@ class MainWindow(QMainWindow):
                 samples_table.item(idx, 0).setFlags(QtCore.Qt.ItemFlag.NoItemFlags)
                 samples_table.item(idx, 1).setFlags(QtCore.Qt.ItemFlag.ItemIsEnabled)
                 samples_table.item(idx, 2).setFlags(QtCore.Qt.ItemFlag.ItemIsEnabled)
-                samples_table.item(idx, 3).setFlags(QtCore.Qt.ItemFlag.ItemIsEnabled)
                 samples_table.item(idx, 1).setToolTip('Double-click to inspect the header information')
                 samples_table.item(idx, 1).setStatusTip(str(provenance.parent) + str(Path('/')))
                 if datatype not in self.ignoredatatypes:
@@ -901,7 +973,7 @@ class EditWindow(QDialog):
         # Set up the properties table
         self.properties_label = QLabel('Properties')
         self.properties_label.setToolTip(f"The filesystem properties that match with (identify) the source file. NB: Expert usage (e.g. using regular expressions, see documentation). Copy: Ctrl+C")
-        self.properties_table = self.set_table(data_properties, 'properties')
+        self.properties_table = self.setup_table(data_properties, 'properties')
         self.properties_table.cellChanged.connect(self.propertiescell2run)
         self.properties_table.setToolTip(f"The filesystem property that matches with the source file")
         self.properties_table.cellDoubleClicked.connect(self.inspect_sourcefile)
@@ -909,7 +981,7 @@ class EditWindow(QDialog):
         # Set up the attributes table
         self.attributes_label = QLabel(f"Attributes")
         self.attributes_label.setToolTip(f"The {self.dataformat} attributes that match with (identify) the source file. NB: Expert usage (e.g. using regular expressions, see documentation). Copy: Ctrl+C")
-        self.attributes_table = self.set_table(data_attributes, 'attributes', minimum=False)
+        self.attributes_table = self.setup_table(data_attributes, 'attributes', minimum=False)
         self.attributes_table.cellChanged.connect(self.attributescell2run)
         self.attributes_table.setToolTip(f"The {self.dataformat} attribute that matches with the source file")
 
@@ -927,14 +999,14 @@ class EditWindow(QDialog):
         # Set up the BIDS table
         self.bids_label = QLabel('Entities')
         self.bids_label.setToolTip(f"The BIDS entities that are used to construct the BIDS output filename. You are encouraged to change their default values to be more meaningful and readable")
-        self.bids_table = self.set_table(data_bids, 'bids')
+        self.bids_table = self.setup_table(data_bids, 'bids')
         self.bids_table.setToolTip(f"The BIDS entity that is used to construct the BIDS output filename. You are encouraged to change its default value to be more meaningful and readable")
         self.bids_table.cellChanged.connect(self.bidscell2run)
 
         # Set up the meta table
         self.meta_label = QLabel('Meta data')
         self.meta_label.setToolTip(f"Key-value pairs that will be appended to the (e.g. dcm2niix-produced) json sidecar file")
-        self.meta_table = self.set_table(data_meta, 'meta', minimum=False)
+        self.meta_table = self.setup_table(data_meta, 'meta', minimum=False)
         self.meta_table.setShowGrid(True)
         self.meta_table.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
         self.meta_table.customContextMenuRequested.connect(self.show_contextmenu)
@@ -1143,13 +1215,10 @@ class EditWindow(QDialog):
 
         return data_properties, data_attributes, data_bids, data_meta
 
-    def set_table(self, data: list, name: str, minimum: bool=True) -> QTableWidget:
+    def setup_table(self, data: list, name: str, minimum: bool=True) -> QTableWidget:
         """Return a table widget filled with the data"""
 
-        if data:
-            nrcolumns = len(data[0])
-        else:
-            nrcolumns = 2                               # Always at least two columns (i.e. key, value)
+        nrcolumns = len(data[0]) if data else 2         # Always at least two columns (i.e. key, value)
         table = MyQTableWidget(minimum=minimum)
         table.setColumnCount(nrcolumns)
         table.setObjectName(name)                       # NB: Serves to identify the tables in fill_table()
@@ -1349,16 +1418,14 @@ class EditWindow(QDialog):
             self.reset()
             return
 
-        old_entities = self.target_run['bids']
-
         # Get the new target_run from the template
         new_target_run = bids.get_run(self.template_bidsmap, self.target_datatype, suffix_idx, self.datasource)
         if not new_target_run:
-            QMessageBox.error(self, 'Edit BIDS mapping', f"Cannot find the {self.target_datatype}[{suffix_idx}] datatype in your template. Resetting the run-item now...")
+            QMessageBox.warning(self, 'Edit BIDS mapping', f"Cannot find the {self.target_datatype}[{suffix_idx}] datatype in your template. Resetting the run-item now...")
             self.reset()
             return
-        else:
-            self.target_run = copy.deepcopy(new_target_run)
+        old_entities    = self.target_run['bids']
+        self.target_run = copy.deepcopy(new_target_run)
 
         # Transfer the old entity data to the new run-item if possible and if it's not there yet
         for key, val in old_entities.items():
@@ -1535,6 +1602,138 @@ class EditWindow(QDialog):
         """Open web page for help"""
         help_url = HELP_URLS.get(self.target_datatype, HELP_URL_DEFAULT)
         webbrowser.open(help_url)
+
+class CompareWindow(QDialog):
+
+    def __init__(self, runs: List[Run], subid: List[str], sesid: List[str]):
+        super().__init__()
+
+        # Set up the window
+        self.setWindowIcon(QtGui.QIcon(str(BIDSCOIN_ICON)))
+        self.setWindowFlags(self.windowFlags() & QtCore.Qt.WindowType.WindowTitleHint & QtCore.Qt.WindowType.WindowMinMaxButtonsHint & QtCore.Qt.WindowType.WindowCloseButtonHint)
+        self.setWindowTitle('Compare BIDS mappings')
+        self.setWhatsThis('BIDScoin mapping of properties and attributes to BIDS output data')
+
+        layout_main = QHBoxLayout(self)
+
+        for index, run in enumerate(runs):
+
+            # Get data for the tables
+            data_properties, data_attributes, data_bids, data_meta = self.run2data(run)
+
+            # Set up the properties table
+            self.properties_label = QLabel('Properties')
+            self.properties_label.setToolTip('The filesystem properties that match with (identify) the source file')
+            self.properties_table = self.fill_table(data_properties, 'properties')
+            self.properties_table.setToolTip('The filesystem property that matches with the source file')
+            self.properties_table.cellDoubleClicked.connect(partial(self.inspect_sourcefile, run['provenance']))
+
+            # Set up the attributes table
+            self.attributes_label = QLabel('Attributes')
+            self.attributes_label.setToolTip('The attributes that match with (identify) the source file')
+            self.attributes_table = self.fill_table(data_attributes, 'attributes', minimum=False)
+            self.attributes_table.setToolTip('The attribute that matches with the source file')
+
+            # Set up the BIDS table
+            self.bids_label = QLabel('BIDS entities')
+            self.bids_label.setToolTip('The BIDS entities that are used to construct the BIDS output filename')
+            self.bids_table = self.fill_table(data_bids, 'bids')
+            self.bids_table.setToolTip('The BIDS entity that is used to construct the BIDS output filename')
+
+            # Set up the meta table
+            self.meta_label = QLabel('Meta data')
+            self.meta_label.setToolTip('Key-value pairs that will be appended to the (e.g. dcm2niix-produced) json sidecar file')
+            self.meta_table = self.fill_table(data_meta, 'meta', minimum=False)
+            self.meta_table.setToolTip('The key-value pair that will be appended to the (e.g. dcm2niix-produced) json sidecar file')
+
+            # Group the tables in boxes
+            sizepolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
+            sizepolicy.setHorizontalStretch(1)
+
+            bidsname = bids.get_bidsname(subid[index], sesid[index], run, False) + '.*'
+            groupbox = QGroupBox(f"{run['datasource'].datatype}/{bidsname}")
+            groupbox.setSizePolicy(sizepolicy)
+            layout = QVBoxLayout()
+            layout.addWidget(self.properties_label)
+            layout.addWidget(self.properties_table)
+            layout.addWidget(self.attributes_label)
+            layout.addWidget(self.attributes_table)
+            layout.addWidget(self.bids_label)
+            layout.addWidget(self.bids_table)
+            layout.addWidget(self.meta_label)
+            layout.addWidget(self.meta_table)
+            groupbox.setLayout(layout)
+
+            # Add the boxes to the layout
+            layout_tables = QVBoxLayout()
+            layout_tables.addWidget(groupbox)
+
+            # Set up the main layout
+            layout_main.addLayout(layout_tables)
+
+    def run2data(self, run) -> tuple:
+        """Derive the tabular data from the target_run, needed to render the compare window
+        :return: (data_properties, data_attributes, data_bids, data_meta)
+        """
+
+        data_properties = [['filepath', run['properties'].get('filepath'), run['datasource'].properties('filepath')],
+                           ['filename', run['properties'].get('filename'), run['datasource'].properties('filename')],
+                           ['filesize', run['properties'].get('filesize'), run['datasource'].properties('filesize')],
+                           ['nrfiles',  run['properties'].get('nrfiles'),  run['datasource'].properties('nrfiles')]]
+
+        data_attributes = []
+        for key in sorted(run['attributes'].keys()):
+            value = run['attributes'].get(key)
+            data_attributes.append([key, value])
+
+        data_bids = []
+        bidskeys = [bids.entities[entity]['name'] for entity in bids.entitiesorder if entity not in ('subject','session')] + ['suffix']   # Impose the BIDS-specified order + suffix
+        for key in bidskeys:
+            if key in run['bids']:
+                value = run['bids'].get(key)
+                if isinstance(value, list):
+                    value = value[value[-1]]
+                data_bids.append([key, value])
+
+        data_meta = []
+        for key in sorted(run['meta'].keys()):
+            value = run['meta'].get(key)
+            data_meta.append([key, value])
+
+        return data_properties, data_attributes, data_bids, data_meta
+
+    def fill_table(self, data: list, name: str, minimum: bool=True) -> QTableWidget:
+        """Return a table widget filled with the data"""
+
+        nrcolumns = len(data[0]) if data else 2         # Always at least two columns (i.e. key, value)
+        table = MyQTableWidget(minimum=minimum)
+        table.setRowCount(len(data))
+        table.setColumnCount(nrcolumns)
+        table.setObjectName(name)                       # NB: Serves to identify the tables in fill_table()
+        table.setHorizontalHeaderLabels(('key', 'value'))
+        horizontal_header = table.horizontalHeader()
+        horizontal_header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        horizontal_header.setSectionResizeMode(nrcolumns-1, QHeaderView.ResizeMode.Stretch)
+        horizontal_header.setVisible(False)
+        for i, row in enumerate(data):
+            for j, value in enumerate(row):
+                item = QTableWidgetItem()
+                item.setText(str(value or ''))
+                item.setFlags(QtCore.Qt.ItemFlag.ItemIsEnabled | QtCore.Qt.ItemFlag.ItemIsSelectable)
+                table.setItem(i, j, item)
+
+        return table
+
+    def inspect_sourcefile(self, provenance: str, rowindex: int=None, colindex: int=None):
+        """When double-clicked, show popup window"""
+
+        if colindex in (0,2):
+            if rowindex == 0:
+                QtGui.QDesktopServices.openUrl(QtCore.QUrl.fromLocalFile(str(Path(provenance).parent)))
+            if rowindex == 1:
+                self.popup = InspectWindow(Path(provenance))
+                self.popup.show()
+                self.popup.scrollbar.setValue(0)  # This can only be done after self.popup.show()
 
 
 class InspectWindow(QDialog):

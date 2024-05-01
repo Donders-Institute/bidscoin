@@ -51,6 +51,10 @@ My bidsmap list is much longer than the number of scan types
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Normally the list of items in the bidsmap is a shortlist that represents the different scan types in the dataset. Each scan type is characterized by unique properties and/or attributes specific for that scan type. If your list is much longer then one or more of the properties or attributes in the bidsmap are varying between different acquisitions of the same scan type (which causes bidscoin to classify them as different scan types that are all added to the list). For instance, it sometimes happens that manufacturers write a value for TR or TE in the DICOM header that reflects the measured TR or TE, instead of the values from the protocol (the measured values typically jitter a tiny bit). If you found out which attributes and/or properties it concerns, you can open the template bidsmap with an editor and remove them for the long-listed scan type(s) (but be careful, this may make the item(s) to generic, yielding false positive matches). An alternative solution is to open your study bidsmap with an editor, delete all the long-listed items except one, and add a custom regular expression for the varying properties and/or attributes (e.g. to catch the jitter)
 
+I have duplicate run-items in my bidsmap
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+There shouldn't be exact duplicates, i.e. there is probably a small difference in the properties or attributes that identify your run-items. To investigate this, you can compare these run-items by selecting their BIDS output names (use shift-/control-click), then right-click them and choose ``compare`` from the context menu
+
 My subject/session labels are wrong
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Everything seems to work but the ``sub-``/``ses-`` BIDS labels are not what I want. In the bidseditor main window, play around with the ``subject`` regular expressions.
@@ -72,7 +76,7 @@ Siemens (and perhaps other manufacturers too) stores all field-map Series in a s
 
 My source-files can no longer be found
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-You may get the warning "Cannot reliably change the datatype and/or suffix because the source file '..' can no longer be found". This warning is generated when (1) your source data moved to a different location, or (2) your data is zipped or in DICOMDIR format. This warning can be ignored if you do not need to change the datatype of your run-items anymore (in the bidseditor), because in that case BIDScoin may need access to the source data (to read new properties or attributes). To restore data access for (1), move the data to it's original location and for (2) use the ``--store`` option of bidsmapper to store local copies of the source data samples in the bids output folder.
+You may get the warning "Cannot reliably change the data type and/or suffix because the source file '..' can no longer be found". This warning is generated when (1) your source data moved to a different location, or (2) your data is zipped or in DICOMDIR format. This warning can be ignored if you do not need to change the data type of your run-items anymore (in the bidseditor), because in that case BIDScoin may need access to the source data (to read new properties or attributes). To restore data access for (1), move the data to it's original location and for (2) use the ``--store`` option of bidsmapper to store local copies of the source data samples in the bids output folder.
 
 I have duplicated field maps because of an interrupted session
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

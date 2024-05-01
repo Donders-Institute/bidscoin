@@ -32,10 +32,10 @@ Before sharing or pre-processing their images, users may want to combine the sep
                             processed (default: None)
       -o OUTPUT, --output OUTPUT
                             A string that determines where the output is saved. It can be the name of a
-                            BIDS datatype folder, such as 'func', or of the derivatives folder, i.e.
-                            'derivatives'. If output = [the name of the input datatype folder] then the
+                            BIDS data type folder, such as 'func', or of the derivatives folder, i.e.
+                            'derivatives'. If output = [the name of the input data type folder] then the
                             original echo images are replaced by one combined image. If output is left
-                            empty then the combined image is saved in the input datatype folder and the
+                            empty then the combined image is saved in the input data type folder and the
                             original echo images are moved to the 'extra_data' folder (default: )
       -a {PAID,TE,average}, --algorithm {PAID,TE,average}
                             Combination algorithm (default: TE)
@@ -86,7 +86,7 @@ Before sharing or pre-processing their images, users may want to deface their an
                             processed (default: None)
       -o OUTPUT, --output OUTPUT
                             A string that determines where the defaced images are saved. It can be the
-                            name of a BIDS datatype folder, such as 'anat', or of the derivatives folder,
+                            name of a BIDS data type folder, such as 'anat', or of the derivatives folder,
                             i.e. 'derivatives'. If output is left empty then the original images are
                             replaced by the defaced images (default: None)
       -c, --cluster         Use the DRMAA library to submit the deface jobs to a high-performance compute
@@ -146,7 +146,7 @@ This utility is very similar to the `deface <#defacing>`__ utility above, except
                             processed (default: None)
       -o OUTPUT, --output OUTPUT
                             A string that determines where the defaced images are saved. It can be the
-                            name of a BIDS datatype folder, such as 'anat', or of the derivatives folder,
+                            name of a BIDS data type folder, such as 'anat', or of the derivatives folder,
                             i.e. 'derivatives'. If output is left empty then the original images are
                             replaced by the defaced images (default: None)
       -c, --cluster         Use the DRMAA library to submit the deface jobs to a high-performance compute
@@ -205,8 +205,8 @@ The ``skullstrip``-tool is a wrapper around the synthstrip tool that writes BIDS
       -o OUTPUT [OUTPUT ...], --output OUTPUT [OUTPUT ...]
                             One or two output strings that determine where the skullstripped + additional
                             masked images are saved. Each output string can be the name of a BIDS
-                            datatype folder, such as 'anat', or of the derivatives folder, i.e.
-                            'derivatives' (default). If the output string is the same as the datatype
+                            data type folder, such as 'anat', or of the derivatives folder, i.e.
+                            'derivatives' (default). If the output string is the same as the data type
                             then the original images are replaced by the skullstripped images (default:
                             None)
       -f, --force           Process images, regardless whether images have already been skullstripped

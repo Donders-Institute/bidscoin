@@ -130,7 +130,7 @@ Step 1b: Running the bidseditor
 Main window
 ^^^^^^^^^^^
 
-As shown below, the main window of the bidseditor opens with separate data mapping tabs for each data format that is present in the bidsmap (here ``DICOM mappings`` and ``PAR mappings``). The data mapping tabs consist of a ``Participant labels`` table and a ``Data samples`` table. By default, the participant table contains `dynamic <./bidsmap.html#special-bidsmap-features>`__ ``<<filepath:regex>>`` property values, which are used to extract the subject and session labels from the path of the source data during bidscoiner runtime. Alternatively, you can put a dynamic attribute value there (e.g. <<PatientName>>) if you want to extract that information from the source header. The data samples table shows a list of input files (left side) that uniquely represent all the different data types in the sourcedata repository, in conjunction with a preview of their ``BIDS output`` names (right side). The BIDS output names are shown in red if they are not BIDS compliant, crossed-out gray when the runs will be ignored / skipped in the conversion to BIDS, otherwise it is colored green.
+As shown below, the main window of the bidseditor opens with separate data mapping tabs for each data format that is present in the bidsmap (here ``DICOM mappings`` and ``PAR mappings``). The data mapping tabs consist of a ``Participant labels`` table and a ``Data samples`` table. By default, the participant table contains `dynamic <./bidsmap.html#special-bidsmap-features>`__ ``<<filepath:regex>>`` property values, which are used to extract the subject and session labels from the path of the source data during bidscoiner runtime. Alternatively, you can put a dynamic attribute value there (e.g. ``<<PatientName>>``) if you want to extract that information from the source header. The data samples table shows a list of input files (left side) that uniquely represent all the different data types in the sourcedata repository, in conjunction with a preview of their ``BIDS output`` names (right side). The BIDS output names are shown in red if they are not BIDS compliant, crossed-out gray when the runs will be ignored / skipped in the conversion to BIDS, otherwise it is colored green.
 
 .. figure:: ./_static/bidseditor_main.png
 
@@ -141,6 +141,9 @@ As shown below, the main window of the bidseditor opens with separate data mappi
 
 .. tip::
    Clear the ``session`` label field if you have data with only one session. This will remove the optional session label from the BIDS output name
+
+.. tip::
+   You can compare or edit multiple run-items by right-clicking their selected BIDS output names (use shift-/control-click to select the run-items)
 
 Edit window
 ^^^^^^^^^^^
@@ -234,7 +237,7 @@ Step 2: Running the bidscoiner
 Finishing up
 ------------
 
-After a successful run of bidscoiner, the work to convert your data in a fully compliant BIDS dataset is usually not fully over and, depending on the complexity of your data-set, additional tools may need to be run to post-process (e.g. deface) your data or convert datatypes not supported by the standard BIDScoin plugins (e.g. EEG data). BIDScoin comes with some bidsapps that can help you finishing up your bids data repository.
+After a successful run of bidscoiner, the work to convert your data in a fully compliant BIDS dataset is usually not fully over and, depending on the complexity of your data-set, additional tools may need to be run to post-process (e.g. deface) your data or convert data types not supported by the standard BIDScoin plugins (e.g. EEG data). BIDScoin comes with some bidsapps that can help you finishing up your bids data repository.
 
 Adding more meta-data
 ^^^^^^^^^^^^^^^^^^^^^

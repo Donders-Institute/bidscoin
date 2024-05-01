@@ -4,6 +4,10 @@
 
 ## [dev]
 
+### Added
+- A bidseditor context menu for comparing selected run-items
+- A bidseditor context menu for changing the data type of selected run-items
+
 ## [4.3.2] - 2024-03-29
 
 ### Fixed
