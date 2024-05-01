@@ -1,10 +1,49 @@
 BIDS-apps
 =========
 
+Metadata editing
+----------------
+If you have a previously converted BIDS data repository and you would like to change or repair some of its metadata fields you can use ``fixmeta``. Fixmeta supports thus use of `special bidsmap features <./bidsmap.html#special-bidsmap-features>`__
+
+::
+
+    usage: fixmeta [-h] [-p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]] [-b BIDSMAP]
+                   bidsfolder pattern metadata
+
+    A bidsapp that edits metadata values of BIDS data repositories. The fixmeta app supports the use of
+    special bidsmap features, such as dynamic values to use source data attributes or properties, or to
+    populate `IntendedFor` and `B0FieldIdentifier`/`B0FieldSource` values
+
+    positional arguments:
+      bidsfolder            The bids-directory with the target data
+      pattern               Globlike recursive search pattern (relative to the subject/session folder) to
+                            select the targets that need to be fixed, e.g. '*task-*echo-1*'
+      metadata              Dictionary with key-value pairs of meta data that need to be fixed. If value
+                            is a string, then it is taken as is, but if it is a list of `old`/`new`
+                            strings, i.e. `[old1, new1, old2, new2, ..]`, then the existing meta data is
+                            used, with all occurrences of substring `old` replaced by `new`
+
+    options:
+      -h, --help            show this help message and exit
+      -p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...], --participant_label PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]
+                            Space separated list of sub-# identifiers to be processed (the sub-prefix can
+                            be left out). If not specified then all sub-folders in the bidsfolder will be
+                            processed (default: None)
+      -b BIDSMAP, --bidsmap BIDSMAP
+                            The study bidsmap file with the mapping heuristics. If the bidsmap filename
+                            is just the basename (i.e. no "/" in the name) then it is assumed to be
+                            located in the current directory or in bidsfolder/code/bidscoin. Default:
+                            bidsmap.yaml or else the template bidsmap (default: None)
+
+    examples:
+      fixmeta myproject/bids func/*task-reward1* '{"TaskName": "Monetary reward paradigm 1"}'
+      fixmeta myproject/bids *acq-reward1* '{"B0FieldIdentifier": ["<<", "_", ">>", ""], "B0FieldSource": ["<<", "_", ">>", ""]}'
+      fixmeta myproject/bids fmap/*run-2* '{"IntendedFor": "<<task/*run-2*_bold*>>"}' -p 001 003
+
 Multi-echo combination
 ----------------------
 
-Before sharing or pre-processing their images, users may want to combine the separate the individual echos of multi-echo MRI acquisitions. The ``echcombine``-tool is a wrapper around ``mecombine`` that writes BIDS valid output.
+Before sharing or pre-processing their images, you may want to combine the separate the individual echos of multi-echo MRI acquisitions. The ``echcombine``-tool is a wrapper around ``mecombine`` that writes BIDS valid echo-combined output data.
 
 ::
 
@@ -54,7 +93,7 @@ Before sharing or pre-processing their images, users may want to combine the sep
 Defacing
 --------
 
-Before sharing or pre-processing their images, users may want to deface their anatomical MRI acquisitions to protect the privacy of their subjects. The ``deface``-tool is a wrapper around `pydeface <https://github.com/poldracklab/pydeface>`__ that writes BIDS valid output. NB: pydeface requires `FSL <https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FslInstallation>`__ to be installed on the system.
+Before sharing or pre-processing your data, you may want to deface your anatomical MRI scans to protect the privacy of your participants. The ``deface``-tool is a wrapper around `pydeface <https://github.com/poldracklab/pydeface>`__ that writes BIDS valid defaced output images. NB: pydeface requires `FSL <https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FslInstallation>`__ to be installed on the system.
 
 ::
 
@@ -170,7 +209,7 @@ This utility is very similar to the `deface <#defacing>`__ utility above, except
 Skull-stripping
 ---------------
 
-The ``skullstrip``-tool is a wrapper around the synthstrip tool that writes BIDS valid output
+The ``skullstrip``-tool is a wrapper around the synthstrip tool that writes BIDS valid brain extracted output data
 
 ::
 
