@@ -192,6 +192,7 @@ filepath
 filesize
 filesystem
 findall
+fixmeta
 fmap
 fmriprep
 fninf
