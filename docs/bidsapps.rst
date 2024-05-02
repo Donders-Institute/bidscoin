@@ -10,18 +10,19 @@ If you have a previously converted BIDS data repository and you would like to re
     usage: fixmeta [-h] [-p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]] [-b BIDSMAP]
                    bidsfolder pattern metadata
 
-    A bidsapp that edits metadata values of BIDS data repositories. The fixmeta app supports the use of
-    special bidsmap features, such as dynamic values to use source data attributes or properties, or to
+    A bidsapp that can change or add meta data in BIDS data repositories. The fixmeta app supports the use
+    of special bidsmap features, such as dynamic values to use source data attributes or properties, or to
     populate `IntendedFor` and `B0FieldIdentifier`/`B0FieldSource` values
 
     positional arguments:
-      bidsfolder            The bids-directory with the target data
+      bidsfolder            The BIDS root directory that needs fixing (in place)
       pattern               Globlike recursive search pattern (relative to the subject/session folder) to
-                            select the targets that need to be fixed, e.g. '*task-*echo-1*'
+                            select the json sidecar targets that need to be fixed, e.g. '*task-*echo-1*'
       metadata              Dictionary with key-value pairs of meta data that need to be fixed. If value
-                            is a string, then it is taken as is, but if it is a list of `old`/`new`
-                            strings, i.e. `[old1, new1, old2, new2, ..]`, then the existing meta data is
-                            used, with all occurrences of substring `old` replaced by `new`
+                            is a string, then this meta data is written to the sidecars as is, but if it
+                            is a list of `old`/`new` strings, i.e. `[old1, new1, old2, new2, ..]`, then
+                            the existing meta data is re-written, with all occurrences of substring `old`
+                            replaced by `new`
 
     options:
       -h, --help            show this help message and exit
@@ -30,10 +31,10 @@ If you have a previously converted BIDS data repository and you would like to re
                             be left out). If not specified then all sub-folders in the bidsfolder will be
                             processed
       -b BIDSMAP, --bidsmap BIDSMAP
-                            The study bidsmap file with the mapping heuristics. If the bidsmap filename
-                            is just the basename (i.e. no "/" in the name) then it is assumed to be
-                            located in the current directory or in bidsfolder/code/bidscoin. Default:
-                            bidsmap.yaml or else the template bidsmap
+                            Selects a custom study bidsmap file for extracting source data properties and
+                            attributes. If the bidsmap filename is just the basename (i.e. no "/" in the
+                            name) then it is assumed to be located in the current directory or in
+                            bidsfolder/code/bidscoin. Default: bidsmap.yaml or else the template bidsmap
 
     examples:
       fixmeta myproject/bids func/*task-reward1* '{"TaskName": "Monetary reward paradigm 1"}'
