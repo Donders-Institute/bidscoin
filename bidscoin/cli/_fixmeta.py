@@ -12,7 +12,7 @@ import json
 def get_parser():
     """Build an argument parser with input arguments for fixmeta.py"""
 
-    class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter, argparse.RawDescriptionHelpFormatter): pass
+    class CustomFormatter(argparse.RawDescriptionHelpFormatter): pass
 
     parser = argparse.ArgumentParser(prog='fixmeta',
                                      formatter_class=CustomFormatter,

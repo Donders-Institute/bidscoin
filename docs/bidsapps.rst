@@ -28,12 +28,12 @@ If you have a previously converted BIDS data repository and you would like to re
       -p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...], --participant_label PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]
                             Space separated list of sub-# identifiers to be processed (the sub-prefix can
                             be left out). If not specified then all sub-folders in the bidsfolder will be
-                            processed (default: None)
+                            processed
       -b BIDSMAP, --bidsmap BIDSMAP
                             The study bidsmap file with the mapping heuristics. If the bidsmap filename
                             is just the basename (i.e. no "/" in the name) then it is assumed to be
                             located in the current directory or in bidsfolder/code/bidscoin. Default:
-                            bidsmap.yaml or else the template bidsmap (default: None)
+                            bidsmap.yaml or else the template bidsmap
 
     examples:
       fixmeta myproject/bids func/*task-reward1* '{"TaskName": "Monetary reward paradigm 1"}'
