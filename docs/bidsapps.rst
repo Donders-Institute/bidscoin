@@ -3,7 +3,7 @@ BIDS-apps
 
 Metadata editing
 ----------------
-If you have a previously converted BIDS data repository and you would like to change or repair some of its metadata fields you can use ``fixmeta``. Fixmeta supports thus use of `special bidsmap features <./bidsmap.html#special-bidsmap-features>`__
+If you have a previously converted BIDS data repository and you would like to retrospectively change or replace one or more metadata fields in the json sidecar files you can use ``fixmeta``. Fixmeta is more powerful than conventional find-and-replace tools in that fixmeta can leverage BIDScoin's `special bidsmap features <./bidsmap.html#special-bidsmap-features>`__
 
 ::
 
