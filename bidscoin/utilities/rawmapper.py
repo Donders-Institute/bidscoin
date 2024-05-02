@@ -15,7 +15,7 @@ def rawmapper(rawfolder, outfolder: str='', sessions: tuple=(), rename: bool=Fal
     """
     :param rawfolder:   The root folder-name of the sub/ses/data/file tree containing the source data files
     :param outfolder:   The name of the folder where the mapping-file is saved (default = rawfolder)
-    :param sessions:    Space separated list of selected sub-#/ses-# names / folders to be processed. Otherwise, all sessions in the bidsfolder will be selected
+    :param sessions:    Space separated list of selected sub-#/ses-# names / folders to be processed. Otherwise, all sessions in the bidsfolder will be processed
     :param rename:      Flag for renaming the sub-subid folders to sub-dicomfield
     :param force:       Flag to rename the directories, even if the target-directory already exists
     :param dicomfield:  The names of the dicomfields that are mapped (/ renamed to sub-dcmval/ses-dcmval)

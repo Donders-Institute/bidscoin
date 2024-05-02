@@ -29,7 +29,7 @@ def skullstrip(bidsdir: str, pattern: str, subjects: list, masked: str, output: 
     """
     :param bidsdir:     The bids-directory with the subject data
     :param pattern:     Globlike search pattern (relative to the subject/session folder) to select the images that need to be skullstripped, e.g. 'anat/*_T1w*'
-    :param subjects:    List of sub-# identifiers to be processed (the sub-prefix can be left out). If not specified then all sub-folders in the bidsfolder will be processed
+    :param subjects:    List of sub-# identifiers to be processed (the sub-prefix can be left out). If not specified then all participants will be processed
     :param force:       If True then images will be processed, regardless if images have already been skullstripped (i.e. if {"SkullStripped": True} in the json sidecar file)
     :param masked:      Globlike search pattern (relative to the subject/session folder) to select additional images that need to be masked with the same mask, e.g. 'fmap/*_phasediff')
     :param output:      One or two output strings that determine where the skullstripped + additional masked images are saved. Each output string can be the name of a BIDS datatype folder, such as 'anat', or of the derivatives folder, i.e. 'derivatives' (default). If the output string is the same as the datatype then the original images are replaced by the skullstripped images

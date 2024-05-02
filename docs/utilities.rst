@@ -63,7 +63,7 @@ The bidscoin command-line utility serves as a central starting point to test and
 dicomsort
 ---------
 
-The ``dicomsort`` command-line tool is a utility to move your flat- or DICOMDIR-organized files (see `above <#required-source-data-structure>`__) into a 'seriesfolder' organization. This can be useful to organize your source data in a more convenient and human readable way (DICOMDIR or flat DICOM directories can often be hard to comprehend). The BIDScoin tools will run dicomsort in a temporary folder if your data is not already organized in series-folders, so in principle you don't really need to run it yourself (unless when you have a single multi-subject DICOMDIR file for your entire repository). Running dicomsort beforehand does, however, give you more flexibility in handling special cases that are not handled properly and it can also give you a speed benefit. If dicomsort do not satisfy your needs, then have a look at this `DICOM reorganize <https://github.com/robertoostenveld/bids-tools/blob/master/doc/reorganize_dicom_files.md>`__ tool.::
+The ``dicomsort`` command-line tool is a utility to move your flat- or DICOMDIR-organized files (see `above <#required-source-data-structure>`__) into a 'seriesfolder' organization. This can be useful to organize your source data in a more convenient and human readable way (DICOMDIR or flat DICOM directories can often be hard to comprehend). The BIDScoin tools will run dicomsort in a temporary folder if your data is not already organized in series-folders, so in principle you don't really need to run it yourself (unless when you have a single multi-subject DICOMDIR file for your entire repository). Running dicomsort beforehand does, however, give you more flexibility in handling special cases that are not handled properly and it can also give you a speed benefit. If dicomsort do not satisfy your needs, then have a look at this `DICOM reorganize <https://github.com/robertoostenveld/bids-tools/blob/master/doc/reorganize_dicom_files.md>`__ tool::
 
     usage: dicomsort [-h] [-i SUBPREFIX] [-j SESPREFIX] [-f FOLDERSCHEME] [-n NAMESCHEME] [-p PATTERN]
                      [--force] [-d]
@@ -117,7 +117,7 @@ The ``dicomsort`` command-line tool is a utility to move your flat- or DICOMDIR-
 rawmapper
 ---------
 
-Another command-line utility that can be helpful in organizing your source data is ``rawmapper``. This utility can show you an overview (map) of all the values of DICOM-attributes of interest in your data-set and, optionally, used to rename your source data sub-folders. The latter option can be handy e.g. if you manually entered subject-identifiers as [Additional info] at the scanner console and you want to use these to rename your subject folders.::
+Another command-line utility that can be helpful in organizing your source data is ``rawmapper``. This utility can show you an overview (map) of all the values of DICOM-attributes of interest in your data-set and, optionally, used to rename your source data sub-folders. The latter option can be handy e.g. if you manually entered subject-identifiers as [Additional info] at the scanner console and you want to use these to rename your subject folders::
 
     usage: rawmapper [-h] [-s SESSIONS [SESSIONS ...]] [-f FIELD [FIELD ...]] [-w WILDCARD]
                      [-o OUTFOLDER] [-r] [-c] [-n SUBPREFIX] [-m [SESPREFIX]] [-d]
@@ -136,7 +136,7 @@ Another command-line utility that can be helpful in organizing your source data 
       -h, --help            show this help message and exit
       -s SESSIONS [SESSIONS ...], --sessions SESSIONS [SESSIONS ...]
                             Space separated list of selected sub-#/ses-# names / folders to be processed.
-                            Otherwise all sessions in the bidsfolder will be selected (default: None)
+                            Otherwise all sessions in the bidsfolder will be processed (default: None)
       -f FIELD [FIELD ...], --field FIELD [FIELD ...]
                             The fieldname(s) of the DICOM attribute(s) used to rename or map the
                             subid/sesid foldernames (default: ['PatientComments', 'ImageComments'])

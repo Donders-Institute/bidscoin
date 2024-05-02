@@ -25,7 +25,7 @@ def fixmeta(bidsdir: str, pattern: str, metadata: dict, subjects: list, bidsmapf
     :param bidsdir:     The bids-directory with the subject data
     :param pattern:     Globlike search pattern to select the targets in bidsdir to be fixed, e.g. 'anat/*_T1w*'
     :param metadata:    Dictionary with key-value pairs of meta data that need to be fixed. If value is a string, then it is taken as is, but if it is a list of `old`/`new` strings, i.e. `[old1, new1, old2, new2, etc]`, the existing meta data is used, with all occurrences of substring `old` replaced by `new`
-    :param subjects:    Space separated list of sub-# identifiers to be processed (the sub-prefix can be left out). If not specified then all sub-folders in the bidsfolder will be processed
+    :param subjects:    Space separated list of sub-# identifiers to be processed (the sub-prefix can be left out). If not specified then all participants will be processed
     :param bidsmapfile: The name of the bidsmap YAML-file. If the bidsmap pathname is just the basename (i.e. no "/" in the name) then it is assumed to be located in the current directory or in bidsfolder/code/bidscoin. Default: 'bidsmap.yaml' or the template bidsmap
     :return:
     """

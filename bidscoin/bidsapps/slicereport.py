@@ -137,7 +137,7 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
     :param pattern:         Globlike search pattern to select the images in bidsdir to be reported, e.g. 'anat/*_T1w*'
     :param outlinepattern:  Globlike search pattern to select red-outline images that are projected on top of the reported images. Prepend `outlinedir:` if your outline images are in `outlinedir` instead of `bidsdir`
     :param outlineimage:    A common red-outline image that is projected on top of all images
-    :param subjects:        Space separated list of sub-# identifiers to be processed (the sub-prefix can be left out). If not specified then all sub-folders in the bidsfolder will be processed
+    :param subjects:        Space separated list of sub-# identifiers to be processed (the sub-prefix can be left out). If not specified then all participants will be processed
     :param reportdir:       The folder where the report is saved
     :param crossdirs:       A (list of) folder(s) with cross-linked sub-reports
     :param qccols:          Column names for creating an accompanying tsv-file to store QC-rating scores

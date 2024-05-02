@@ -26,7 +26,7 @@ If you have a previously converted BIDS data repository and you would like to re
       -h, --help            show this help message and exit
       -p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...], --participant_label PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]
                             Space separated list of sub-# identifiers to be processed (the sub-prefix can
-                            be left out). If not specified then all sub-folders in the bidsfolder will be
+                            be left out). If not specified then all participants will be processed will be
                             processed
       -b BIDSMAP, --bidsmap BIDSMAP
                             Selects a custom study bidsmap file for extracting source data properties and
@@ -42,7 +42,7 @@ If you have a previously converted BIDS data repository and you would like to re
 Multi-echo combination
 ----------------------
 
-Before sharing or pre-processing their images, you may want to combine the separate the individual echos of multi-echo MRI acquisitions. The ``echcombine``-tool is a wrapper around ``mecombine`` that writes BIDS valid echo-combined output data.::
+Before sharing or pre-processing their images, you may want to combine the separate the individual echos of multi-echo MRI acquisitions. The ``echcombine``-tool is a wrapper around ``mecombine`` that writes BIDS valid echo-combined output data::
 
     usage: echocombine [-h] [-p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]] [-o OUTPUT]
                        [-a {PAID,TE,average}] [-w [WEIGHTS ...]] [-f]
@@ -64,7 +64,7 @@ Before sharing or pre-processing their images, you may want to combine the separ
       -h, --help            show this help message and exit
       -p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...], --participant_label PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]
                             Space separated list of sub-# identifiers to be processed (the sub-prefix can
-                            be left out). If not specified then all sub-folders in the bidsfolder will be
+                            be left out). If not specified then all participants will be processed will be
                             processed (default: None)
       -o OUTPUT, --output OUTPUT
                             A string that determines where the output is saved. It can be the name of a
@@ -90,7 +90,7 @@ Before sharing or pre-processing their images, you may want to combine the separ
 Defacing
 --------
 
-Before sharing or pre-processing your data, you may want to deface your anatomical MRI scans to protect the privacy of your participants. The ``deface``-tool is a wrapper around `pydeface <https://github.com/poldracklab/pydeface>`__ that writes BIDS valid defaced output images. NB: pydeface requires `FSL <https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FslInstallation>`__ to be installed on the system.::
+Before sharing or pre-processing your data, you may want to deface your anatomical MRI scans to protect the privacy of your participants. The ``deface``-tool is a wrapper around `pydeface <https://github.com/poldracklab/pydeface>`__ that writes BIDS valid defaced output images (NB: pydeface requires `FSL <https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FslInstallation>`__ to be installed on the system)::
 
     usage: deface [-h] [-p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]] [-o OUTPUT] [-c] [-n NATIVESPEC]
                   [-a ARGS] [-f]
@@ -116,7 +116,7 @@ Before sharing or pre-processing your data, you may want to deface your anatomic
       -h, --help            show this help message and exit
       -p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...], --participant_label PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]
                             Space separated list of sub-# identifiers to be processed (the sub-prefix can
-                            be left out). If not specified then all sub-folders in the bidsfolder will be
+                            be left out). If not specified then all participants will be processed will be
                             processed (default: None)
       -o OUTPUT, --output OUTPUT
                             A string that determines where the defaced images are saved. It can be the
@@ -143,7 +143,7 @@ Before sharing or pre-processing your data, you may want to deface your anatomic
 Multi-echo defacing
 -------------------
 
-This utility is very similar to the `deface <#defacing>`__ utility above, except that it can handle multi-echo data.::
+This utility is very similar to the `deface <#defacing>`__ utility above, except that it can handle multi-echo data::
 
     usage: medeface [-h] [-m MASKPATTERN] [-p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]] [-o OUTPUT] [-c]
                     [-n NATIVESPEC] [-a ARGS] [-f]
@@ -174,7 +174,7 @@ This utility is very similar to the `deface <#defacing>`__ utility above, except
                             mag_*_T2starw*'. If not given then 'pattern' is used (default: None)
       -p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...], --participant_label PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]
                             Space separated list of sub-# identifiers to be processed (the sub-prefix can
-                            be left out). If not specified then all sub-folders in the bidsfolder will be
+                            be left out). If not specified then all participants will be processed will be
                             processed (default: None)
       -o OUTPUT, --output OUTPUT
                             A string that determines where the defaced images are saved. It can be the
@@ -225,7 +225,7 @@ The ``skullstrip``-tool is a wrapper around the synthstrip tool that writes BIDS
       -h, --help            show this help message and exit
       -p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...], --participant_label PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]
                             Space separated list of sub-# identifiers to be processed (the sub-prefix can
-                            be left out). If not specified then all sub-folders in the bidsfolder will be
+                            be left out). If not specified then all participants will be processed will be
                             processed (default: None)
       -m MASKED, --masked MASKED
                             Globlike search pattern (relative to the subject/session folder) to select
@@ -259,7 +259,7 @@ The ``skullstrip``-tool is a wrapper around the synthstrip tool that writes BIDS
 Quality control
 ---------------
 
-``Slicereport`` is a very flexible QC report generator for doing visual inspections on your BIDS data.::
+``Slicereport`` is a very flexible QC report generator for doing visual inspections on your BIDS data::
 
     usage: slicereport [-h] [-o OUTLINEPATTERN] [-i OUTLINEIMAGE]
                        [-p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]] [-r REPORTFOLDER]
@@ -298,7 +298,7 @@ Quality control
                             A common red-outline image that is projected on top of all images
       -p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...], --participant_label PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]
                             Space separated list of sub-# identifiers to be processed (the sub-prefix can
-                            be left out). If not specified then all sub-folders in the bidsfolder will be
+                            be left out). If not specified then all participants will be processed will be
                             processed
       -r REPORTFOLDER, --reportfolder REPORTFOLDER
                             The folder where the report is saved (default:

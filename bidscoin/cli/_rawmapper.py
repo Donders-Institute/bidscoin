@@ -27,7 +27,7 @@ def get_parser():
                                             '  rawmapper myproject/raw -r -s sub-1*/* sub-2*/ses-mri01 --dryrun\n'
                                             '  rawmapper -f EchoTime -w *fMRI* myproject/raw\n ')
     parser.add_argument('sourcefolder',     help='The source folder with the raw data in sub-#/ses-#/series organization')
-    parser.add_argument('-s','--sessions',  help='Space separated list of selected sub-#/ses-# names / folders to be processed. Otherwise all sessions in the bidsfolder will be selected', nargs='+')
+    parser.add_argument('-s','--sessions',  help='Space separated list of selected sub-#/ses-# names / folders to be processed. Otherwise all sessions in the bidsfolder will be processed', nargs='+')
     parser.add_argument('-f','--field',     help='The fieldname(s) of the DICOM attribute(s) used to rename or map the subid/sesid foldernames', default=['PatientComments', 'ImageComments'], nargs='+')
     parser.add_argument('-w','--wildcard',  help='The Unix style pathname pattern expansion that is used to select the series from which the dicomfield is being mapped (can contain wildcards)', default='*')
     parser.add_argument('-o','--outfolder', help='The mapper-file is normally saved in sourcefolder or, when using this option, in outfolder')

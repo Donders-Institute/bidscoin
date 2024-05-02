@@ -27,7 +27,7 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
     """
     :param bidsdir:     The bids-directory with the (multi-echo) subject data
     :param pattern:     Globlike recursive search pattern (relative to the subject/session folder) to select the first echo of the images that need to be combined, e.g. '*task-*echo-1*'
-    :param subjects:    List of sub-# identifiers to be processed (the sub-prefix can be left out). If not specified then all sub-folders in the bidsfolder will be processed
+    :param subjects:    List of sub-# identifiers to be processed (the sub-prefix can be left out). If not specified then all participants will be processed
     :param output:      Determines where the output is saved. It can be the name of a BIDS datatype folder, such as 'func', or of the derivatives folder, i.e. 'derivatives'. If output = [the name of the input datatype folder] then the original echo images are replaced by one combined image. If output is left empty then the combined image is saved in the input datatype folder and the original echo images are moved to the {unknowndatatype} folder
     :param algorithm:   Combination algorithm, either 'PAID', 'TE' or 'average'
     :param weights:     Weights for each echo

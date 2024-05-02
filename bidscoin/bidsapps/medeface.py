@@ -32,7 +32,7 @@ def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, force
     :param bidsdir:     The bids-directory with the (multi-echo) subject data
     :param pattern:     Globlike search pattern (relative to the subject/session folder) to select the echo-images that need to be defaced, e.g. 'anat/*_T1w*'
     :param maskpattern: Globlike search pattern (relative to the subject/session folder) to select the images from which the defacemask is computed, e.g. 'anat/*_part-mag_*_T2starw*'. If not given then 'pattern' is used
-    :param subjects:    List of sub-# identifiers to be processed (the sub-prefix can be left out). If not specified then all sub-folders in the bidsfolder will be processed
+    :param subjects:    List of sub-# identifiers to be processed (the sub-prefix can be left out). If not specified then all participants will be processed
     :param force:       If True then images will be processed, regardless if images have already been defaced (i.e. if {"Defaced": True} in the json sidecar file)
     :param output:      Determines where the defaced images are saved. It can be the name of a BIDS datatype folder, such as 'anat', or of the derivatives folder, i.e. 'derivatives'. If output is left empty then the original images are replaced by the defaced images
     :param cluster:     Flag to submit the-deface jobs to the high-performance compute (HPC) cluster

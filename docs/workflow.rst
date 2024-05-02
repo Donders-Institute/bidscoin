@@ -201,8 +201,8 @@ Step 2: Running the bidscoiner
       -h, --help            show this help message and exit
       -p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...], --participant_label PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]
                             Space separated list of selected sub-# names / folders to be processed (the
-                            sub-prefix can be removed). Otherwise all subjects in the sourcefolder will
-                            be selected
+                            sub-prefix can be removed). Otherwise all participants in the sourcefolder will
+                            be processed
       -b BIDSMAP, --bidsmap BIDSMAP
                             The study bidsmap file with the mapping heuristics. If the bidsmap filename
                             is just the basename (i.e. no "/" in the name) then it is assumed to be

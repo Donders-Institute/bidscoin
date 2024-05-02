@@ -56,7 +56,7 @@ examples:
     parser.add_argument('pattern',                  help="Globlike search pattern to select the images in bidsfolder to be reported, e.g. 'anat/*_T2starw*'")
     parser.add_argument('-o','--outlinepattern',    help="Globlike search pattern to select red outline images that are projected on top of the reported images (i.e. 'outlinepattern' must yield the same number of images as 'pattern'. Prepend `outlinedir:` if your outline images are in `outlinedir` instead of `bidsdir` (see examples below)`")
     parser.add_argument('-i','--outlineimage',      help='A common red-outline image that is projected on top of all images', default='')
-    parser.add_argument('-p','--participant_label', help='Space separated list of sub-# identifiers to be processed (the sub-prefix can be left out). If not specified then all sub-folders in the bidsfolder will be processed', nargs='+')
+    parser.add_argument('-p','--participant_label', help='Space separated list of sub-# identifiers to be processed (the sub-prefix can be left out). If not specified then all participants will be processed', nargs='+')
     parser.add_argument('-r','--reportfolder',      help="The folder where the report is saved (default: bidsfolder/derivatives/slicereport)")
     parser.add_argument('-x','--xlinkfolder',       help="A (list of) QC report folder(s) with cross-linkable sub-reports, e.g. bidsfolder/derivatives/mriqc", nargs='+')
     parser.add_argument('-q','--qcscores',          help="Column names for creating an accompanying tsv-file to store QC-rating scores (default: rating_overall)", default=['rating_overall'], nargs='+')
