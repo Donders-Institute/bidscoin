@@ -3,9 +3,7 @@ BIDS-apps
 
 Metadata editing
 ----------------
-If you have a previously converted BIDS data repository and you would like to retrospectively change or replace one or more metadata fields in the json sidecar files you can use ``fixmeta``. Fixmeta is more powerful than conventional find-and-replace tools in that fixmeta can leverage BIDScoin's `special bidsmap features <./bidsmap.html#special-bidsmap-features>`__
-
-::
+If you have a previously converted BIDS data repository and you would like to retrospectively change or replace one or more metadata fields in the json sidecar files you can use ``fixmeta``. Fixmeta is more powerful than conventional find-and-replace tools in that fixmeta can leverage BIDScoin's `special bidsmap features <./bidsmap.html#special-bidsmap-features>`__::
 
     usage: fixmeta [-h] [-p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]] [-b BIDSMAP]
                    bidsfolder pattern metadata
@@ -44,9 +42,7 @@ If you have a previously converted BIDS data repository and you would like to re
 Multi-echo combination
 ----------------------
 
-Before sharing or pre-processing their images, you may want to combine the separate the individual echos of multi-echo MRI acquisitions. The ``echcombine``-tool is a wrapper around ``mecombine`` that writes BIDS valid echo-combined output data.
-
-::
+Before sharing or pre-processing their images, you may want to combine the separate the individual echos of multi-echo MRI acquisitions. The ``echcombine``-tool is a wrapper around ``mecombine`` that writes BIDS valid echo-combined output data.::
 
     usage: echocombine [-h] [-p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]] [-o OUTPUT]
                        [-a {PAID,TE,average}] [-w [WEIGHTS ...]] [-f]
@@ -94,9 +90,7 @@ Before sharing or pre-processing their images, you may want to combine the separ
 Defacing
 --------
 
-Before sharing or pre-processing your data, you may want to deface your anatomical MRI scans to protect the privacy of your participants. The ``deface``-tool is a wrapper around `pydeface <https://github.com/poldracklab/pydeface>`__ that writes BIDS valid defaced output images. NB: pydeface requires `FSL <https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FslInstallation>`__ to be installed on the system.
-
-::
+Before sharing or pre-processing your data, you may want to deface your anatomical MRI scans to protect the privacy of your participants. The ``deface``-tool is a wrapper around `pydeface <https://github.com/poldracklab/pydeface>`__ that writes BIDS valid defaced output images. NB: pydeface requires `FSL <https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FslInstallation>`__ to be installed on the system.::
 
     usage: deface [-h] [-p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]] [-o OUTPUT] [-c] [-n NATIVESPEC]
                   [-a ARGS] [-f]
@@ -149,9 +143,7 @@ Before sharing or pre-processing your data, you may want to deface your anatomic
 Multi-echo defacing
 -------------------
 
-This utility is very similar to the `deface <#defacing>`__ utility above, except that it can handle multi-echo data.
-
-::
+This utility is very similar to the `deface <#defacing>`__ utility above, except that it can handle multi-echo data.::
 
     usage: medeface [-h] [-m MASKPATTERN] [-p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]] [-o OUTPUT] [-c]
                     [-n NATIVESPEC] [-a ARGS] [-f]
@@ -210,9 +202,7 @@ This utility is very similar to the `deface <#defacing>`__ utility above, except
 Skull-stripping
 ---------------
 
-The ``skullstrip``-tool is a wrapper around the synthstrip tool that writes BIDS valid brain extracted output data
-
-::
+The ``skullstrip``-tool is a wrapper around the synthstrip tool that writes BIDS valid brain extracted output data::
 
     usage: skullstrip [-h] [-p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]] [-m MASKED]
                       [-o OUTPUT [OUTPUT ...]] [-f] [-a ARGS] [-c] [-n NATIVESPEC]
@@ -269,9 +259,7 @@ The ``skullstrip``-tool is a wrapper around the synthstrip tool that writes BIDS
 Quality control
 ---------------
 
-``Slicereport`` is a very flexible QC report generator for doing visual inspections on your BIDS data.
-
-::
+``Slicereport`` is a very flexible QC report generator for doing visual inspections on your BIDS data.::
 
     usage: slicereport [-h] [-o OUTLINEPATTERN] [-i OUTLINEIMAGE]
                        [-p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]] [-r REPORTFOLDER]

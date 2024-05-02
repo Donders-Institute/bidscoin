@@ -21,7 +21,6 @@ If you add new subjects all you need to do is re-run the bidscoiner -- unless th
 
 Step 1a: Running the bidsmapper
 -------------------------------
-
 ::
 
     usage: bidsmapper [-h] [-b BIDSMAP] [-t TEMPLATE] [-p PLUGINS [PLUGINS ...]] [-n SUBPREFIX]
@@ -94,7 +93,6 @@ After the source data has been scanned, the bidsmapper will automatically launch
 
 Step 1b: Running the bidseditor
 -------------------------------
-
 ::
 
     usage: bidseditor [-h] [-b BIDSMAP] [-t TEMPLATE] bidsfolder
@@ -176,7 +174,6 @@ Field maps are typically acquired to be applied to specific other scans from the
 
 Step 2: Running the bidscoiner
 ------------------------------
-
 ::
 
     usage: bidscoiner [-h] [-p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]] [-b BIDSMAP] [-f] [-c]
