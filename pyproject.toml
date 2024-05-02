@@ -54,6 +54,7 @@ bidscoin         = 'bidscoin.bcoin:main'
 bidseditor       = 'bidscoin.bidseditor:main'
 bidsmapper       = 'bidscoin.bidsmapper:main'
 bidscoiner       = 'bidscoin.bidscoiner:main'
+fixmeta          = 'bidscoin.bidsapps.fixmeta:main'
 echocombine      = 'bidscoin.bidsapps.echocombine:main'
 deface           = 'bidscoin.bidsapps.deface:main'
 medeface         = 'bidscoin.bidsapps.medeface:main'
@@ -70,6 +71,7 @@ manpages         = ['man/bidscoin.1:function=get_parser:pyfile=bidscoin/cli/_bco
                     'man/bidseditor.1:function=get_parser:pyfile=bidscoin/cli/_bidseditor.py',
                     'man/bidsmapper.1:function=get_parser:pyfile=bidscoin/cli/_bidsmapper.py',
                     'man/bidscoiner.1:function=get_parser:pyfile=bidscoin/cli/_bidscoiner.py',
+                    'man/fixmeta.1:function=get_parser:pyfile=bidscoin/cli/_fixmeta.py',
                     'man/echocombine.1:function=get_parser:pyfile=bidscoin/cli/_echocombine.py',
                     'man/deface.1:function=get_parser:pyfile=bidscoin/cli/_deface.py',
                     'man/medeface.1:function=get_parser:pyfile=bidscoin/cli/_medeface.py',
