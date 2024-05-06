@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""A wrapper around the 'slicer' imaging tool (See also cli/_slicereport.py)"""
+"""A wrapper around the 'slicer' imaging tool (See also cli/_fixmeta.py)"""
 
 # NB: Set os.environ['DUECREDIT'] values as early as possible to capture all credits
 import os
@@ -83,7 +83,7 @@ def fixmeta(bidsdir: str, pattern: str, metadata: dict, subjects: list, bidsmapf
                         if isinstance(row['targets'], str) and target.name in row['targets']:
                             sourcedir = source
                     datasource = bids.get_datasource(Path(sourcedir), plugins)
-                    LOGGER.bcdebug(f"Using datasource: '{datasource.path}'" if datasource.is_datasource() else f"Could not find a datasource for: '{target.name}'")
+                    LOGGER.bcdebug(f"Datasource provenance: '{target.name}' -> '{datasource.path}'")
 
                     # Load/copy over the source meta-data
                     jsonfile = target.with_suffix('').with_suffix('.json')
@@ -122,7 +122,7 @@ def main():
                 bidsmapfile = args.bidsmap)
 
     except Exception:
-        trackusage('slicereport_exception')
+        trackusage('fixmeta_exception')
         raise
 
 
