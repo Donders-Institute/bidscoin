@@ -141,7 +141,7 @@ As shown below, the main window of the bidseditor opens with separate data mappi
    Clear the ``session`` label field if you have data with only one session. This will remove the optional session label from the BIDS output name
 
 .. tip::
-   You can compare or edit multiple run-items by right-clicking their selected BIDS output names (use shift-/control-click to select the run-items)
+   You can `compare <./screenshots.html>`__ or edit multiple run-items by right-clicking their selected BIDS output names (use shift-/control-click to select the run-items)
 
 Edit window
 ^^^^^^^^^^^
