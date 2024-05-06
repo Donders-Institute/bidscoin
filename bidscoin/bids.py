@@ -2431,7 +2431,7 @@ def bidsprov(bidsfolder: Path, source: Path=Path(), runid: str='', datatype: str
     :param runid:       The bidsmap runid (provenance) that was used to map the source data, e.g. as returned from get_matching_run()
     :param datatype:    The BIDS datatype/name of the subfolder where the targets are saved (e.g. extra_data)
     :param targets:     The set of output files
-    :return:            The dataframe with the provenance data
+    :return:            The dataframe with the provenance data (index_col='source', columns=['runid', 'datatype', 'targets'])
     """
 
     # Check the input

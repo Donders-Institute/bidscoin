@@ -78,11 +78,12 @@ def fixmeta(bidsdir: str, pattern: str, metadata: dict, subjects: list, bidsmapf
                 for target in targets:
 
                     # Lookup the source folder in the bidscoiner.tsv provenance logs and get a datasource from it
-                    provtarget = provdata['targets'] == target.name
-                    sourcedir  = provdata.loc[provtarget].index[-1] if not provtarget.empty else ''
+                    sourcedir = ''
+                    for source, row in provdata.iterrows():
+                        if isinstance(row['targets'], str) and target.name in row['targets']:
+                            sourcedir = source
                     datasource = bids.get_datasource(Path(sourcedir), plugins)
-                    if datasource.is_datasource():
-                        LOGGER.bcdebug(f"Using datasource '{datasource.path}'")
+                    LOGGER.bcdebug(f"Using datasource: '{datasource.path}'" if datasource.is_datasource() else f"Could not find a datasource for: '{target.name}'")
 
                     # Load/copy over the source meta-data
                     jsonfile = target.with_suffix('').with_suffix('.json')
