@@ -70,7 +70,7 @@ def is_sourcefile(file: Path) -> str:
     """
 
     ext = ''.join(file.suffixes)
-    if file.is_file() and ext.lower() in sum((klass.valid_exts for klass in nib.imageclasses.all_image_classes),()) + ('.nii.gz',):
+    if file.is_file() and ext.lower() in sum((klass.valid_exts for klass in nib.imageclasses.all_image_classes), ('.nii.gz',)):
         return 'Nibabel'
 
     return ''

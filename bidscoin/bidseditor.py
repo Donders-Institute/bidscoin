@@ -9,6 +9,7 @@ import re
 import ast
 import json
 import csv
+import nibabel as nib
 from bids_validator import BIDSValidator
 from typing import Union, List, Dict
 from pydicom import dcmread
@@ -228,8 +229,7 @@ class MainWindow(QMainWindow):
                 self.datachanged = True
 
         elif action == compare:
-            self.comparewindow = CompareWindow(runs, subid, sesid)
-            self.comparewindow.show()
+            CompareWindow(runs, subid, sesid)
 
         elif action == edit:
             if len(rowindex) == 1:
@@ -904,12 +904,14 @@ class MainWindow(QMainWindow):
         """Opens the inspect- or native application-window when a data file in the file-tree tab is double-clicked"""
 
         datafile = Path(self.filesystem.fileInfo(index).absoluteFilePath())
-        if bids.is_dicomfile(datafile) or bids.is_parfile(datafile):
-            self.popup = InspectWindow(datafile)
-            self.popup.show()
-            self.popup.scrollbar.setValue(0)  # This can only be done after self.popup.show()
-        elif datafile.is_file():
-            QtGui.QDesktopServices.openUrl(QtCore.QUrl.fromLocalFile(str(datafile)))
+        if datafile.is_file():
+            ext = ''.join(datafile.suffixes).lower()
+            if bids.is_dicomfile(datafile) or bids.is_parfile(datafile) or ext in sum((klass.valid_exts for klass in nib.imageclasses.all_image_classes), ('.nii.gz',)):
+                self.popup = InspectWindow(datafile)
+                self.popup.show()
+                self.popup.scrollbar.setValue(0)  # This can only be done after self.popup.show()
+            else:
+                QtGui.QDesktopServices.openUrl(QtCore.QUrl.fromLocalFile(str(datafile)))
 
     def show_about(self):
         """Shows a pop-up window with the BIDScoin version"""
@@ -1624,54 +1626,47 @@ class CompareWindow(QDialog):
             data_properties, data_attributes, data_bids, data_meta = self.run2data(run)
 
             # Set up the properties table
-            self.properties_label = QLabel('Properties')
-            self.properties_label.setToolTip('The filesystem properties that match with (identify) the source file')
-            self.properties_table = self.fill_table(data_properties, 'properties')
-            self.properties_table.setToolTip('The filesystem property that matches with the source file')
-            self.properties_table.cellDoubleClicked.connect(partial(self.inspect_sourcefile, run['provenance']))
+            properties_label = QLabel('Properties')
+            properties_label.setToolTip('The filesystem properties that match with (identify) the source file')
+            properties_table = self.fill_table(data_properties, 'properties')
+            properties_table.setToolTip('The filesystem property that matches with the source file')
+            properties_table.cellDoubleClicked.connect(partial(self.inspect_sourcefile, run['provenance']))
 
             # Set up the attributes table
-            self.attributes_label = QLabel('Attributes')
-            self.attributes_label.setToolTip('The attributes that match with (identify) the source file')
-            self.attributes_table = self.fill_table(data_attributes, 'attributes', minimum=False)
-            self.attributes_table.setToolTip('The attribute that matches with the source file')
+            attributes_label = QLabel('Attributes')
+            attributes_label.setToolTip('The attributes that match with (identify) the source file')
+            attributes_table = self.fill_table(data_attributes, 'attributes', minimum=False)
+            attributes_table.setToolTip('The attribute that matches with the source file')
 
             # Set up the BIDS table
-            self.bids_label = QLabel('BIDS entities')
-            self.bids_label.setToolTip('The BIDS entities that are used to construct the BIDS output filename')
-            self.bids_table = self.fill_table(data_bids, 'bids')
-            self.bids_table.setToolTip('The BIDS entity that is used to construct the BIDS output filename')
+            bids_label = QLabel('BIDS entities')
+            bids_label.setToolTip('The BIDS entities that are used to construct the BIDS output filename')
+            bids_table = self.fill_table(data_bids, 'bids')
+            bids_table.setToolTip('The BIDS entity that is used to construct the BIDS output filename')
 
             # Set up the meta table
-            self.meta_label = QLabel('Meta data')
-            self.meta_label.setToolTip('Key-value pairs that will be appended to the (e.g. dcm2niix-produced) json sidecar file')
-            self.meta_table = self.fill_table(data_meta, 'meta', minimum=False)
-            self.meta_table.setToolTip('The key-value pair that will be appended to the (e.g. dcm2niix-produced) json sidecar file')
-
-            # Group the tables in boxes
-            sizepolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
-            sizepolicy.setHorizontalStretch(1)
+            meta_label = QLabel('Meta data')
+            meta_label.setToolTip('Key-value pairs that will be appended to the (e.g. dcm2niix-produced) json sidecar file')
+            meta_table = self.fill_table(data_meta, 'meta', minimum=False)
+            meta_table.setToolTip('The key-value pair that will be appended to the (e.g. dcm2niix-produced) json sidecar file')
 
             bidsname = bids.get_bidsname(subid[index], sesid[index], run, False) + '.*'
             groupbox = QGroupBox(f"{run['datasource'].datatype}/{bidsname}")
-            groupbox.setSizePolicy(sizepolicy)
-            layout = QVBoxLayout()
-            layout.addWidget(self.properties_label)
-            layout.addWidget(self.properties_table)
-            layout.addWidget(self.attributes_label)
-            layout.addWidget(self.attributes_table)
-            layout.addWidget(self.bids_label)
-            layout.addWidget(self.bids_table)
-            layout.addWidget(self.meta_label)
-            layout.addWidget(self.meta_table)
+            layout   = QVBoxLayout()
+            layout.addWidget(properties_label)
+            layout.addWidget(properties_table)
+            layout.addWidget(attributes_label)
+            layout.addWidget(attributes_table)
+            layout.addWidget(bids_label)
+            layout.addWidget(bids_table)
+            layout.addWidget(meta_label)
+            layout.addWidget(meta_table)
             groupbox.setLayout(layout)
 
-            # Add the boxes to the layout
-            layout_tables = QVBoxLayout()
-            layout_tables.addWidget(groupbox)
-
             # Set up the main layout
-            layout_main.addLayout(layout_tables)
+            layout_main.addWidget(groupbox)
+
+        self.show()
 
     def run2data(self, run) -> tuple:
         """Derive the tabular data from the target_run, needed to render the compare window
@@ -1743,13 +1738,14 @@ class InspectWindow(QDialog):
     def __init__(self, filename: Path):
         super().__init__()
 
+        ext = ''.join(filename.suffixes).lower()
         if bids.is_dicomfile(filename):
             if filename.name == 'DICOMDIR':
                 LOGGER.bcdebug(f"Getting DICOM fields from {filename} will raise dcmread error below if pydicom => v3.0")
             text = str(dcmread(filename, force=True))
-        elif bids.is_parfile(filename) or filename.suffix.lower() in ('.spar', '.txt', '.text'):
+        elif bids.is_parfile(filename) or ext in ('.spar', '.txt', '.text'):
             text = filename.read_text()
-        elif filename.suffix == '.7':
+        elif ext == '.7':
             try:
                 from spec2nii.GE.ge_read_pfile import Pfile
                 text = ''
@@ -1763,9 +1759,11 @@ class InspectWindow(QDialog):
             except ImportError as perror:
                 text = f"Could not inspect: {filename}"
                 LOGGER.verbose(f"Could not import spec2nii to read {filename}\n{perror}")
+        elif filename.is_file() and ext in sum((klass.valid_exts for klass in nib.imageclasses.all_image_classes), ('.nii.gz',)):
+            text = str(nib.load(filename).header)
         else:
             text = f"Could not inspect: {filename}"
-            LOGGER.info(text)
+            LOGGER.verbose(text)
 
         self.setWindowIcon(QtGui.QIcon(str(BIDSCOIN_ICON)))
         self.setWindowTitle(str(filename))
@@ -1780,12 +1778,6 @@ class InspectWindow(QDialog):
         textbrowser.setWhatsThis(f"This window displays all available source attributes")
         self.scrollbar = textbrowser.verticalScrollBar()        # For setting the slider to the top (can only be done after self.show()
         layout.addWidget(textbrowser)
-
-        buttonbox = QDialogButtonBox(self)
-        buttonbox.setStandardButtons(QDialogButtonBox.StandardButton.Ok)
-        buttonbox.button(QDialogButtonBox.StandardButton.Ok).setToolTip('Close this window')
-        buttonbox.accepted.connect(self.close)
-        layout.addWidget(buttonbox)
 
         # Set the layout-width to the width of the text
         fontmetrics = QtGui.QFontMetrics(textbrowser.font())
