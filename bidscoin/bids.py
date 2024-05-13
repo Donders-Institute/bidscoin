@@ -87,6 +87,14 @@ class DataSource:
         self.sesprefix: str  = sesprefix
         self._cache: dict    = {}
 
+    def __repr__(self):
+        return (f"Path:\t\t{self.path}\n"
+                f"Datatype:\t{self.datatype}\n"
+                f"Dataformat:\t{self.dataformat}\n"
+                f"Plugins:\t{self.plugins}\n"
+                f"Subprefix:\t{self.subprefix}\n"
+                f"Sesprefix:\t{self.sesprefix}")
+
     def resubprefix(self) -> str:
         """Returns the subprefix with escaped regular expression characters (except '-'). A single '*' wildcard is returned as ''"""
         return '' if self.subprefix=='*' else re.escape(self.subprefix).replace(r'\-','-')
