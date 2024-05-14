@@ -1251,7 +1251,7 @@ class EditWindow(QDialog):
             if table.objectName()=='bids' and key=='suffix' and self.target_datatype in self.bidsdatatypes:
                 table.setItem(i, 0, MyWidgetItem('suffix', iseditable=False))
                 suffix   = self.datasource.dynamicvalue(self.target_run['bids'].get('suffix',''))
-                suffixes = sorted(self.allowed_suffixes.get(self.target_datatype, ['']))
+                suffixes = sorted(self.allowed_suffixes.get(self.target_datatype, ['']), key=str.casefold)
                 suffix_dropdown = self.suffix_dropdown = QComboBox()
                 suffix_dropdown.addItems(suffixes)
                 suffix_dropdown.setCurrentIndex(suffix_dropdown.findText(suffix))
