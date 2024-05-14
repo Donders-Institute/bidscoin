@@ -1251,9 +1251,9 @@ class EditWindow(QDialog):
             if table.objectName()=='bids' and key=='suffix' and self.target_datatype in self.bidsdatatypes:
                 table.setItem(i, 0, MyWidgetItem('suffix', iseditable=False))
                 suffix   = self.datasource.dynamicvalue(self.target_run['bids'].get('suffix',''))
-                suffixes = self.allowed_suffixes.get(self.target_datatype, [''])
+                suffixes = sorted(self.allowed_suffixes.get(self.target_datatype, ['']))
                 suffix_dropdown = self.suffix_dropdown = QComboBox()
-                suffix_dropdown.addItems(sorted(suffixes))
+                suffix_dropdown.addItems(suffixes)
                 suffix_dropdown.setCurrentIndex(suffix_dropdown.findText(suffix))
                 suffix_dropdown.currentIndexChanged.connect(self.suffix_dropdown_change)
                 suffix_dropdown.setToolTip('The suffix that sets the different run types apart. First make sure the "Data type" dropdown-menu is set correctly before choosing the right suffix here')
