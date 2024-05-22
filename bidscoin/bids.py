@@ -2214,7 +2214,8 @@ def addmetadata(bidsses: Path) -> None:
                 limitmatches(fmap, matches, limits, niifiles, scans_table)
 
                 # In the b0fieldtags, replace the limits with fieldmap runindex
-                newb0fieldtag = b0fieldtag.replace(':'+limits, '_'+get_bidsvalue(fmap,'run'))
+                runindex      = get_bidsvalue(fmap, 'run')
+                newb0fieldtag = b0fieldtag.replace(':'+limits, '_'+runindex if runindex else '')
                 for niifile in niifiles:
                     metafile = (bidsses/niifile).with_suffix('').with_suffix('.json')
                     LOGGER.bcdebug(f"Updating the b0fieldtag ({b0fieldtag} -> {newb0fieldtag}) for: {metafile}")
