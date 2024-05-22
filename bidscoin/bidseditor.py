@@ -193,9 +193,9 @@ class MainWindow(QMainWindow):
         rowindex   = [index.row() for index in table.selectedIndexes() if index.column() == colindex]
         if colindex in (-1, 0, 4):      # User clicked the index, the edit-button or elsewhere (i.e. not on an activated widget)
             return
-        runs       = []
-        subid      = []
-        sesid      = []
+        runs  = []
+        subid = []
+        sesid = []
         for index in rowindex:
             datatype   = table.item(index, 2).text()
             provenance = table.item(index, 5).text()
@@ -216,7 +216,7 @@ class MainWindow(QMainWindow):
 
         if action == delete:
             answer = QMessageBox.question(self, f"Remove {dataformat} mapping",
-                                          f'Only delete mappings for obsolete data (unless you are an expert user). Do you really want to remove this mapping"?',
+                                          'Only delete mappings for obsolete data (unless you are an expert user). Do you want to continue?',
                                           QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel, QMessageBox.StandardButton.Cancel)
             if answer == QMessageBox.StandardButton.Yes:
                 for index in rowindex:

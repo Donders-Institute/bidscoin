@@ -41,7 +41,7 @@ except Exception:
         __version__ = tomllib.load(fid)['project']['version']
 
 # Add license metadata
-__license__    = 'GNU General Public License v3 or later (GPLv3+)'
+__license__    = 'GNU General Public License v3.0 or later (GPLv3+)'
 __copyright__  = f"2018-{datetime.date.today().year}, Marcel Zwiers"
 __disclaimer__ = """\
 This module and all modules in this package are part of BIDScoin (https://github.com/Donders-Institute/bidscoin).

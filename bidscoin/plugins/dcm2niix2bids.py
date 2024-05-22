@@ -380,10 +380,10 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
                 # Strip each dcm2niix postfix and assign it to the proper bids entity in the new bidsname (else assign it to the fallback entity)
                 ext         = ''.join(dcm2niixfile.suffixes)
                 postfixes   = dcm2niixfile.name.split(bidsname)[1].rsplit(ext)[0].split('_')[1:]
-                newbidsname = bids.insert_bidskeyval(dcm2niixfile.name, 'run', runindex, ignore)        # Restart the run-index. NB: Unlike bidsname, newbidsname has a file extension
+                newbidsname = bids.insert_bidskeyval(dcm2niixfile.name, 'run', runindex, ignore)            # Restart the run-index. NB: Unlike bidsname, newbidsname has a file extension
                 for postfix in postfixes:
 
-                    # Patch the echo entity in the newbidsname with the dcm2niix echo info                     # NB: We can't rely on the bids-entity info here because manufacturers can e.g. put multiple echos in one series / run-folder
+                    # Patch the echo entity in the newbidsname with the dcm2niix echo info                      # NB: We can't rely on the bids-entity info here because manufacturers can e.g. put multiple echos in one series / run-folder
                     if 'echo' in run['bids'] and postfix.startswith('e'):
                         echonr = f"_{postfix}".replace('_e','')                                                 # E.g. postfix='e1'
                         if not echonr:
@@ -393,10 +393,10 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
                         elif echonr[0:-1].isdecimal():
                             LOGGER.verbose(f"Splitting off echo-number {echonr[0:-1]} from the '{postfix}' postfix")
                             newbidsname = bids.insert_bidskeyval(newbidsname, 'echo', echonr[0:-1].lstrip('0'), ignore) # Strip of the 'a', 'b', etc. from `e1a`, `e1b`, etc
-                            newbidsname = bids.get_bidsvalue(newbidsname, fallback, echonr[-1])        # Append the 'a' to the fallback-label
+                            newbidsname = bids.get_bidsvalue(newbidsname, fallback, echonr[-1])                 # Append the 'a' to the fallback-label
                         else:
                             LOGGER.error(f"Unexpected postix '{postfix}' found in {dcm2niixfile}")
-                            newbidsname = bids.get_bidsvalue(newbidsname, fallback, postfix)           # Append the unknown postfix to the fallback-label
+                            newbidsname = bids.get_bidsvalue(newbidsname, fallback, postfix)                    # Append the unknown postfix to the fallback-label
 
                     # Patch the phase entity in the newbidsname with the dcm2niix mag/phase info
                     elif 'part' in run['bids'] and postfix in ('ph','real','imaginary'):                        # e.g. part: ['', 'mag', 'phase', 'real', 'imag', 0]

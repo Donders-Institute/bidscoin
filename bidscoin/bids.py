@@ -627,8 +627,7 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
 
                         if find_spec('dicom_parser'):
                             from dicom_parser import Image
-
-                            LOGGER.bcdebug(f"Parsing {tagname} using `dicom_parser`")
+                            LOGGER.bcdebug(f"Parsing {tagname} from the CSA header using `dicom_parser`")
                             for csa in ('CSASeriesHeaderInfo', 'CSAImageHeaderInfo'):
                                 value = value if (value or value==0) else Image(dicomfile).header.get(csa)
                                 for csatag in tagname.split('.'):           # E.g. CSA tagname = 'SliceArray.Slice.instance_number.Position.Tra'
@@ -640,8 +639,7 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
                                     value = str(value or '')
 
                         else:
-
-                            LOGGER.bcdebug(f"Parsing {tagname} using `nibabel`")
+                            LOGGER.bcdebug(f"Parsing {tagname} from the CSA header using `nibabel`")
                             for modality in ('Series', 'Image'):
                                 value = value if (value or value==0) else csareader.get_csa_header(dicomdata, modality)['tags']
                                 for csatag in tagname.split('.'):           # NB: Currently MrPhoenixProtocol is not supported
@@ -902,7 +900,7 @@ def get_p7field(tagname: str, p7file: Path) -> Union[str, int]:
         return str(value)  # If it's a MultiValue type then flatten it
 
 
-# ---------------- All function below this point are bidsmap related. TODO: make a class out of them -------------------
+# TODO: A number of functions below this point are bidsmap related. Make a class out of them
 
 
 def load_bidsmap(yamlfile: Path=Path(), folder: Path=templatefolder, plugins:Iterable[Union[Path,str]]=(), checks: Tuple[bool, bool, bool]=(True, True, True)) -> Tuple[Bidsmap, Path]:

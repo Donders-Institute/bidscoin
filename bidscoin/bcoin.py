@@ -537,7 +537,7 @@ def test_bidscoin(bidsmapfile: Union[Path,dict], options: dict=None, testplugins
     except ModuleNotFoundError:
         pass
 
-    # Show an overview of the bidscoin tools. TODO: test the entry points?
+    # Show an overview of the bidscoin tools
     list_executables(True)
 
     # Test the plugins
