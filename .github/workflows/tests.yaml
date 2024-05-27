@@ -1,7 +1,15 @@
 name: CI
 on:
   push:
+    paths-ignore:
+      - 'docs/**'
+      - '**.rst'
+      - '**.md'
   pull_request:
+    paths-ignore:
+      - 'docs/**'
+      - '**.rst'
+      - '**.md'
 
 jobs:
   tests:
