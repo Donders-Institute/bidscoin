@@ -135,7 +135,7 @@ Another command-line utility that can be helpful in organizing your source data 
     options:
       -h, --help            show this help message and exit
       -s SESSIONS [SESSIONS ...], --sessions SESSIONS [SESSIONS ...]
-                            Space separated list of selected sub-#/ses-# names / folders to be processed.
+                            Space separated list of selected sub-#/ses-# names/folders to be processed.
                             Otherwise all sessions in the bidsfolder will be processed (default: None)
       -f FIELD [FIELD ...], --field FIELD [FIELD ...]
                             The fieldname(s) of the DICOM attribute(s) used to rename or map the
@@ -185,7 +185,7 @@ The bidsparticipants tool is useful for (re-)generating a participants.tsv file 
 
     positional arguments:
       sourcefolder          The study root folder containing the raw source data folders
-      bidsfolder            The destination / output folder with the bids data
+      bidsfolder            The destination/output folder with the bids data
 
     options:
       -h, --help            show this help message and exit

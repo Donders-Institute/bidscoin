@@ -11,7 +11,7 @@ BIDScoin is a Python 3 package and can be installed on Linux, MS Windows and on 
 BIDScoin installation
 ---------------------
 
-To install BIDScoin on your system run one of the following commands in your command-line interface / shell (important tip: you probably want or need to create and activate a `virtual`_ / `conda`_ Python environment first and then):
+To install BIDScoin on your system run one of the following commands in your command-line interface/shell (important tip: you probably want or need to create and activate a `virtual`_/`conda`_ Python environment first and then):
 
 .. code-block:: console
 
@@ -22,7 +22,7 @@ To install BIDScoin on your system run one of the following commands in your com
    $ pip install bidscoin[deface,spec2nii2bids] # Use this when you want to deface anatomical MRI scans and convert MRS data with the spec2nii2bids plugin
    $ pip install bidscoin[all]                  # Use this to install all extra packages
 
-These install commands can be run independently and will give you the latest stable release of BIDScoin and its `plugins <./options.html#dcm2niix2bids-plugin>`__. Alternatively, if you need to use the very latest (development / unstable) version of the software, you can also install BIDScoin directly from the github source code repository, e.g. like this:
+These install commands can be run independently and will give you the latest stable release of BIDScoin and its `plugins <./options.html#dcm2niix2bids-plugin>`__. Alternatively, if you need to use the very latest (development/unstable) version of the software, you can also install BIDScoin directly from the github source code repository, e.g. like this:
 
 .. code-block:: console
 

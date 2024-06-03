@@ -230,7 +230,7 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
         LOGGER.info(f"--> No {__name__} sourcedata found in: {session}")
         return
 
-    # Make a list of all the data sources / runs
+    # Make a list of all the data sources/runs
     sources: List[Path] = []
     manufacturer = 'UNKNOWN'
     if dataformat == 'DICOM':
@@ -383,7 +383,7 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
                 newbidsname = bids.insert_bidskeyval(dcm2niixfile.name, 'run', runindex, ignore)            # Restart the run-index. NB: Unlike bidsname, newbidsname has a file extension
                 for postfix in postfixes:
 
-                    # Patch the echo entity in the newbidsname with the dcm2niix echo info                      # NB: We can't rely on the bids-entity info here because manufacturers can e.g. put multiple echos in one series / run-folder
+                    # Patch the echo entity in the newbidsname with the dcm2niix echo info                      # NB: We can't rely on the bids-entity info here because manufacturers can e.g. put multiple echos in one series/run-folder
                     if 'echo' in run['bids'] and postfix.startswith('e'):
                         echonr = f"_{postfix}".replace('_e','')                                                 # E.g. postfix='e1'
                         if not echonr:
@@ -409,10 +409,10 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
 
                     # Patch fieldmap images (NB: datatype=='fmap' is too broad, see the fmap.yaml file)
                     elif suffix in bids.datatyperules['fmap']['fieldmaps']['suffixes']:                         # i.e. in ('magnitude','magnitude1','magnitude2','phase1','phase2','phasediff','fieldmap')
-                        if len(dcm2niixfiles) not in (1, 2, 3, 4):                                              # Phase / echo data may be stored in the same data source / run folder
+                        if len(dcm2niixfiles) not in (1, 2, 3, 4):                                              # Phase/echo data may be stored in the same data source/run folder
                             LOGGER.verbose(f"Unknown fieldmap {outfolder/bidsname} for '{postfix}'")
-                        newbidsname = newbidsname.replace('_magnitude1a',    '_magnitude2')                     # First catch this potential weird / rare case
-                        newbidsname = newbidsname.replace('_magnitude1_pha', '_phase2')                         # First catch this potential weird / rare case
+                        newbidsname = newbidsname.replace('_magnitude1a',    '_magnitude2')                     # First catch this potential weird/rare case
+                        newbidsname = newbidsname.replace('_magnitude1_pha', '_phase2')                         # First catch this potential weird/rare case
                         newbidsname = newbidsname.replace('_magnitude1_e1',  '_magnitude1')                     # Case 2 = Two phase and magnitude images
                         newbidsname = newbidsname.replace('_magnitude1_e2',  '_magnitude2')                     # Case 2: This can happen when the e2 image is stored in the same directory as the e1 image, but with the e2 listed first
                         newbidsname = newbidsname.replace('_magnitude2_e1',  '_magnitude1')                     # Case 2: This can happen when the e2 image is stored in the same directory as the e1 image, but with the e2 listed first
@@ -423,24 +423,24 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
                         newbidsname = newbidsname.replace('_phasediff_e1',   '_phasediff')                      # Case 1
                         newbidsname = newbidsname.replace('_phasediff_e2',   '_phasediff')                      # Case 1
                         newbidsname = newbidsname.replace('_phasediff_ph',   '_phasediff')                      # Case 1
-                        newbidsname = newbidsname.replace('_magnitude1_ph',  '_phase1')                         # Case 2: One or two magnitude and phase images in one folder / datasource
-                        newbidsname = newbidsname.replace('_magnitude2_ph',  '_phase2')                         # Case 2: Two magnitude + two phase images in one folder / datasource
+                        newbidsname = newbidsname.replace('_magnitude1_ph',  '_phase1')                         # Case 2: One or two magnitude and phase images in one folder/datasource
+                        newbidsname = newbidsname.replace('_magnitude2_ph',  '_phase2')                         # Case 2: Two magnitude + two phase images in one folder/datasource
                         newbidsname = newbidsname.replace('_phase1_e1',      '_phase1')                         # Case 2
                         newbidsname = newbidsname.replace('_phase1_e2',      '_phase2')                         # Case 2: This can happen when the e2 image is stored in the same directory as the e1 image, but with the e2 listed first
                         newbidsname = newbidsname.replace('_phase2_e1',      '_phase1')                         # Case 2: This can happen when the e2 image is stored in the same directory as the e1 image, but with the e2 listed first
                         newbidsname = newbidsname.replace('_phase2_e2',      '_phase2')                         # Case 2
-                        newbidsname = newbidsname.replace('_phase1_ph',      '_phase1')                         # Case 2: One or two magnitude and phase images in one folder / datasource
-                        newbidsname = newbidsname.replace('_phase2_ph',      '_phase2')                         # Case 2: Two magnitude + two phase images in one folder / datasource
+                        newbidsname = newbidsname.replace('_phase1_ph',      '_phase1')                         # Case 2: One or two magnitude and phase images in one folder/datasource
+                        newbidsname = newbidsname.replace('_phase2_ph',      '_phase2')                         # Case 2: Two magnitude + two phase images in one folder/datasource
                         newbidsname = newbidsname.replace('_magnitude_e1',   '_magnitude')                      # Case 3 = One magnitude + one fieldmap image
                         if len(dcm2niixfiles) == 2:
-                            newbidsname = newbidsname.replace('_fieldmap_e1', '_magnitude')                     # Case 3: One magnitude + one fieldmap image in one folder / datasource
+                            newbidsname = newbidsname.replace('_fieldmap_e1', '_magnitude')                     # Case 3: One magnitude + one fieldmap image in one folder/datasource
                             newbidsname = newbidsname.replace('_magnitude_fieldmaphz', '_fieldmap')
                             newbidsname = newbidsname.replace('_fieldmap_fieldmaphz',  '_fieldmap')
                         newbidsname = newbidsname.replace('_fieldmap_e1',    '_fieldmap')                       # Case 3
-                        newbidsname = newbidsname.replace('_magnitude_ph',   '_fieldmap')                       # Case 3: One magnitude + one fieldmap image in one folder / datasource
+                        newbidsname = newbidsname.replace('_magnitude_ph',   '_fieldmap')                       # Case 3: One magnitude + one fieldmap image in one folder/datasource
                         newbidsname = newbidsname.replace('_fieldmap_ph',    '_fieldmap')                       # Case 3
 
-                    # Append the dcm2niix info to the fallback-label, may need to be improved / elaborated for future BIDS standards, supporting multi-coil data
+                    # Append the dcm2niix info to the fallback-label, may need to be improved/elaborated for future BIDS standards, supporting multi-coil data
                     else:
                         newbidsname = bids.get_bidsvalue(newbidsname, fallback, postfix)
 

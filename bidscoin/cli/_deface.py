@@ -29,13 +29,13 @@ def get_parser():
                                             '  deface myproject/bids anat/*_T1w* -p 001 003 -o derivatives\n'
                                             '  deface myproject/bids anat/*_T1w* -c -n "-l walltime=00:60:00,mem=4gb"\n'
                                             '  deface myproject/bids anat/*_T1w* -a \'{"cost": "corratio", "verbose": ""}\'\n ')
-    parser.add_argument('bidsfolder',               help='The bids-directory with the subject data')
-    parser.add_argument('pattern',                  help="Globlike search pattern (relative to the subject/session folder) to select the images that need to be defaced, e.g. 'anat/*_T1w*'")
-    parser.add_argument('-p','--participant_label', help='Space separated list of sub-# identifiers to be processed (the sub-prefix can be left out). If not specified then all participants will be processed', nargs='+')
-    parser.add_argument('-o','--output',            help=f"A string that determines where the defaced images are saved. It can be the name of a BIDS datatype folder, such as 'anat', or of the derivatives folder, i.e. 'derivatives'. If output is left empty then the original images are replaced by the defaced images")
-    parser.add_argument('-c','--cluster',           help='Use the DRMAA library to submit the deface jobs to a high-performance compute (HPC) cluster', action='store_true')
-    parser.add_argument('-n','--nativespec',        help='Opaque DRMAA argument with native specifications for submitting deface jobs to the HPC cluster (NB: Use quotes and include at least one space character to prevent premature parsing)', default='-l walltime=00:30:00,mem=2gb')
-    parser.add_argument('-a','--args',              help='Additional arguments (in dict/json-style) that are passed to pydeface (NB: Use quotes). See examples for usage', type=json.loads, default={})
-    parser.add_argument('-f','--force',             help='Deface all images, regardless if they have already been defaced (i.e. if {"Defaced": True} in the json sidecar file)', action='store_true')
+    parser.add_argument('bidsfolder',         help='The bids-directory with the subject data')
+    parser.add_argument('pattern',            help="Globlike search pattern (relative to the subject/session folder) to select the images that need to be defaced, e.g. 'anat/*_T1w*'")
+    parser.add_argument('-p','--participant', help='Space separated list of sub-# identifiers to be processed (the sub-prefix can be left out). If not specified then all participants will be processed', nargs='+')
+    parser.add_argument('-o','--output',      help=f"A string that determines where the defaced images are saved. It can be the name of a BIDS datatype folder, such as 'anat', or of the derivatives folder, i.e. 'derivatives'. If output is left empty then the original images are replaced by the defaced images")
+    parser.add_argument('-c','--cluster',     help='Use the DRMAA library to submit the deface jobs to a high-performance compute (HPC) cluster', action='store_true')
+    parser.add_argument('-n','--nativespec',  help='Opaque DRMAA argument with native specifications for submitting deface jobs to the HPC cluster (NB: Use quotes and include at least one space character to prevent premature parsing)', default='-l walltime=00:30:00,mem=2gb')
+    parser.add_argument('-a','--args',        help='Additional arguments (in dict/json-style) that are passed to pydeface (NB: Use quotes). See examples for usage', type=json.loads, default={})
+    parser.add_argument('-f','--force',       help='Deface all images, regardless if they have already been defaced (i.e. if {"Defaced": True} in the json sidecar file)', action='store_true')
 
     return parser

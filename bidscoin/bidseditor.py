@@ -101,7 +101,7 @@ class MainWindow(QMainWindow):
 
         # Set the input data
         self.bidsfolder: Path            = Path(bidsfolder)              # The folder where the bids data is / will be stored
-        self.input_bidsmap: Bidsmap      = input_bidsmap                 # The original / unedited bidsmap
+        self.input_bidsmap: Bidsmap      = input_bidsmap                 # The original/unedited bidsmap
         self.output_bidsmap: Bidsmap     = copy.deepcopy(input_bidsmap)  # The edited bidsmap
         self.template_bidsmap: Bidsmap   = template_bidsmap              # The bidsmap from which new data type run-items are taken
         self.datasaved: bool             = datasaved                     # True if data has been saved on disk
@@ -512,7 +512,7 @@ class MainWindow(QMainWindow):
         self.datachanged    = True
         self.output_bidsmap = output_bidsmap  # input main window / output from edit window -> output main window
 
-        # Update the subject / session table
+        # Update the subject/session table
         subitem = MyWidgetItem('subject', iseditable=False)
         subitem.setToolTip(bids.get_entityhelp('sub'))
         sesitem = MyWidgetItem('session', iseditable=False)
@@ -572,7 +572,7 @@ class MainWindow(QMainWindow):
                         f = samples_table.item(idx, 3).font()
                         f.setStrikeOut(True)
                         samples_table.item(idx, 3).setFont(f)
-                        samples_table.item(idx, 3).setToolTip('Gray / Strike-out: This imaging data type will be ignored and not converted BIDS')
+                        samples_table.item(idx, 3).setToolTip('Gray/Strike-out: This imaging data type will be ignored and not converted BIDS')
                     elif not validrun or datatype in self.unknowndatatypes:
                         samples_table.item(idx, 3).setForeground(QtGui.QColor('red'))
                         samples_table.item(idx, 3).setToolTip(f"Red: This {datatype} item is not BIDS-valid but will still be converted. You should edit this item or make sure it is in your bidsignore list ([Options] tab)")
@@ -585,7 +585,7 @@ class MainWindow(QMainWindow):
                     edit_button.setToolTip('Click to see more details and edit the BIDS output name')
                 else:
                     edit_button = QPushButton('Edit*')
-                    edit_button.setToolTip('*: Contains invalid / missing values! Click to see more details and edit the BIDS output name')
+                    edit_button.setToolTip('*: Contains invalid/missing values! Click to see more details and edit the BIDS output name')
                 edit_button.clicked.connect(self.open_editwindow)
                 edit_button.setCheckable(not sys.platform.startswith('darwin'))
                 edit_button.setAutoExclusive(True)
@@ -917,7 +917,7 @@ class MainWindow(QMainWindow):
         """Shows a pop-up window with the BIDScoin version"""
 
         _, _, message = check_version()
-        # QMessageBox.about(self, 'About', f"BIDS editor {__version__}\n\n{message}")    # Has an ugly / small icon image
+        # QMessageBox.about(self, 'About', f"BIDS editor {__version__}\n\n{message}")    # Has an ugly/small icon image
         messagebox = QMessageBox(self)
         messagebox.setText(f"\n\nBIDS editor {__version__}\n\n{message}")
         messagebox.setWindowTitle('About')
@@ -1479,7 +1479,7 @@ class EditWindow(QDialog):
             self.bidsname_textbox.setTextColor(QtGui.QColor('red'))
             font.setStrikeOut(False)
         elif self.target_datatype in self.ignoredatatypes:
-            self.bidsname_textbox.setToolTip(f"Gray / Strike-out: This '{self.target_datatype}' data type will be ignored and not converted BIDS. Click 'OK' if you want your BIDS output data to look like this")
+            self.bidsname_textbox.setToolTip(f"Gray/Strike-out: This '{self.target_datatype}' data type will be ignored and not converted BIDS. Click 'OK' if you want your BIDS output data to look like this")
             self.bidsname_textbox.setTextColor(QtGui.QColor('gray'))
             font.setStrikeOut(True)
         elif not all(bids.check_run(self.target_datatype, self.target_run, checks=(False, True, True))[1:3]):
@@ -1838,18 +1838,18 @@ class MyWidgetItem(QTableWidgetItem):
             self.setForeground(QtGui.QColor('gray'))
 
 
-def bidseditor(bidsfolder: str, bidsmapfile: str='', templatefile: str=bidsmap_template) -> None:
+def bidseditor(bidsfolder: str, bidsmap: str='', template: str=bidsmap_template) -> None:
     """
     Collects input and launches the bidseditor GUI
 
-    :param bidsfolder:      The name of the BIDS root folder
-    :param bidsmapfile:     The name of the bidsmap YAML-file
-    :param templatefile:    The name of the bidsmap template YAML-file
+    :param bidsfolder: The name of the BIDS root folder
+    :param bidsmap:    The name of the bidsmap YAML-file
+    :param template:   The name of the bidsmap template YAML-file
     """
 
     bidsfolder   = Path(bidsfolder).resolve()
-    bidsmapfile  = Path(bidsmapfile)
-    templatefile = Path(templatefile)
+    bidsmapfile  = Path(bidsmap)
+    templatefile = Path(template)
 
     # Start logging
     bcoin.setup_logging(bidsfolder/'code'/'bidscoin'/'bidseditor.log')
@@ -1887,9 +1887,7 @@ def main():
 
     trackusage('bidseditor')
     try:
-        bidseditor(bidsfolder   = args.bidsfolder,
-                   bidsmapfile  = args.bidsmap,
-                   templatefile = args.template)
+        bidseditor(**vars(args))
 
     except Exception:
         trackusage('bidseditor_exception')

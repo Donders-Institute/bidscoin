@@ -24,31 +24,31 @@ from bidscoin.bids import Bidsmap
 _, uptodate, versionmessage = check_version()
 
 
-def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: str, plugins: list, subprefix: str, sesprefix: str, unzip: str, store: bool=False, noeditor: bool=False, force: bool=False, noupdate: bool=False) -> dict:
+def bidsmapper(sourcefolder: str, bidsfolder: str, bidsmap: str, template: str, plugins: list, subprefix: str, sesprefix: str, unzip: str, store: bool=False, automated: bool=False, force: bool=False, no_update: bool=False) -> dict:
     """
     Main function that processes all the subjects and session in the sourcefolder and that generates a fully filled-in bidsmap.yaml
     file in bidsfolder/code/bidscoin. Folders in sourcefolder are assumed to contain a single dataset.
 
-    :param rawfolder:       The root folder-name of the sub/ses/data/file tree containing the source data files
-    :param bidsfolder:      The name of the BIDS root folder
-    :param bidsmapfile:     The name of the bidsmap YAML-file
-    :param templatefile:    The name of the bidsmap template YAML-file
-    :param plugins:         Optional list of plugins that should be used (overrules the list in the study/template bidsmaps)
-    :param subprefix:       The prefix common for all source subject-folders
-    :param sesprefix:       The prefix common for all source session-folders
-    :param unzip:           Wildcard pattern to select tar/zip-files in the session folder. Leave empty to use the bidsmap value
-    :param store:           If True, the provenance samples will be stored
-    :param noeditor:        The bidseditor will not be launched if True
-    :param noupdate:        Do not update any sub/sesprefixes in or prepend the rawfolder name to the <<filepath:regex>> expression
-    :param force:           If True, the previous bidsmap and logfiles will be deleted
-    :return:                The new bidsmap
+    :param sourcefolder: The root folder-name of the sub/ses/data/file tree containing the source data files
+    :param bidsfolder:   The name of the BIDS root folder
+    :param bidsmap:      The name of the bidsmap YAML-file
+    :param template:     The name of the bidsmap template YAML-file
+    :param plugins:      Optional list of plugins that should be used (overrules the list in the study/template bidsmaps)
+    :param subprefix:    The prefix common for all source subject-folders
+    :param sesprefix:    The prefix common for all source session-folders
+    :param unzip:        Wildcard pattern to select tar/zip-files in the session folder. Leave empty to use the bidsmap value
+    :param store:        If True, the provenance samples will be stored
+    :param automated:    The bidseditor will not be launched if True
+    :param no_update:    Do not update any sub/sesprefixes in or prepend the sourcefolder name to the <<filepath:regex>> expression
+    :param force:        If True, the previous bidsmap and logfiles will be deleted
+    :return:             The new bidsmap
     """
 
     # Input checking
-    rawfolder      = Path(rawfolder).resolve()
+    rawfolder      = Path(sourcefolder).resolve()
     bidsfolder     = Path(bidsfolder).resolve()
-    bidsmapfile    = Path(bidsmapfile)
-    templatefile   = Path(templatefile)
+    bidsmapfile    = Path(bidsmap)
+    templatefile   = Path(template)
     bidscoinfolder = bidsfolder/'code'/'bidscoin'
     if [char for char in subprefix or '' if char in ('^', '$', '+', '{', '}', '[', ']', '\\', '|', '(', ')')]:
         LOGGER.bcdebug(f"Regular expression metacharacters found in {subprefix}, this may cause errors later on...")
@@ -96,7 +96,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
                 bidsmap_new[dataformat][datatype] = []
 
     # Store/retrieve the empty or user-defined sub-/ses-prefix
-    subprefix, sesprefix = setprefix(bidsmap_new, subprefix, sesprefix, rawfolder, update = not noupdate)
+    subprefix, sesprefix = setprefix(bidsmap_new, subprefix, sesprefix, rawfolder, update = not no_update)
 
     # Start with an empty skeleton if we didn't have an old bidsmap
     if not bidsmap_old:
@@ -145,7 +145,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
                         shutil.rmtree(sesfolder)
 
     # Save the new study bidsmap in the bidscoinfolder or launch the bidseditor UI_MainWindow
-    if noeditor:
+    if automated:
         bids.save_bidsmap(bidsmapfile, bidsmap_new)
 
     else:
@@ -248,18 +248,7 @@ def main():
 
     trackusage('bidsmapper')
     try:
-        bidsmapper(rawfolder    = args.sourcefolder,
-                   bidsfolder   = args.bidsfolder,
-                   bidsmapfile  = args.bidsmap,
-                   templatefile = args.template,
-                   plugins      = args.plugins,
-                   subprefix    = args.subprefix,
-                   sesprefix    = args.sesprefix,
-                   unzip        = args.unzip,
-                   store        = args.store,
-                   noeditor     = args.automated,
-                   force        = args.force,
-                   noupdate     = args.no_update)
+        bidsmapper(**args(args))
 
     except Exception:
         trackusage('bidsmapper_exception')

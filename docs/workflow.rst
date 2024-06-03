@@ -128,7 +128,7 @@ Step 1b: Running the bidseditor
 Main window
 ^^^^^^^^^^^
 
-As shown below, the main window of the bidseditor opens with separate data mapping tabs for each data format that is present in the bidsmap (here ``DICOM mappings`` and ``PAR mappings``). The data mapping tabs consist of a ``Participant labels`` table and a ``Data samples`` table. By default, the participant table contains `dynamic <./bidsmap.html#special-bidsmap-features>`__ ``<<filepath:regex>>`` property values, which are used to extract the subject and session labels from the path of the source data during bidscoiner runtime. Alternatively, you can put a dynamic attribute value there (e.g. ``<<PatientName>>``) if you want to extract that information from the source header. The data samples table shows a list of input files (left side) that uniquely represent all the different data types in the sourcedata repository, in conjunction with a preview of their ``BIDS output`` names (right side). The BIDS output names are shown in red if they are not BIDS compliant, crossed-out gray when the runs will be ignored / skipped in the conversion to BIDS, otherwise it is colored green.
+As shown below, the main window of the bidseditor opens with separate data mapping tabs for each data format that is present in the bidsmap (here ``DICOM mappings`` and ``PAR mappings``). The data mapping tabs consist of a ``Participant labels`` table and a ``Data samples`` table. By default, the participant table contains `dynamic <./bidsmap.html#special-bidsmap-features>`__ ``<<filepath:regex>>`` property values, which are used to extract the subject and session labels from the path of the source data during bidscoiner runtime. Alternatively, you can put a dynamic attribute value there (e.g. ``<<PatientName>>``) if you want to extract that information from the source header. The data samples table shows a list of input files (left side) that uniquely represent all the different data types in the sourcedata repository, in conjunction with a preview of their ``BIDS output`` names (right side). The BIDS output names are shown in red if they are not BIDS compliant, crossed-out gray when the runs will be ignored/skipped in the conversion to BIDS, otherwise it is colored green.
 
 .. figure:: ./_static/bidseditor_main.png
 
@@ -183,7 +183,7 @@ Step 2: Running the bidscoiner
     Converts ("coins") your source datasets to NIfTI/json/tsv BIDS datasets using the mapping
     information from the bidsmap.yaml file. Edit this bidsmap to your needs using the bidseditor
     tool before running this function or (re-)run the bidsmapper whenever you encounter unexpected
-    data. You can run bidscoiner after all data has been collected, or run / re-run it whenever
+    data. You can run bidscoiner after all data has been collected, or run/re-run it whenever
     new data has been added to your source folder (presuming the scan protocol has not changed).
     Also, if you delete a subject/session folder from the bidsfolder, it will simply be re-created
     from the sourcefolder the next time you run the bidscoiner.
@@ -195,12 +195,12 @@ Step 2: Running the bidscoiner
 
     positional arguments:
       sourcefolder          The study root folder containing the raw source data
-      bidsfolder            The destination / output folder with the bids data
+      bidsfolder            The destination/output folder with the bids data
 
     options:
       -h, --help            show this help message and exit
       -p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...], --participant_label PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]
-                            Space separated list of selected sub-# names / folders to be processed (the
+                            Space separated list of selected sub-# names/folders to be processed (the
                             sub-prefix can be removed). Otherwise all participants in the sourcefolder will
                             be processed
       -b BIDSMAP, --bidsmap BIDSMAP
@@ -227,7 +227,7 @@ Step 2: Running the bidscoiner
    * Check your json sidecar files of your field maps, in particular see if they have the expected ``IntendedFor``/``B0FieldIdentifier`` values
 
 .. note::
-   * The provenance of the produced BIDS data-sets is stored in the ``[bidsfolder]/code/bidscoin/bidscoiner.log`` file. This file is also very useful for debugging / tracking down bidscoin issues
+   * The provenance of the produced BIDS data-sets is stored in the ``[bidsfolder]/code/bidscoin/bidscoiner.log`` file. This file is also very useful for debugging/tracking down bidscoin issues
    * Privacy-sensitive source data samples may be stored in ``[bidsfolder]/code/bidscoin/provenance`` (see the ``-s`` option in the `bidsmapper <./workflow.html#step-1a-running-the-bidsmapper>`__)
    * Small anonymized data snippets are send to the BIDScoin developers to generate usage and error statistics. For more information and opt-out run ``bidscoin --tracking show``
 

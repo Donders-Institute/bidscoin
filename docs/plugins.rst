@@ -153,7 +153,7 @@ As can be seen in the API code snippet below (but also see the default plugins f
        This plugin function assesses whether a sourcefile is of a supported dataformat
 
        :param file:    The sourcefile that is assessed
-       :return:        The valid / supported dataformat of the sourcefile
+       :return:        The valid/supported dataformat of the sourcefile
        """
 
        if file.is_file():

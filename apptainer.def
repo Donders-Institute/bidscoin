@@ -89,4 +89,4 @@ Stage: final
     ldconfig
 
 %runscript
-    exec bidscoin --help
+    exec bidscoin

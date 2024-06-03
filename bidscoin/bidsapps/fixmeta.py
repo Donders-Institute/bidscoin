@@ -20,18 +20,18 @@ if find_spec('bidscoin') is None:
 from bidscoin import bcoin, bids, lsdirs, trackusage, bidsmap_template
 
 
-def fixmeta(bidsdir: str, pattern: str, metadata: dict, subjects: list, bidsmapfile: str=''):
+def fixmeta(bidsfolder: str, pattern: str, metadata: dict, participant: list, bidsmap: str= ''):
     """
-    :param bidsdir:     The bids-directory with the subject data
-    :param pattern:     Globlike search pattern to select the targets in bidsdir to be fixed, e.g. 'anat/*_T1w*'
+    :param bidsfolder:  The bids-directory with the subject data
+    :param pattern:     Globlike search pattern to select the targets in bidsfolder to be fixed, e.g. 'anat/*_T1w*'
     :param metadata:    Dictionary with key-value pairs of meta data that need to be fixed. If value is a string, then it is taken as is, but if it is a list of `old`/`new` strings, i.e. `[old1, new1, old2, new2, etc]`, the existing meta data is used, with all occurrences of substring `old` replaced by `new`
-    :param subjects:    Space separated list of sub-# identifiers to be processed (the sub-prefix can be left out). If not specified then all participants will be processed
-    :param bidsmapfile: The name of the bidsmap YAML-file. If the bidsmap pathname is just the basename (i.e. no "/" in the name) then it is assumed to be located in the current directory or in bidsfolder/code/bidscoin. Default: 'bidsmap.yaml' or the template bidsmap
+    :param participant: Space separated list of sub-# identifiers to be processed (the sub-prefix can be left out). If not specified then all participants will be processed
+    :param bidsmap:     The name of the bidsmap YAML-file. If the bidsmap pathname is just the basename (i.e. no "/" in the name) then it is assumed to be located in the current directory or in bidsfolder/code/bidscoin. Default: 'bidsmap.yaml' or the template bidsmap
     :return:
     """
 
     # Input checking
-    bidsdir = Path(bidsdir).resolve()
+    bidsdir = Path(bidsfolder).resolve()
     if not bidsdir.is_dir():
         print(f"Could not find the bids folder: {bidsdir}"); return
     for key, value in metadata.items():
@@ -40,12 +40,12 @@ def fixmeta(bidsdir: str, pattern: str, metadata: dict, subjects: list, bidsmapf
             return
 
     # Get the list of subjects
-    if not subjects:
+    if not participant:
         subjects = lsdirs(bidsdir, 'sub-*')
         if not subjects:
             print(f"No subjects found in: {bidsdir/'sub-*'}"); return
     else:
-        subjects = ['sub-' + subject.replace('sub-', '') for subject in subjects]               # Make sure there is a "sub-" prefix
+        subjects = ['sub-' + subject.replace('sub-', '') for subject in participant]               # Make sure there is a "sub-" prefix
         subjects = [bidsdir/subject for subject in subjects if (bidsdir/subject).is_dir()]
 
     # Start logging
@@ -53,7 +53,7 @@ def fixmeta(bidsdir: str, pattern: str, metadata: dict, subjects: list, bidsmapf
     LOGGER.info(f"Command: fixmeta {' '.join(sys.argv[1:])}")
 
     # Load the bidsmap data (-> plugins)
-    bidsmap, _ = bids.load_bidsmap(Path(bidsmapfile or 'bidsmap.yaml'), bidsdir/'code'/'bidscoin', checks=(False, False, False))
+    bidsmap, _ = bids.load_bidsmap(Path(bidsmap or 'bidsmap.yaml'), bidsdir/'code'/'bidscoin', checks=(False, False, False))
     if not bidsmap:
         bidsmap, _ = bids.load_bidsmap(bidsmap_template, checks=(False, False, False))
     plugins  = bidsmap['Options']['plugins']
@@ -115,11 +115,7 @@ def main():
 
     trackusage('fixmeta')
     try:
-        fixmeta(bidsdir     = args.bidsfolder,
-                pattern     = args.pattern,
-                metadata    = args.metadata,
-                subjects    = args.participant_label,
-                bidsmapfile = args.bidsmap)
+        fixmeta(**vars(args))
 
     except Exception:
         trackusage('fixmeta_exception')

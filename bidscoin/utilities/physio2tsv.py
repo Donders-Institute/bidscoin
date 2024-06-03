@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-""" Reads and writes SIEMENS advanced physiological log / DICOM files (See also cli/_physio2tsv.py)"""
+""" Reads and writes SIEMENS advanced physiological log/DICOM files (See also cli/_physio2tsv.py)"""
 
 import logging
 import coloredlogs

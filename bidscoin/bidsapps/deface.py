@@ -25,21 +25,21 @@ from bidscoin.due import due, Doi
 
 
 @due.dcite(Doi('10.5281/zenodo.3524400'), description='A tool to remove facial structure from MRI images', tags=['reference-implementation'])
-def deface(bidsdir: str, pattern: str, subjects: list, force: bool, output: str, cluster: bool, nativespec: str, kwargs: dict):
+def deface(bidsfolder: str, pattern: str, participant: list, force: bool, output: str, cluster: bool, nativespec: str, args: dict):
     """
-    :param bidsdir:     The bids-directory with the subject data
+    :param bidsfolder:  The bids-directory with the subject data
     :param pattern:     Globlike search pattern (relative to the subject/session folder) to select the images that need to be defaced, e.g. 'anat/*_T1w*'
-    :param subjects:    List of sub-# identifiers to be processed (the sub-prefix can be left out). If not specified then all participants will be processed
+    :param participant: List of sub-# identifiers to be processed (the sub-prefix can be left out). If not specified then all participants will be processed
     :param force:       If True then images will be processed, regardless if images have already been defaced (i.e. if {"Defaced": True} in the json sidecar file)
     :param output:      Determines where the defaced images are saved. It can be the name of a BIDS datatype folder, such as 'anat', or of the derivatives folder, i.e. 'derivatives'. If output is left empty then the original images are replaced by the defaced images
     :param cluster:     Flag to submit the deface-jobs to the high-performance compute (HPC) cluster using the drmaa library
     :param nativespec:  DRMAA native specifications for submitting deface jobs to the HPC cluster
-    :param kwargs:      Additional arguments (in dict/json-style) that are passed to pydeface. See examples for usage
+    :param args:        Additional arguments (in dict/json-style) that are passed to pydeface. See examples for usage
     :return:
     """
 
     # Input checking
-    bidsdir = Path(bidsdir).resolve()
+    bidsdir = Path(bidsfolder).resolve()
     if not bidsdir.is_dir():
         print(f"Could not find the bids folder: {bidsdir}")
         return
@@ -48,16 +48,16 @@ def deface(bidsdir: str, pattern: str, subjects: list, force: bool, output: str,
     bcoin.setup_logging(bidsdir/'code'/'bidscoin'/'deface.log')
     LOGGER.info('')
     LOGGER.info('------------ START deface ------------')
-    LOGGER.info(f">>> deface bidsfolder={bidsdir} pattern={pattern} subjects={subjects} output={output}"
-                f" cluster={cluster} nativespec={nativespec} {kwargs}")
+    LOGGER.info(f">>> deface bidsfolder={bidsdir} pattern={pattern} participant={participant} output={output}"
+                f" cluster={cluster} nativespec={nativespec} {args}")
 
     # Get the list of subjects
-    if not subjects:
+    if not participant:
         subjects = lsdirs(bidsdir, 'sub-*')
         if not subjects:
             LOGGER.warning(f"No subjects found in: {bidsdir/'sub-*'}")
     else:
-        subjects = ['sub-' + subject.replace('sub-', '') for subject in subjects]               # Make sure there is a "sub-" prefix
+        subjects = ['sub-' + subject.replace('sub-', '') for subject in participant]            # Make sure there is a "sub-" prefix
         subjects = [bidsdir/subject for subject in subjects if (bidsdir/subject).is_dir()]
 
     # Prepare the HPC job submission
@@ -118,13 +118,13 @@ def deface(bidsdir: str, pattern: str, subjects: list, force: bool, output: str,
                         # Deface the image
                         LOGGER.info(f"Defacing: {match_rel} -> {outputfile_rel}")
                         if cluster:
-                            jt.args       = [str(match), '--outfile', str(outputfile), '--force'] + [item for pair in [[f"--{key}",val] for key,val in kwargs.items()] for item in pair]
+                            jt.args       = [str(match), '--outfile', str(outputfile), '--force'] + [item for pair in [[f"--{key}",val] for key,val in args.items()] for item in pair]
                             jt.jobName    = f"deface_{subid}_{sesid}"
                             jt.outputPath = f"{os.getenv('HOSTNAME')}:{Path.cwd() if DEBUG else tempfile.gettempdir()}/{jt.jobName}.out"
                             jobids.append(pbatch.runJob(jt))
                             LOGGER.info(f"Your deface job has been submitted with ID: {jobids[-1]}")
                         else:
-                            pdu.deface_image(str(match), str(outputfile), force=True, forcecleanup=True, **kwargs)
+                            pdu.deface_image(str(match), str(outputfile), force=True, forcecleanup=True, **args)
 
                         # Add a json sidecar-file with the "Defaced" field
                         inputjson = match.with_suffix('').with_suffix('.json')
@@ -166,14 +166,7 @@ def main():
 
     trackusage('deface')
     try:
-        deface(bidsdir    = args.bidsfolder,
-               pattern    = args.pattern,
-               subjects   = args.participant_label,
-               force      = args.force,
-               output     = args.output,
-               cluster    = args.cluster,
-               nativespec = args.nativespec,
-               kwargs     = args.args)
+        deface(**vars(args))
 
     except Exception:
         trackusage('deface_exception')

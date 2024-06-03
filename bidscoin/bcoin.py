@@ -451,7 +451,7 @@ def test_bidsmap(bidsmapfile: str):
     """
     Tests the bidsmaps run-items and their bidsname using BIDScoin's check and the bids-validator
 
-    :param bidsmapfile: The bidsmap or the full pathname / basename of the bidsmap yaml-file
+    :param bidsmapfile: The bidsmap or the full pathname/basename of the bidsmap yaml-file
     :return:
     """
 
@@ -475,7 +475,7 @@ def test_bidscoin(bidsmapfile: Union[Path,dict], options: dict=None, testplugins
     """
     Performs a bidscoin installation test
 
-    :param bidsmapfile: The bidsmap or the full pathname / basename of the bidsmap yaml-file
+    :param bidsmapfile: The bidsmap or the full pathname/basename of the bidsmap yaml-file
     :param options:     The bidscoin options. If empty, the default options are used
     :return:            0 if the test was successful, otherwise 1
     """

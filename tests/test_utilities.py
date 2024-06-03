@@ -30,7 +30,7 @@ def test_bidsparticipants(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir):
     if participantsfile.is_file():                                  # Compare newly generated data with reference data from test_bidscoiner
         with open(participantsfile) as fid:
             refdata = list(csv.reader(fid, delimiter='\t'))
-        bidsparticipants.bidsparticipants(raw_dicomdir, bids_dicomdir, ['age', 'sex', 'size', 'weight'], bidsmapfile=bidsmap_dicomdir)
+        bidsparticipants.bidsparticipants(raw_dicomdir, bids_dicomdir, ['age', 'sex', 'size', 'weight'], bidsmap=bidsmap_dicomdir)
         with open(participantsfile) as fid:
             newdata = list(csv.reader(fid, delimiter='\t'))
         assert newdata == refdata
@@ -40,7 +40,7 @@ def test_rawmapper(raw_dicomdir, tmp_path):
     shutil.copytree(raw_dicomdir, tmp_path, dirs_exist_ok=True)
 
     mapperfile = tmp_path/'rawmapper_PatientID_PatientComments.tsv'
-    rawmapper.rawmapper(tmp_path, dicomfield=('PatientID','PatientComments'), subprefix='Doe^', sesprefix='*')
+    rawmapper.rawmapper(tmp_path, field=('PatientID', 'PatientComments'), subprefix='Doe^', sesprefix='*')
     with open(mapperfile) as fid:
         mapperdata = list(csv.reader(fid, delimiter='\t'))
     assert len(mapperdata) == 7
@@ -49,7 +49,7 @@ def test_rawmapper(raw_dicomdir, tmp_path):
     assert mapperdata[2]   == ['Doe^Archibald', '02-CT, HEADBRAIN WO CONTRAST', '002-Routine Brain', '77654033', '']
 
     mapperfile = tmp_path/'rawmapper_PatientID.tsv'
-    rawmapper.rawmapper(tmp_path, dicomfield=('PatientID',), rename=True, subprefix='Doe^', sesprefix='01')
+    rawmapper.rawmapper(tmp_path, field=('PatientID',), rename=True, subprefix='Doe^', sesprefix='01')
     with open(mapperfile) as fid:
         mapperdata = list(csv.reader(fid, delimiter='\t'))
     assert len(mapperdata) == 3
@@ -59,7 +59,7 @@ def test_rawmapper(raw_dicomdir, tmp_path):
     assert (tmp_path/'Doe^77654033'/'01-XR C Spine Comp Min 4 Views').is_dir()
     assert (tmp_path/'Doe^98890234'/'01-').is_dir()
 
-    rawmapper.rawmapper(tmp_path, dicomfield=('PatientID',), rename=True, subprefix='Doe^', sesprefix='02')
+    rawmapper.rawmapper(tmp_path, field=('PatientID',), rename=True, subprefix='Doe^', sesprefix='02')
     with open(mapperfile) as fid:
         mapperdata = list(csv.reader(fid, delimiter='\t'))
     assert len(mapperdata) == 5
@@ -68,7 +68,7 @@ def test_rawmapper(raw_dicomdir, tmp_path):
     assert mapperdata[4]   == ['Doe^Peter', '02-Carotids', 'Doe^98890234', '02-Carotids']
     assert (tmp_path/'Doe^98890234'/'02-Carotids').is_dir()
 
-    rawmapper.rawmapper(tmp_path, dicomfield=('PatientID',), rename=True, subprefix='Doe^', sesprefix='*')
+    rawmapper.rawmapper(tmp_path, field=('PatientID',), rename=True, subprefix='Doe^', sesprefix='*')
     with open(mapperfile) as fid:
         mapperdata = list(csv.reader(fid, delimiter='\t'))
     assert len(mapperdata) == 7

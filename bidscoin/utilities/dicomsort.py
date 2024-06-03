@@ -214,14 +214,7 @@ def main():
 
     trackusage('dicomsort')
     try:
-        sortsessions(sourcefolder = args.dicomsource,
-                     subprefix    = args.subprefix,
-                     sesprefix    = args.sesprefix,
-                     folderscheme = args.folderscheme,
-                     namescheme   = args.namescheme,
-                     pattern      = args.pattern,
-                     force        = args.force,
-                     dryrun       = args.dryrun)
+        sortsessions(**vars(args))
 
     except Exception:
         trackusage('dicomsort_exception')

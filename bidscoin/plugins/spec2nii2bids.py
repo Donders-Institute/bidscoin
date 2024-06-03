@@ -52,7 +52,7 @@ def is_sourcefile(file: Path) -> str:
     This plugin function assesses whether a sourcefile is of a supported dataformat
 
     :param file:    The sourcefile that is assessed
-    :return:        The valid / supported dataformat of the sourcefile
+    :return:        The valid/supported dataformat of the sourcefile
     """
 
     suffix = file.suffix.lower()
@@ -102,7 +102,7 @@ def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: Pl
 def bidsmapper_plugin(session: Path, bidsmap_new: Bidsmap, bidsmap_old: Bidsmap, template: Bidsmap, store: dict) -> None:
     """
     All the heuristics spec2nii2bids attributes and properties onto bids labels and meta-data go into this plugin function.
-    The function is expected to update / append new runs to the bidsmap_new data structure. The bidsmap options for this plugin
+    The function is expected to update/append new runs to the bidsmap_new data structure. The bidsmap options for this plugin
     are stored in:
 
     bidsmap_new['Options']['plugins']['spec2nii2bids']

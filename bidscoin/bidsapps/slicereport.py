@@ -131,16 +131,16 @@ def slicer_append(inputimage: Path, operations: str, outlineimage: Path, mainopt
         sys.exit(process.returncode)
 
 
-def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: str, subjects: list, reportdir: str, crossdirs: str, qccols: list, cluster: str, mem: str, operations: str, suboperations: str, options: list, outputs: list, suboptions: list, suboutputs: list):
+def slicereport(bidsfolder: str, pattern: str, outlinepattern: str, outlineimage: str, participant: list, reportfolder: str, xlinkfolder: str, qcscores: list, cluster: str, mem: str, operations: str, suboperations: str, options: list, outputs: list, suboptions: list, suboutputs: list):
     """
-    :param bidsdir:         The bids-directory with the subject data
-    :param pattern:         Globlike search pattern to select the images in bidsdir to be reported, e.g. 'anat/*_T1w*'
-    :param outlinepattern:  Globlike search pattern to select red-outline images that are projected on top of the reported images. Prepend `outlinedir:` if your outline images are in `outlinedir` instead of `bidsdir`
+    :param bidsfolder:      The bids-directory with the subject data
+    :param pattern:         Globlike search pattern to select the images in bidsfolder to be reported, e.g. 'anat/*_T1w*'
+    :param outlinepattern:  Globlike search pattern to select red-outline images that are projected on top of the reported images. Prepend `outlinedir:` if your outline images are in `outlinedir` instead of `bidsfolder`
     :param outlineimage:    A common red-outline image that is projected on top of all images
-    :param subjects:        Space separated list of sub-# identifiers to be processed (the sub-prefix can be left out). If not specified then all participants will be processed
-    :param reportdir:       The folder where the report is saved
-    :param crossdirs:       A (list of) folder(s) with cross-linked sub-reports
-    :param qccols:          Column names for creating an accompanying tsv-file to store QC-rating scores
+    :param participant:     Space separated list of sub-# identifiers to be processed (the sub-prefix can be left out). If not specified then all participants will be processed
+    :param reportfolder:    The folder where the report is saved
+    :param xlinkfolder:     A (list of) folder(s) with cross-linked sub-reports
+    :param qcscores:        Column names for creating an accompanying tsv-file to store QC-rating scores
     :param cluster:         Use `torque` or `slurm` to submit the slicer jobs to a high-performance compute (HPC) cluster. Leave empty to run slicer on your local computer
     :param mem:             The amount of requested memory in GB for the cluster jobs
     :param operations:      The fslmath operations performed on the input image: fslmaths inputimage OPERATIONS reportimage
@@ -153,18 +153,18 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
     """
 
     # Input checking
-    bidsdir = Path(bidsdir).resolve()
+    bidsdir = Path(bidsfolder).resolve()
     if not bidsdir.is_dir():
         print(f"Could not find the bids folder: {bidsdir}"); return
-    if not reportdir:
-        reportdir = bidsdir/'derivatives/slicereport'
+    if not reportfolder:
+        reportfolder = bidsdir/'derivatives/slicereport'
     else:
-        reportdir = Path(reportdir).resolve()
-    if isinstance(crossdirs, str):
-        crossdirs = [crossdirs]
-    elif crossdirs is None:
-        crossdirs = []
-    for crossdir in crossdirs:
+        reportfolder = Path(reportfolder).resolve()
+    if isinstance(xlinkfolder, str):
+        xlinkfolder = [xlinkfolder]
+    elif xlinkfolder is None:
+        xlinkfolder = []
+    for crossdir in xlinkfolder:
         if not Path(crossdir).is_dir():
             print(f"Could not find: {crossdir}"); return
     if outlineimage:
@@ -191,32 +191,32 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
     valid_exts                  = set(sum((klass.valid_exts for klass in nib.imageclasses.all_image_classes),()))
 
     # Get the list of subjects
-    if not subjects:
+    if not participant:
         subjects = lsdirs(bidsdir, 'sub-*')
         if not subjects:
             print(f"No subjects found in: {bidsdir/'sub-*'}"); return
     else:
-        subjects = ['sub-' + subject.replace('sub-', '') for subject in subjects]               # Make sure there is a "sub-" prefix
+        subjects = ['sub-' + subject.replace('sub-', '') for subject in participant]               # Make sure there is a "sub-" prefix
         subjects = [bidsdir/subject for subject in subjects if (bidsdir/subject).is_dir()]
 
     # Start logging
-    reportdir.mkdir(parents=True, exist_ok=True)
-    (reportdir/'slicereport.log').unlink(missing_ok=True)
-    bcoin.setup_logging(reportdir/'slicereport.log')
+    reportfolder.mkdir(parents=True, exist_ok=True)
+    (reportfolder/'slicereport.log').unlink(missing_ok=True)
+    bcoin.setup_logging(reportfolder/'slicereport.log')
     LOGGER.info(f"Command: slicereport {' '.join(sys.argv[1:])}")
 
     # Create the report index file
-    report = reportdir/'index.html'
+    report = reportfolder/'index.html'
     report.write_text(f'{html_head}<h1>Command:<span style="color: White"> slicereport {" ".join(sys.argv[1:])}</span></h1>\n')
-    style  = reportdir/'style.css'
+    style  = reportfolder/'style.css'
     style.write_text(html_style)
 
     # Create a QC tsv-file
-    qcfile = reportdir/'qcscores.tsv'
-    if qccols:
+    qcfile = reportfolder/'qcscores.tsv'
+    if qcscores:
         with open(qcfile, 'wt') as fid:
             tsv_writer = csv.writer(fid, delimiter='\t')
-            tsv_writer.writerow(['subject/session'] + qccols)
+            tsv_writer.writerow(['subject/session'] + qcscores)
 
     # Loop over the subject/session-directories
     with logging_redirect_tqdm():
@@ -229,10 +229,10 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
             for session in sessions:
 
                 # Write a row in the QC tsv-file
-                if qccols:
+                if qcscores:
                     with open(qcfile, 'a') as fid:
                         tsv_writer = csv.writer(fid, delimiter='\t')
-                        tsv_writer.writerow([str(session.relative_to(bidsdir))] + len(qccols) * ['n/a'])
+                        tsv_writer.writerow([str(session.relative_to(bidsdir))] + len(qcscores) * ['n/a'])
 
                 # Search for the (nibabel supported) image(s) to report
                 LOGGER.info(f"Processing images in: {session.relative_to(bidsdir)}")
@@ -249,7 +249,7 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
                         outlineimages = [''] * len(images)
 
                 # Generate a report row and a sub-report for each session
-                reportses = reportdir/session.relative_to(bidsdir)
+                reportses = reportfolder/session.relative_to(bidsdir)
                 reportses.mkdir(parents=True, exist_ok=True)
                 for n, image in enumerate(images):
 
@@ -262,14 +262,14 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
                     caption   = f"{image.relative_to(bidsdir)}{'&nbsp;&nbsp;&nbsp;( ../'+str(outline.relative_to(outlinesession))+' )' if outlinepattern and outline.name else ''}"
                     subreport = reportses/f"{bids.insert_bidskeyval(image, 'desc', 'subreport', False).with_suffix('').stem}.html"
                     with report.open('a') as fid:
-                        fid.write(f'\n<p><a href="{subreport.relative_to(reportdir).as_posix()}"><img src="{montage.relative_to(reportdir).as_posix()}"><br>\n{caption}</a></p>\n')
+                        fid.write(f'\n<p><a href="{subreport.relative_to(reportfolder).as_posix()}"><img src="{montage.relative_to(reportfolder).as_posix()}"><br>\n{caption}</a></p>\n')
 
                     # Add the sub-report
                     if suboutputs:
                         montage = subreport.with_suffix('.png')
                         slicer_append(image, suboperations, outline, suboptions, suboutputs, subsliceroutput, montage, cluster, mem)
                     crossreports = ''
-                    for crossdir in crossdirs:          # Include niprep reports
+                    for crossdir in xlinkfolder:          # Include niprep reports
                         for crossreport in sorted(Path(crossdir).glob(f"{subject.name.split('_')[0]}*.html")) + sorted((Path(crossdir)/session.relative_to(bidsdir)).glob('*.html')):
                             crossreports += f'\n<br><a href="{crossreport.resolve()}">&#8618; {crossreport}</a>'
                     if subreport.with_suffix('.json').is_file():
@@ -283,7 +283,7 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
                     subreport.write_text(f'{html_head.replace("style.css", style_rel)}<h1>{caption}</h1>\n{crossreports}\n<p><img src="{montage.name}"></p>{metadata}\n\n</body></html>')
 
     # Create a dataset description file if it does not exist
-    dataset = reportdir/'dataset_description.json'
+    dataset = reportfolder/'dataset_description.json'
     if not dataset.is_file():
         description = {"Name": "Slicereport - A visual inspection report",
                        "BIDSVersion": bidsversion(),
@@ -300,7 +300,7 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
         footer = '<h3 style="color: LimeGreen">No errors or warnings were reported</h3>\n'
     with report.open('a') as fid:
         fid.write(f'\n<br>{footer}<p>\n{errors}</p>\n\n</body></html>')
-    if qccols:
+    if qcscores:
         LOGGER.info(' ')
         LOGGER.info('To store QC ratings, open:')
         LOGGER.info(qcfile)
@@ -320,22 +320,7 @@ def main():
 
     trackusage('slicereport')
     try:
-        slicereport(bidsdir        = args.bidsfolder,
-                    pattern        = args.pattern,
-                    outlinepattern = args.outlinepattern,
-                    outlineimage   = args.outlineimage,
-                    subjects       = args.participant_label,
-                    reportdir      = args.reportfolder,
-                    crossdirs      = args.xlinkfolder,
-                    qccols         = args.qcscores,
-                    cluster        = args.cluster,
-                    mem            = args.mem,
-                    operations     = args.operations,
-                    suboperations  = args.suboperations,
-                    options        = args.options,
-                    outputs        = args.outputs,
-                    suboptions     = args.suboptions,
-                    suboutputs     = args.suboutputs)
+        slicereport(**vars(args))
 
     except Exception:
         trackusage('slicereport_exception')

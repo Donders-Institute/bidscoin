@@ -276,7 +276,7 @@ class DataSource:
         :return:        Updated (subid, sesid) tuple, including the BIDS-compliant 'sub-'/'ses-' prefixes
         """
 
-        # Add the default value for subid and sesid if unspecified / None
+        # Add the default value for subid and sesid if unspecified/None
         if subid is None:
             subid = f"<<filepath:/{self.resubprefix()}(.*?)/>>"
         if sesid is None:
@@ -1370,7 +1370,7 @@ def sanitize(label: str) -> str:
     example map "Joe's reward_task" to "Joesrewardtask"
 
     :param label:   The given label that potentially contains undesired characters
-    :return:        The cleaned-up / BIDS-valid label
+    :return:        The cleaned-up/BIDS-valid label
     """
 
     if label is None or label == '':
@@ -1715,7 +1715,7 @@ def get_matching_run(datasource: DataSource, bidsmap: Bidsmap, runtime=False) ->
     :param datasource:  The data source from which the attributes are read. NB: The datasource.datatype attribute is updated
     :param bidsmap:     Full bidsmap data structure, with all options, BIDS keys and attributes, etc
     :param runtime:     Dynamic <<values>> are expanded if True
-    :return:            (run, provenance) The matching and filled-in / cleaned run item, and if there is a match, the
+    :return:            (run, provenance) The matching and filled-in/cleaned run item, and if there is a match, the
                         provenance (i.e. unique identifier) of the run-item in the bidsmap. If there is no match then the
                         run is still populated with info from the source-file, but the returned provenance will be ''
     """
@@ -2339,7 +2339,7 @@ def updatemetadata(datasource: DataSource, targetmeta: Path, usermeta: Meta, ext
             elif isinstance(metapool[key], list):
                 metapool[key] = [item.replace('<<session', f"<<ses{ses}") for item in metapool[key]]
 
-        # Remove unused (but added from the template) B0FieldIdentifiers / Sources
+        # Remove unused (but added from the template) B0FieldIdentifiers/Sources
         if not metapool.get(key):
             metapool.pop(key, None)
 

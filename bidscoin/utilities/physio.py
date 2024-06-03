@@ -172,7 +172,7 @@ def readparsefile(fn: Union[bytes,Path], logdatatype: str, firsttime: int=0, exp
 
 def readphysio(fn: Union[str,Path]) -> dict:
     """
-    Read and plots active (i.e. non-zero) signals from SIEMENS advanced physiological log / DICOM files (>=R013, >=VD13A)
+    Read and plots active (i.e. non-zero) signals from SIEMENS advanced physiological log/DICOM files (>=R013, >=VD13A)
     E. Auerbach, CMRR, 2015-9
 
     This function expects to find either a combination of individual logfiles (*_ECG.log, *_RESP.log, *_PULS.log, *_EXT.log,

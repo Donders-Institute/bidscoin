@@ -23,11 +23,11 @@ from bidscoin import bcoin, bids, lsdirs, trackusage
 unknowndatatype = 'extra_data'
 
 
-def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorithm: str, weights: list, force: bool=False):
+def echocombine(bidsfolder: str, pattern: str, participant: list, output: str, algorithm: str, weights: list, force: bool=False):
     """
     :param bidsdir:     The bids-directory with the (multi-echo) subject data
     :param pattern:     Globlike recursive search pattern (relative to the subject/session folder) to select the first echo of the images that need to be combined, e.g. '*task-*echo-1*'
-    :param subjects:    List of sub-# identifiers to be processed (the sub-prefix can be left out). If not specified then all participants will be processed
+    :param participant: List of sub-# identifiers to be processed (the sub-prefix can be left out). If not specified then all participants will be processed
     :param output:      Determines where the output is saved. It can be the name of a BIDS datatype folder, such as 'func', or of the derivatives folder, i.e. 'derivatives'. If output = [the name of the input datatype folder] then the original echo images are replaced by one combined image. If output is left empty then the combined image is saved in the input datatype folder and the original echo images are moved to the {unknowndatatype} folder
     :param algorithm:   Combination algorithm, either 'PAID', 'TE' or 'average'
     :param weights:     Weights for each echo
@@ -36,7 +36,7 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
     """
 
     # Input checking
-    bidsdir = Path(bidsdir).resolve()
+    bidsdir = Path(bidsfolder).resolve()
     if not bidsdir.is_dir():
         print(f"Could not find the bids folder: {bidsdir}")
         return
@@ -45,16 +45,16 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
     bcoin.setup_logging(bidsdir/'code'/'bidscoin'/'echocombine.log')
     LOGGER.info('')
     LOGGER.info(f"--------- START echocombine ---------")
-    LOGGER.info(f">>> echocombine bidsfolder={bidsdir} pattern={pattern} subjects={subjects} output={output}"
+    LOGGER.info(f">>> echocombine bidsfolder={bidsdir} pattern={pattern} participant={participant} output={output}"
                 f" algorithm={algorithm} weights={weights}")
 
     # Get the list of subjects
-    if not subjects:
+    if not participant:
         subjects = lsdirs(bidsdir, 'sub-*')
         if not subjects:
             LOGGER.warning(f"No subjects found in: {bidsdir/'sub-*'}")
     else:
-        subjects = ['sub-' + subject.replace('sub-', '') for subject in subjects]              # Make sure there is a "sub-" prefix
+        subjects = ['sub-' + subject.replace('sub-', '') for subject in participant]              # Make sure there is a "sub-" prefix
         subjects = [bidsdir/subject for subject in subjects if (bidsdir/subject).is_dir()]
 
     # Loop over bids subject/session-directories
@@ -211,13 +211,7 @@ def main():
 
     trackusage('echocombine')
     try:
-        echocombine(bidsdir   = args.bidsfolder,
-                    pattern   = args.pattern,
-                    subjects  = args.participant_label,
-                    output    = args.output,
-                    algorithm = args.algorithm,
-                    weights   = args.weights,
-                    force     = args.force)
+        echocombine(**vars(args))
 
     except Exception:
         trackusage('echocombine_exception')

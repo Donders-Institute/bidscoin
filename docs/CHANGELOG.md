@@ -143,10 +143,10 @@
 - Dicomsort now searches recursively over the sessionfolder
 - The dcm2niix2bids plugin now searches recursively for DICOM Series folders
 - Images that have already been defaced are now skipped
-- Prepend the rawfolder name & subprefix for more robust subject- / session-label filepath extraction
+- Prepend the rawfolder name & subprefix for more robust subject-/session-label filepath extraction
 
 ### Fixed
-- Pydeface not parsing subject / session labels from the filepath
+- Pydeface not parsing subject/session labels from the filepath
 - The non-HPC use of pydeface no longer requires DRMAA installation
 - Account for `*` and `?` wildcards in the sub/ses prefixes in the bidsmapper
 - Account for dynamic values with non-matching regular expressions (special thanks to Mateusz Pawlik)
@@ -167,7 +167,7 @@
 - Plugin `meta` option setting to enrich json sidecar files or add data that is not supported
 
 ### Changed
-- Removed / changed redundant subject/session prefix input arguments (now stored in the bidsmap)
+- Removed/changed redundant subject/session prefix input arguments (now stored in the bidsmap)
 - The `IntendedFor` search feature now works independent of plugins
 
 ### Fixed
@@ -180,7 +180,7 @@
 - A BIDScoin installation test (`bidscoin -t`)
 - Option to install extra packages, such as phys2bids
 - A bidseditor button to save the Options to a (default) template bidsmap
-- Sub-/ses-prefix settings and BIDS / extra_data / excluded datatypes in `bidsmap['Options']['bidscoin']`
+- Sub-/ses-prefix settings and BIDS/extra_data/excluded datatypes in `bidsmap['Options']['bidscoin']`
 - Regular expressions for extracting property and attribute substrings from dynamic values via a <\<key:regular_expression>> syntax
 - A plugin for spec2nii to convert MR spectroscopy data
 - An experimental plugin for phys2bids to convert physiological data
@@ -195,7 +195,7 @@
 ### Changed
 - Plugins should now have a `is_sourcefile` and a `get_attribute` function and have a simpler/changed API (-> DataSource class)
 - The intricate filtering of the `nrfiles` property by the other filesystem properties has been removed and is now a pure/unfiltered file-system property
-- The default `<<SourceFilePath>>` keyword has been replaced by the more flexible <\<filepath:/sub-(.*?)/>> property to extract the subject / session label
+- The default `<<SourceFilePath>>` keyword has been replaced by the more flexible <\<filepath:/sub-(.*?)/>> property to extract the subject/session label
 - The dcm2bidsmap and the dcm2niix2bids plugins have been merged
 - The dicomsort utility has new naming-scheme functionality
 - Removed the obsolete bidsmap_template.yaml file
@@ -229,7 +229,7 @@ The bidscoiner no longer sometimes crashes when dcm2niix produces custom suffixe
 - More user feedback in the GUI for new BIDS-compliancy checks on missing or invalid bids data
 - A right-click menu option to remove a run-item from the bidsmap (advanced usage)
 - The option to load a new bidsmap in the bidseditor
-- Enable the user to edit json, yaml, tsv and other non-DICOM / non-PAR files with double-clicks in the data browser
+- Enable the user to edit json, yaml, tsv and other non-DICOM/non-PAR files with double-clicks in the data browser
 - A central 'bidscoin' package function with various utilities, such as listing and installing BIDScoin plugins or executables
 - Plugins can have their own 'test' routine that can be called from the bidseditor
 
@@ -336,7 +336,7 @@ A significant rewrite and evolution of BIDScoin!
 A Significant rewrite to make BIDScoin more robust, user-friendly and feature-rich :-)
 
 ### Added
-- First support for Philips PAR / REC data format
+- First support for Philips PAR/REC data format
 - A BIDS compliant defacing tool
 - A BIDS compliant multi-echo combination tool
 - Much improved documentation (https://bidscoin.readthedocs.io)
@@ -354,7 +354,7 @@ A lot of improvements have landed in 2.3, making it the best release of the 2-se
 - The possibility to edit Participant labels
 - Various tests and checks in Options to ensure creating good working bidsmaps / BIDS output data
 - Upgraded compliance with bids v1.2.1
-- The possibility to leave-out certain data types / runs
+- The possibility to leave-out certain data types/runs
 
 ### Changed
 - A new workflow that is easier and more consistent
@@ -407,7 +407,7 @@ A major release and rewrite with important user-facing improvements
 - Saving of template sidecar files in the bids output directory
 
 ### Changed
-- increased flexibility for renaming / reorganizing the raw (input) data structure
+- increased flexibility for renaming/reorganizing the raw (input) data structure
 - Added provenance data to the bidsmap/yaml files
 
 ### Fixed

@@ -68,7 +68,7 @@ You may get the error "Could not parse required sub- label from [..]". This erro
 
 I got an "Unexpected postfix / file conversion result"
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-This bidscoiner warning message means that the source data was not properly recognized / converted by the plugin. Please search and/or report it on `Github issue <https://github.com/Donders-Institute/bidscoin/issues?q=>`__ to resolve it.
+This bidscoiner warning message means that the source data was not properly recognized/converted by the plugin. Please search and/or report it on `Github issue <https://github.com/Donders-Institute/bidscoin/issues?q=>`__ to resolve it.
 
 I only see "_magnitude1" or "_magnitude2" run-items in my bidsmap
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

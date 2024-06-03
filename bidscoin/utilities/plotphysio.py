@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-""" Plots SIEMENS advanced physiological log / DICOM files (See also cli/_plotphysio.py)"""
+""" Plots SIEMENS advanced physiological log/DICOM files (See also cli/_plotphysio.py)"""
 
 import logging
 import coloredlogs

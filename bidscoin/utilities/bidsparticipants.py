@@ -53,20 +53,20 @@ def scanpersonals(bidsmap: Bidsmap, session: Path, personals: dict, keys: list) 
     return True
 
 
-def bidsparticipants(rawfolder: str, bidsfolder: str, keys: list, bidsmapfile: str='bidsmap.yaml', dryrun: bool=False) -> None:
+def bidsparticipants(sourcefolder: str, bidsfolder: str, keys: list, bidsmap: str= 'bidsmap.yaml', dryrun: bool=False) -> None:
     """
     Main function that processes all the subjects and session in the sourcefolder to (re)generate the particpants.tsv file in the BIDS folder.
 
-    :param rawfolder:       The root folder-name of the sub/ses/data/file tree containing the source data files
-    :param bidsfolder:      The name of the BIDS root folder
-    :param keys:            The keys that are extracted from the source data when populating the participants.tsv file
-    :param bidsmapfile:     The name of the bidsmap YAML-file. If the bidsmap pathname is just the basename (i.e. no "/" in the name) then it is assumed to be located in the current directory or in bidsfolder/code/bidscoin
-    :param dryrun:          Boolean to just display the participants info
-    :return:                Nothing
+    :param sourcefolder: The root folder-name of the sub/ses/data/file tree containing the source data files
+    :param bidsfolder:   The name of the BIDS root folder
+    :param keys:         The keys that are extracted from the source data when populating the participants.tsv file
+    :param bidsmap:      The name of the bidsmap YAML-file. If the bidsmap pathname is just the basename (i.e. no "/" in the name) then it is assumed to be located in the current directory or in bidsfolder/code/bidscoin
+    :param dryrun:       Boolean to just display the participants info
+    :return:             Nothing
     """
 
     # Input checking & defaults
-    rawfolder  = Path(rawfolder).resolve()
+    rawfolder  = Path(sourcefolder).resolve()
     bidsfolder = Path(bidsfolder).resolve()
     if not rawfolder.is_dir():
         print(f"Rawfolder '{rawfolder}' not found")
@@ -82,10 +82,10 @@ def bidsparticipants(rawfolder: str, bidsfolder: str, keys: list, bidsmapfile: s
         bcoin.setup_logging(bidsfolder/'code'/'bidscoin'/'bidsparticipants.log')
     LOGGER.info('')
     LOGGER.info(f"-------------- START bidsparticipants {__version__} ------------")
-    LOGGER.info(f">>> bidsparticipants sourcefolder={rawfolder} bidsfolder={bidsfolder} bidsmap={bidsmapfile}")
+    LOGGER.info(f">>> bidsparticipants sourcefolder={rawfolder} bidsfolder={bidsfolder} bidsmap={bidsmap}")
 
     # Get the bidsmap sub-/ses-prefix from the bidsmap YAML-file
-    bidsmap,_ = bids.load_bidsmap(Path(bidsmapfile), bidsfolder/'code'/'bidscoin', checks=(False, False, False))
+    bidsmap,_ = bids.load_bidsmap(Path(bidsmap), bidsfolder/'code'/'bidscoin', checks=(False, False, False))
     if not bidsmap:
         LOGGER.info('Make sure to run "bidsmapper" first, exiting now')
         return
@@ -128,7 +128,7 @@ def bidsparticipants(rawfolder: str, bidsfolder: str, keys: list, bidsmapfile: s
                 sesfolders, unpacked = bids.unpack(session, bidsmap['Options']['bidscoin'].get('unzip',''))
                 for sesfolder in sesfolders:
 
-                    # Update / append the personal source data
+                    # Update/append the personal source data
                     LOGGER.info(f"Scanning session: {sesfolder}")
                     success = scanpersonals(bidsmap, sesfolder, personals, keys)
 
@@ -161,11 +161,7 @@ def main():
 
     trackusage('bidsparticipants')
     try:
-        bidsparticipants(rawfolder   = args.sourcefolder,
-                         bidsfolder  = args.bidsfolder,
-                         keys        = args.keys,
-                         bidsmapfile = args.bidsmap,
-                         dryrun      = args.dryrun)
+        bidsparticipants(**vars(args))
 
     except Exception:
         trackusage('bidsparticipants_exception')

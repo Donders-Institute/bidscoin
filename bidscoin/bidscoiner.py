@@ -23,25 +23,25 @@ if find_spec('bidscoin') is None:
 from bidscoin import bcoin, bids, lsdirs, bidsversion, trackusage, __version__, DEBUG
 
 
-def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=False, bidsmapfile: str='bidsmap.yaml', cluster: bool=False, nativespec: str='') -> None:
+def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: bool=False, bidsmap: str='bidsmap.yaml', cluster: bool=False, nativespec: str='') -> None:
     """
     Main function that processes all the subjects and session in the sourcefolder and uses the
     bidsmap.yaml file in bidsfolder/code/bidscoin to cast the data into the BIDS folder.
 
-    :param rawfolder:       The root folder-name of the sub/ses/data/file tree containing the source data files
-    :param bidsfolder:      The name of the BIDS root folder
-    :param subjects:        List of selected subjects / participants (i.e. sub-# names / folders) to be processed (the sub-prefix can be omitted). Otherwise, all subjects in the sourcefolder will be processed
-    :param force:           If True, subjects will be processed, regardless of existing folders in the bidsfolder. Otherwise, existing folders will be skipped
-    :param bidsmapfile:     The name of the bidsmap YAML-file. If the bidsmap pathname is just the basename (i.e. no "/" in the name) then it is assumed to be located in the current directory or in bidsfolder/code/bidscoin
-    :param cluster:         Use the DRMAA library to submit the bidscoiner jobs to a high-performance compute (HPC) cluster
-    :param nativespec:      DRMAA native specifications for submitting bidscoiner jobs to the HPC cluster. See cli/_bidscoiner() for default
-    :return:                Nothing
+    :param sourcefolder: The root folder-name of the sub/ses/data/file tree containing the source data files
+    :param bidsfolder:   The name of the BIDS root folder
+    :param participant:  List of selected subjects/participants (i.e. sub-# names/folders) to be processed (the sub-prefix can be omitted). Otherwise, all subjects in the sourcefolder will be processed
+    :param force:        If True, participant will be processed, regardless of existing folders in the bidsfolder. Otherwise, existing folders will be skipped
+    :param bidsmap:      The name of the bidsmap YAML-file. If the bidsmap pathname is just the basename (i.e. no "/" in the name) then it is assumed to be located in the current directory or in bidsfolder/code/bidscoin
+    :param cluster:      Use the DRMAA library to submit the bidscoiner jobs to a high-performance compute (HPC) cluster
+    :param nativespec:   DRMAA native specifications for submitting bidscoiner jobs to the HPC cluster. See cli/_bidscoiner() for default
+    :return:             Nothing
     """
 
     # Input checking & defaults
-    rawfolder      = Path(rawfolder).resolve()
+    rawfolder      = Path(sourcefolder).resolve()
     bidsfolder     = Path(bidsfolder).resolve()
-    bidsmapfile    = Path(bidsmapfile)
+    bidsmapfile    = Path(bidsmap)
     bidscoinfolder = bidsfolder/'code'/'bidscoin'
     bidscoinfolder.mkdir(parents=True, exist_ok=True)
     if not rawfolder.is_dir():
@@ -52,7 +52,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
     bcoin.setup_logging(bidscoinfolder/'bidscoiner.log')
     LOGGER.info('')
     LOGGER.info(f"-------------- START BIDScoiner {__version__}: BIDS {bidsversion()} ------------")
-    LOGGER.info(f">>> bidscoiner sourcefolder={rawfolder} bidsfolder={bidsfolder} subjects={subjects} force={force} bidsmap={bidsmapfile}")
+    LOGGER.info(f">>> bidscoiner sourcefolder={rawfolder} bidsfolder={bidsfolder} participant={participant} force={force} bidsmap={bidsmapfile}")
 
     # Create a dataset description file if it does not exist
     dataset_file = bidsfolder/'dataset_description.json'
@@ -124,12 +124,12 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
     # Get the list of subjects
     subprefix = bidsmap['Options']['bidscoin']['subprefix'].replace('*','')
     sesprefix = bidsmap['Options']['bidscoin']['sesprefix'].replace('*','')
-    if not subjects:
+    if not participant:
         subjects = lsdirs(rawfolder, (subprefix if subprefix!='*' else '') + '*')
         if not subjects:
             LOGGER.warning(f"No subjects found in: {rawfolder/subprefix}*")
     else:
-        subjects = [rawfolder/(subprefix + re.sub(f"^{'' if subprefix=='*' else re.escape(subprefix)}",'',subject)) for subject in subjects]   # Make sure there is a sub-prefix
+        subjects = [rawfolder/(subprefix + re.sub(f"^{'' if subprefix=='*' else re.escape(subprefix)}",'',subject)) for subject in participant]   # Make sure there is a sub-prefix
 
     # Recursively call bidscoiner to run individual subjects on the HPC
     if cluster:
@@ -297,7 +297,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
                     # Add the special fieldmap metadata (IntendedFor, TE, etc)
                     bids.addmetadata(bidssession)
 
-                    # Check / repair the run-indices using acq_time info in the scans_table
+                    # Check/repair the run-indices using acq_time info in the scans_table
                     bids.check_runindices(bidssession)
 
                     # Clean-up the temporary unpacked data
@@ -320,13 +320,7 @@ def main():
 
     trackusage('bidscoiner')
     try:
-        bidscoiner(rawfolder   = args.sourcefolder,
-                   bidsfolder  = args.bidsfolder,
-                   subjects    = args.participant_label,
-                   force       = args.force,
-                   bidsmapfile = args.bidsmap,
-                   cluster     = args.cluster,
-                   nativespec  = args.nativespec)
+        bidscoiner(**vars(args))
 
     except Exception:
         trackusage('bidscoiner_exception')
