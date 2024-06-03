@@ -6,12 +6,19 @@ BIDScoin can be installed directly on your operating system, or in a so-called c
 Python installation
 -------------------
 
-BIDScoin is a Python 3 package and can be installed on Linux, MS Windows and on OS-X computers, as long as a Python interpreter (v3.8 or higher) is available on the system. On Linux and OS-X this is usually already the case, but MS Windows users may need to first install Python themselves. See e.g. this `Python 3 distribution <https://docs.anaconda.com/anaconda/install/windows/>`__ for instructions.
+BIDScoin is a Python 3 package and can be installed on Linux, MS Windows and on OS-X computers, as long as a Python interpreter (v3.8 or higher) is available on the system. On Linux and OS-X this is usually already the case, but MS Windows users may need to first install Python themselves. The easiest solution is to use the official `Python installer <https://www.python.org/downloads/windows/>`__ and tick the "Add Python 3.# to PATH" checkbox during the installation process.
+
+If you have a working Python installation, then you can install BIDScoin directly on your system, but this is not recommended. Instead, it is best practice to isolate apps such as BIDScoin, and install them in a so-called `virtual <https://docs.python.org/3/tutorial/venv.html>`__ environment, e.g. by opening a command terminal execute (Linux example):
+
+.. code-block:: console
+
+   $ python -m venv bidscoin        # This will create an environment for BIDScoin
+   $ source bidscoin/bin/activate   # This activates the environment so you can use it
 
 BIDScoin installation
 ---------------------
 
-To install BIDScoin on your system run one of the following commands in your command-line interface/shell (important tip: you probably want or need to create and activate a `virtual`_/`conda`_ Python environment first and then):
+To install BIDScoin on your system / activated virtual environment (see above) run one of the following commands in your command-line interface/shell:
 
 .. code-block:: console
 
@@ -29,7 +36,7 @@ These install commands can be run independently and will give you the latest sta
    $ pip install git+https://github.com/Donders-Institute/bidscoin                          # The BIDScoin-framework only
    $ pip install bidscoin[dcm2niix2bids]@git+https://github.com/Donders-Institute/bidscoin  # The BIDScoin-framework + dcm2niix2bids plugin
 
-If you do not have git (or any other version control system) installed you can `download`_ and unzip the code yourself in a folder named e.g. 'bidscoin' and run:
+If you do not have git (or any other version control system) installed you can `download <https://github.com/Donders-Institute/bidscoin>`__ and unzip the code yourself in a folder named e.g. 'bidscoin' and run:
 
 .. code-block:: console
 
@@ -55,18 +62,13 @@ Run your pip install command as before with the additional ``--upgrade`` or ``--
    - The bidsmaps are not guaranteed to be compatible between different BIDScoin versions
    - After a successful BIDScoin installation or upgrade, it may be needed to (re)do any adjustments that were done on your `template bidsmap <./bidsmap.html#building-your-own-template-bidsmap>`__
 
-.. _Options: options.html
-.. _virtual: https://docs.python.org/3/tutorial/venv.html
-.. _conda: https://conda.io/docs/user-guide/tasks/manage-environments.html
-.. _download: https://github.com/Donders-Institute/bidscoin
-
 Dcm2niix installation
 ---------------------
 
-The default 'dcm2niix2bids' plugin relies on an external application named `dcm2niix <https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage>`__ for converting DICOM and PAR/REC source data to NIfTI. To use the plugin you must pip-install dcm2niix when installing BIDScoin or install it yourself (e.g. when pip-installing dcm2niix does not work for your platform) as explained in the `dcm2niix installation instructions <https://github.com/rordenlab/dcm2niix#install>`__. When done, make sure that the dcm2niix executable is on your user or system path (Windows users can add the path permanently, e.g. by running: ``setx path "%path%;C:\Program Files\dcm2niix"``). Otherwise (for instance when you want to use the Linux module system or fixate the software version), make sure that the command to run the dcm2niix executable (exactly as if you would run it yourself in your command terminal) is set correctly in the `Options`_ section in your bidsmap. This can be done in two ways:
+The default 'dcm2niix2bids' plugin relies on an external application named `dcm2niix <https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage>`__ for converting DICOM and PAR/REC source data to NIfTI. To use the plugin you must pip-install dcm2niix when installing BIDScoin or install it yourself (e.g. when pip-installing dcm2niix does not work for your platform) as explained in the `dcm2niix installation instructions <https://github.com/rordenlab/dcm2niix#install>`__. When done, make sure that the dcm2niix executable is on your user or system path (Windows users can add the path permanently, e.g. by running: ``setx path "%path%;C:\Program Files\dcm2niix"``). Otherwise (for instance when you want to use the Linux module system or fixate the software version), make sure that the command to run the dcm2niix executable (exactly as if you would run it yourself in your command terminal) is set correctly in the `Options <options.html>`__ section in your bidsmap. This can be done in two ways:
 
 1. Open your template bidsmap with a text editor and adjust the settings as needed. The default template bidsmap is located in your ``[home]/.bidscoin/[version]/templates`` folder (see the output of ``bidscoin -p`` for the fullpath location on your system).
-2. Go to the `Options`_ tab the first time the BIDScoin GUI is launched and adjust the settings as needed. Then click the [Set as default] button to save the settings to your default template bidsmap.
+2. Go to the `Options <options.html>`__ tab the first time the BIDScoin GUI is launched and adjust the settings as needed. Then click the [Set as default] button to save the settings to your default template bidsmap.
 
 .. tip::
 

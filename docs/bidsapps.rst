@@ -1,6 +1,21 @@
 BIDS-apps
 =========
 
+BIDScoin comes with a set of command-line applications that can read and write BIDS compliant datasets. These applications can be qualified as `bidsapps <https://bids-apps.neuroimaging.io/>`__, except that they don't strictly adhere to the ``app_name bids_dir output_dir analysis_level`` API and that the bidsapps are all bundled into a single BIDScoin container. Hence, that means that for example a BIDScoin bidsapp command such as:
+
+.. code-block:: console
+
+   $ app_name bids_dir pattern --example option
+
+Could be translated into a Docker command like this:
+
+.. code-block:: console
+
+   $ sudo docker run --rm -v /home/me/bidsfolder:/bidsfolder \
+    marcelzwiers/bidscoin:<version> app_name bids_dir pattern --example option
+
+See the `installation instructions <https://bidscoin.readthedocs.io/en/stable/installation.html#using-an-apptainer-singularity-container>`__ for more information on how to use a BIDScoin container and below for more information on the individual bidsapps.
+
 Metadata editing
 ----------------
 If you have a previously converted BIDS data repository and you would like to retrospectively change or replace one or more metadata fields in the json sidecar files you can use ``fixmeta``. Fixmeta is more powerful than conventional find-and-replace tools in that fixmeta can leverage BIDScoin's `special bidsmap features <./bidsmap.html#special-bidsmap-features>`__::

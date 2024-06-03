@@ -59,6 +59,33 @@ My subject/session labels are wrong
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Everything seems to work but the ``sub-``/``ses-`` BIDS labels are not what I want. In the bidseditor main window, play around with the ``subject`` regular expressions.
 
+As an example, let's break down the regular expression `pattern <https://docs.python.org/3/library/re.html#re.findall>`__ ``/source_data/sub-.*?/ses-(.*?)/`` step by step:
+
+1. ``/source_data/sub-``: This part of the pattern matches the literal string “/source_data/sub-”.
+2. ``.*?``: This is a non-greedy (or lazy) match for any character zero or more times. The ``.*`` part means “match any character (``.``) zero or more times (``*``)”, and the ``?`` makes the quantifier non-greedy, which means it will match as few characters as possible.
+3. ``/ses-``: This matches the literal string “/ses-”.
+4. ``(.*?)``: This is another non-greedy match for any character zero or more times, but this time it is inside parentheses, which means it captures the matched characters into a group. The non-greedy quantifier ensures that this group will match as few characters as possible.
+5. ``/``: This matches the literal character “/”.
+
+Summary
+.......
+
+The regular expression ``/source_data/sub-.*?/ses-(.*?)/`` is designed to:
+
+- Match the literal path starting with “/source_data/sub-”.
+- Use a non-greedy match to skip over characters until it finds “/ses-”.
+- Capture the segment following “/ses-” up to the next “/”.
+
+*Example Matches*
+
+Here are a few example strings and how they would be matched by the regular expression::
+
+    /project/source_data/sub-123/ses-456/some_string
+        Captured group 1: 456
+
+    /project/source_data/sub-abcd/ses-efgh/another_string
+        Captured group 1: efgh
+
 Could not parse required sub-/ses- label
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 You may get the error "Could not parse required sub- label from [..]". This error can have multiple causes, the most probable ones are:
