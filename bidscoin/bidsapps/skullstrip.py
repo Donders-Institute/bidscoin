@@ -25,7 +25,7 @@ from bidscoin.due import due, Doi
 
 
 @due.dcite(Doi('10.1016/j.neuroimage.2022.119474'), description='Robust, universal skull-stripping for brain images of any type', tags=['reference-implementation'])
-def skullstrip(bidsfolder: str, pattern: str, participant: list, masked: str, output: list, force: bool, args: str, cluster: bool, nativespec: str):
+def skullstrip(bidsfolder: str, pattern: str, participant: list, masked: str, output: list, force: bool, args: str, cluster: str):
     """
     :param bidsfolder:  The bids-directory with the subject data
     :param pattern:     Globlike search pattern (relative to the subject/session folder) to select the images that need to be skullstripped, e.g. 'anat/*_T1w*'
@@ -34,8 +34,7 @@ def skullstrip(bidsfolder: str, pattern: str, participant: list, masked: str, ou
     :param masked:      Globlike search pattern (relative to the subject/session folder) to select additional images that need to be masked with the same mask, e.g. 'fmap/*_phasediff')
     :param output:      One or two output strings that determine where the skullstripped + additional masked images are saved. Each output string can be the name of a BIDS datatype folder, such as 'anat', or of the derivatives folder, i.e. 'derivatives' (default). If the output string is the same as the datatype then the original images are replaced by the skullstripped images
     :param args:        Additional arguments that are passed to synthstrip. See examples for usage
-    :param cluster:     Flag to submit the skullstrip-jobs to the high-performance compute (HPC) cluster using the drmaa library
-    :param nativespec:  DRMAA native specifications for submitting skullstrip jobs to the HPC cluster
+    :param cluster:     Flag to submit the skullstrip-jobs to the high-performance compute (HPC) cluster using the drmaa library with DRMAA native specifications for submitting skullstrip jobs to the HPC cluster
     :return:
     """
 
@@ -84,7 +83,7 @@ def skullstrip(bidsfolder: str, pattern: str, participant: list, masked: str, ou
             jt                     = pbatch.createJobTemplate()
             jt.jobEnvironment      = os.environ
             jt.remoteCommand       = shutil.which('mri_synthstrip')
-            jt.nativeSpecification = nativespec
+            jt.nativeSpecification = cluster
             jt.joinFiles           = True
 
         # Loop over bids subject/session-directories

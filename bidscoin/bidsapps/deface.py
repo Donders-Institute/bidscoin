@@ -25,15 +25,14 @@ from bidscoin.due import due, Doi
 
 
 @due.dcite(Doi('10.5281/zenodo.3524400'), description='A tool to remove facial structure from MRI images', tags=['reference-implementation'])
-def deface(bidsfolder: str, pattern: str, participant: list, force: bool, output: str, cluster: bool, nativespec: str, args: dict):
+def deface(bidsfolder: str, pattern: str, participant: list, force: bool, output: str, cluster: str, args: dict):
     """
     :param bidsfolder:  The bids-directory with the subject data
     :param pattern:     Globlike search pattern (relative to the subject/session folder) to select the images that need to be defaced, e.g. 'anat/*_T1w*'
     :param participant: List of sub-# identifiers to be processed (the sub-prefix can be left out). If not specified then all participants will be processed
     :param force:       If True then images will be processed, regardless if images have already been defaced (i.e. if {"Defaced": True} in the json sidecar file)
     :param output:      Determines where the defaced images are saved. It can be the name of a BIDS datatype folder, such as 'anat', or of the derivatives folder, i.e. 'derivatives'. If output is left empty then the original images are replaced by the defaced images
-    :param cluster:     Flag to submit the deface-jobs to the high-performance compute (HPC) cluster using the drmaa library
-    :param nativespec:  DRMAA native specifications for submitting deface jobs to the HPC cluster
+    :param cluster:     Flag to submit the deface-jobs to the high-performance compute (HPC) cluster using the drmaa library with DRMAA native specifications for submitting deface jobs to the HPC cluster
     :param args:        Additional arguments (in dict/json-style) that are passed to pydeface. See examples for usage
     :return:
     """
@@ -48,8 +47,7 @@ def deface(bidsfolder: str, pattern: str, participant: list, force: bool, output
     bcoin.setup_logging(bidsdir/'code'/'bidscoin'/'deface.log')
     LOGGER.info('')
     LOGGER.info('------------ START deface ------------')
-    LOGGER.info(f">>> deface bidsfolder={bidsdir} pattern={pattern} participant={participant} output={output}"
-                f" cluster={cluster} nativespec={nativespec} {args}")
+    LOGGER.info(f">>> deface bidsfolder={bidsdir} pattern={pattern} participant={participant} output={output} cluster={cluster} {args}")
 
     # Get the list of subjects
     if not participant:
@@ -71,7 +69,7 @@ def deface(bidsfolder: str, pattern: str, participant: list, force: bool, output
             jt                     = pbatch.createJobTemplate()
             jt.jobEnvironment      = os.environ
             jt.remoteCommand       = shutil.which('pydeface')
-            jt.nativeSpecification = nativespec
+            jt.nativeSpecification = cluster
             jt.joinFiles           = True
 
         # Loop over bids subject/session-directories

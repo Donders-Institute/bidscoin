@@ -76,8 +76,9 @@ def synchronize(pbatch, jobids: list, wait: int=15):
             time.sleep(2)
         qbar.close(), rbar.close()
 
-        if any([pbatch.jobStatus(jobid)=='failed' for jobid in jobids]):
-            LOGGER.error('One or more HPC jobs failed to run')
+        failedjobs = [jobid for jobid in jobids if pbatch.jobStatus(jobid)=='failed']
+        if failedjobs:
+            LOGGER.error(f"\nERROR: {len(failedjobs)} HPC jobs failed to run\n{failedjobs}")
 
         # Give NAS systems some time to fully synchronize
         for t in tqdm(range(wait*100), desc='synchronizing', leave=False, bar_format='{l_bar}{bar}| [{elapsed}]'):

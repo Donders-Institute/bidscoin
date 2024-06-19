@@ -27,7 +27,7 @@ from bidscoin.due import due, Doi
 
 
 @due.dcite(Doi('10.5281/zenodo.3524400'), description='A tool to remove facial structure from MRI images', tags=['reference-implementation'])
-def medeface(bidsfolder: str, pattern: str, maskpattern: str, participant: list, force: bool, output: str, cluster: bool, nativespec: str, args: dict):
+def medeface(bidsfolder: str, pattern: str, maskpattern: str, participant: list, force: bool, output: str, cluster: str, args: dict):
     """
     :param bidsfolder:  The bids-directory with the (multi-echo) subject data
     :param pattern:     Globlike search pattern (relative to the subject/session folder) to select the echo-images that need to be defaced, e.g. 'anat/*_T1w*'
@@ -35,8 +35,7 @@ def medeface(bidsfolder: str, pattern: str, maskpattern: str, participant: list,
     :param participant: List of sub-# identifiers to be processed (the sub-prefix can be left out). If not specified then all participants will be processed
     :param force:       If True then images will be processed, regardless if images have already been defaced (i.e. if {"Defaced": True} in the json sidecar file)
     :param output:      Determines where the defaced images are saved. It can be the name of a BIDS datatype folder, such as 'anat', or of the derivatives folder, i.e. 'derivatives'. If output is left empty then the original images are replaced by the defaced images
-    :param cluster:     Flag to submit the-deface jobs to the high-performance compute (HPC) cluster
-    :param nativespec:  DRMAA native specifications for submitting deface jobs to the HPC cluster
+    :param cluster:     Flag to submit the-deface jobs to the high-performance compute (HPC) cluster with DRMAA native specifications for submitting deface jobs to the HPC cluster
     :param args:        Additional arguments (in dict/json-style) that are passed to pydeface. See examples for usage
     :return:
     """
@@ -53,8 +52,7 @@ def medeface(bidsfolder: str, pattern: str, maskpattern: str, participant: list,
     bcoin.setup_logging(bidsdir/'code'/'bidscoin'/'medeface.log')
     LOGGER.info('')
     LOGGER.info('------------ START multi-echo deface ----------')
-    LOGGER.info(f">>> medeface bidsfolder={bidsdir} pattern={pattern} maskpattern={maskpattern} participant={participant} output={output}"
-                f" cluster={cluster} nativespec={nativespec} {args}")
+    LOGGER.info(f">>> medeface bidsfolder={bidsdir} pattern={pattern} maskpattern={maskpattern} participant={participant} output={output} cluster={cluster} {args}")
 
     # Get the list of subjects
     if not participant:
@@ -77,7 +75,7 @@ def medeface(bidsfolder: str, pattern: str, maskpattern: str, participant: list,
             jt                     = pbatch.createJobTemplate()
             jt.jobEnvironment      = os.environ
             jt.remoteCommand       = shutil.which('pydeface')
-            jt.nativeSpecification = nativespec
+            jt.nativeSpecification = cluster
             jt.joinFiles           = True
 
         # Loop over bids subject/session-directories to first get all the echo-combined deface masks
