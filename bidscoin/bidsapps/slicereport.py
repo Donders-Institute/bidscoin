@@ -111,24 +111,31 @@ def slicer_append(inputimage: Path, operations: str, outlineimage: Path, mainopt
                f"mv {montage.name} {montage.parent}\n" \
                + (f"rm -r {workdir}" if not DEBUG else '')
 
-    # Wrap the shell command with a cluster submit command
-    mem = mem or ('10' if inputimage.stat().st_size > 50 * 1024**2 else '2')  # Ask for more resources if we have a large (e.g. > 50 MB / 4D) input image
-    outpath = workdir if DEBUG else tempfile.gettempdir()
-    if cluster == 'torque':
-        command = f"qsub -l walltime=0:02:00,mem={mem}gb -N slicereport -j oe -o {outpath} << EOF\n#!/bin/bash\n{command}\nEOF"
-    elif cluster == 'slurm':
-        command = f"sbatch --time=0:02:00 --mem={mem}G --job-name slicereport -o {outpath}/slurm-%x-%j.out << EOF\n#!/bin/bash\n{command}\nEOF"
-    elif cluster:
-        LOGGER.error(f"Invalid cluster manager `{cluster}`")
-        exit(1)
+    # Run the command on the HPC cluster or directly in the shell
+    if cluster:
+        from drmaa import Session as drmaasession   # Lazy import to avoid import error on non-HPC systems
 
-    # Run the command
-    LOGGER.bcdebug(f"Command: {command}")
-    process = subprocess.run(command, shell=True, capture_output=True, text=True)
-    if process.stderr or process.returncode != 0:
-        LOGGER.warning(f"{command}\nErrorcode {process.returncode}:\n{process.stdout}\n{process.stderr}")
-    if process.returncode != 0:
-        sys.exit(process.returncode)
+        script = workdir/'slicereport.sh'
+        script.write_text('#!/bin/bash\n' + command)
+        script.chmod(0o744)
+        with drmaasession() as pbatch:
+            jt                     = pbatch.createJobTemplate()
+            jt.jobEnvironment      = os.environ
+            jt.remoteCommand       = script
+            jt.nativeSpecification = cluster
+            jt.joinFiles           = True
+            jt.jobName             = 'slicereport'
+            jt.outputPath          = f"{os.getenv('HOSTNAME')}:{workdir}/{jt.jobName}.out"
+            jobid                  = pbatch.runJob(jt)
+            LOGGER.info(f"Your slicereport job has been submitted with ID: {jobid}")
+
+    else:
+        LOGGER.bcdebug(f"Command: {command}")
+        process = subprocess.run(command, shell=True, capture_output=True, text=True)
+        if process.stderr or process.returncode != 0:
+            LOGGER.warning(f"{command}\nErrorcode {process.returncode}:\n{process.stdout}\n{process.stderr}")
+        if process.returncode != 0:
+            sys.exit(process.returncode)
 
 
 def slicereport(bidsfolder: str, pattern: str, outlinepattern: str, outlineimage: str, participant: list, reportfolder: str, xlinkfolder: str, qcscores: list, cluster: str, mem: str, operations: str, suboperations: str, options: list, outputs: list, suboptions: list, suboutputs: list):

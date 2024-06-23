@@ -43,7 +43,7 @@ OUTPUTS:
 examples:
   slicereport bids anat/*_T1w*
   slicereport bids anat/*_T2w* -r QC/slicereport_T2 -x QC/slicereport_T1
-  slicereport bids fmap/*_phasediff* -o fmap/*_magnitude1*
+  slicereport bids fmap/*_phasediff* -o fmap/*_magnitude1* -c "--time=00:10:00 --mem=2000"
   slicereport bids/derivatives/fmriprep func/*desc-preproc_bold* --suboperations " -Tstd"
   slicereport bids/derivatives/fmriprep anat/*desc-preproc_T1w* -o anat/*label-GM* -x bids/derivatives/fmriprep
   slicereport bids/derivatives/deface anat/*_T1w* -o bids:anat/*_T1w* --options L e 0.05
@@ -60,8 +60,7 @@ examples:
     parser.add_argument('-r','--reportfolder',   help="The folder where the report is saved (default: bidsfolder/derivatives/slicereport)", metavar='FOLDER')
     parser.add_argument('-x','--xlinkfolder',    help="A (list of) QC report folder(s) with cross-linkable sub-reports, e.g. bidsfolder/derivatives/mriqc", nargs='+', metavar='FOLDER')
     parser.add_argument('-q','--qcscores',       help="Column names for creating an accompanying tsv-file to store QC-rating scores (default: rating_overall)", default=['rating_overall'], nargs='+', metavar='NAME')
-    parser.add_argument('-c','--cluster',        help='Use `torque` or `slurm` to submit the slicereport jobs to a high-performance compute (HPC) cluster', choices=['torque','slurm'])
-    parser.add_argument('-m','--mem',            help='The amount of requested memory in GB for the cluster jobs', default='', metavar='GB')
+    parser.add_argument('-c','--cluster',        help='Use the DRMAA library to submit the slicereport jobs to a high-performance compute (HPC) cluster. You can add an opaque DRMAA argument with native specifications for your HPC resource manager (NB: Use quotes and include at least one space character to prevent premature parsing -- see examples)', metavar='SPECS', nargs='?', const='-l walltime=00:10:00,mem=2gb', type=str)
     parser.add_argument('--operations',          help='One or more fslmaths operations that are performed on the input image (before slicing it for the report). OPERATIONS is opaquely passed as is: `fslmaths inputimage OPERATIONS reportimage`. NB: Use quotes and include at least one space character to prevent premature parsing, e.g. " -Tmean" or "-Tstd -s 3" (default: -Tmean)', default='-Tmean')
     parser.add_argument('--suboperations',       help='The same as OPERATIONS but then for the sub-report instead of the main report: `fslmaths inputimage SUBOPERATIONS subreportimage` (default: -Tmean)', default='-Tmean', metavar='OPERATIONS')
     parser.add_argument('--options',             help='Main options of slicer (see below). (default: "s 1")', default=['s','1'], nargs='+')
