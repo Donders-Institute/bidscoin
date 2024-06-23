@@ -55,7 +55,7 @@ def scanpersonals(bidsmap: Bidsmap, session: Path, personals: dict, keys: list) 
 
 def bidsparticipants(sourcefolder: str, bidsfolder: str, keys: list, bidsmap: str= 'bidsmap.yaml', dryrun: bool=False) -> None:
     """
-    Main function that processes all the subjects and session in the sourcefolder to (re)generate the particpants.tsv file in the BIDS folder.
+    Main function that processes all the subjects and session in the sourcefolder to (re)generate the participants.tsv file in the BIDS folder.
 
     :param sourcefolder: The root folder-name of the sub/ses/data/file tree containing the source data files
     :param bidsfolder:   The name of the BIDS root folder
