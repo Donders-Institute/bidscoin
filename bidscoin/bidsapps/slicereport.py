@@ -121,7 +121,7 @@ def slicer_append(inputimage: Path, operations: str, outlineimage: Path, mainopt
         with drmaasession() as pbatch:
             jt                     = pbatch.createJobTemplate()
             jt.jobEnvironment      = os.environ
-            jt.remoteCommand       = script
+            jt.remoteCommand       = str(script)
             jt.nativeSpecification = cluster
             jt.joinFiles           = True
             jt.jobName             = 'slicereport'
