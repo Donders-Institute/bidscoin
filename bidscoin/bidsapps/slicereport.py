@@ -109,7 +109,7 @@ def slicer_append(inputimage: Path, operations: str, outlineimage: Path, mainopt
                f"slicer {'mathsimg' if mathsimg else inputimage} {outlineimage if outlineimage.name else ''} {mainopts} {outputopts}\n" \
                f"pngappend {sliceroutput} {montage.name}\n" \
                f"mv {montage.name} {montage.parent}\n" \
-               + (f"rm -r {workdir}" if not DEBUG else '')
+               + (f"cd {workdir.parent}; rm -r {workdir}" if not DEBUG else '')
 
     # Run the command on the HPC cluster or directly in the shell
     if cluster:
@@ -129,7 +129,7 @@ def slicer_append(inputimage: Path, operations: str, outlineimage: Path, mainopt
             jt.outputPath          = f"{os.getenv('HOSTNAME')}:{workdir if DEBUG else tempfile.gettempdir()}/{jt.jobName}.out"
             jobid                  = pbatch.runJob(jt)
             pbatch.deleteJobTemplate(jt)
-            LOGGER.info(f"Your slicereport job has been submitted with ID: {jobid}")
+            LOGGER.verbose(f"Your slicereport job has been submitted with ID: {jobid}")
 
     else:
         LOGGER.bcdebug(f"Command: {command}")

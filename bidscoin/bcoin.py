@@ -60,14 +60,18 @@ def drmaa_nativespec(specs: str, session) -> str:
     :return:        The converted native specifications
     """
 
-    jobmanager = session.drmaaImplementation
+    jobmanager: str = session.drmaaImplementation
 
-    if 'Slurm' in jobmanager and '-l ' in specs:
-        specs = (specs.replace('-l ', '')
-                      .replace(',', ' ')
-                      .replace('walltime', '--time')
-                      .replace('mem', '--mem')
-                      .replace('gb','000'))
+    if '-l ' in specs and 'torque' not in jobmanager.lower():
+
+        if 'slurm' in jobmanager.lower():
+            specs = (specs.replace('-l ', '')
+                          .replace(',', ' ')
+                          .replace('walltime', '--time')
+                          .replace('mem', '--mem')
+                          .replace('gb','000'))
+        else:
+            LOGGER.warning(f"Default native specifications not (yet) provided for {jobmanager}")
 
     return specs.strip()
 
