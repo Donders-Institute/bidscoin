@@ -55,7 +55,7 @@ def drmaa_nativespec(specs: str, session) -> str:
     """
     Converts (CLI default) native Torque walltime and memory specifications to the DRMAA implementation (currently only Slurm is supported)
 
-    :param specs:   Native Torque walltime and memory specifications, e.g. '-l walltime=00:10:00,mem=2gb' from argparse CLI
+    :param specs:   Native Torque walltime and memory specifications, e.g. '-l walltime=00:10:00,mem=2gb'
     :param session: The DRMAA session
     :return:        The converted native specifications
     """
@@ -71,7 +71,8 @@ def drmaa_nativespec(specs: str, session) -> str:
                           .replace('mem', '--mem')
                           .replace('gb','000'))
         else:
-            LOGGER.warning(f"Default native specifications not (yet) provided for {jobmanager}")
+            LOGGER.warning(f"Default `--cluster` native specifications are not (yet) provided for {jobmanager}. Please add them to your command if you get DRMAA errors")
+            specs = ''
 
     return specs.strip()
 
@@ -103,7 +104,7 @@ def synchronize(pbatch, jobids: list, wait: int=15):
 
         failedjobs = [jobid for jobid in jobids if pbatch.jobStatus(jobid)=='failed']
         if failedjobs:
-            LOGGER.error(f"\nERROR: {len(failedjobs)} HPC jobs failed to run\n{failedjobs}")
+            LOGGER.error(f"{len(failedjobs)} HPC jobs failed to run:\n{failedjobs}\nThis may well be due to an underspecified `--cluster` input option (e.g. not enough memory)")
 
         # Give NAS systems some time to fully synchronize
         for t in tqdm(range(wait*100), desc='synchronizing', leave=False, bar_format='{l_bar}{bar}| [{elapsed}]'):

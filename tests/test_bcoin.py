@@ -42,3 +42,22 @@ def test_list_plugins():
     plugins, templates = bcoin.list_plugins()
     assert 'dcm2niix2bids' in [plugin.stem for plugin in plugins]
     assert 'bidsmap_dccn' in [template.stem for template in templates]
+
+
+def test_drmaa_nativespec():
+
+    class DrmaaSession:
+        def __init__(self, drmaaImplementation):
+            self.drmaaImplementation = drmaaImplementation
+
+    specs = bcoin.drmaa_nativespec('-l walltime=00:10:00,mem=2gb', DrmaaSession('PBS Pro'))
+    assert specs == '-l walltime=00:10:00,mem=2gb'
+
+    specs = bcoin.drmaa_nativespec('-l walltime=00:10:00,mem=2gb', DrmaaSession('Slurm'))
+    assert specs == '--time=00:10:00 --mem=2000'
+
+    specs = bcoin.drmaa_nativespec('-l mem=200,walltime=00:10:00', DrmaaSession('Slurm'))
+    assert specs == '--mem=200 --time=00:10:00'
+
+    specs = bcoin.drmaa_nativespec('-l walltime=00:10:00,mem=2gb', DrmaaSession('Unsupported'))
+    assert specs == ''
