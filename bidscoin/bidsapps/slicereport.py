@@ -43,6 +43,7 @@ a:hover  { color: Orange; }
 a:active { color: Yellow; }
 """
 
+JOBIDS = []         # Collect JOBIDS to synchronize DRMAA jobs
 
 def parse_options(options: list) -> str:
     """Check the OPTIONS arguments and return them to a string that can be passed to slicer"""
@@ -124,9 +125,9 @@ def slicer_append(inputimage: Path, operations: str, outlineimage: Path, mainopt
             jt.joinFiles           = True
             jt.jobName             = 'slicereport'
             jt.outputPath          = f"{os.getenv('HOSTNAME')}:{workdir if DEBUG else tempfile.gettempdir()}/{jt.jobName}.out"
-            jobid                  = pbatch.runJob(jt)
+            JOBIDS.append(pbatch.runJob(jt))
             pbatch.deleteJobTemplate(jt)
-            LOGGER.verbose(f"Your slicereport job has been submitted with ID: {jobid}")
+            LOGGER.verbose(f"Your slicereport job has been submitted with ID: {JOBIDS[-1]}")
 
     else:
         LOGGER.bcdebug(f"Command: {command}")
@@ -313,7 +314,9 @@ def slicereport(bidsfolder: str, pattern: str, outlinepattern: str, outlineimage
     LOGGER.info('To view the slice report, point your web browser at:')
     LOGGER.info(f"{report}\n ")
     if cluster:
-        LOGGER.info('But first wait for your `slicereport`-jobs to finish... Use e.g.:\n\nqstat $(qselect -s RQ) | grep slicereport\n')
+        from drmaa import Session as drmaasession   # Lazy import to avoid import error on non-HPC systems
+        with drmaasession() as pbatch:
+            bcoin.synchronize(pbatch, JOBIDS, 0)
 
 
 def main():
