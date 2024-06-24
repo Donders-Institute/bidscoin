@@ -109,20 +109,17 @@ def slicer_append(inputimage: Path, operations: str, outlineimage: Path, mainopt
                f"slicer {'mathsimg' if mathsimg else inputimage} {outlineimage if outlineimage.name else ''} {mainopts} {outputopts}\n" \
                f"pngappend {sliceroutput} {montage.name}\n" \
                f"mv {montage.name} {montage.parent}\n" \
-               + (f"cd {workdir.parent}; rm -r {workdir}" if not DEBUG else '')
+               + (f"rm -r {workdir}" if not DEBUG else '')
 
     # Run the command on the HPC cluster or directly in the shell
     if cluster:
         from drmaa import Session as drmaasession   # Lazy import to avoid import error on non-HPC systems
         from bidscoin.bcoin import drmaa_nativespec
 
-        script = workdir/'slicereport.sh'
-        script.write_text('#!/bin/bash\n' + command)
-        script.chmod(0o744)
         with drmaasession() as pbatch:
             jt                     = pbatch.createJobTemplate()
             jt.jobEnvironment      = os.environ
-            jt.remoteCommand       = str(script)
+            jt.remoteCommand       = '#!/bin/bash\n' + command
             jt.nativeSpecification = drmaa_nativespec(cluster, pbatch)
             jt.joinFiles           = True
             jt.jobName             = 'slicereport'
