@@ -61,6 +61,7 @@ def deface(bidsfolder: str, pattern: str, participant: list, force: bool, output
     # Prepare the HPC job submission
     if cluster:
         from drmaa import Session as drmaasession
+        from bidscoin.bcoin import drmaa_nativespec
     else:
         from contextlib import nullcontext as drmaasession                                      # Use a dummy context manager
     with drmaasession() as pbatch:
@@ -69,7 +70,7 @@ def deface(bidsfolder: str, pattern: str, participant: list, force: bool, output
             jt                     = pbatch.createJobTemplate()
             jt.jobEnvironment      = os.environ
             jt.remoteCommand       = shutil.which('pydeface')
-            jt.nativeSpecification = cluster
+            jt.nativeSpecification = drmaa_nativespec(cluster)
             jt.joinFiles           = True
 
         # Loop over bids subject/session-directories

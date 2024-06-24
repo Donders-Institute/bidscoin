@@ -51,6 +51,29 @@ class TqdmUpTo(tqdm):
         self.update(b * bsize - self.n)  # will also set self.n = b * bsize
 
 
+def drmaa_nativespec(specs: str) -> str:
+    """
+    Converts native Torque walltime and memory specifications to the DRMAA implementation (currently only Slurm is supported)
+
+    :param specs: Native Torque walltime and memory specifications, e.g. '-l walltime=00:10:00,mem=2gb'
+    :return:      The converted native specifications
+    """
+
+    import drmaa    # Lazy import to avoid import error on non-HPC systems
+
+    with drmaa.Session() as session:
+        implementation = session.drmaaImplementation
+
+    if 'Slurm' in implementation and '-l ' in specs:
+        specs = (specs.replace('-l ', '')
+                      .replace(',', ' ')
+                      .replace('walltime', '--time')
+                      .replace('mem', '--mem')
+                      .replace('gb','000'))
+
+    return specs.strip()
+
+
 def synchronize(pbatch, jobids: list, wait: int=15):
     """
     Shows tqdm progress bars for queued and running DRMAA jobs. Waits until all jobs have finished +

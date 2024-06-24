@@ -134,6 +134,7 @@ def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: 
     if cluster:
 
         from drmaa import Session as drmaasession           # NB: Importing drmaa for non-HPC users may cause import errors
+        from bidscoin.bcoin import drmaa_nativespec
 
         LOGGER.info('')
         LOGGER.info('============== HPC START ==============')
@@ -142,7 +143,7 @@ def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: 
             jt                     = pbatch.createJobTemplate()
             jt.jobEnvironment      = os.environ
             jt.remoteCommand       = shutil.which('bidscoiner') or __file__
-            jt.nativeSpecification = cluster
+            jt.nativeSpecification = drmaa_nativespec(cluster)
             jt.joinFiles           = True
             jobids                 = []
 

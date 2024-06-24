@@ -67,6 +67,7 @@ def medeface(bidsfolder: str, pattern: str, maskpattern: str, participant: list,
     tmp_combined = f"{next(tempfile._get_candidate_names())}_echocombined_deface.nii"
     if cluster:
         from drmaa import Session as drmaasession
+        from bidscoin.bcoin import drmaa_nativespec
     else:
         from contextlib import nullcontext as drmaasession                                      # Use a dummy context manager
     with drmaasession() as pbatch:
@@ -75,7 +76,7 @@ def medeface(bidsfolder: str, pattern: str, maskpattern: str, participant: list,
             jt                     = pbatch.createJobTemplate()
             jt.jobEnvironment      = os.environ
             jt.remoteCommand       = shutil.which('pydeface')
-            jt.nativeSpecification = cluster
+            jt.nativeSpecification = drmaa_nativespec(cluster)
             jt.joinFiles           = True
 
         # Loop over bids subject/session-directories to first get all the echo-combined deface masks
