@@ -123,13 +123,13 @@ def slicer_append(inputimage: Path, operations: str, outlineimage: Path, mainopt
             jt                     = pbatch.createJobTemplate()
             jt.jobEnvironment      = os.environ
             jt.remoteCommand       = str(script)
-            jt.nativeSpecification = drmaa_nativespec(cluster)
+            jt.nativeSpecification = drmaa_nativespec(cluster, pbatch)
             jt.joinFiles           = True
             jt.jobName             = 'slicereport'
             jt.outputPath          = f"{os.getenv('HOSTNAME')}:{workdir}/{jt.jobName}.out"
             jobid                  = pbatch.runJob(jt)
-        pbatch.deleteJobTemplate(jt)
-        LOGGER.info(f"Your slicereport job has been submitted with ID: {jobid}")
+            pbatch.deleteJobTemplate(jt)
+            LOGGER.info(f"Your slicereport job has been submitted with ID: {jobid}")
 
     else:
         LOGGER.bcdebug(f"Command: {command}")

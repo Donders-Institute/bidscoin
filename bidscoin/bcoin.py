@@ -51,20 +51,18 @@ class TqdmUpTo(tqdm):
         self.update(b * bsize - self.n)  # will also set self.n = b * bsize
 
 
-def drmaa_nativespec(specs: str) -> str:
+def drmaa_nativespec(specs: str, session) -> str:
     """
     Converts native Torque walltime and memory specifications to the DRMAA implementation (currently only Slurm is supported)
 
-    :param specs: Native Torque walltime and memory specifications, e.g. '-l walltime=00:10:00,mem=2gb'
-    :return:      The converted native specifications
+    :param specs:   Native Torque walltime and memory specifications, e.g. '-l walltime=00:10:00,mem=2gb'
+    :param session: The DRMAA session
+    :return:        The converted native specifications
     """
 
-    import drmaa    # Lazy import to avoid import error on non-HPC systems
+    jobmanager = session.drmaaImplementation
 
-    with drmaa.Session() as session:
-        implementation = session.drmaaImplementation
-
-    if 'Slurm' in implementation and '-l ' in specs:
+    if 'Slurm' in jobmanager and '-l ' in specs:
         specs = (specs.replace('-l ', '')
                       .replace(',', ' ')
                       .replace('walltime', '--time')

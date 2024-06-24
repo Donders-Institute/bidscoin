@@ -76,7 +76,7 @@ def medeface(bidsfolder: str, pattern: str, maskpattern: str, participant: list,
             jt                     = pbatch.createJobTemplate()
             jt.jobEnvironment      = os.environ
             jt.remoteCommand       = shutil.which('pydeface')
-            jt.nativeSpecification = drmaa_nativespec(cluster)
+            jt.nativeSpecification = drmaa_nativespec(cluster, pbatch)
             jt.joinFiles           = True
 
         # Loop over bids subject/session-directories to first get all the echo-combined deface masks

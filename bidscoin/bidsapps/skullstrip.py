@@ -84,7 +84,7 @@ def skullstrip(bidsfolder: str, pattern: str, participant: list, masked: str, ou
             jt                     = pbatch.createJobTemplate()
             jt.jobEnvironment      = os.environ
             jt.remoteCommand       = shutil.which('mri_synthstrip')
-            jt.nativeSpecification = drmaa_nativespec(cluster)
+            jt.nativeSpecification = drmaa_nativespec(cluster, pbatch)
             jt.joinFiles           = True
 
         # Loop over bids subject/session-directories

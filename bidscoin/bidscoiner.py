@@ -143,7 +143,7 @@ def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: 
             jt                     = pbatch.createJobTemplate()
             jt.jobEnvironment      = os.environ
             jt.remoteCommand       = shutil.which('bidscoiner') or __file__
-            jt.nativeSpecification = drmaa_nativespec(cluster)
+            jt.nativeSpecification = drmaa_nativespec(cluster, pbatch)
             jt.joinFiles           = True
             jobids                 = []
 

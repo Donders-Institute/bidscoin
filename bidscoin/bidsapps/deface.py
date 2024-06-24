@@ -70,7 +70,7 @@ def deface(bidsfolder: str, pattern: str, participant: list, force: bool, output
             jt                     = pbatch.createJobTemplate()
             jt.jobEnvironment      = os.environ
             jt.remoteCommand       = shutil.which('pydeface')
-            jt.nativeSpecification = drmaa_nativespec(cluster)
+            jt.nativeSpecification = drmaa_nativespec(cluster, pbatch)
             jt.joinFiles           = True
 
         # Loop over bids subject/session-directories
