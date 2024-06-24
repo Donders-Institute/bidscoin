@@ -84,7 +84,7 @@ def parse_outputs(outputargs: list, name: str) -> tuple:
     return outputs, slices
 
 
-def slicer_append(inputimage: Path, operations: str, outlineimage: Path, mainopts: str, outputopts: str, sliceroutput: str, montage: Path, cluster: str, mem: str):
+def slicer_append(inputimage: Path, operations: str, outlineimage: Path, mainopts: str, outputopts: str, sliceroutput: str, montage: Path, cluster: str):
     """Run fslmaths, slicer and pngappend (locally or on the cluster) to create a montage of the sliced images"""
 
     # Create a workdir and the shell command
@@ -138,7 +138,7 @@ def slicer_append(inputimage: Path, operations: str, outlineimage: Path, mainopt
             sys.exit(process.returncode)
 
 
-def slicereport(bidsfolder: str, pattern: str, outlinepattern: str, outlineimage: str, participant: list, reportfolder: str, xlinkfolder: str, qcscores: list, cluster: str, mem: str, operations: str, suboperations: str, options: list, outputs: list, suboptions: list, suboutputs: list):
+def slicereport(bidsfolder: str, pattern: str, outlinepattern: str, outlineimage: str, participant: list, reportfolder: str, xlinkfolder: str, qcscores: list, cluster: str, operations: str, suboperations: str, options: list, outputs: list, suboptions: list, suboutputs: list):
     """
     :param bidsfolder:      The bids-directory with the subject data
     :param pattern:         Globlike search pattern to select the images in bidsfolder to be reported, e.g. 'anat/*_T1w*'
@@ -148,8 +148,7 @@ def slicereport(bidsfolder: str, pattern: str, outlinepattern: str, outlineimage
     :param reportfolder:    The folder where the report is saved
     :param xlinkfolder:     A (list of) folder(s) with cross-linked sub-reports
     :param qcscores:        Column names for creating an accompanying tsv-file to store QC-rating scores
-    :param cluster:         Use `torque` or `slurm` to submit the slicer jobs to a high-performance compute (HPC) cluster. Leave empty to run slicer on your local computer
-    :param mem:             The amount of requested memory in GB for the cluster jobs
+    :param cluster:         Use the DRMAA library to submit the bidscoiner jobs to a high-performance compute (HPC) cluster with DRMAA native specifications for submitting bidscoiner jobs to the HPC cluster. See cli/_bidscoiner() for default
     :param operations:      The fslmath operations performed on the input image: fslmaths inputimage OPERATIONS reportimage
     :param suboperations:   The fslmath operations performed on the input image: fslmaths inputimage SUBOPERATIONS subreportimage
     :param options:         Slicer main options
@@ -263,7 +262,7 @@ def slicereport(bidsfolder: str, pattern: str, outlinepattern: str, outlineimage
                     # Generate the sliced image montage
                     outline = Path(outlineimages[n] if outlinepattern else outlineimage)
                     montage = reportses/image.with_suffix('').with_suffix('.png').name
-                    slicer_append(image, operations, outline, options, outputs, sliceroutput, montage, cluster, mem)
+                    slicer_append(image, operations, outline, options, outputs, sliceroutput, montage, cluster)
 
                     # Add the montage as a (sub-report linked) row to the report
                     caption   = f"{image.relative_to(bidsdir)}{'&nbsp;&nbsp;&nbsp;( ../'+str(outline.relative_to(outlinesession))+' )' if outlinepattern and outline.name else ''}"
@@ -274,7 +273,7 @@ def slicereport(bidsfolder: str, pattern: str, outlinepattern: str, outlineimage
                     # Add the sub-report
                     if suboutputs:
                         montage = subreport.with_suffix('.png')
-                        slicer_append(image, suboperations, outline, suboptions, suboutputs, subsliceroutput, montage, cluster, mem)
+                        slicer_append(image, suboperations, outline, suboptions, suboutputs, subsliceroutput, montage, cluster)
                     crossreports = ''
                     for crossdir in xlinkfolder:          # Include niprep reports
                         for crossreport in sorted(Path(crossdir).glob(f"{subject.name.split('_')[0]}*.html")) + sorted((Path(crossdir)/session.relative_to(bidsdir)).glob('*.html')):
