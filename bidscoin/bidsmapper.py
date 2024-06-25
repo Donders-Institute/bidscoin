@@ -91,7 +91,7 @@ def bidsmapper(sourcefolder: str, bidsfolder: str, bidsmap: str, template: str, 
         unzip = bidsmap_new['Options']['bidscoin'].get('unzip','')
     for dataformat in bidsmap_new:
         if dataformat in ('$schema', 'Options'): continue
-        for datatype in bidsmap_new[dataformat]:
+        for datatype in bidsmap_new[dataformat] or []:
             if datatype not in ('subject', 'session'):
                 bidsmap_new[dataformat][datatype] = []
 
@@ -248,7 +248,7 @@ def main():
 
     trackusage('bidsmapper')
     try:
-        bidsmapper(**args(args))
+        bidsmapper(**vars(args))
 
     except Exception:
         trackusage('bidsmapper_exception')

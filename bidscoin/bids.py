@@ -985,9 +985,9 @@ def load_bidsmap(yamlfile: Path=Path(), folder: Path=templatefolder, plugins:Ite
     for dataformat in bidsmap:
         if dataformat in ('$schema', 'Options'): continue
         bidsmap[dataformat]['session'] = bidsmap[dataformat]['session'] or ''   # Session-less data repositories
-        for datatype in bidsmap[dataformat]:
-            if not isinstance(bidsmap[dataformat][datatype], list): continue    # E.g. 'subject', 'session' and empty datatypes
-            for index, run in enumerate(bidsmap[dataformat][datatype]):
+        for datatype in bidsmap[dataformat] or []:
+            if datatype in ('subject', 'session'): continue
+            for index, run in enumerate(bidsmap[dataformat][datatype] or []):
 
                 # Add missing provenance info
                 if not run.get('provenance'):
@@ -1045,12 +1045,11 @@ def save_bidsmap(filename: Path, bidsmap: Bidsmap) -> None:
     :return:
     """
 
-    # Remove the added DataSource object
+    # Remove the added DataSource objects
     bidsmap = copy.deepcopy(bidsmap)
     for dataformat in bidsmap:
         if dataformat in ('$schema', 'Options'): continue
-        if not bidsmap[dataformat]: continue
-        for datatype in bidsmap[dataformat]:
+        for datatype in bidsmap[dataformat] or []:
             if not isinstance(bidsmap[dataformat][datatype], list): continue    # E.g. 'subject' and 'session'
             for run in bidsmap[dataformat][datatype]:
                 run.pop('datasource', None)
@@ -1091,8 +1090,7 @@ def validate_bidsmap(bidsmap: Bidsmap, level: int=1) -> bool:
     LOGGER.info(f"bids-validator {bids_validator.__version__} test results (* = in .bidsignore):")
     for dataformat in bidsmap:
         if dataformat in ('$schema', 'Options'): continue
-        if not bidsmap[dataformat]: continue
-        for datatype in bidsmap[dataformat]:
+        for datatype in bidsmap[dataformat] or []:
             if not isinstance(bidsmap[dataformat][datatype], list): continue        # E.g. 'subject' and 'session'
             for run in bidsmap[dataformat][datatype]:
                 bidsname = get_bidsname(f"sub-{sanitize(dataformat)}", '', run, False)
@@ -1135,8 +1133,7 @@ def check_bidsmap(bidsmap: Bidsmap, checks: Tuple[bool, bool, bool]=(True, True,
     LOGGER.info('Checking the bidsmap run-items:')
     for dataformat in bidsmap:
         if dataformat in ('$schema', 'Options'): continue    # TODO: Check Options
-        if not bidsmap[dataformat]: continue
-        for datatype in bidsmap[dataformat]:
+        for datatype in bidsmap[dataformat] or []:
             if not isinstance(bidsmap[dataformat][datatype], list):                  continue   # E.g. 'subject' and 'session'
             if datatype in bidsmap['Options']['bidscoin']['ignoretypes']:            continue   # E.g. 'exclude'
             if check_ignore(datatype, bidsmap['Options']['bidscoin']['bidsignore']): continue
@@ -1178,7 +1175,7 @@ def check_template(bidsmap: Bidsmap) -> bool:
     LOGGER.verbose('Checking the template bidsmap datatypes:')
     for dataformat in bidsmap:
         if dataformat in ('$schema', 'Options'): continue
-        for datatype in bidsmap[dataformat]:
+        for datatype in bidsmap[dataformat] or []:
             if not isinstance(bidsmap[dataformat][datatype], list): continue        # Skip datatype = 'subject'/'session'
             if not (datatype in bidsdatatypesdef or datatype in ignoretypes or check_ignore(datatype, bidsignore)):
                 LOGGER.warning(f"Invalid {dataformat} datatype: '{datatype}' (you may want to add it to the 'bidsignore' list)")
@@ -1427,7 +1424,7 @@ def create_run(datasource: DataSource=None, bidsmap: Bidsmap=None) -> Run:
     return Run(dict(provenance = str(datasource.path),
                     properties = {'filepath':'', 'filename':'', 'filesize':'', 'nrfiles':None},
                     attributes = {},
-                    bids       = {},
+                    bids       = {'suffix':''},
                     meta       = {},
                     datasource = datasource))
 
@@ -1518,7 +1515,7 @@ def find_run(bidsmap: Bidsmap, provenance: str, dataformat: str='', datatype: st
     return Run({})
 
 
-def delete_run(bidsmap: Bidsmap, provenance: Union[Run, str], datatype: str= '', dataformat: str='') -> None:
+def delete_run(bidsmap: Bidsmap, provenance: Union[Run, str], datatype: str= '', dataformat: str='') -> bool:
     """
     Delete the first matching run from the BIDS map
 
@@ -1526,13 +1523,13 @@ def delete_run(bidsmap: Bidsmap, provenance: Union[Run, str], datatype: str= '',
     :param provenance:  The provenance identifier of/or the run-item that is deleted
     :param datatype:    The datatype that of the deleted run_item (can be different from run_item['datasource']), e.g. 'anat'
     :param dataformat:  The dataformat section in the bidsmap in which the run is deleted, e.g. 'DICOM'
-    :return:
+    :return:            True if successful, False otherwise
     """
 
     if isinstance(provenance, str):
         run_item = find_run(bidsmap, provenance, dataformat)
         if not run_item:
-            return
+            return False
     else:
         run_item   = provenance
         provenance = run_item['provenance']
@@ -1545,17 +1542,19 @@ def delete_run(bidsmap: Bidsmap, provenance: Union[Run, str], datatype: str= '',
         for index, run in enumerate(bidsmap[dataformat].get(datatype,[])):
             if Path(run['provenance']) == Path(provenance):
                 del bidsmap[dataformat][datatype][index]
-                return
+                return True
 
     LOGGER.error(f"Could not find (and delete) this [{dataformat}][{datatype}] run: '{provenance}")
+    return False
 
 
-def append_run(bidsmap: Bidsmap, run: Run) -> None:
+def insert_run(bidsmap: Bidsmap, run: Run, position: int=None) -> None:
     """
-    Append a cleaned-up run to the BIDS map
+    Inserts a cleaned-up run to the BIDS map
 
     :param bidsmap:     Full bidsmap data structure, with all options, BIDS labels and attributes, etc.
     :param run:         The run (listitem) that is appended to the datatype
+    :param position:    The position at which the run is inserted. The run is appended at the end if position is None
     :return:
     """
 
@@ -1574,7 +1573,7 @@ def append_run(bidsmap: Bidsmap, run: Run) -> None:
     if not bidsmap.get(dataformat).get(datatype):
         bidsmap[dataformat][datatype] = [run]
     else:
-        bidsmap[dataformat][datatype].append(run)
+        bidsmap[dataformat][datatype].insert(len(bidsmap[dataformat][datatype]) if position is None else position, run)
 
 
 def update_bidsmap(bidsmap: Bidsmap, source_datatype: str, run: Run) -> None:
@@ -1610,7 +1609,7 @@ def update_bidsmap(bidsmap: Bidsmap, source_datatype: str, run: Run) -> None:
         delete_run(bidsmap, run, source_datatype)
 
         # Append the (cleaned-up) target run
-        append_run(bidsmap, run)
+        insert_run(bidsmap, run)
 
     else:
         for index, run_ in enumerate(bidsmap[dataformat][run_datatype]):

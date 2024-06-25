@@ -196,7 +196,7 @@ def bidsmapper_plugin(session: Path, bidsmap_new: Bidsmap, bidsmap_old: Bidsmap,
                 run['datasource'].path = targetfile
 
             # Copy the filled-in run over to the new bidsmap
-            bids.append_run(bidsmap_new, run)
+            bids.insert_run(bidsmap_new, run)
 
         else:
             LOGGER.bcdebug(f"Existing/duplicate '{datasource.datatype}' {dataformat} sample: {sourcefile}")
@@ -372,7 +372,7 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
             dcm2niixpostfixes = ('_c', '_i', '_Eq', '_real', '_imaginary', '_MoCo', '_t', '_Tilt', '_e', '_ph', '_ADC', '_fieldmaphz')              #_c%d, _e%d and _ph (and any combination of these in that order) are for multi-coil data, multi-echo data and phase data
             dcm2niixfiles = sorted(set([dcm2niixfile for dcm2niixpostfix in dcm2niixpostfixes for dcm2niixfile in outfolder.glob(f"{bidsname}*{dcm2niixpostfix}*.nii*")]))
             dcm2niixfiles = [dcm2niixfile for dcm2niixfile in dcm2niixfiles if not (re.match(r'sub-.*_echo-[0-9]*\.nii',      dcm2niixfile.name) or
-                                                                                    re.match(r'sub-.*_phase(diff|[12])\.nii', dcm2niixfile.name))]   # Skip false-positive (-> glob) dcm2niixfiles, e.g. postfix = 'echo-1' (see Github issue #232)
+                                                                                    re.match(r'sub-.*_phase(diff|[12])\.nii', dcm2niixfile.name))]   # Skip false-positive (-> glob) dcm2niixfiles, e.g. postfix = 'echo-1' (see GitHub issue #232)
 
             # Rename all dcm2niix files that got additional postfixes (i.e. store the postfixes in the bidsname)
             for dcm2niixfile in dcm2niixfiles:

@@ -3,7 +3,7 @@ Troubleshooting
 
 Installation
 ------------
-A first step when encountering execution errors is to test whether your installation is working correctly. An easy way to test the working of various BIDScoin components is to run ``bidscoin -t`` in your terminal. Some commonly seen messages are:
+When encountering execution errors it is helpful to know whether your BIDScoin installation is working correctly. An easy way to test the working of its various components is to run ``bidscoin -t`` in your terminal. Some commonly reported issues are:
 
 The "dcm2niix" command is not recognized
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -41,7 +41,7 @@ The fix comes from these resources:
 
 Workflow
 --------
-The first step in troubleshooting is to look at the warnings and messages printed out in the terminal (they are also save to disk in the ``bidsfolder/code/bidscoin`` output folder). Make sure you are OK with the warnings (they are meaningful and not to be ignored) and do not continue with a next step until all errors are resolved.
+The first step in workflow troubleshooting is to look at the warnings and messages printed out in the terminal (they are also saved to disk in the ``bidsfolder/code/bidscoin`` output folder). Make sure you are OK with the warnings (they are meaningful and not to be ignored) and do not continue with a next step until all errors are resolved. Below you can find answers to some commonly reported issues.
 
 My bidsmap is empty
 ^^^^^^^^^^^^^^^^^^^
@@ -105,6 +105,10 @@ My source-files can no longer be found
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 You may get the warning "Cannot reliably change the data type and/or suffix because the source file '..' can no longer be found". This warning is generated when (1) your source data moved to a different location, or (2) your data is zipped or in DICOMDIR format. This warning can be ignored if you do not need to change the data type of your run-items anymore (in the bidseditor), because in that case BIDScoin may need access to the source data (to read new properties or attributes). To restore data access for (1), move the data to it's original location and for (2) use the ``--store`` option of bidsmapper to store local copies of the source data samples in the bids output folder.
 
+Some acquisitions went wrong and need to be excluded
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+BIDScoin plugins will skip (Linux-style hidden) files and folders of which the name starts with a ``.`` (dot) character. You can use this feature to flexibly omit subjects, sessions or runs from your bids repository, for instance when you restarted an MRI scan because something went wrong with the stimulus presentation and you don't want that data to be converted and enumerated as ``run-1``, ``run-2``.
+
 I have duplicated field maps because of an interrupted session
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 It may happen that due to irregularities during data acquisition you had to reacquire your field-map for part of your data. In that case the ``IntendedFor`` and ``B0FieldIdentifier``/``B0FieldSource`` semantics become ambiguous. To handle this situation, you can use json sidecar files to extend the source attributes (see below) or use the limited ``IntendedFor`` search as described `here <./bidsmap.html#intendedfor>`__ and `here <https://github.com/Donders-Institute/bidscoin/issues/123>`__.
@@ -136,4 +140,4 @@ You can simply use the ``bidseditor`` to make changes to your bidsmap, delete al
 
 More help
 ---------
-If this guide does not help to solve your problem, then you can `search on github <https://github.com/Donders-Institute/bidscoin/issues?q=>`__ for open and/or closed issues to see if anyone else has encountered similar problems before. If not, feel free to help yourself and others by opening a new github issue.
+If this guide does not help to solve your problem, then you can `search on github <https://github.com/Donders-Institute/bidscoin/issues?q=>`__ for open and/or closed issues to see if anyone else has encountered similar problems before. If not, feel free to help yourself and others by opening a new github issue or post your question on `NeuroStars <https://neurostars.org/tag/bidscoin>`__ (tag: #bidscoin)

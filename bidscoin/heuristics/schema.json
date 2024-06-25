@@ -1,6 +1,6 @@
 {
    "$schema": "https://json-schema.org/draft/2020-12/schema",
-   "$id": "http://bidscoin.templates/schema.json",
+   "$id": "file://bidscoin/heuristics/schema.json",
    "title": "Schema for validating template bidsmaps",
    "type": "object",
    "required": ["Options"],
@@ -53,8 +53,14 @@
       "required": ["subject", "session"],
 
       "properties": {
-         "subject": { "type": "string" },
-         "session": { "type": ["string", "integer", "null"] }
+         "subject": {
+            "type": "string",
+            "description": "The participant label (typically a dynamic value)"
+         },
+         "session": {
+            "type": ["string", "integer", "null"],
+            "description": "The session label (typically a dynamic value)"
+         }
       },
 
       "additionalProperties": {
@@ -63,7 +69,7 @@
          "items": {
             "description": "Run-item (containing the bidsmappings)",
             "type": "object",
-            "required": ["bids"],
+            "required": ["provenance", "bids"],
             "properties": {
                "provenance": {
                   "description": "The fullpath name of the data source. Serves also as a unique identifier to find a run-item in the bidsmap",

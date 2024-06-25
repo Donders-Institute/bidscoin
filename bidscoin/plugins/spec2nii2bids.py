@@ -157,7 +157,7 @@ def bidsmapper_plugin(session: Path, bidsmap_new: Bidsmap, bidsmap_old: Bidsmap,
                 run['datasource'].path = targetfile
 
             # Copy the filled-in run over to the new bidsmap
-            bids.append_run(bidsmap_new, run)
+            bids.insert_run(bidsmap_new, run)
 
         else:
             LOGGER.bcdebug(f"Existing/duplicate '{datasource.datatype}' {dataformat} sample: {sourcefile}")
