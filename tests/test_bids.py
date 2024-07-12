@@ -390,7 +390,7 @@ def test_delete_run(study_bidsmap):
     assert bids.find_run(bidsmap, provenance) == {}
 
 
-def test_append_run(study_bidsmap):
+def test_insert_run(study_bidsmap):
 
     # Load a study bidsmap and delete one anat run
     bidsmap, _ = bids.load_bidsmap(study_bidsmap)
@@ -402,12 +402,20 @@ def test_append_run(study_bidsmap):
     run['datasource'].datatype   = 'Bar'
     run['bids']['part']          = ['', 'mag', 'phase', 'real', 'imag', 3]
 
-    # Append the run elsewhere in the bidsmap
-    bids.append_run(bidsmap, run)
+    # Insert the run elsewhere in the bidsmap
+    bids.insert_run(bidsmap, run)
     assert Path(bidsmap['Foo']['Bar'][0]['provenance'])     == Path(run['provenance'])
     assert Path(bidsmap['DICOM']['anat'][0]['provenance'])  == Path(run['provenance'])
     assert bidsmap['Foo']['Bar'][0]['bids']['part']         == ['', 'mag', 'phase', 'real', 'imag', 3]
     assert bidsmap['DICOM']['anat'][0]['bids']['part']      == ['', 'mag', 'phase', 'real', 'imag', 0]
+
+    # Insert another run at the end and at the front of the list
+    run['bids']['part']          = ['', 'mag', 'phase', 'real', 'imag', 4]
+    bids.insert_run(bidsmap, run)
+    bids.insert_run(bidsmap, run, 0)
+    assert bidsmap['Foo']['Bar'][0]['bids']['part']         == ['', 'mag', 'phase', 'real', 'imag', 4]
+    assert bidsmap['Foo']['Bar'][1]['bids']['part']         == ['', 'mag', 'phase', 'real', 'imag', 3]
+    assert bidsmap['Foo']['Bar'][2]['bids']['part']         == ['', 'mag', 'phase', 'real', 'imag', 4]
 
 
 def test_update_bidsmap(study_bidsmap):

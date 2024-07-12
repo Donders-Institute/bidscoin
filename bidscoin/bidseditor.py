@@ -18,7 +18,7 @@ from functools import partial
 from PyQt6 import QtCore, QtGui, QtWidgets
 from PyQt6.QtGui import QAction, QFileSystemModel
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QFileDialog, QDialogButtonBox, QTreeView,
-                             QHBoxLayout, QVBoxLayout, QLabel, QDialog, QMessageBox, QTableWidget,
+                             QHBoxLayout, QVBoxLayout, QLabel, QDialog, QInputDialog, QMessageBox, QTableWidget,
                              QTableWidgetItem, QHeaderView, QGroupBox, QTextBrowser, QPushButton, QComboBox)
 from importlib.util import find_spec
 if find_spec('bidscoin') is None:
@@ -87,8 +87,7 @@ class MainWindow(QMainWindow):
             self.set_menu_statusbar()
 
         if not input_bidsmap:
-            filename, _ = QFileDialog.getOpenFileName(None, 'Open a bidsmap file', str(bidsfolder),
-                                                      'YAML Files (*.yaml *.yml);;All Files (*)')
+            filename, _ = QFileDialog.getOpenFileName(self, 'Open a bidsmap file', str(bidsfolder), 'YAML Files (*.yaml *.yml);;All Files (*)')
             if filename:
                 input_bidsmap, _ = bids.load_bidsmap(Path(filename))
                 if input_bidsmap.get('Options'):
@@ -119,7 +118,7 @@ class MainWindow(QMainWindow):
         self.samples_table: dict      = {}
         self.options_label: dict      = {}
         self.options_table: dict      = {}
-        self.ordered_file_index: dict = {}
+        self.ordered_file_index: dict = {}  # The mapping between the ordered provenance and an increasing file-index
         for dataformat in self.dataformats:
             self.set_tab_bidsmap(dataformat)
         self.set_tab_options()
@@ -191,7 +190,7 @@ class MainWindow(QMainWindow):
         table      = self.samples_table[dataformat]
         colindex   = table.currentColumn()
         rowindex   = [index.row() for index in table.selectedIndexes() if index.column() == colindex]
-        if colindex in (-1, 0, 4):      # User clicked the index, the edit-button or elsewhere (i.e. not on an activated widget)
+        if rowindex and colindex in (-1, 0, 4):      # User clicked the index, the edit-button or elsewhere (i.e. not on an activated widget)
             return
         runs  = []
         subid = []
@@ -203,30 +202,62 @@ class MainWindow(QMainWindow):
             subid.append(bids.get_bidsvalue(table.item(index, 3).text(), 'sub'))
             sesid.append(bids.get_bidsvalue(table.item(index, 3).text(), 'ses'))
 
+        # Get the datatypes for the dataformat(s)
+        datatypes = set()
+        for dtype in self.template_bidsmap[dataformat]:
+            if dtype not in ('subject', 'session'):
+                datatypes.add(dtype)
+        datatypes = sorted(datatypes)
+
         # Pop-up the context-menu
         menu    = QtWidgets.QMenu(self)
         compare = menu.addAction('Compare')
         compare.setEnabled(len(rowindex) > 1)
         compare.setToolTip('Compare the BIDS mappings of multiple run-items')
         edit    = menu.addAction('Edit')
+        edit.setEnabled(len(rowindex) > 0)
         edit.setToolTip('Edit a single run-item in detail or edit the data type of multiple run-items')
+        add     = menu.addAction('Add')
+        add.setToolTip('Add a run-item (expert usage)')
         delete  = menu.addAction('Remove')
-        delete.setToolTip('Delete run-items from the bidsmap (expert usage)')
+        delete.setEnabled(len(rowindex) > 0)
+        delete.setToolTip('Delete run-items (expert usage)')
         action  = menu.exec(table.viewport().mapToGlobal(pos))
 
-        if action == delete:
-            answer = QMessageBox.question(self, f"Remove {dataformat} mapping",
-                                          'Only delete mappings for obsolete data (unless you are an expert user). Do you want to continue?',
-                                          QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel, QMessageBox.StandardButton.Cancel)
-            if answer == QMessageBox.StandardButton.Yes:
-                for index in rowindex:
-                    datatype   = table.item(index, 2).text()
-                    provenance = table.item(index, 5).text()
-                    LOGGER.warning(f"Expert usage: User has removed run-item {dataformat}[{datatype}]: {provenance}")
-                    bids.delete_run(self.output_bidsmap, bids.find_run(self.output_bidsmap, provenance, dataformat, datatype))
+        if action == add:
+            filenames, _ = QFileDialog.getOpenFileNames(self, 'Select the data source(s) for which you want to add a run-item(s)', str(self.bidsfolder))
+            if filenames:
+                datatype, ok = QInputDialog.getItem(self, 'Select the data type of the run-item(s)', 'datatype', datatypes, editable=False)
+                if datatype and ok:
+                    datasource = bids.DataSource()
+                    for filename in filenames:
+                        datasource = bids.DataSource(filename, self.output_bidsmap['Options']['plugins'], dataformat, datatype)
+                        if datasource.is_datasource():
+                            run = bids.get_run(self.template_bidsmap, datatype, 0, datasource)
+                            run['properties']['filepath'] = datasource.properties('filepath')   # Make the added run a strict match (i.e. an exception)
+                            run['properties']['filename'] = datasource.properties('filename')   # Make the added run a strict match (i.e. an exception)
+                            bids.insert_run(self.output_bidsmap, run, 0)                        # Put the run at the front (so it gets matching priority)
+                            if dataformat not in self.ordered_file_index:
+                                self.ordered_file_index[dataformat] = {datasource.path: 0}
+                            else:
+                                self.ordered_file_index[dataformat][datasource.path] = max([self.ordered_file_index[dataformat][fname] for fname in self.ordered_file_index[dataformat]]) + 1
+                    if datasource.is_datasource():
+                        self.update_subses_samples(self.output_bidsmap, dataformat)
+
+        elif action == delete:
+            deleted = False
+            for index in rowindex:
+                datatype   = table.item(index, 2).text()
+                provenance = table.item(index, 5).text()
+                if Path(provenance).is_file():
+                    answer = QMessageBox.question(self, f"Remove {dataformat} mapping for {provenance}",
+                                                  'Only delete run-items that are obsolete or irregular (unless you are an expert user). Do you want to continue?',
+                                                  QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel, QMessageBox.StandardButton.Cancel)
+                    if answer != QMessageBox.StandardButton.Yes: continue
+                LOGGER.verbose(f"Expert usage: User removes run-item {dataformat}[{datatype}]: {provenance}")
+                deleted = bids.delete_run(self.output_bidsmap, bids.find_run(self.output_bidsmap, provenance, dataformat, datatype))
+            if deleted:
                 self.update_subses_samples(self.output_bidsmap, dataformat)
-                table.setRowCount(table.rowCount() - len(rowindex))
-                self.datachanged = True
 
         elif action == compare:
             CompareWindow(runs, subid, sesid)
@@ -237,8 +268,8 @@ class MainWindow(QMainWindow):
                 provenance = table.item(table.currentRow(), 5).text()
                 self.open_editwindow(provenance, datatype)
             else:
-                newdatatype = self.ask_datatype([datatype for datatype in self.template_bidsmap[dataformat] if datatype not in ('subject', 'session')])
-                if not newdatatype:
+                newdatatype, ok = QInputDialog.getItem(self, 'Edit data types', 'Select the new data type for your run-items', datatypes, editable=False)
+                if not (newdatatype and ok):
                     return
 
                 # Change the datatype for the selected run-items
@@ -246,7 +277,7 @@ class MainWindow(QMainWindow):
                     datatype   = table.item(index, 2).text()
                     provenance = table.item(index, 5).text()
                     if not Path(provenance).is_file():
-                        QMessageBox.warning(self, 'Edit BIDS mapping', f"Cannot reliably change the datatype and/or suffix because the source file '{provenance}' can no longer be found.\n\nPlease restore the source data or use the `bidsmapper -s` option to solve this issue")
+                        QMessageBox.warning(self, 'Edit BIDS mapping', f"Cannot reliably change the data type and/or suffix because the source file '{provenance}' can no longer be found.\n\nPlease restore the source data or use the `bidsmapper -s` option to solve this issue")
                         continue
 
                     # Get the new run from the template
@@ -258,37 +289,9 @@ class MainWindow(QMainWindow):
 
                     # Insert the new run in our output bidsmap
                     bids.update_bidsmap(self.output_bidsmap, datatype, newrun)
-                    LOGGER.verbose(f"User has set run-item {dataformat}[{datatype} -> {newdatatype}]: {provenance}")
+                    LOGGER.verbose(f"User sets run-item {dataformat}[{datatype} -> {newdatatype}]: {provenance}")
 
                 self.update_subses_samples(self.output_bidsmap, dataformat)
-                self.datachanged = True
-
-    def ask_datatype(self, datatypes: List[str]):
-        """Helper function for asking the user for a data type"""
-
-        # Set-up a datatype dropdown menu
-        label    = QLabel('Select the new data type for your run-items')
-        dropdown = QComboBox()
-        dropdown.addItems(datatypes)
-
-        # Set-up OK/Cancel buttons
-        buttonbox = QDialogButtonBox()
-        buttonbox.setStandardButtons(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
-        buttonbox.button(QDialogButtonBox.StandardButton.Ok).setToolTip('Change the data type of the selected run items')
-
-        # Set up the dialog window and wait till the user has selected a plugin
-        layout = QVBoxLayout()
-        layout.addWidget(label)
-        layout.addWidget(dropdown)
-        layout.addWidget(buttonbox)
-        qdialog = QDialog(modal=True)
-        qdialog.setLayout(layout)
-        qdialog.setWindowTitle('Edit data types')
-        qdialog.setWindowIcon(QtGui.QIcon(str(BIDSCOIN_ICON)))
-        buttonbox.accepted.connect(qdialog.accept)
-        buttonbox.rejected.connect(qdialog.reject)
-
-        return dropdown.currentText() if qdialog.exec() else ''
 
     def set_menu_statusbar(self):
         """Set up the menu and statusbar"""
@@ -362,8 +365,8 @@ class MainWindow(QMainWindow):
         """Set the SOURCE file sample listing tab"""
 
         # Set the Participant labels table
-        subses_label = QLabel('Participant labels')
-        subses_label.setToolTip('Subject/session mapping')
+        subses_label = QLabel('Participant label')
+        subses_label.setToolTip('Subject/session mappings')
 
         subses_table = MyQTableWidget()
         subses_table.setToolTip(f"Use e.g. '<<filepath:/sub-(.*?)/>>' to parse the subject and (optional) session label from the pathname. NB: the () parentheses indicate the part that is extracted as the subject/session label\n"
@@ -379,15 +382,6 @@ class MainWindow(QMainWindow):
         self.subses_table[dataformat] = subses_table
 
         # Set the bidsmap table
-        provenance = bids.dir_bidsmap(self.input_bidsmap, dataformat)
-        ordered_file_index = {}                                         # The mapping between the ordered provenance and an increasing file-index
-        num_files = 0
-        for file_index, file_name in enumerate(provenance):
-            ordered_file_index[file_name] = file_index
-            num_files = file_index + 1
-
-        self.ordered_file_index[dataformat] = ordered_file_index
-
         label = QLabel('Data samples')
         label.setToolTip('List of unique source-data samples')
 
@@ -395,7 +389,6 @@ class MainWindow(QMainWindow):
         samples_table.setMouseTracking(True)
         samples_table.setShowGrid(True)
         samples_table.setColumnCount(6)
-        samples_table.setRowCount(num_files)
         samples_table.setHorizontalHeaderLabels(['', f'{dataformat} input', 'BIDS data type', 'BIDS output', 'Action', 'Provenance'])
         samples_table.setSortingEnabled(True)
         samples_table.sortByColumn(0, QtCore.Qt.SortOrder.AscendingOrder)
@@ -524,9 +517,11 @@ class MainWindow(QMainWindow):
         subses_table.setItem(1, 1, MyWidgetItem(output_bidsmap[dataformat]['session']))
 
         # Update the run samples table
-        idx = 0
+        idx           = 0
+        num_files     = self.set_ordered_file_index(dataformat)
         samples_table = self.samples_table[dataformat]
         samples_table.blockSignals(True)
+        samples_table.setRowCount(num_files)
         samples_table.setSortingEnabled(False)
         samples_table.clearContents()
         for datatype, runs in output_bidsmap[dataformat].items():
@@ -600,6 +595,18 @@ class MainWindow(QMainWindow):
         samples_table.setSortingEnabled(True)
         samples_table.blockSignals(False)
 
+    def set_ordered_file_index(self, dataformat: str) -> int:
+        """Sets the mapping between the ordered provenance and an increasing file-index"""
+
+        provenances = bids.dir_bidsmap(self.output_bidsmap, dataformat)
+        if len(provenances) > len(self.ordered_file_index.get(dataformat,[])):
+            ordered_index = {}
+            for file_index, file_name in enumerate(provenances):
+                ordered_index[file_name]        = file_index
+            self.ordered_file_index[dataformat] = ordered_index
+
+        return len(provenances)
+
     def subsescell2bidsmap(self, rowindex: int, colindex: int):
         """Subject or session value has been changed in subject-session table"""
 
@@ -614,10 +621,7 @@ class MainWindow(QMainWindow):
 
             # Only if cell content was changed, update
             if key and value != oldvalue:
-                if key == 'subject':
-                    LOGGER.warning(f"Expert usage: User has set {dataformat}['{key}'] from '{oldvalue}' to '{value}'")
-                else:
-                    LOGGER.verbose(f"User has set {dataformat}['{key}'] from '{oldvalue}' to '{value}'")
+                LOGGER.verbose(f"User sets {dataformat}['{key}'] from '{oldvalue}' to '{value}'")
                 self.output_bidsmap[dataformat][key] = value
                 self.update_subses_samples(self.output_bidsmap, dataformat)
 
@@ -629,7 +633,7 @@ class MainWindow(QMainWindow):
             samples_table = self.samples_table[dataformat]
             clicked       = self.focusWidget()
             rowindex      = samples_table.indexAt(clicked.pos()).row()
-            if rowindex < 0:                                        # This may happen on macOS (rowindex = -1)? (github issue #131)
+            if rowindex < 0:                                        # This presumably happened on PyQt5@macOS (rowindex = -1)? (github issue #131)
                 LOGGER.bcdebug(f"User clicked on the [Edit] button (presumably) but PyQt returns pos={clicked.pos()} -> rowindex={rowindex}")
                 return                                              # TODO: Simply changing this to 0? (the value of rowindex when data type is DICOM)
             datatype      = samples_table.item(rowindex, 2).text()
@@ -712,7 +716,7 @@ class MainWindow(QMainWindow):
                         except (ValueError, SyntaxError): pass
                     newoptions[key] = val
                     if val != oldoptions.get(key):
-                        LOGGER.verbose(f"User has set the '{plugin}' option from '{key}: {oldoptions.get(key)}' to '{key}: {val}'")
+                        LOGGER.verbose(f"User sets the '{plugin}' option from '{key}: {oldoptions.get(key)}' to '{key}: {val}'")
                         self.datachanged = True
             if plugin == 'bidscoin':
                 self.output_bidsmap['Options']['bidscoin'] = newoptions
@@ -854,7 +858,7 @@ class MainWindow(QMainWindow):
 
         filename, _ = QFileDialog.getOpenFileName(self, 'Open File', str(self.bidsfolder/'code'/'bidscoin'/'bidsmap.yaml'), 'YAML Files (*.yaml *.yml);;All Files (*)')
         if filename:
-            QtCore.QCoreApplication.setApplicationName(f"{filename} - BIDS editor")
+            QtCore.QCoreApplication.setApplicationName(f"{filename} - BIDS editor {__version__}")
             self.input_bidsmap, _ = bids.load_bidsmap(Path(filename))
             self.reset()
 
@@ -870,7 +874,7 @@ class MainWindow(QMainWindow):
         filename,_ = QFileDialog.getSaveFileName(self, 'Save File',  str(self.bidsfolder/'code'/'bidscoin'/'bidsmap.yaml'), 'YAML Files (*.yaml *.yml);;All Files (*)')
         if filename:
             bids.save_bidsmap(Path(filename), self.output_bidsmap)
-            QtCore.QCoreApplication.setApplicationName(f"{filename} - BIDS editor")
+            QtCore.QCoreApplication.setApplicationName(f"{filename} - BIDS editor {__version__}")
             self.datasaved   = True
             self.datachanged = False
 
@@ -1116,8 +1120,7 @@ class EditWindow(QDialog):
         if action == import_data:
 
             # Read all the meta-data from the table and store it in the target_run
-            metafile, _ = QFileDialog.getOpenFileName(self, 'Import meta data from file',
-                                                      str(self.source_run['provenance']),
+            metafile, _ = QFileDialog.getOpenFileName(self, 'Import meta data from file', str(self.source_run['provenance']),
                                                       'JSON/YAML/CSV/TSV Files (*.json *.yaml *.yml *.txt *.csv *.tsv);;All Files (*)')
             if metafile:
 
@@ -1305,7 +1308,7 @@ class EditWindow(QDialog):
                                               f'It is discouraged to change {self.dataformat} property values unless you are an expert user. Do you really want to change "{oldvalue}" to "{value}"?',
                                               QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
                 if answer == QMessageBox.StandardButton.Yes:
-                    LOGGER.warning(f"Expert usage: User has set {self.dataformat}['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
+                    LOGGER.verbose(f"Expert usage: User sets {self.dataformat}['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
                     self.target_run['properties'][key] = value
                 else:
                     self.properties_table.blockSignals(True)
@@ -1329,7 +1332,7 @@ class EditWindow(QDialog):
                                               f'It is discouraged to change {self.dataformat} attribute values unless you are an expert user. Do you really want to change "{oldvalue}" to "{value}"?',
                                               QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
                 if answer == QMessageBox.StandardButton.Yes:
-                    LOGGER.warning(f"Expert usage: User has set {self.dataformat}['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
+                    LOGGER.verbose(f"Expert usage: User sets {self.dataformat}['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
                     self.target_run['attributes'][key] = value
                 else:
                     self.attributes_table.blockSignals(True)
@@ -1364,13 +1367,13 @@ class EditWindow(QDialog):
                                                   f'It is discouraged to remove the <<dynamic>> run-index. Do you really want to change "{oldvalue}" to "{value}"?',
                                                   QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
                     if answer == QMessageBox.StandardButton.Yes:
-                        LOGGER.warning(f"Expert usage: User has set bids['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
+                        LOGGER.verbose(f"Expert usage: User sets bids['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
                     else:
                         value = oldvalue
                         self.bids_table.item(rowindex, 1).setText(oldvalue)
-                        LOGGER.verbose(f"User has set bids['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
+                        LOGGER.verbose(f"User sets bids['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
                 else:
-                    LOGGER.verbose(f"User has set bids['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
+                    LOGGER.verbose(f"User sets bids['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
                 self.bids_table.blockSignals(False)
                 self.target_run['bids'][key] = value
                 self.refresh_bidsname()
@@ -1390,7 +1393,7 @@ class EditWindow(QDialog):
                 self.meta_table.blockSignals(True)
                 self.meta_table.item(rowindex, 1).setText(value)
                 self.meta_table.blockSignals(False)
-            LOGGER.verbose(f"User has set meta['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
+            LOGGER.verbose(f"User sets meta['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
 
         # Read all the meta-data from the table and store it in the target_run
         self.target_run['meta'] = {}
@@ -1450,7 +1453,7 @@ class EditWindow(QDialog):
 
         self.target_datatype = self.datatype_dropdown.currentText()
 
-        LOGGER.verbose(f"User has changed the BIDS data type from '{self.current_datatype}' to '{self.target_datatype}' for {self.target_run['provenance']}")
+        LOGGER.verbose(f"User changes the BIDS data type from '{self.current_datatype}' to '{self.target_datatype}' for {self.target_run['provenance']}")
 
         self.change_run(0)
 
@@ -1459,7 +1462,7 @@ class EditWindow(QDialog):
 
         target_suffix = self.suffix_dropdown.currentText()
 
-        LOGGER.verbose(f"User has changed the BIDS suffix from '{self.target_run['bids'].get('suffix')}' to '{target_suffix}' for {self.target_run['provenance']}")
+        LOGGER.verbose(f"User changes the BIDS suffix from '{self.target_run['bids'].get('suffix')}' to '{target_suffix}' for {self.target_run['provenance']}")
 
         self.change_run(target_suffix)
 
@@ -1551,7 +1554,7 @@ class EditWindow(QDialog):
             if answer == QMessageBox.StandardButton.Yes: return
             LOGGER.warning(message)
 
-        LOGGER.verbose(f'User has approved the edit')
+        LOGGER.verbose(f'User approves the edit')
         if re.sub('<(?!.*<).*? object at .*?>','',str(self.target_run)) != re.sub('<(?!.*<).*? object at .*?>','',str(self.source_run)):    # Ignore the memory address of the datasource object
             bids.update_bidsmap(self.target_bidsmap, self.current_datatype, self.target_run)
 
@@ -1570,7 +1573,7 @@ class EditWindow(QDialog):
             LOGGER.info(f'Exporting run item: bidsmap[{self.dataformat}][{self.target_datatype}] -> {yamlfile}')
             yamlfile   = Path(yamlfile)
             bidsmap, _ = bids.load_bidsmap(yamlfile, checks=(False, False, False))
-            bids.append_run(bidsmap, self.target_run)
+            bids.insert_run(bidsmap, self.target_run)
             bids.save_bidsmap(yamlfile, bidsmap)
             QMessageBox.information(self, 'Edit BIDS mapping', f"Successfully exported:\n\nbidsmap[{self.dataformat}][{self.target_datatype}] -> {yamlfile}")
 
