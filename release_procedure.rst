@@ -2,17 +2,17 @@
 Release procedure
 =================
 
-This document describes how to prepare a new BIDScoin release from within the DCCN + a Linux VM
+This document describes how to prepare a new BIDScoin release from within the DCCN + from a Linux VM
 
-1. Inspect the git history and update the release notes (including the links)
-2. Delete the the bidscoin config folder
+1. Inspect the git history and update the CHANGELOG (including the links)
+2. Delete the ``.bidscoin`` config folder
 3. Update the version string everywhere (i.e. search without word matching), COPYRIGHT and cli help texts
 4. Add a git version tag
 5. Backport to PyQt5 in a v4.#.#+qt5 branch
 6. Manually run the bidscoin, bidsmapper, bidscoiner, bids-validator and other integration tests
 7. Run tox@DCCN::
 
-    VERSION="4.3.2"
+    VERSION="4.3.3"
     cd ~/python/bidscoin
     git checkout v${VERSION}+qt5
     module load bidscoin/dev
@@ -62,7 +62,7 @@ Dockerhub
 
 1. In the VM, build, test and push a Docker image::
 
-    VERSION="4.3.2"
+    VERSION="4.3.3"
     sudo docker build -t marcelzwiers/bidscoin:$VERSION .
     sudo docker run --rm marcelzwiers/bidscoin:$VERSION bidscoin -v
     sudo docker run --rm marcelzwiers/bidscoin:$VERSION pngappend
@@ -70,7 +70,7 @@ Dockerhub
     sudo docker push marcelzwiers/bidscoin:$VERSION
     sudo docker system prune -a
 
-Github
+GitHub
 ------
 
 1. Publish a new release

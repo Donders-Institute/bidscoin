@@ -95,7 +95,7 @@ You may get the error "Could not parse required sub- label from [..]". This erro
 
 I got an "Unexpected postfix / file conversion result"
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-This bidscoiner warning message means that the source data was not properly recognized/converted by the plugin. Please search and/or report it on `Github issue <https://github.com/Donders-Institute/bidscoin/issues?q=>`__ to resolve it.
+This bidscoiner warning message means that the source data was not properly recognized/converted by the plugin. Please search and/or report it on `GitHub issue <https://github.com/Donders-Institute/bidscoin/issues?q=>`__ to resolve it.
 
 I only see "_magnitude1" or "_magnitude2" run-items in my bidsmap
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -104,14 +104,6 @@ Siemens (and perhaps other manufacturers too) stores all field-map Series in a s
 My source-files can no longer be found
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 You may get the warning "Cannot reliably change the data type and/or suffix because the source file '..' can no longer be found". This warning is generated when (1) your source data moved to a different location, or (2) your data is zipped or in DICOMDIR format. This warning can be ignored if you do not need to change the data type of your run-items anymore (in the bidseditor), because in that case BIDScoin may need access to the source data (to read new properties or attributes). To restore data access for (1), move the data to it's original location and for (2) use the ``--store`` option of bidsmapper to store local copies of the source data samples in the bids output folder.
-
-Some acquisitions went wrong and need to be excluded
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-BIDScoin plugins will skip (Linux-style hidden) files and folders of which the name starts with a ``.`` (dot) character. You can use this feature to flexibly omit subjects, sessions or runs from your bids repository, for instance when you restarted an MRI scan because something went wrong with the stimulus presentation and you don't want that data to be converted and enumerated as ``run-1``, ``run-2``.
-
-I have duplicated field maps because of an interrupted session
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-It may happen that due to irregularities during data acquisition you had to reacquire your field-map for part of your data. In that case the ``IntendedFor`` and ``B0FieldIdentifier``/``B0FieldSource`` semantics become ambiguous. To handle this situation, you can use json sidecar files to extend the source attributes (see below) or use the limited ``IntendedFor`` search as described `here <./bidsmap.html#intendedfor>`__ and `here <https://github.com/Donders-Institute/bidscoin/issues/123>`__.
 
 The bidscoiner says that the IntendedFor search gave no results
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -125,10 +117,6 @@ I use dynamic run-indices and now have 'orphan' run-indices in my BIDS directory
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 BIDScoin automatically increments the run-index based on existing files in the same directory. In rare cases, this procedure can fail, leading to 'orphan' run-indices, e.g. a ``run-2`` file without an accompanying ``run-1`` file. Most likely this is caused by underspecified run-items in the bidsmap, for instance when you have a magnitude as well as a phase item, but you left the ``part`` entity empty (instead of specifying ``part-mag`` and ``part-phase``), i.e. you gave them the same output name (which BIDScoin then has to fix post-hoc). In rare cases you cannot avoid this problem and then it is advised to use the more robust ``<<1>>`` index, instead of ``<<>>``
 
-The data of some subjects need to be treated (mapped) differently
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Sometimes you may have irregularities in your data that make that you would like make exceptions for run-items of certain subjects. There are different ways to do this but most likely the best way to do this is to add a json sidecar file to the source data of those run-items. In the json sidecar file you can store an attribute key-value pair to `overrule or extend the original attribute value of the source data <./bidsmap.html#structure-and-content>`__. For instance, if your fMRI run was acquired with the wrong task presentation, e.g. ``task2`` instead of ``task1``, you can add ``SeriesDescription: task2`` to the sidecar file to overrule ``SeriesDescription: task1`` in the DICOM header (to make a more specific exception that shows up as a new run-item in the bidsmap you can change it to e.g. ``task1_exception``).
-
 I want to rename files or change some data in my existing BIDS directory
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 You can simply use the ``bidseditor`` to make changes to your bidsmap, delete all subject folders in your BIDS output folder and then re-run ``bidscoiner``. However, sometimes you may no longer have access to your source data, or you may have downloaded a publicly shared BIDS dataset (without source data). In that case you can use ``bidscoiner`` in combination with the ``nibabel2bids`` plugin and the ``bidsmap_bids2bids`` bidsmap to create a new BIDS dataset, i.e. like this:
@@ -137,6 +125,27 @@ You can simply use the ``bidseditor`` to make changes to your bidsmap, delete al
 
    $ bidsmapper bidsfolder bidsfolder_new -p nibabel2bids -t bidsmap_bids2bids
    $ bidscoiner bidsfolder bidsfolder_new
+
+Irregular data acquisition
+--------------------------
+
+Some acquisitions went wrong and need to be excluded
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+BIDScoin plugins will skip (Linux-style hidden) files and folders of which the name starts with a ``.`` (dot) character. You can use this feature to flexibly omit subjects, sessions or runs from your bids repository, for instance when you restarted an MRI scan because something went wrong with the stimulus presentation and you don't want that data to be converted and enumerated as ``run-1``, ``run-2``. Alternatively, you can manually add these runs using the bidseditor context menu (see the section below) and set their data type to ``exclude``.
+
+The data of some subjects need to be treated (mapped) differently
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Sometimes you may have irregularities in your data that make that you would like make exceptions for run-items of certain subjects. There are different ways to do this but most likely the best way to do this is to add a json sidecar file to the source data of those run-items. In the json sidecar file you can store an attribute key-value pair to `overrule or extend the original attribute value of the source data <./bidsmap.html#structure-and-content>`__. For instance, if your fMRI run was acquired with the wrong task presentation, e.g. ``task2`` instead of ``task1``, you can add ``SeriesDescription: task2`` to the sidecar file to overrule ``SeriesDescription: task1`` in the DICOM header (to make a more specific exception that shows up as a new run-item in the bidsmap you can change it to e.g. ``task1_exception``).
+
+An alternative way to make exceptions is to manually insert run-items using the ``Add`` context menu-item in the main window of the bidseditor (right-click on the selected BIDS output names). After you selected the irregular source data files you can then set the data type and BIDS entities just for these data sources. The way this works is that, as opposed to regular run-items, the ``filepath`` and ``filename`` properties are explicitly specified (so they do not match with other data sources; surely you can still edit them and add e.g. regular expression patterns to tweak your results). You can see the explicit values in the properties table in the screenshot below, and when you edit your added run-items. Finally, the added run-items are put at the front of the lists, so they get (run-item matching) priority when mapping your source data to BIDS.
+
+.. figure:: ./_static/bidseditor_added_run.png
+
+   The full filepath and filename values (in black) of the added run-item. Typically, these values are empty or contain (regular expression) wildcards, to make generalize them over subject and sessions. Note that, for reference, their values (in gray, next column) on the filesystem are always shown.
+
+I have duplicated field maps because of an interrupted session
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+It may happen that due to irregularities during data acquisition you had to reacquire your field-map for part of your data. In that case the ``IntendedFor`` and ``B0FieldIdentifier``/``B0FieldSource`` semantics become ambiguous. To handle this situation, you can use json sidecar files to extend the source attributes (see the section above) or use the limited ``IntendedFor`` search as described `here <./bidsmap.html#intendedfor>`__ and `here <https://github.com/Donders-Institute/bidscoin/issues/123>`__.
 
 More help
 ---------

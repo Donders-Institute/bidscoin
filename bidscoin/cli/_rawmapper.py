@@ -30,7 +30,7 @@ def get_parser():
     parser.add_argument('-s','--sessions',  help='Space separated list of selected sub-#/ses-# names/folders to be processed. Otherwise all sessions in the bidsfolder will be processed', nargs='+', metavar='SESSION')
     parser.add_argument('-f','--field',     help='The fieldname(s) of the DICOM attribute(s) used to rename or map the subid/sesid foldernames', default=['PatientComments', 'ImageComments'], nargs='+', metavar='NAME')
     parser.add_argument('-w','--wildcard',  help='The Unix style pathname pattern expansion that is used to select the series from which the dicomfield is being mapped (can contain wildcards)', default='*', metavar='PATTERN')
-    parser.add_argument('-o','--outfolder', help='The mapper-file is normally saved in sourcefolder or, when using this option, in outfolder', metavar='DESTINATION')
+    parser.add_argument('-o','--outfolder', help='The mapper-file is normally saved in sourcefolder or, when using this option, in outfolder', metavar='FOLDER')
     parser.add_argument('-r','--rename',    help='Rename sub-subid/ses-sesid directories in the sourcefolder to sub-dcmval/ses-dcmval', action='store_true')
     parser.add_argument('-c','--clobber',   help='Rename the sub/ses directories, even if the target-directory already exists', action='store_true')
     parser.add_argument('-n','--subprefix', help="The prefix common for all the source subject-folders. Use a '*' wildcard if there is no prefix", default='sub-', metavar='PREFIX')

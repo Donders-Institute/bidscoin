@@ -23,8 +23,8 @@ Step 1a: Running the bidsmapper
 -------------------------------
 ::
 
-    usage: bidsmapper [-h] [-b BIDSMAP] [-t TEMPLATE] [-p PLUGINS [PLUGINS ...]] [-n SUBPREFIX]
-                      [-m SESPREFIX] [-u UNZIP] [-s] [-a] [-f] [--no-update]
+    usage: bidsmapper [-h] [-b NAME] [-t NAME] [-p NAME [NAME ...]] [-n PREFIX] [-m PREFIX] [-u PATTERN]
+                      [-s] [-a] [-f] [--no-update]
                       sourcefolder bidsfolder
 
     The bidsmapper scans your source data repository to identify different data types by matching
@@ -43,30 +43,30 @@ Step 1a: Running the bidsmapper
 
     options:
       -h, --help            show this help message and exit
-      -b BIDSMAP, --bidsmap BIDSMAP
+      -b NAME, --bidsmap NAME
                             The study bidsmap file with the mapping heuristics. If the bidsmap filename
                             is just the basename (i.e. no '/' in the name) then it is assumed to be
                             located in the current directory or in bidsfolder/code/bidscoin. Default:
                             bidsmap.yaml
-      -t TEMPLATE, --template TEMPLATE
+      -t NAME, --template NAME
                             The bidsmap template file with the default heuristics (this could be provided
                             by your institute). If the bidsmap filename is just the basename (i.e. no '/'
                             in the name) then it is assumed to be located in the bidscoin config folder.
                             Default: bidsmap_dccn
-      -p PLUGINS [PLUGINS ...], --plugins PLUGINS [PLUGINS ...]
+      -p NAME [NAME ...], --plugins NAME [NAME ...]
                             List of plugins to be used. Default: the plugin list of the study/template
                             bidsmap)
-      -n SUBPREFIX, --subprefix SUBPREFIX
+      -n PREFIX, --subprefix PREFIX
                             The prefix common for all the source subject-folders (e.g. 'Pt' is the
                             subprefix if subject folders are named 'Pt018', 'Pt019', ...). Use '*' when
                             your subject folders do not have a prefix. Default: the value of the
                             study/template bidsmap, e.g. 'sub-'
-      -m SESPREFIX, --sesprefix SESPREFIX
+      -m PREFIX, --sesprefix PREFIX
                             The prefix common for all the source session-folders (e.g. 'M_' is the
                             subprefix if session folders are named 'M_pre', 'M_post', ..). Use '*' when
                             your session folders do not have a prefix. Default: the value of the
                             study/template bidsmap, e.g. 'ses-'
-      -u UNZIP, --unzip UNZIP
+      -u PATTERN, --unzip PATTERN
                             Wildcard pattern to unpack tarball/zip-files in the sub/ses sourcefolder that
                             need to be unzipped (in a tempdir) to make the data readable. Default: the
                             value of the study/template bidsmap
@@ -95,7 +95,7 @@ Step 1b: Running the bidseditor
 -------------------------------
 ::
 
-    usage: bidseditor [-h] [-b BIDSMAP] [-t TEMPLATE] bidsfolder
+    usage: bidseditor [-h] [-b NAME] [-t NAME] bidsfolder
 
     This application launches a graphical user interface for editing the bidsmap that is produced
     by the bidsmapper. You can edit the BIDS data types and entities until all run-items have a
@@ -109,12 +109,12 @@ Step 1b: Running the bidseditor
 
     options:
       -h, --help            show this help message and exit
-      -b BIDSMAP, --bidsmap BIDSMAP
+      -b NAME, --bidsmap NAME
                             The study bidsmap file with the mapping heuristics. If the bidsmap filename
                             is just the basename (i.e. no "/" in the name) then it is assumed to be
                             located in the current directory or in bidsfolder/code/bidscoin. Default:
                             bidsmap.yaml
-      -t TEMPLATE, --template TEMPLATE
+      -t NAME, --template NAME
                             The template bidsmap file with the default heuristics (this could be provided
                             by your institute). If the bidsmap filename is just the basename (i.e. no "/"
                             in the name) then it is assumed to be located in the bidscoin config folder.
@@ -141,7 +141,7 @@ As shown below, the main window of the bidseditor opens with separate data mappi
    Clear the ``session`` label field if you have data with only one session. This will remove the optional session label from the BIDS output name
 
 .. tip::
-   You can `compare <./screenshots.html>`__ or edit multiple run-items by right-clicking their selected BIDS output names (use shift-/control-click to select the run-items)
+   You can compare, edit or add multiple run-items by selecting and right-clicking BIDS output names (use shift-/control-click to select multiple run-items). Unlike regular run-items, added run-items are specific to single data sources and can be used to handle data acquisition exceptions (see the `troubleshooting <./troubleshooting.html#irregular-data-acquisition>`__ guide for more info)
 
 Edit window
 ^^^^^^^^^^^
@@ -176,9 +176,7 @@ Step 2: Running the bidscoiner
 ------------------------------
 ::
 
-    usage: bidscoiner [-h] [-p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]] [-b BIDSMAP] [-f] [-c]
-                      [-n NATIVESPEC]
-                      sourcefolder bidsfolder
+    usage: bidscoiner [-h] [-p LABEL [LABEL ...]] [-b NAME] [-f] [-c [SPECS]] sourcefolder bidsfolder
 
     Converts ("coins") your source datasets to NIfTI/json/tsv BIDS datasets using the mapping
     information from the bidsmap.yaml file. Edit this bidsmap to your needs using the bidseditor
@@ -199,28 +197,27 @@ Step 2: Running the bidscoiner
 
     options:
       -h, --help            show this help message and exit
-      -p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...], --participant_label PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]
+      -p LABEL [LABEL ...], --participant LABEL [LABEL ...]
                             Space separated list of selected sub-# names/folders to be processed (the
-                            sub-prefix can be removed). Otherwise all participants in the sourcefolder will
+                            sub-prefix can be omitted). Otherwise all subjects in the sourcefolder will
                             be processed
-      -b BIDSMAP, --bidsmap BIDSMAP
+      -b NAME, --bidsmap NAME
                             The study bidsmap file with the mapping heuristics. If the bidsmap filename
                             is just the basename (i.e. no "/" in the name) then it is assumed to be
                             located in the current directory or in bidsfolder/code/bidscoin. Default:
                             bidsmap.yaml
       -f, --force           Process all subjects, regardless of existing subject folders in the
                             bidsfolder. Otherwise these subject folders will be skipped
-      -c, --cluster         Use the DRMAA library to submit the bidscoiner jobs to a high-performance
-                            compute (HPC) cluster
-      -n NATIVESPEC, --nativespec NATIVESPEC
-                            Opaque DRMAA argument with native specifications for submitting bidscoiner
-                            jobs to the HPC cluster. NB: Use quotes and include at least one space
-                            character to prevent premature parsing (default: -l walltime=00:30:00,mem=4gb)
+      -c [SPECS], --cluster [SPECS]
+                            Use the DRMAA library to submit the bidscoiner jobs to a high-performance
+                            compute (HPC) cluster. You can add an opaque DRMAA argument with native
+                            specifications for your HPC resource manager (NB: Use quotes and include at
+                            least one space character to prevent premature parsing -- see examples)
 
     examples:
       bidscoiner myproject/raw myproject/bids
       bidscoiner -f myproject/raw myproject/bids -p sub-009 sub-030
-      bidscoiner -f myproject/raw myproject/bids -c -n "--time=00:30:00 --mem=4000"
+      bidscoiner -f myproject/raw myproject/bids -c "--time=00:30:00 --mem=4000"
 
 .. tip::
    * Always check the terminal output for possible warnings or errors (a summary of them is printed at the end)

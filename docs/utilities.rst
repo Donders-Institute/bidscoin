@@ -6,9 +6,9 @@ bidscoin
 
 The bidscoin command-line utility serves as a central starting point to test and manage your BIDScoin installation::
 
-    usage: bidscoin [-h] [-l] [-p] [-i INSTALL [INSTALL ...]] [-u UNINSTALL [UNINSTALL ...]]
-                    [-d DOWNLOAD] [-t [TEST]] [-b BIDSMAPTEST] [-c CREDITS [CREDITS ...]]
-                    [--tracking {yes,no,show}] [-v]
+    usage: bidscoin [-h] [-l] [-p] [-i INSTALL [INSTALL ...]] [-u UNINSTALL [UNINSTALL ...]] [-d FOLDER]
+                    [-t [TEMPLATE]] [-b BIDSMAP] [-c OPTIONS [OPTIONS ...]] [--tracking {yes,no,show}]
+                    [-v]
 
     BIDScoin is a toolkit to convert raw data-sets according to the Brain Imaging Data Structure (BIDS)
 
@@ -34,14 +34,14 @@ The bidscoin command-line utility serves as a central starting point to test and
                             A list of template bidsmaps and/or bidscoin plugins to install
       -u UNINSTALL [UNINSTALL ...], --uninstall UNINSTALL [UNINSTALL ...]
                             A list of template bidsmaps and/or bidscoin plugins to uninstall
-      -d DOWNLOAD, --download DOWNLOAD
+      -d FOLDER, --download FOLDER
                             Download tutorial MRI data to the DOWNLOAD folder
-      -t [TEST], --test [TEST]
+      -t [TEMPLATE], --test [TEMPLATE]
                             Test the bidscoin installation and template bidsmap
-      -b BIDSMAPTEST, --bidsmaptest BIDSMAPTEST
+      -b BIDSMAP, --bidsmaptest BIDSMAP
                             Test the run-items and their bidsnames of all normal runs in the study
                             bidsmap. Provide the bids-folder or the bidsmap filepath
-      -c CREDITS [CREDITS ...], --credits CREDITS [CREDITS ...]
+      -c OPTIONS [OPTIONS ...], --credits OPTIONS [OPTIONS ...]
                             Show duecredit citations for your BIDS repository. You can also add duecredit
                             summary arguments (without dashes), e.g. `style {apa,harvard1}` or `format
                             {text,bibtex}`.
@@ -65,9 +65,8 @@ dicomsort
 
 The ``dicomsort`` command-line tool is a utility to move your flat- or DICOMDIR-organized files (see `above <#required-source-data-structure>`__) into a 'seriesfolder' organization. This can be useful to organize your source data in a more convenient and human readable way (DICOMDIR or flat DICOM directories can often be hard to comprehend). The BIDScoin tools will run dicomsort in a temporary folder if your data is not already organized in series-folders, so in principle you don't really need to run it yourself (unless when you have a single multi-subject DICOMDIR file for your entire repository). Running dicomsort beforehand does, however, give you more flexibility in handling special cases that are not handled properly and it can also give you a speed benefit. If dicomsort do not satisfy your needs, then have a look at this `DICOM reorganize <https://github.com/robertoostenveld/bids-tools/blob/master/doc/reorganize_dicom_files.md>`__ tool::
 
-    usage: dicomsort [-h] [-i SUBPREFIX] [-j SESPREFIX] [-f FOLDERSCHEME] [-n NAMESCHEME] [-p PATTERN]
-                     [--force] [-d]
-                     dicomsource
+    usage: dicomsort [-h] [-i PREFIX] [-j PREFIX] [-f SCHEME] [-n SCHEME] [-p PATTERN] [--force] [-d]
+                     sourcefolder
 
     Sorts and/or renames DICOM files into local subfolders, e.g. with 3-digit SeriesNumber-SeriesDescription
     folder names (i.e. following the same listing as on the scanner console)
@@ -75,25 +74,24 @@ The ``dicomsort`` command-line tool is a utility to move your flat- or DICOMDIR-
     Supports flat DICOM as well as multi-subject/session DICOMDIR file structures.
 
     positional arguments:
-      dicomsource           The root folder containing the dicomsource/[sub/][ses/] dicomfiles or the
-                            DICOMDIR file
+      sourcefolder          The root folder containing the [sub/][ses/] dicomfiles or the DICOMDIR file
 
     options:
       -h, --help            show this help message and exit
-      -i SUBPREFIX, --subprefix SUBPREFIX
-                            Provide a prefix string to recursively sort dicomsource/subject subfolders
+      -i PREFIX, --subprefix PREFIX
+                            Provide a prefix string to recursively sort sourcefolder/subject subfolders
                             (e.g. "sub-" or "S_") (default: None)
-      -j SESPREFIX, --sesprefix SESPREFIX
-                            Provide a prefix string to recursively sort dicomsource/subject/session
+      -j PREFIX, --sesprefix PREFIX
+                            Provide a prefix string to recursively sort sourcefolder/subject/session
                             subfolders (e.g. "ses-" or "T_") (default: None)
-      -f FOLDERSCHEME, --folderscheme FOLDERSCHEME
+      -f SCHEME, --folderscheme SCHEME
                             Naming scheme for the sorted DICOM Series subfolders. Follows the Python
                             string formatting syntax with DICOM field names in curly bracers with an
                             optional number of digits for numeric fields. Sorting in subfolders is
                             skipped when an empty folderscheme is given (but note that renaming the
                             filenames can still be performed) (default:
                             {SeriesNumber:03d}-{SeriesDescription})
-      -n NAMESCHEME, --namescheme NAMESCHEME
+      -n SCHEME, --namescheme SCHEME
                             Optional naming scheme that can be provided to rename the DICOM files.
                             Follows the Python string formatting syntax with DICOM field names in curly
                             bracers with an optional number of digits for numeric fields. Use e.g. "{Pati
@@ -119,9 +117,9 @@ rawmapper
 
 Another command-line utility that can be helpful in organizing your source data is ``rawmapper``. This utility can show you an overview (map) of all the values of DICOM-attributes of interest in your data-set and, optionally, used to rename your source data sub-folders. The latter option can be handy e.g. if you manually entered subject-identifiers as [Additional info] at the scanner console and you want to use these to rename your subject folders::
 
-    usage: rawmapper [-h] [-s SESSIONS [SESSIONS ...]] [-f FIELD [FIELD ...]] [-w WILDCARD]
-                     [-o OUTFOLDER] [-r] [-c] [-n SUBPREFIX] [-m [SESPREFIX]] [-d]
-                     sourcefolder
+    usage: rawmapper [-h] [-s SESSION [SESSION ...]] [-f NAME [NAME ...]] [-w PATTERN] [-o FOLDER] [-r]
+                     [-c] [-n PREFIX] [-m [PREFIX]] [-d]
+                     FOLDER
 
     Maps out the values of a DICOM attribute of all subjects in the sourcefolder, saves the result
     in a mapper-file and, optionally, uses the DICOM values to rename the sub-/ses-id's of the
@@ -130,31 +128,31 @@ Another command-line utility that can be helpful in organizing your source data 
     is stored in the DICOM attribute named 'PatientComments')
 
     positional arguments:
-      sourcefolder          The source folder with the raw data in sub-#/ses-#/series organization
+      FOLDER                The source folder with the raw data in sub-#/ses-#/series organization
 
     options:
       -h, --help            show this help message and exit
-      -s SESSIONS [SESSIONS ...], --sessions SESSIONS [SESSIONS ...]
+      -s SESSION [SESSION ...], --sessions SESSION [SESSION ...]
                             Space separated list of selected sub-#/ses-# names/folders to be processed.
                             Otherwise all sessions in the bidsfolder will be processed (default: None)
-      -f FIELD [FIELD ...], --field FIELD [FIELD ...]
+      -f NAME [NAME ...], --field NAME [NAME ...]
                             The fieldname(s) of the DICOM attribute(s) used to rename or map the
                             subid/sesid foldernames (default: ['PatientComments', 'ImageComments'])
-      -w WILDCARD, --wildcard WILDCARD
+      -w PATTERN, --wildcard PATTERN
                             The Unix style pathname pattern expansion that is used to select the series
                             from which the dicomfield is being mapped (can contain wildcards) (default:
                             *)
-      -o OUTFOLDER, --outfolder OUTFOLDER
+      -o FOLDER, --outfolder FOLDER
                             The mapper-file is normally saved in sourcefolder or, when using this option,
                             in outfolder (default: None)
       -r, --rename          Rename sub-subid/ses-sesid directories in the sourcefolder to sub-dcmval/ses-
                             dcmval (default: False)
       -c, --clobber         Rename the sub/ses directories, even if the target-directory already exists
                             (default: False)
-      -n SUBPREFIX, --subprefix SUBPREFIX
+      -n PREFIX, --subprefix PREFIX
                             The prefix common for all the source subject-folders. Use a '*' wildcard if
                             there is no prefix (default: sub-)
-      -m [SESPREFIX], --sesprefix [SESPREFIX]
+      -m [PREFIX], --sesprefix [PREFIX]
                             The prefix common for all the source session-folders. Use a '*' wildcard if
                             there is no prefix or an empty value if there are no sessions (default: ses-)
       -d, --dryrun          Dryrun (test) the mapping or renaming of the sub-subid/ses-sesid directories
@@ -174,7 +172,7 @@ bidsparticipants
 
 The bidsparticipants tool is useful for (re-)generating a participants.tsv file from your source data (without having to run bidscoiner)::
 
-    usage: bidsparticipants [-h] [-k KEYS [KEYS ...]] [-d] [-b BIDSMAP] sourcefolder bidsfolder
+    usage: bidsparticipants [-h] [-k KEY [KEY ...]] [-d] [-b NAME] sourcefolder bidsfolder
 
     (Re)scans data sets in the source folder for subject metadata to populate the participants.tsv
     file in the bids directory, e.g. after you renamed (be careful there!), added or deleted data
@@ -189,11 +187,11 @@ The bidsparticipants tool is useful for (re-)generating a participants.tsv file 
 
     options:
       -h, --help            show this help message and exit
-      -k KEYS [KEYS ...], --keys KEYS [KEYS ...]
+      -k KEY [KEY ...], --keys KEY [KEY ...]
                             Space separated list of the participants.tsv columns. Default: 'session_id'
                             'age' 'sex' 'size' 'weight'
       -d, --dryrun          Do not save anything, only print the participants info on screen
-      -b BIDSMAP, --bidsmap BIDSMAP
+      -b NAME, --bidsmap NAME
                             The study bidsmap file with the mapping heuristics. If the bidsmap filename
                             is just the basename (i.e. no "/" in the name) then it is assumed to be
                             located in the current directory or in bidsfolder/code/bidscoin. Default:

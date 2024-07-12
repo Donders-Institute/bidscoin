@@ -31,7 +31,7 @@ RUN mkdir -p /opt/miniconda3; \
 # Clone bidscoin and switch to the qt5 branch \
     git clone https://github.com/Donders-Institute/bidscoin.git /opt/bidscoin; \
     cd /opt/bidscoin; \
-    git checkout v4.3.2+qt5; \
+    git checkout v4.3.3+qt5; \
     rm -rf docs tests .git
 
 

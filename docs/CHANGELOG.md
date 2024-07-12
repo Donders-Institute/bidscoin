@@ -4,22 +4,25 @@
 
 ## [dev]
 
+## [4.3.3] - 2024-07-12
+
 ### Added
-- A bidseditor context menu for comparing selected run-items
-- A bidseditor context menu for changing the data type of selected run-items
+- A bidseditor context menu for comparing, editing or adding multiple run-items (GitHub issue #239)
+- A ``fixmeta`` bidsapp for retrospective metadata editing
 
 ### Changed
 - Merged the DRMAA `cluster` and `nativespec` input arguments
+- DRMAA support for slicereport (instead of calling qsub or sbatch)
 
 ## [4.3.2] - 2024-03-29
 
 ### Fixed
-- A regression was introduced when fixing Github issue #229 (now reverted)
+- A regression was introduced when fixing GitHub issue #229 (now reverted)
 
 ## [4.3.1] - 2024-03-27
 
 ### Added
-- Update B0FieldIdentifier/Source when having multiple fieldmap runs (Github issue [#198](https://github.com/Donders-Institute/bidscoin/issues/198))
+- Update B0FieldIdentifier/Source when having multiple fieldmap runs (`GitHub` issue [#198](https://github.com/Donders-Institute/bidscoin/issues/198))
 - Slicereport support for all nibabel file-formats
 - The `BIDSCOIN_TRACKUSAGE` environment variable for setting trackusage on the fly (see `bidscoin --trackusage show`)
 
@@ -450,7 +453,8 @@ A first stable release of BIDScoin :-)
 ### To do
 - Add support for non-imaging data
 
-[dev]: https://github.com/Donders-Institute/bidscoin/compare/4.3.2...HEAD
+[dev]: https://github.com/Donders-Institute/bidscoin/compare/4.3.3...HEAD
+[4.3.3]: https://github.com/Donders-Institute/bidscoin/compare/4.3.2...4.3.3
 [4.3.2]: https://github.com/Donders-Institute/bidscoin/compare/4.3.1...4.3.2
 [4.3.1]: https://github.com/Donders-Institute/bidscoin/compare/4.3.0...4.3.1
 [4.3.0]: https://github.com/Donders-Institute/bidscoin/compare/4.2.1...4.3.0

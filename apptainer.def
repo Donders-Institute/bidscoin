@@ -36,7 +36,7 @@ Stage: builder
     # Clone bidscoin and switch to the qt5 branch
     git clone https://github.com/Donders-Institute/bidscoin.git /opt/bidscoin
     cd /opt/bidscoin
-    git checkout v4.3.2+qt5
+    git checkout v4.3.3+qt5
     rm -rf docs tests .git
 
 
@@ -48,7 +48,7 @@ Stage: final
     This BIDScoin Apptainer image includes:
 
     * Debian stable,
-    * The latest stable release of BIDScoin (v4.3.2+qt5)
+    * The latest stable release of BIDScoin (v4.3.3+qt5)
     * The latest versions of dcm2niix, pydeface, spec2nii and some FSL tools
 
     The general form to run BIDScoin commands is:
