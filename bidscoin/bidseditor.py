@@ -237,7 +237,7 @@ class MainWindow(QMainWindow):
                             if dataformat not in self.ordered_file_index:
                                 self.ordered_file_index[dataformat] = {datasource.path: 0}
                             else:
-                                self.ordered_file_index[dataformat][datasource.path] = max([self.ordered_file_index[dataformat][fname] for fname in self.ordered_file_index[dataformat]]) + 1
+                                self.ordered_file_index[dataformat][datasource.path] = max(self.ordered_file_index[dataformat][fname] for fname in self.ordered_file_index[dataformat]) + 1
                     if datasource.is_datasource():
                         self.update_subses_samples(self.output_bidsmap, dataformat)
 
@@ -549,7 +549,6 @@ class MainWindow(QMainWindow):
                 samples_table.item(idx, 0).setFlags(QtCore.Qt.NoItemFlags)
                 samples_table.item(idx, 1).setFlags(QtCore.Qt.ItemIsEnabled)
                 samples_table.item(idx, 2).setFlags(QtCore.Qt.ItemIsEnabled)
-                samples_table.item(idx, 3).setFlags(QtCore.Qt.ItemIsEnabled)
                 samples_table.item(idx, 1).setToolTip('Double-click to inspect the header information')
                 samples_table.item(idx, 1).setStatusTip(str(provenance.parent) + str(Path('/')))
                 if datatype not in self.ignoredatatypes:
