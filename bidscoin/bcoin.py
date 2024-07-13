@@ -95,9 +95,9 @@ def synchronize(pbatch, jobids: list, wait: int=15):
         done = 0
         while done < len(jobids):
             jobs   = [pbatch.jobStatus(jobid) for jobid in jobids]
-            done   = sum([status in ('done', 'failed', 'undetermined') for status in jobs])
-            qbar.n = sum([status == 'queued_active'                    for status in jobs])
-            rbar.n = sum([status == 'running'                          for status in jobs])
+            done   = sum(status in ('done', 'failed', 'undetermined') for status in jobs)
+            qbar.n = sum(status == 'queued_active'                    for status in jobs)
+            rbar.n = sum(status == 'running'                          for status in jobs)
             qbar.refresh(), rbar.refresh()
             time.sleep(2)
         qbar.close(), rbar.close()

@@ -236,11 +236,14 @@ class MainWindow(QMainWindow):
                             run = bids.get_run(self.template_bidsmap, datatype, 0, datasource)
                             run['properties']['filepath'] = datasource.properties('filepath')   # Make the added run a strict match (i.e. an exception)
                             run['properties']['filename'] = datasource.properties('filename')   # Make the added run a strict match (i.e. an exception)
+                            LOGGER.verbose(f"Expert usage: User adds run-item {dataformat}[{datatype}]: {filename}")
+                            if Path(filename) in bids.dir_bidsmap(self.output_bidsmap, dataformat):
+                                LOGGER.warning(f"Added run-item {dataformat}[{datatype}]: {filename} already exists")
                             bids.insert_run(self.output_bidsmap, run, 0)                        # Put the run at the front (so it gets matching priority)
                             if dataformat not in self.ordered_file_index:
                                 self.ordered_file_index[dataformat] = {datasource.path: 0}
                             else:
-                                self.ordered_file_index[dataformat][datasource.path] = max([self.ordered_file_index[dataformat][fname] for fname in self.ordered_file_index[dataformat]]) + 1
+                                self.ordered_file_index[dataformat][datasource.path] = max(self.ordered_file_index[dataformat][fname] for fname in self.ordered_file_index[dataformat]) + 1
                     if datasource.is_datasource():
                         self.update_subses_samples(self.output_bidsmap, dataformat)
 

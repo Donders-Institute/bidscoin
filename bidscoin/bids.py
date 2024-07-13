@@ -1736,7 +1736,7 @@ def get_matching_run(datasource: DataSource, bidsmap: Bidsmap, runtime=False) ->
         datasource.datatype = datatype
         for run in runs or []:
 
-            match = any([run[matching][attrkey] not in [None,''] for matching in ('properties','attributes') for attrkey in run[matching]])     # Normally match==True, but make match==False if all attributes are empty
+            match = any(run[matching][attrkey] not in [None,''] for matching in ('properties','attributes') for attrkey in run[matching])     # Normally match==True, but make match==False if all attributes are empty
             run_  = create_run(datasource, bidsmap)
 
             # Try to see if the sourcefile matches all the filesystem properties
@@ -2071,7 +2071,7 @@ def check_runindices(session: Path) -> bool:
                     if not (pd.isna(scans_table.loc[scan, 'acq_time']) or pd.isna(scans_table.loc[prevscan, 'acq_time'])):
                         acq_time = datetime.datetime.fromisoformat(scans_table.loc[scan, 'acq_time'])
                         acq_prev = datetime.datetime.fromisoformat(scans_table.loc[prevscan, 'acq_time'])
-                        if (acq_time - acq_prev).total_seconds() <= 0:
+                        if (acq_time - acq_prev).total_seconds() < 0:
                             LOGGER.warning(f"Acquisition times do not increase with the run-indices. Please check `{scans_tsv}`")
                             return False
 
