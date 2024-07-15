@@ -2071,7 +2071,7 @@ def check_runindices(session: Path) -> bool:
                     if not (pd.isna(scans_table.loc[scan, 'acq_time']) or pd.isna(scans_table.loc[prevscan, 'acq_time'])):
                         acq_time = datetime.datetime.fromisoformat(scans_table.loc[scan, 'acq_time'])
                         acq_prev = datetime.datetime.fromisoformat(scans_table.loc[prevscan, 'acq_time'])
-                        if (acq_time - acq_prev).total_seconds() <= 0:
+                        if (acq_time - acq_prev).total_seconds() < 0:
                             LOGGER.warning(f"Acquisition times do not increase with the run-indices. Please check `{scans_tsv}`")
                             return False
 
