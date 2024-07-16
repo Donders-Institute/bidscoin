@@ -109,7 +109,7 @@ Neurodesk
     conda activate neurodocker
     ./build.sh -ds
     sudo docker image list         # Checkout the TAG
-    sudo docker run --rm -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix bidscoin_$(VERSION}:TAG bidscoin -t
+    sudo docker run --rm -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix bidscoin_${VERSION}:TAG bidscoin -t
 
 3. Create a neurocontainers PR from the release branch
 
