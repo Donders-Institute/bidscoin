@@ -63,18 +63,18 @@ with (schemafolder/'objects'/'metadata.yaml').open('r') as _stream:
 
 
 class DataSource:
+    """
+    A source data type (e.g. DICOM or PAR) that can be converted to BIDS by the plugins
+
+    :param provenance:  The full path of a representative file for this data source
+    :param plugins:     The plugins that are used to interact with the source data type. Uses bidsmap['Options']['plugins'] format
+    :param dataformat:  The dataformat name in the bidsmap, e.g. DICOM or PAR
+    :param datatype:    The intended BIDS data type of the data source TODO: move to a separate BidsTarget/Mapping class
+    :param subprefix:   The subprefix used in the sourcefolder
+    :param sesprefix:   The sesprefix used in the sourcefolder
+    """
+
     def __init__(self, provenance: Union[str, Path]='', plugins: Dict[str, Plugin]=None, dataformat: str='', datatype: str='', subprefix: str='', sesprefix: str=''):
-        """
-        A source data type (e.g. DICOM or PAR) that can be converted to BIDS by the plugins
-
-        :param provenance:  The full path of a representative file for this data source
-        :param plugins:     The plugins that are used to interact with the source data type. Uses bidsmap['Options']['plugins'] format
-        :param dataformat:  The dataformat name in the bidsmap, e.g. DICOM or PAR
-        :param datatype:    The intended BIDS data type of the data source TODO: move to a separate BidsTarget/Mapping class
-        :param subprefix:   The subprefix used in the sourcefolder
-        :param sesprefix:   The sesprefix used in the sourcefolder
-        """
-
         self.path: Path      = Path(provenance)
         self.datatype: str   = datatype
         self.dataformat: str = dataformat
@@ -546,8 +546,7 @@ def parse_x_protocol(pattern: str, dicomfile: Path) -> str:
 
 
 # Profiling shows this is currently the most expensive function, therefore the (primitive but effective) _DICOMDICT_CACHE optimization
-_DICOMDICT_CACHE = None
-_DICOMFILE_CACHE = None
+_DICOMDICT_CACHE = _DICOMFILE_CACHE = None
 @lru_cache(maxsize=65536)
 def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
     """
@@ -671,8 +670,7 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
 
 
 # Profiling shows this is currently the most expensive function, therefore the (primitive but effective) cache optimization
-_TWIXHDR_CACHE  = None
-_TWIXFILE_CACHE = None
+_TWIXHDR_CACHE = _TWIXFILE_CACHE = None
 @lru_cache(maxsize=65536)
 def get_twixfield(tagname: str, twixfile: Path, mraid: int=2) -> Union[str, int]:
     """
@@ -742,8 +740,7 @@ def get_twixfield(tagname: str, twixfile: Path, mraid: int=2) -> Union[str, int]
 
 
 # Profiling shows this is currently the most expensive function, therefore the (primitive but effective) _PARDICT_CACHE optimization
-_PARDICT_CACHE = None
-_PARFILE_CACHE = None
+_PARDICT_CACHE = _PARFILE_CACHE = None
 @lru_cache(maxsize=65536)
 def get_parfield(tagname: str, parfile: Path) -> Union[str, int]:
     """
@@ -796,8 +793,7 @@ def get_parfield(tagname: str, parfile: Path) -> Union[str, int]:
 
 
 # Profiling shows this is currently the most expensive function, therefore the (primitive but effective) cache optimization
-_SPARHDR_CACHE  = None
-_SPARFILE_CACHE = None
+_SPARHDR_CACHE = _SPARFILE_CACHE = None
 @lru_cache(maxsize=65536)
 def get_sparfield(tagname: str, sparfile: Path) -> Union[str, int]:
     """
@@ -847,8 +843,7 @@ def get_sparfield(tagname: str, sparfile: Path) -> Union[str, int]:
 
 
 # Profiling shows this is currently the most expensive function, therefore the (primitive but effective) cache optimization
-_P7HDR_CACHE  = None
-_P7FILE_CACHE = None
+_P7HDR_CACHE = _P7FILE_CACHE = None
 @lru_cache(maxsize=65536)
 def get_p7field(tagname: str, p7file: Path) -> Union[str, int]:
     """
