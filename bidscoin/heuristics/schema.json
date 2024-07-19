@@ -69,7 +69,7 @@
          "items": {
             "description": "Run-item (containing the bidsmappings)",
             "type": "object",
-            "required": ["provenance", "bids"],
+            "required": ["bids"],
             "properties": {
                "provenance": {
                   "description": "The fullpath name of the data source. Serves also as a unique identifier to find a run-item in the bidsmap",
