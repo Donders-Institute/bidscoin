@@ -140,19 +140,17 @@ class DataSource:
         try:
             if tagname.startswith('filepath:') and len(tagname) > 9:
                 match = re.findall(tagname[9:], self.path.parent.as_posix() + '/')
-                if match:
-                    if len(match) > 1:
-                        LOGGER.warning(f"Multiple matches {match} found when extracting '{tagname}' from '{self.path.parent.as_posix() + '/'}'. Using: {match[-1]}")
-                    return match[-1] if match else ''           # The last match is most likely the most informative
+                if len(match) > 1:
+                    LOGGER.warning(f"Multiple matches {match} found when extracting '{tagname}' from '{self.path.parent.as_posix() + '/'}'. Using: {match[-1]}")
+                return match[-1] if match else ''               # The last match is most likely the most informative
             elif tagname == 'filepath':
                 return self.path.parent.as_posix() + '/'
 
             if tagname.startswith('filename:') and len(tagname) > 9:
                 match = re.findall(tagname[9:], self.path.name)
-                if match:
-                    if len(match) > 1:
-                        LOGGER.warning(f"Multiple matches {match} found when extracting '{tagname}' from '{self.path.name}'. Using: {match[0]}")
-                    return match[0] if match else ''            # The first match is most likely the most informative (?)
+                if len(match) > 1:
+                    LOGGER.warning(f"Multiple matches {match} found when extracting '{tagname}' from '{self.path.name}'. Using: {match[0]}")
+                return match[0] if match else ''                # The first match is most likely the most informative (?)
             elif tagname == 'filename':
                 return self.path.name
 
@@ -1092,7 +1090,7 @@ def validate_bidsmap(bidsmap: Bidsmap, level: int=1) -> bool:
                 ignore   = check_ignore(datatype, bidsignore) or check_ignore(bidsname+'.json', bidsignore, 'file')
                 ignore_1 = datatype in ignoretypes or ignore
                 ignore_2 = datatype in ignoretypes
-                bidstest = bids_validator.BIDSValidator().is_bids(f"/sub-{sanitize(dataformat)}/{datatype}/{bidsname}.json")
+                bidstest = bids_validator.BIDSValidator().is_bids(f"/sub-{sanitize(dataformat)}/{datatype}/{bidsname}.nii")
                 if level==3 or (abs(level)==2 and not ignore_2) or (-2<level<2 and not ignore_1):
                     valid = valid and bidstest
                 if (level==0 and not bidstest) or (level==1 and not ignore_1) or (level==2 and not ignore_2) or level==3:
@@ -2359,8 +2357,7 @@ def addparticipant(participants_tsv: Path, subid: str='', sesid: str='', data: d
 
     # Read the participants table
     if participants_tsv.is_file():
-        table = pd.read_csv(participants_tsv, sep='\t', dtype=str)
-        table.set_index(['participant_id'], verify_integrity=True, inplace=True)
+        table = pd.read_csv(participants_tsv, sep='\t', dtype=str, index_col='participant_id')
     else:
         table = pd.DataFrame()
         table.index.name = 'participant_id'
