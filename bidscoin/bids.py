@@ -82,7 +82,7 @@ class DataSource:
         if not plugins:
             self.plugins = {}
         if not dataformat:
-            self.is_datasource()
+            self.is_datasource
         self.subprefix: str  = subprefix
         self.sesprefix: str  = sesprefix
         self._cache: dict    = {}
@@ -95,14 +95,17 @@ class DataSource:
                 f"Subprefix:\t{self.subprefix}\n"
                 f"Sesprefix:\t{self.sesprefix}")
 
+    @property
     def resubprefix(self) -> str:
         """Returns the subprefix with escaped regular expression characters (except '-'). A single '*' wildcard is returned as ''"""
         return '' if self.subprefix=='*' else re.escape(self.subprefix).replace(r'\-','-')
 
+    @property
     def resesprefix(self) -> str:
         """Returns the sesprefix with escaped regular expression characters (except '-'). A single '*' wildcard is returned as ''"""
         return '' if self.sesprefix=='*' else re.escape(self.sesprefix).replace(r'\-','-')
 
+    @property
     def is_datasource(self) -> bool:
         """Returns True is the datasource has a valid dataformat"""
 
@@ -276,9 +279,9 @@ class DataSource:
 
         # Add the default value for subid and sesid if unspecified/None
         if subid is None:
-            subid = f"<<filepath:/{self.resubprefix()}(.*?)/>>"
+            subid = f"<<filepath:/{self.resubprefix}(.*?)/>>"
         if sesid is None:
-            sesid = f"<<filepath:/{self.resubprefix()}.*?/{self.resesprefix()}(.*?)/>>"
+            sesid = f"<<filepath:/{self.resubprefix}.*?/{self.resesprefix}(.*?)/>>"
 
         # Parse the sub-/ses-id's
         subid_ = self.dynamicvalue(subid, runtime=True)
@@ -288,8 +291,8 @@ class DataSource:
         subid = subid_
 
         # Add sub- and ses- prefixes if they are not there
-        subid =  'sub-' + sanitize(re.sub(f"^{self.resubprefix()}", '', subid))
-        sesid = ('ses-' + sanitize(re.sub(f"^{self.resesprefix()}", '', sesid))) if sesid else ''
+        subid =  'sub-' + sanitize(re.sub(f"^{self.resubprefix}", '', subid))
+        sesid = ('ses-' + sanitize(re.sub(f"^{self.resesprefix}", '', sesid))) if sesid else ''
 
         return subid, sesid
 
@@ -1006,7 +1009,7 @@ def load_bidsmap(yamlfile: Path=Path(), folder: Path=templatefolder, plugins:Ite
 
                 # Add missing bids entities
                 suffix = run['bids'].get('suffix')
-                if run['datasource'].is_datasource():
+                if run['datasource'].is_datasource:
                     suffix = run['datasource'].dynamicvalue(suffix, True, True)
                 for typegroup in datatyperules.get(datatype, {}):                               # E.g. typegroup = 'nonparametric'
                     if suffix in datatyperules[datatype][typegroup]['suffixes']:                # run_found = True
@@ -1090,7 +1093,7 @@ def validate_bidsmap(bidsmap: Bidsmap, level: int=1) -> bool:
                 ignore   = check_ignore(datatype, bidsignore) or check_ignore(bidsname+'.json', bidsignore, 'file')
                 ignore_1 = datatype in ignoretypes or ignore
                 ignore_2 = datatype in ignoretypes
-                bidstest = bids_validator.BIDSValidator().is_bids(f"/sub-{sanitize(dataformat)}/{datatype}/{bidsname}.nii")
+                bidstest = bids_validator.BIDSValidator().is_bids(f"/sub-{sanitize(dataformat)}/{datatype}/{bidsname}.nii") # NB: This used to be '.json', which is more generic (but see https://github.com/bids-standard/bids-validator/issues/2113)
                 if level==3 or (abs(level)==2 and not ignore_2) or (-2<level<2 and not ignore_1):
                     valid = valid and bidstest
                 if (level==0 and not bidstest) or (level==1 and not ignore_1) or (level==2 and not ignore_2) or level==3:

@@ -57,7 +57,7 @@ class TestDataSource:
         return bids.DataSource(ext_dcm_file, {'dcm2niix2bids': Plugin({})}, 'DICOM')
 
     def test_is_datasource(self, datasource):
-        assert datasource.is_datasource()
+        assert datasource.is_datasource
         assert datasource.dataformat == 'DICOM'
 
     def test_properties(self, datasource):
@@ -79,9 +79,9 @@ class TestDataSource:
         subsesdir.mkdir(parents=True)
         subses_file   = shutil.copy(dcm_file, subsesdir)
         subses_source = bids.DataSource(subses_file, {'dcm2niix2bids': Plugin({})}, 'DICOM', subprefix=subprefix, sesprefix=sesprefix)
-        sub, ses      = subses_source.subid_sesid(f"<<filepath:/data/{subses_source.resubprefix()}(.*?)/>>", f"<<filepath:/data/{subses_source.resubprefix()}.*?/{subses_source.resesprefix()}(.*?)/>>")
-        expected_sub  = 'sub-' + bids.sanitize(re.sub(f"^{subses_source.resubprefix()}", '', subid)  if subid.startswith(subprefix) or subprefix=='*' else '')  # NB: this expression is too complicated/resembles the actual code too much :-/
-        expected_ses  = 'ses-' + bids.sanitize(re.sub(f"^{subses_source.resesprefix()}", '', sesid)) if (subid.startswith(subprefix) or subprefix=='*') and (sesid.startswith(sesprefix) or sesprefix=='*') and sesid else ''
+        sub, ses      = subses_source.subid_sesid(f"<<filepath:/data/{subses_source.resubprefix}(.*?)/>>", f"<<filepath:/data/{subses_source.resubprefix}.*?/{subses_source.resesprefix}(.*?)/>>")
+        expected_sub  = 'sub-' + bids.sanitize(re.sub(f"^{subses_source.resubprefix}", '', subid)  if subid.startswith(subprefix) or subprefix=='*' else '')  # NB: this expression is too complicated/resembles the actual code too much :-/
+        expected_ses  = 'ses-' + bids.sanitize(re.sub(f"^{subses_source.resesprefix}", '', sesid)) if (subid.startswith(subprefix) or subprefix=='*') and (sesid.startswith(sesprefix) or sesprefix=='*') and sesid else ''
         print(f"[{subprefix}, {subid}] -> {sub}\t\t[{sesprefix}, {sesid}] -> {ses}")
         assert (sub, ses) == (expected_sub, expected_ses)
         assert subses_source.subid_sesid(r'<<PatientName:.*\^(.*?)1>>', '') == ('sub-MR', '')
@@ -122,7 +122,7 @@ def test_get_dicomfile(dcm_file, dicomdir):
 
 def test_get_datasource(dicomdir):
     datasource = bids.get_datasource(dicomdir.parent, {'dcm2niix2bids': Plugin({})})
-    assert datasource.is_datasource()
+    assert datasource.is_datasource
     assert datasource.dataformat == 'DICOM'
 
 

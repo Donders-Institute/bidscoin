@@ -232,7 +232,7 @@ class MainWindow(QMainWindow):
                     datasource = bids.DataSource()
                     for filename in filenames:
                         datasource = bids.DataSource(filename, self.output_bidsmap['Options']['plugins'], dataformat, datatype)
-                        if datasource.is_datasource():
+                        if datasource.is_datasource:
                             run = bids.get_run(self.template_bidsmap, datatype, 0, datasource)
                             run['properties']['filepath'] = datasource.properties('filepath')   # Make the added run a strict match (i.e. an exception)
                             run['properties']['filename'] = datasource.properties('filename')   # Make the added run a strict match (i.e. an exception)
@@ -244,7 +244,7 @@ class MainWindow(QMainWindow):
                                 self.ordered_file_index[dataformat] = {datasource.path: 0}
                             else:
                                 self.ordered_file_index[dataformat][datasource.path] = max(self.ordered_file_index[dataformat][fname] for fname in self.ordered_file_index[dataformat]) + 1
-                    if datasource.is_datasource():
+                    if datasource.is_datasource:
                         self.update_subses_samples(self.output_bidsmap, dataformat)
 
         elif action == delete:
@@ -460,7 +460,7 @@ class MainWindow(QMainWindow):
         add_button.setToolTip(f'Click to add an installed plugin')
         layout.addWidget(add_button, alignment=QtCore.Qt.AlignmentFlag.AlignRight)
 
-        # Add an 'Default' button below the tables on the left side
+        # Add a 'Default' button below the tables on the left side
         set_button = QPushButton('Set as default')
         set_button.clicked.connect(self.save_options)
         set_button.setToolTip(f'Click to store these options in your default template bidsmap, i.e. set them as default for all new studies')
@@ -528,7 +528,7 @@ class MainWindow(QMainWindow):
         samples_table.setSortingEnabled(False)
         samples_table.clearContents()
         for datatype, runs in output_bidsmap[dataformat].items():
-            if not isinstance(runs, list): continue     # E.g. datape = 'subject' or 'session'
+            if not isinstance(runs, list): continue     # E.g. datatype = 'subject' or 'session'
             for run in runs:
 
                 # Check the run and get some data
@@ -1612,6 +1612,7 @@ class EditWindow(QDialog):
         """Open web page for help"""
         help_url = HELP_URLS.get(self.target_datatype, HELP_URL_DEFAULT)
         webbrowser.open(help_url)
+
 
 class CompareWindow(QDialog):
 

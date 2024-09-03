@@ -69,8 +69,8 @@ def rawmapper(sourcefolder, outfolder: str='', sessions: tuple=(), rename: bool=
 
         # Get the (uncleaned) subject and session identifiers from the sourcefolder
         datasource = bids.DataSource(session/'dum.my', subprefix=subprefix, sesprefix=sesprefix)
-        subid      = datasource.dynamicvalue(f"<filepath:/{datasource.resubprefix()}(.*?)/>", cleanup=False)
-        sesid      = datasource.dynamicvalue(f"<filepath:/{datasource.resubprefix()}.*?/{datasource.resesprefix()}(.*?)/>", cleanup=False) if sesprefix else ''
+        subid      = datasource.dynamicvalue(f"<filepath:/{datasource.resubprefix}(.*?)/>", cleanup=False)
+        sesid      = datasource.dynamicvalue(f"<filepath:/{datasource.resubprefix}.*?/{datasource.resesprefix}(.*?)/>", cleanup=False) if sesprefix else ''
 
         # Parse the new subject and session identifiers from the dicomfield
         series = lsdirs(session, wildcard)
