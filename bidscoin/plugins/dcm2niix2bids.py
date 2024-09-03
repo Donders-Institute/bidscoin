@@ -297,7 +297,7 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
         targets  = set()        # -> A store for all fullpath output targets (.nii/.tsv) for this bidsname
 
         # Check if the bidsname is valid
-        bidstest = (Path('/')/subid/sesid/datasource.datatype/bidsname).with_suffix('.json').as_posix()
+        bidstest = (Path('/')/subid/sesid/datasource.datatype/bidsname).with_suffix('.nii').as_posix()
         isbids   = BIDSValidator().is_bids(bidstest)
         if not isbids and not ignore:
             LOGGER.warning(f"The '{bidstest}' output name did not pass the bids-validator test")

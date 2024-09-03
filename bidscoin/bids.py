@@ -47,19 +47,28 @@ LOGGER = logging.getLogger(__name__)
 
 # Read the BIDS schema data
 with (schemafolder/'objects'/'datatypes.yaml').open('r') as _stream:
-    bidsdatatypesdef = yaml.load(_stream)                                       # The valid BIDS datatypes, along with their full names and descriptions
+    bidsdatatypesdef = yaml.load(_stream)
+    "The valid BIDS datatypes, along with their full names and descriptions"
 datatyperules = {}
+"The entities that can/should be present for each BIDS data type"
 for _datatypefile in (schemafolder/'rules'/'files'/'raw').glob('*.yaml'):
     with _datatypefile.open('r') as _stream:
-        datatyperules[_datatypefile.stem] = yaml.load(_stream)                  # The entities that can/should be present for each BIDS data type
+        datatyperules[_datatypefile.stem] = yaml.load(_stream)
 with (schemafolder/'objects'/'suffixes.yaml').open('r') as _stream:
-    suffixes = yaml.load(_stream)                                               # The descriptions of the valid BIDS file suffixes
+    suffixes = yaml.load(_stream)
+    "The descriptions of the valid BIDS file suffixes"
 with (schemafolder/'objects'/'entities.yaml').open('r') as _stream:
-    entities = yaml.load(_stream)                                               # The descriptions of the entities present in BIDS filenames
+    entities = yaml.load(_stream)
+    "The descriptions of the entities present in BIDS filenames"
+with (schemafolder/'objects'/'extensions.yaml').open('r') as _stream:
+    extensions = [val['value'] for key,val in yaml.load(_stream).items() if val['value'] not in ('.json','.tsv','.bval','.bvec')]
+    "The possible extensions of BIDS data files"
 with (schemafolder/'rules'/'entities.yaml').open('r') as _stream:
-    entitiesorder = yaml.load(_stream)                                          # The order in which the entities should appear within filenames
+    entitiesorder = yaml.load(_stream)
+    "The order in which the entities should appear within filenames"
 with (schemafolder/'objects'/'metadata.yaml').open('r') as _stream:
-    metafields = yaml.load(_stream)                                             # The descriptions of the valid BIDS metadata fields
+    metafields = yaml.load(_stream)
+    "The descriptions of the valid BIDS metadata fields"
 
 
 class DataSource:
@@ -1093,7 +1102,8 @@ def validate_bidsmap(bidsmap: Bidsmap, level: int=1) -> bool:
                 ignore   = check_ignore(datatype, bidsignore) or check_ignore(bidsname+'.json', bidsignore, 'file')
                 ignore_1 = datatype in ignoretypes or ignore
                 ignore_2 = datatype in ignoretypes
-                bidstest = bids_validator.BIDSValidator().is_bids(f"/sub-{sanitize(dataformat)}/{datatype}/{bidsname}.nii") # NB: This used to be '.json', which is more generic (but see https://github.com/bids-standard/bids-validator/issues/2113)
+                for ext in extensions:      # NB: `ext` used to be '.json', which is more generic (but see https://github.com/bids-standard/bids-validator/issues/2113)
+                    if bidstest := bids_validator.BIDSValidator().is_bids(f"/sub-{sanitize(dataformat)}/{datatype}/{bidsname}{ext}"): break
                 if level==3 or (abs(level)==2 and not ignore_2) or (-2<level<2 and not ignore_1):
                     valid = valid and bidstest
                 if (level==0 and not bidstest) or (level==1 and not ignore_1) or (level==2 and not ignore_2) or level==3:

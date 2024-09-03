@@ -24,7 +24,7 @@ from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     sys.path.append(str(Path(__file__).parents[1]))
 from bidscoin import bcoin, bids, bidsversion, check_version, trackusage, bidsmap_template, __version__
-from bidscoin.bids import Bidsmap, Plugin, Run
+from bidscoin.bids import Bidsmap, Plugin, Run, extensions
 
 
 ROW_HEIGHT       = 22
@@ -1532,12 +1532,12 @@ class EditWindow(QDialog):
         """Save the changes to the target_bidsmap and send it back to the main window: Finished!"""
 
         # Check if the bidsname is valid
-        bidsname = Path(self.bidsname_textbox.toPlainText())
-        validrun = False not in bids.check_run(self.target_datatype, self.target_run, checks=(False, False, False))[1:3]
+        bidsname  = Path(self.bidsname_textbox.toPlainText())
+        validrun  = False not in bids.check_run(self.target_datatype, self.target_run, checks=(False, False, False))[1:3]
+        bidsvalid = validrun
         if not (bids.check_ignore(self.target_datatype,self.bidsignore) or bids.check_ignore(bidsname.name,self.bidsignore,'file') or self.target_datatype in self.ignoredatatypes):
-            bidsvalid = BIDSValidator().is_bids((Path('/')/self.subid/self.sesid/bidsname).with_suffix('.json').as_posix())
-        else:
-            bidsvalid = validrun
+            for ext in extensions:      # NB: `ext` used to be '.json', which is more generic (but see https://github.com/bids-standard/bids-validator/issues/2113)
+                if bidsvalid := BIDSValidator().is_bids((Path('/')/self.subid/self.sesid/bidsname).with_suffix(ext).as_posix()): break
 
         # If the bidsname is not valid, ask the user if that's OK
         message = ''
