@@ -12,7 +12,7 @@ from typing import Union
 from bids_validator import BIDSValidator
 from pathlib import Path
 from bidscoin import bcoin, bids, due, Doi
-from bidscoin.bids import Bidsmap, Plugin
+from bidscoin.bids import BidsMap, Plugin
 
 LOGGER = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ def test(options: Plugin=OPTIONS) -> int:
     """
     This plugin shell tests the working of the spec2nii2bids plugin + its bidsmap options
 
-    :param options: A dictionary with the plugin options, e.g. taken from the bidsmap['Options']['plugins']['spec2nii2bids']
+    :param options: A dictionary with the plugin options, e.g. taken from the bidsmap.plugins['spec2nii2bids']
     :return:        The errorcode (e.g 0 if the tool generated the expected result, > 0 if there was a tool error)
     """
 
@@ -47,13 +47,17 @@ def test(options: Plugin=OPTIONS) -> int:
     return bcoin.run_command(f"{options.get('command',OPTIONS['command'])} -v")
 
 
-def is_sourcefile(file: Path) -> str:
+def has_support(file: Path, dataformat: Union[DataFormat, str]='') -> str:
     """
     This plugin function assesses whether a sourcefile is of a supported dataformat
 
-    :param file:    The sourcefile that is assessed
-    :return:        The valid/supported dataformat of the sourcefile
+    :param file:        The sourcefile that is assessed
+    :param dataformat:  The requested dataformat (optional requirement)
+    :return:            The valid/supported dataformat of the sourcefile
     """
+
+    if dataformat and dataformat not in ('Twix', 'SPAR', 'Pfile'):
+        return ''
 
     suffix = file.suffix.lower()
     if suffix == '.dat':
@@ -99,7 +103,7 @@ def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: Pl
     LOGGER.error(f"Unsupported MRS data-format: {dataformat}")
 
 
-def bidsmapper_plugin(session: Path, bidsmap_new: Bidsmap, bidsmap_old: Bidsmap, template: Bidsmap, store: dict) -> None:
+def bidsmapper_plugin(session: Path, bidsmap_new: BidsMap, bidsmap_old: BidsMap, template: BidsMap, store: dict) -> None:
     """
     All the heuristics spec2nii2bids attributes and properties onto bids labels and meta-data go into this plugin function.
     The function is expected to update/append new runs to the bidsmap_new data structure. The bidsmap options for this plugin
@@ -119,7 +123,7 @@ def bidsmapper_plugin(session: Path, bidsmap_new: Bidsmap, bidsmap_old: Bidsmap,
     plugins = {'spec2nii2bids': Plugin(bidsmap_new['Options']['plugins']['spec2nii2bids'])}
 
     # Update the bidsmap with the info from the source files
-    for sourcefile in [file for file in session.rglob('*') if is_sourcefile(file)]:
+    for sourcefile in [file for file in session.rglob('*') if has_support(file)]:
 
         datasource = bids.DataSource(sourcefile, plugins)
         dataformat = datasource.dataformat
@@ -133,38 +137,30 @@ def bidsmapper_plugin(session: Path, bidsmap_new: Bidsmap, bidsmap_old: Bidsmap,
             return
 
         # See if we can find a matching run in the old bidsmap
-        run, match = bids.get_matching_run(datasource, bidsmap_old)
+        run, match = bidsmap_old.get_matching_run(datasource)
 
         # If not, see if we can find a matching run in the template
         if not match:
-            run, _ = bids.get_matching_run(datasource, template)
+            run, _ = template.get_matching_run(datasource)
 
         # See if we have collected the run somewhere in our new bidsmap
-        if not bids.exist_run(bidsmap_new, '', run):
+        if not bidsmap_new.exist_run(run):
 
             # Communicate with the user if the run was not present in bidsmap_old or in template, i.e. that we found a new sample
             if not match:
-                LOGGER.info(f"Discovered '{datasource.datatype}' {dataformat} sample: {sourcefile}")
+                LOGGER.info(f"Discovered sample: {datasource}")
             else:
-                LOGGER.bcdebug(f"Known '{datasource.datatype}' {dataformat} sample: {sourcefile}")
-
-            # Now work from the provenance store
-            if store:
-                targetfile             = store['target']/sourcefile.relative_to(store['source'])
-                targetfile.parent.mkdir(parents=True, exist_ok=True)
-                LOGGER.verbose(f"Storing the discovered {dataformat} sample as: {targetfile}")
-                run['provenance']      = str(shutil.copyfile(sourcefile, targetfile))
-                run['datasource'].path = targetfile
+                LOGGER.bcdebug(f"Known sample: {datasource}")
 
             # Copy the filled-in run over to the new bidsmap
-            bids.insert_run(bidsmap_new, run)
+            bidsmap_new.insert_run(run)
 
         else:
-            LOGGER.bcdebug(f"Existing/duplicate '{datasource.datatype}' {dataformat} sample: {sourcefile}")
+            LOGGER.bcdebug(f"Existing/duplicate sample: {datasource}")
 
 
 @due.dcite(Doi('10.1002/mrm.29418'), description='Multi-format in vivo MR spectroscopy conversion to NIFTI', tags=['reference-implementation'])
-def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[None, dict]:
+def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> Union[None, dict]:
     """
     This wrapper function around spec2nii converts the MRS data in the session folder and saves it in the bidsfolder.
     Each saved datafile should be accompanied by a json sidecar file. The bidsmap options for this plugin can be found in:
@@ -182,10 +178,10 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
     sesid = bidsses.name if bidsses.name.startswith('ses-') else ''
 
     # Get started and see what dataformat we have
-    options     = bidsmap['Options']['plugins']['spec2nii2bids']
+    options     = bidsmap.plugins['spec2nii2bids']
     datasource  = bids.get_datasource(session, {'spec2nii2bids':options})
     dataformat  = datasource.dataformat
-    sourcefiles = [file for file in session.rglob('*') if is_sourcefile(file)]
+    sourcefiles = [file for file in session.rglob('*') if has_support(file)]
     if not sourcefiles:
         LOGGER.info(f"--> No {__name__} sourcedata found in: {session}")
         return
@@ -203,10 +199,10 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
 
         # Get a data source, a matching run from the bidsmap
         datasource = bids.DataSource(source, {'spec2nii2bids': options})
-        run, runid = bids.get_matching_run(datasource, bidsmap, runtime=True)
+        run, runid = bidsmap.get_matching_run(datasource, runtime=True)
 
         # Check if we should ignore this run
-        if datasource.datatype in bidsmap['Options']['bidscoin']['ignoretypes']:
+        if datasource.datatype in bidsmap.options['ignoretypes']:
             LOGGER.info(f"--> Leaving out: {source}")
             bids.bidsprov(bidsses, source, runid, datasource.datatype)              # Write out empty provenance data
             continue
@@ -224,9 +220,9 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
         outfolder.mkdir(parents=True, exist_ok=True)
 
         # Compose the BIDS filename using the matched run
-        bidsignore = bids.check_ignore(datasource.datatype, bidsmap['Options']['bidscoin']['bidsignore'])
+        bidsignore = bids.check_ignore(datasource.datatype, bidsmap.options['bidsignore'])
         bidsname   = bids.get_bidsname(subid, sesid, run, not bidsignore, runtime=True)
-        bidsignore = bidsignore or bids.check_ignore(bidsname+'.json', bidsmap['Options']['bidscoin']['bidsignore'], 'file')
+        bidsignore = bidsignore or bids.check_ignore(bidsname+'.json', bidsmap.options['bidsignore'], 'file')
         bidsname   = bids.increment_runindex(outfolder, bidsname, run, scans_table)
         target     = (outfolder/bidsname).with_suffix('.nii.gz')
 
@@ -325,6 +321,6 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
                 age = int(float(age))
             personals['age'] = str(age)
     except Exception as exc:
-        LOGGER.warning(f"Could not parse age from: {datasource.path}\n{exc}")
+        LOGGER.warning(f"Could not parse age from: {datasource}\n{exc}")
 
     return personals

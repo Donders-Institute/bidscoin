@@ -9,14 +9,13 @@ import re
 import dateutil.parser
 import pandas as pd
 import json
-import shutil
 import ast
 from bids_validator import BIDSValidator
 from typing import Union, List
 from pathlib import Path
 from bidscoin import bcoin, bids, lsdirs, due, Doi
 from bidscoin.utilities import physio
-from bidscoin.bids import Bidsmap, Plugin
+from bidscoin.bids import BidsMap, Plugin, Plugins, DataFormat
 try:
     from nibabel.testing import data_path
 except ImportError:
@@ -41,7 +40,7 @@ def test(options: Plugin=OPTIONS) -> int:
     """
     Performs shell tests of dcm2niix
 
-    :param options: A dictionary with the plugin options, e.g. taken from the bidsmap['Options']['plugins']['dcm2niix2bids']
+    :param options: A dictionary with the plugin options, e.g. taken from the bidsmap.plugins['dcm2niix2bids']
     :return:        The errorcode (e.g 0 if the tool generated the expected result, > 0 if there was a tool error)
     """
 
@@ -62,7 +61,7 @@ def test(options: Plugin=OPTIONS) -> int:
     # Test reading an attribute from a PAR-file
     parfile = Path(data_path)/'phantom_EPI_asc_CLEAR_2_1.PAR'
     try:
-        assert is_sourcefile(parfile) == 'PAR'
+        assert has_support(parfile) == 'PAR'
         assert get_attribute('PAR', parfile, 'exam_name', options) == 'Konvertertest'
     except Exception as pluginerror:
         LOGGER.error(f"Could not read attribute(s) from {parfile}:\n{pluginerror}")
@@ -71,13 +70,17 @@ def test(options: Plugin=OPTIONS) -> int:
     return errorcode if errorcode != 3 else 0
 
 
-def is_sourcefile(file: Path) -> str:
+def has_support(file: Path, dataformat: Union[DataFormat, str]='') -> str:
     """
-    This plugin function supports assessing whether the file is a valid sourcefile
+    This plugin function assesses whether a sourcefile is of a supported dataformat
 
-    :param file:    The file that is assessed
-    :return:        The valid dataformat of the file for this plugin
+    :param file:        The sourcefile that is assessed
+    :param dataformat:  The requested dataformat (optional requirement)
+    :return:            The valid/supported dataformat of the sourcefile
     """
+
+    if dataformat and dataformat not in ('DICOM', 'PAR'):
+        return ''
 
     if bids.is_dicomfile(file):     # To support pet2bids add: and bids.get_dicomfield('Modality', file) != 'PT'
         return 'DICOM'
@@ -88,14 +91,14 @@ def is_sourcefile(file: Path) -> str:
     return ''
 
 
-def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: Plugin) -> Union[str, int]:
+def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options) -> Union[str, int]:
     """
     This plugin supports reading attributes from DICOM and PAR dataformats
 
     :param dataformat:  The bidsmap-dataformat of the sourcefile, e.g. DICOM of PAR
     :param sourcefile:  The sourcefile from which the attribute value should be read
     :param attribute:   The attribute key for which the value should be read
-    :param options:     A dictionary with the plugin options, e.g. taken from the bidsmap['Options']['plugins']
+    :param options:     A dictionary with the plugin options, e.g. taken from the bidsmap.plugins
     :return:            The attribute value
     """
     if dataformat == 'DICOM':
@@ -105,7 +108,7 @@ def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: Pl
         return bids.get_parfield(attribute, sourcefile)
 
 
-def bidsmapper_plugin(session: Path, bidsmap_new: Bidsmap, bidsmap_old: Bidsmap, template: Bidsmap, store: dict) -> None:
+def bidsmapper_plugin(session: Path, bidsmap_new: BidsMap, bidsmap_old: BidsMap, template: BidsMap) -> None:
     """
     All the logic to map the DICOM/PAR source fields onto bids labels go into this function
 
@@ -113,12 +116,11 @@ def bidsmapper_plugin(session: Path, bidsmap_new: Bidsmap, bidsmap_old: Bidsmap,
     :param bidsmap_new: The new study bidsmap that we are building
     :param bidsmap_old: The previous study bidsmap that has precedence over the template bidsmap
     :param template:    The template bidsmap with the default heuristics
-    :param store:       The paths of the source- and target-folder
     :return:
     """
 
     # Get started
-    plugins    = {'dcm2niix2bids': Plugin(bidsmap_new['Options']['plugins']['dcm2niix2bids'])}
+    plugins    = Plugins({'dcm2niix2bids': bidsmap_new.plugins['dcm2niix2bids']})
     datasource = bids.get_datasource(session, plugins)
     dataformat = datasource.dataformat
     if not dataformat:
@@ -130,17 +132,12 @@ def bidsmapper_plugin(session: Path, bidsmap_new: Bidsmap, bidsmap_old: Bidsmap,
         for sourcedir in lsdirs(session, '**/*'):
             for n in range(1):      # Option: Use range(2) to scan two files and catch e.g. magnitude1/2 fieldmap files that are stored in one Series folder (but bidscoiner sees only the first file anyhow and it makes bidsmapper 2x slower :-()
                 sourcefile = bids.get_dicomfile(sourcedir, n)
-                if sourcefile.name and is_sourcefile(sourcefile):
+                if sourcefile.name and has_support(sourcefile):
                     sourcefiles.append(sourcefile)
     elif dataformat == 'PAR':
         sourcefiles = bids.get_parfiles(session)
     else:
         LOGGER.error(f"Unsupported dataformat '{dataformat}'")
-
-    # Extra bidsmap check
-    if not template[dataformat] and not bidsmap_old[dataformat]:
-        LOGGER.error(f"No {dataformat} source information found in the study and template bidsmap")
-        return
 
     # Update the bidsmap with the info from the source files
     for sourcefile in sourcefiles:
@@ -153,57 +150,48 @@ def bidsmapper_plugin(session: Path, bidsmap_new: Bidsmap, bidsmap_old: Bidsmap,
                     break
 
         # See if we can find a matching run in the old bidsmap
-        datasource = bids.DataSource(sourcefile, plugins, dataformat)
-        run, match = bids.get_matching_run(datasource, bidsmap_old)
+        datasource = bids.DataSource(sourcefile, plugins, dataformat, bidsmap_new.options)
+        run, match = bidsmap_old.get_matching_run(datasource)
 
         # If not, see if we can find a matching run in the template
         if not match:
             LOGGER.bcdebug('No match found in the study bidsmap, now trying the template bidsmap')
-            run, _ = bids.get_matching_run(datasource, template)
+            run, _ = template.get_matching_run(datasource)
 
         # See if we have collected the run somewhere in our new bidsmap
-        if not bids.exist_run(bidsmap_new, '', run):
+        if not bidsmap_new.exist_run(run):
 
             # Communicate with the user if the run was not present in bidsmap_old or in template, i.e. that we found a new sample
             if not match:
 
-                LOGGER.info(f"Discovered '{datasource.datatype}' {dataformat} sample: {sourcefile}")
+                LOGGER.info(f"Discovered sample: {datasource}")
 
                 # Try to automagically set the {part: phase/imag/real} (should work for Siemens data)
-                if not datasource.datatype=='' and 'part' in run['bids'] and not run['bids']['part'][-1] and run['attributes'].get('ImageType'):    # part[-1]==0 -> part is not specified
-                    imagetype = ast.literal_eval(run['attributes']['ImageType'])                                    # E.g. ImageType = "['ORIGINAL', 'PRIMARY', 'M', 'ND']"
+                if not run.datatype == '' and 'part' in run.bids and not run.bids['part'][-1] and run.attributes.get('ImageType'):    # part[-1]==0 -> part is not specified
+                    imagetype = ast.literal_eval(run['attributes']['ImageType'])                            # E.g. ImageType = "['ORIGINAL', 'PRIMARY', 'M', 'ND']"
                     if 'P' in imagetype:
-                        pass
-                        run['bids']['part'][-1] = run['bids']['part'].index('phase')                                # E.g. part = ['', mag, phase, real, imag, 0]
+                        run.bids['part'][-1] = run.bids['part'].index('phase')                              # E.g. part = ['', mag, phase, real, imag, 0]
                     # elif 'M' in imagetype:
-                    #     run['bids']['part'][-1] = run['bids']['part'].index('mag')
+                    #     run.bids['part'][-1] = run.bids['part'].index('mag')
                     elif 'I' in imagetype:
-                        run['bids']['part'][-1] = run['bids']['part'].index('imag')
+                        run.bids['part'][-1] = run.bids['part'].index('imag')
                     elif 'R' in imagetype:
-                        run['bids']['part'][-1] = run['bids']['part'].index('real')
-                    if run['bids']['part'][-1]:
-                        LOGGER.verbose(f"Updated {dataformat}/{datasource.datatype} entity: 'part' -> '{run['bids']['part'][run['bids']['part'][-1]]}' ({imagetype})")
+                        run.bids['part'][-1] = run.bids['part'].index('real')
+                    if run.bids['part'][-1]:
+                        LOGGER.verbose(f"Updated {dataformat}/{datasource.datatype} entity: 'part' -> '{run.bids['part'][run.bids['part'][-1]]}' ({imagetype})")
 
             else:
-                LOGGER.bcdebug(f"Known '{datasource.datatype}' {dataformat} sample: {sourcefile}")
-
-            # Now work from the provenance store
-            if store:
-                targetfile             = store['target']/sourcefile.relative_to(store['source'])
-                targetfile.parent.mkdir(parents=True, exist_ok=True)
-                LOGGER.verbose(f"Storing the discovered {dataformat} sample as: {targetfile}")
-                run['provenance']      = str(shutil.copyfile(sourcefile, targetfile))
-                run['datasource'].path = targetfile
+                LOGGER.bcdebug(f"Known sample: {datasource}")
 
             # Copy the filled-in run over to the new bidsmap
-            bids.insert_run(bidsmap_new, run)
+            bidsmap_new.insert_run(run)
 
         else:
-            LOGGER.bcdebug(f"Existing/duplicate '{datasource.datatype}' {dataformat} sample: {sourcefile}")
+            LOGGER.bcdebug(f"Existing/duplicate sample: {datasource}")
 
 
 @due.dcite(Doi('10.1016/j.jneumeth.2016.03.001'), description='dcm2niix: DICOM to NIfTI converter', tags=['reference-implementation'])
-def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[None, dict]:
+def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> Union[None, dict]:
     """
     The bidscoiner plugin to convert the session DICOM and PAR/REC source-files into BIDS-valid NIfTI-files in the
     corresponding bids session-folder and extract personals (e.g. Age, Sex) from the source header
@@ -220,11 +208,11 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
     bidsfolder = bidsses.parent.parent if sesid else bidsses.parent
 
     # Get started and see what dataformat we have
-    options: Plugin  = bidsmap['Options']['plugins']['dcm2niix2bids']
-    exceptions: list = bidsmap['Options']['bidscoin'].get('notderivative', ())
-    bidsignore: list = bidsmap['Options']['bidscoin']['bidsignore']
+    options          = Plugin(bidsmap.plugins['dcm2niix2bids'])
+    exceptions: list = bidsmap.options.get('notderivative', [])
+    bidsignore: list = bidsmap.options['bidsignore']
     fallback         = 'fallback' if options.get('fallback','y').lower() in ('y', 'yes', 'true') else ''
-    datasource       = bids.get_datasource(session, {'dcm2niix2bids': options})
+    datasource       = bids.get_datasource(session, Plugins({'dcm2niix2bids': options}))
     dataformat       = datasource.dataformat
     if not dataformat:
         LOGGER.info(f"--> No {__name__} sourcedata found in: {session}")
@@ -259,45 +247,45 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
             sourcefile = bids.get_dicomfile(source)
         elif dataformat == 'PAR':
             sourcefile = source
-        if not sourcefile.name or not is_sourcefile(sourcefile):
+        if not sourcefile.name or not has_support(sourcefile):
             continue
 
         # Get a matching run from the bidsmap
-        datasource = bids.DataSource(sourcefile, {'dcm2niix2bids': options}, dataformat)
-        run, runid = bids.get_matching_run(datasource, bidsmap, runtime=True)
+        datasource = bids.DataSource(sourcefile, {'dcm2niix2bids': options}, dataformat, bidsmap.options)
+        run, runid = bidsmap.get_matching_run(datasource, runtime=True)
 
         # Check if we should ignore this run
-        if datasource.datatype in bidsmap['Options']['bidscoin']['ignoretypes']:
+        if run.datatype in bidsmap.options['ignoretypes']:
             LOGGER.info(f"--> Leaving out: {source}")
-            bids.bidsprov(bidsses, source, runid, datasource.datatype)              # Write out empty provenance data
+            bids.bidsprov(bidsses, source, runid, run.datatype)              # Write out empty provenance data
             continue
 
         # Check if we already know this run
         if not runid:
-            LOGGER.error(f"--> Skipping unknown '{datasource.datatype}' run: {sourcefile}\n-> Re-run the bidsmapper and delete {bidsses} to solve this warning")
+            LOGGER.error(f"--> Skipping unknown '{run.datatype}' run: {sourcefile}\n-> Re-run the bidsmapper and delete {bidsses} to solve this warning")
             bids.bidsprov(bidsses, source)                              # Write out empty provenance data
             continue
 
         LOGGER.info(f"--> Coining: {source}")
 
         # Create the BIDS session/datatype output folder
-        suffix = datasource.dynamicvalue(run['bids']['suffix'], True, True)
-        if suffix in bids.get_derivatives(datasource.datatype, exceptions):
-            outfolder = bidsfolder/'derivatives'/manufacturer.replace(' ','')/subid/sesid/datasource.datatype
+        suffix = datasource.dynamicvalue(run.bids['suffix'], True, True)
+        if suffix in bids.get_derivatives(run.datatype, exceptions):
+            outfolder = bidsfolder/'derivatives'/manufacturer.replace(' ','')/subid/sesid/run.datatype
         else:
-            outfolder = bidsses/datasource.datatype
+            outfolder = bidsses/run.datatype
         outfolder.mkdir(parents=True, exist_ok=True)
 
         # Compose the BIDS filename using the matched run
-        ignore   = bids.check_ignore(datasource.datatype, bidsignore)
-        bidsname = bids.get_bidsname(subid, sesid, run, not ignore, runtime=True)
+        ignore   = bids.check_ignore(run.datatype, bidsignore)
+        bidsname = run.bidsname(subid, sesid, not ignore, runtime=True)
         ignore   = ignore or bids.check_ignore(bidsname+'.json', bidsignore, 'file')
         runindex = bids.get_bidsvalue(bidsname, 'run')
-        bidsname = bids.increment_runindex(outfolder, bidsname, run, scans_table)
+        bidsname = run.increment_runindex(outfolder, bidsname, scans_table)
         targets  = set()        # -> A store for all fullpath output targets (.nii/.tsv) for this bidsname
 
         # Check if the bidsname is valid
-        bidstest = (Path('/')/subid/sesid/datasource.datatype/bidsname).with_suffix('.nii').as_posix()
+        bidstest = (Path('/')/subid/sesid/run.datatype/bidsname).with_suffix('.nii').as_posix()
         isbids   = BIDSValidator().is_bids(bidstest)
         if not isbids and not ignore:
             LOGGER.warning(f"The '{bidstest}' output name did not pass the bids-validator test")
@@ -384,7 +372,7 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
                 for postfix in postfixes:
 
                     # Patch the echo entity in the newbidsname with the dcm2niix echo info                      # NB: We can't rely on the bids-entity info here because manufacturers can e.g. put multiple echos in one series/run-folder
-                    if 'echo' in run['bids'] and postfix.startswith('e'):
+                    if 'echo' in run.bids and postfix.startswith('e'):
                         echonr = f"_{postfix}".replace('_e','')                                                 # E.g. postfix='e1'
                         if not echonr:
                             echonr = '1'
@@ -399,7 +387,7 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
                             newbidsname = bids.get_bidsvalue(newbidsname, fallback, postfix)                    # Append the unknown postfix to the fallback-label
 
                     # Patch the phase entity in the newbidsname with the dcm2niix mag/phase info
-                    elif 'part' in run['bids'] and postfix in ('ph','real','imaginary'):                        # e.g. part: ['', 'mag', 'phase', 'real', 'imag', 0]
+                    elif 'part' in run.bids and postfix in ('ph','real','imaginary'):                        # e.g. part: ['', 'mag', 'phase', 'real', 'imag', 0]
                         if postfix == 'ph':
                             newbidsname = bids.insert_bidskeyval(newbidsname, 'part', 'phase', ignore)
                         if postfix == 'real':
@@ -479,7 +467,7 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
             jsonfile = target.with_suffix('').with_suffix('.json')
             if not jsonfile.is_file():
                 LOGGER.warning(f"Unexpected conversion result, could not find: {jsonfile}")
-            metadata = bids.updatemetadata(datasource, jsonfile, run['meta'], options.get('meta',[]))
+            metadata = bids.updatemetadata(datasource, jsonfile, run.meta, options.get('meta',[]))
 
             # Remove the bval/bvec files of sbref- and inv-images (produced by dcm2niix but not allowed by the BIDS specifications)
             if ((datasource.datatype == 'dwi'  and suffix == 'sbref') or
@@ -535,7 +523,7 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
             if age and options.get('anon','y') in ('y','yes'):
                 age = int(float(age))
         except Exception as exc:
-            LOGGER.warning(f"Could not parse age from: {datasource.path}\n{exc}")
+            LOGGER.warning(f"Could not parse age from: {datasource}\n{exc}")
         personals           = {}
         personals['age']    = str(age)
         personals['sex']    = datasource.attributes('PatientSex')

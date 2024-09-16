@@ -27,7 +27,7 @@ def scanpersonals(bidsmap: Bidsmap, session: Path, personals: dict, keys: list) 
     """
 
     # Get valid BIDS subject/session identifiers from the (first) DICOM- or PAR/XML source file
-    datasource = bids.get_datasource(session, bidsmap['Options']['plugins'])
+    datasource = bids.get_datasource(session, bidsmap.plugins)
     dataformat = datasource.dataformat
     if not datasource.dataformat:
         LOGGER.info(f"No supported datasource found in '{session}'")
@@ -46,7 +46,7 @@ def scanpersonals(bidsmap: Bidsmap, session: Path, personals: dict, keys: list) 
         elif age.endswith('M'): age = float(age.rstrip('M')) / 12
         elif age.endswith('Y'): age = float(age.rstrip('Y'))
         if age:
-            if bidsmap['Options']['plugins']['dcm2niix2bids'].get('anon', 'y') in ('y','yes'):
+            if bidsmap.plugins['dcm2niix2bids'].get('anon', 'y') in ('y','yes'):
                 age = int(float(age))
             personals['age'] = str(age)
 
@@ -89,8 +89,8 @@ def bidsparticipants(sourcefolder: str, bidsfolder: str, keys: list, bidsmap: st
     if not bidsmap:
         LOGGER.info('Make sure to run "bidsmapper" first, exiting now')
         return
-    subprefix = bidsmap['Options']['bidscoin']['subprefix']
-    sesprefix = bidsmap['Options']['bidscoin']['sesprefix']
+    subprefix = bidsmap.options['subprefix']
+    sesprefix = bidsmap.options['sesprefix']
 
     # Get the table & dictionary of the subjects that have been processed
     participants_tsv                      = bidsfolder/'participants.tsv'
@@ -125,7 +125,7 @@ def bidsparticipants(sourcefolder: str, bidsfolder: str, keys: list, bidsmap: st
                 subid, sesid = bids.DataSource(session/'dum.my', subprefix=subprefix, sesprefix=sesprefix).subid_sesid()
 
                 # Unpack the data in a temporary folder if it is tarballed/zipped and/or contains a DICOMDIR file
-                sesfolders, unpacked = bids.unpack(session, bidsmap['Options']['bidscoin'].get('unzip',''))
+                sesfolders, unpacked = bids.unpack(session, bidsmap.options.get('unzip',''))
                 for sesfolder in sesfolders:
 
                     # Update/append the personal source data

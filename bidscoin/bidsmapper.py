@@ -19,12 +19,12 @@ from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     sys.path.append(str(Path(__file__).parents[1]))
 from bidscoin import bcoin, bids, lsdirs, trackusage, check_version, __version__
-from bidscoin.bids import Bidsmap
+from bidscoin.bids import BidsMap
 
 _, uptodate, versionmessage = check_version()
 
 
-def bidsmapper(sourcefolder: str, bidsfolder: str, bidsmap: str, template: str, plugins: list, subprefix: str, sesprefix: str, unzip: str, store: bool=False, automated: bool=False, force: bool=False, no_update: bool=False) -> dict:
+def bidsmapper(sourcefolder: str, bidsfolder: str, bidsmap: str, template: str, plugins: list, subprefix: str, sesprefix: str, unzip: str, store: bool=False, automated: bool=False, force: bool=False, no_update: bool=False) -> BidsMap:
     """
     Main function that processes all the subjects and session in the sourcefolder and that generates a fully filled-in bidsmap.yaml
     file in bidsfolder/code/bidscoin. Folders in sourcefolder are assumed to contain a single dataset.
@@ -56,7 +56,7 @@ def bidsmapper(sourcefolder: str, bidsfolder: str, bidsmap: str, template: str, 
         LOGGER.bcdebug(f"Regular expression metacharacters found in {sesprefix}, this may cause errors later on...")
     if not rawfolder.is_dir():
         print(f"Rawfolder '{rawfolder}' not found")
-        return {}
+        exit(1)
 
     # Start logging
     if force:
@@ -71,45 +71,41 @@ def bidsmapper(sourcefolder: str, bidsfolder: str, bidsmap: str, template: str, 
                 f"template={templatefile} plugins={plugins} subprefix={subprefix} sesprefix={sesprefix} store={store} force={force}")
 
     # Get the heuristics for filling the new bidsmap (NB: plugins are stored in the bidsmaps)
-    bidsmap_old, bidsmapfile = bids.load_bidsmap(bidsmapfile,  bidscoinfolder, plugins)
-    template, _              = bids.load_bidsmap(templatefile, plugins=plugins, checks=(True, True, False))
-    bids.check_template(template)
+    bidsmap_old = BidsMap(bidsmapfile,  bidscoinfolder, plugins)
+    template    = BidsMap(templatefile, plugins=plugins, checks=(True, True, False))
+    template.check_template()
 
     # Create the new bidsmap as a copy / bidsmap skeleton with no data type entries (i.e. bidsmap with empty lists)
-    if force and bidsmapfile.is_file():
-        LOGGER.info(f"Deleting previous bidsmap: {bidsmapfile}")
-        bidsmapfile.unlink()
-        bidsmap_old = {}
-    if bidsmap_old:
-        bidsmap_new = copy.deepcopy(bidsmap_old)
-    else:
-        bidsmap_new = copy.deepcopy(template)
-    template['Options'] = bidsmap_new['Options']                # Always use the options of the new bidsmap
+    if force and bidsmap_old.filepath.name:
+        LOGGER.info(f"Deleting previous bidsmap: {bidsmap_old.filepath}")
+        bidsmap_old.filepath.unlink()
+        bidsmap_old.filepath = Path()
+    bidsmap_new      = copy.deepcopy(bidsmap_old if bidsmap_old.filepath.name else template)
+    template.options = bidsmap_new.options              # Always use the options of the new bidsmap
+    template.plugins = bidsmap_new.plugins              # Always use the plugins of the new bidsmap
     if unzip:
-        bidsmap_new['Options']['bidscoin']['unzip'] = unzip
+        bidsmap_new.options['unzip'] = unzip
     else:
-        unzip = bidsmap_new['Options']['bidscoin'].get('unzip','')
-    for dataformat in bidsmap_new:
-        if dataformat in ('$schema', 'Options'): continue
-        for datatype in bidsmap_new[dataformat] or []:
-            if datatype not in ('subject', 'session'):
-                bidsmap_new[dataformat][datatype] = []
+        unzip = bidsmap_new.options.get('unzip','')
+    for dataformat in bidsmap_new.dataformats:
+        for datatype in dataformat.datatypes:
+            datatype.delete_runs()
 
-    # Store/retrieve the empty or user-defined sub-/ses-prefix
+    # Store/retrieve the empty or user-defined sub-/ses-prefix. The new bidsmap is now ready to be populated
     subprefix, sesprefix = setprefix(bidsmap_new, subprefix, sesprefix, rawfolder, update = not no_update)
 
-    # Start with an empty skeleton if we didn't have an old bidsmap
-    if not bidsmap_old:
+    # Start with an empty skeleton if we don't have an old bidsmap (due to loading failure or deletion by force)
+    if not bidsmap_old.filepath.name:
         bidsmap_old = copy.deepcopy(bidsmap_new)
 
     # Import the data scanning plugins
-    plugins = [bcoin.import_plugin(plugin, ('bidsmapper_plugin',)) for plugin in bidsmap_new['Options']['plugins']]
+    plugins = [bcoin.import_plugin(plugin, ('bidsmapper_plugin',)) for plugin in bidsmap_new.plugins]
     plugins = [plugin for plugin in plugins if plugin]          # Filter the empty items from the list
     if not plugins:
         LOGGER.warning(f"The plugins listed in your bidsmap['Options'] did not have a usable `bidsmapper_plugin` function, nothing to do")
         LOGGER.info('-------------- FINISHED! ------------')
         LOGGER.info('')
-        return {}
+        return bidsmap_new
 
     # Loop over all subjects and sessions and built up the bidsmap entries
     subjects = lsdirs(rawfolder, ('' if subprefix=='*' else subprefix) + '*')
@@ -129,16 +125,14 @@ def bidsmapper(sourcefolder: str, bidsfolder: str, bidsmap: str, template: str, 
                 sesfolders, unpacked = bids.unpack(session, unzip)
                 for sesfolder in sesfolders:
                     if store:
-                        store = {'source': sesfolder.parent.parent.parent.parent if unpacked else rawfolder.parent,
-                                 'target': bidscoinfolder/'provenance'}
-                    else:
-                        store = {}
+                        bidsmap_new.store = {'source': sesfolder.parent.parent.parent.parent if unpacked else rawfolder.parent,
+                                             'target': bidscoinfolder/'provenance'}
 
                     # Run the bidsmapper plugins
                     for module in plugins:
                         LOGGER.verbose(f"Executing plugin: {Path(module.__file__).stem} -> {sesfolder}")
                         trackusage(Path(module.__file__).stem)
-                        module.bidsmapper_plugin(sesfolder, bidsmap_new, bidsmap_old, template, store)
+                        module.bidsmapper_plugin(sesfolder, bidsmap_new, bidsmap_old, template)
 
                     # Clean-up the temporary unpacked data
                     if unpacked:
@@ -146,7 +140,7 @@ def bidsmapper(sourcefolder: str, bidsfolder: str, bidsmap: str, template: str, 
 
     # Save the new study bidsmap in the bidscoinfolder or launch the bidseditor UI_MainWindow
     if automated:
-        bids.save_bidsmap(bidsmapfile, bidsmap_new)
+        bidsmap_new.save()
 
     else:
         LOGGER.info('Opening the bidseditor')
@@ -157,12 +151,12 @@ def bidsmapper(sourcefolder: str, bidsfolder: str, bidsmap: str, template: str, 
         except ImportError:
             import bidseditor       # This should work if bidscoin was not pip-installed
         app = QApplication(sys.argv)
-        app.setApplicationName(f"{bidsmapfile} - BIDS editor {__version__}")
+        app.setApplicationName(f"{bidsmap_new.filepath} - BIDS editor {__version__}")
 
         mainwin = bidseditor.MainWindow(bidsfolder, bidsmap_new, template)
         mainwin.show()
 
-        if not bidsmapfile.is_file() or not uptodate:
+        if not bidsmap_new.filepath.name or not uptodate:
             messagebox = QMessageBox(mainwin)
             messagebox.setText(f"The bidsmapper has finished scanning {rawfolder}\n\n"
                                f"Please carefully check all the different BIDS output names "
@@ -185,9 +179,9 @@ def bidsmapper(sourcefolder: str, bidsfolder: str, bidsmap: str, template: str, 
     return bidsmap_new
 
 
-def setprefix(bidsmap: Bidsmap, subprefix: str, sesprefix: str, rawfolder: Path, update: bool=True) -> tuple:
+def setprefix(bidsmap: BidsMap, subprefix: str, sesprefix: str, rawfolder: Path, update: bool=True) -> tuple:
     """
-    Set the prefix in the Options, subject, session and in all the run['datasource'] objects
+    Set the prefix in the Options, subject, session
 
     :param bidsmap:     The bidsmap with the data
     :param subprefix:   The subprefix (take value from bidsmap if empty)
@@ -198,42 +192,34 @@ def setprefix(bidsmap: Bidsmap, subprefix: str, sesprefix: str, rawfolder: Path,
     """
 
     # Get/set the sub-/ses-prefixes in the 'Options'
-    oldsubprefix = bidsmap['Options']['bidscoin'].get('subprefix','')
-    oldsesprefix = bidsmap['Options']['bidscoin'].get('sesprefix','')
+    oldsubprefix = bidsmap.options.get('subprefix','')
+    oldsesprefix = bidsmap.options.get('sesprefix','')
     if not subprefix:
         subprefix = oldsubprefix                                # Use the default value from the bidsmap
     if not sesprefix:
         sesprefix = oldsesprefix                                # Use the default value from the bidsmap
-    bidsmap['Options']['bidscoin']['subprefix'] = subprefix
-    bidsmap['Options']['bidscoin']['sesprefix'] = sesprefix
+    bidsmap.options['subprefix'] = subprefix
+    bidsmap.options['sesprefix'] = sesprefix
 
     # Update the bidsmap dataformat sections
     reprefix = lambda prefix: '' if prefix=='*' else re.escape(prefix).replace(r'\-','-')
-    for dataformat in bidsmap:
-        if not bidsmap[dataformat] or dataformat in ('$schema','Options'): continue
-
-        # Update the run-DataSources
-        for datatype in bidsmap[dataformat]:
-            if not isinstance(bidsmap[dataformat][datatype], list): continue  # E.g. 'subject' and 'session'
-            for run in bidsmap[dataformat][datatype]:
-                run['datasource'].subprefix = subprefix
-                run['datasource'].sesprefix = sesprefix
+    for dataformat in bidsmap.dataformats:
 
         # Replace the sub-/ses-prefixes in the dynamic filepath values of bidsmap[dataformat]['subject'] and ['session']
-        if update and bidsmap[dataformat]['subject'].startswith('<<filepath:'):
+        if update and dataformat.subject.startswith('<<filepath:'):
             if oldsubprefix:
-                bidsmap[dataformat]['subject'] = bidsmap[dataformat]['subject'].replace(reprefix(oldsubprefix), reprefix(subprefix))    # TODO: Not very robust for short prefixes :-(
+                dataformat.subject = dataformat.subject.replace(reprefix(oldsubprefix), reprefix(subprefix))    # TODO: Not very robust for short prefixes :-(
             else:
-                LOGGER.warning(f"Could not update the bidsmap subject label expression: {bidsmap[dataformat]['subject']}")
-            if not bidsmap[dataformat]['subject'].startswith(f"<<filepath:/{rawfolder.name}"):    # NB: Don't prepend the fullpath of rawfolder because of potential data unpacking in /tmp
-                bidsmap[dataformat]['subject'] = bidsmap[dataformat]['subject'].replace('<<filepath:', f"<<filepath:/{rawfolder.name}")
-        if update and bidsmap[dataformat]['session'].startswith('<<filepath:'):
+                LOGGER.warning(f"Could not update the bidsmap subject label expression: {dataformat.subject}")
+            if not dataformat.subject.startswith(f"<<filepath:/{rawfolder.name}"):    # NB: Don't prepend the fullpath of rawfolder because of potential data unpacking in /tmp
+                dataformat.subject = dataformat.subject.replace('<<filepath:', f"<<filepath:/{rawfolder.name}")
+        if update and dataformat.session.startswith('<<filepath:'):
             if oldsesprefix:
-                bidsmap[dataformat]['session'] = bidsmap[dataformat]['session'].replace(reprefix(oldsubprefix), reprefix(subprefix)).replace(reprefix(oldsesprefix), reprefix(sesprefix))       # TODO: Not very robust for short prefixes :-(
+                dataformat.session = dataformat.session.replace(reprefix(oldsubprefix), reprefix(subprefix)).replace(reprefix(oldsesprefix), reprefix(sesprefix))       # TODO: Not very robust for short prefixes :-(
             else:
-                LOGGER.warning(f"Could not update the bidsmap session label expression: {bidsmap[dataformat]['session']}")
-            if not bidsmap[dataformat]['session'].startswith(f"<<filepath:/{rawfolder.name}"):
-                bidsmap[dataformat]['session'] = bidsmap[dataformat]['session'].replace('<<filepath:', f"<<filepath:/{rawfolder.name}")
+                LOGGER.warning(f"Could not update the bidsmap session label expression: {dataformat.session}")
+            if not dataformat.session.startswith(f"<<filepath:/{rawfolder.name}"):
+                dataformat.session = dataformat.session.replace('<<filepath:', f"<<filepath:/{rawfolder.name}")
 
     return subprefix, sesprefix
 

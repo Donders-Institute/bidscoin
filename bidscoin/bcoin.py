@@ -443,7 +443,7 @@ def test_plugin(plugin: Union[Path,str], options: dict) -> int:
     Performs runtime tests of the plug-in
 
     :param plugin:  The name of the plugin that is being tested
-    :param options: A dictionary with the plugin options, e.g. taken from the bidsmap['Options']['plugins'][plugin.stem]
+    :param options: A dictionary with the plugin options, e.g. taken from the bidsmap.plugins[plugin.stem]
     :return:        The result of the plugin test routine (e.g. 0 if it passed or 1 if there was a general plug-in error)
     """
 
@@ -493,12 +493,12 @@ def test_bidsmap(bidsmapfile: str):
     bidsmapfile = Path(bidsmapfile)
     if bidsmapfile.is_dir():
         bidsmapfile = bidsmapfile/'code'/'bidscoin'/'bidsmap.yaml'
-    bidsmap, _ = bids.load_bidsmap(bidsmapfile, checks=(True, True, True))
+    bidsmap = bids.BidsMap(bidsmapfile, checks=(True, True, True))
 
-    return bids.validate_bidsmap(bidsmap, 1)
+    return bidsmap.validate(1)
 
 
-def test_bidscoin(bidsmapfile: Union[Path,dict], options: dict=None, testplugins: bool=True, testgui: bool=True, testtemplate: bool=True) -> int:
+def test_bidscoin(bidsmapfile: Path, options: dict=None, testplugins: bool=True, testgui: bool=True, testtemplate: bool=True) -> int:
     """
     Performs a bidscoin installation test
 
@@ -521,7 +521,7 @@ def test_bidscoin(bidsmapfile: Union[Path,dict], options: dict=None, testplugins
         LOGGER.info(f"Running bidsmap checks:")
         try:            # Moving the import to the top of this module will cause circular import issues
             from bidscoin import bids
-            bidsmap, _ = bids.load_bidsmap(bidsmapfile, checks=(True, True, False))
+            bidsmap = bids.BidsMap(bidsmapfile, checks=(True, True, False))
         except Exception as bidsmaperror:
             LOGGER.error(f"An error occurred when loading {bidsmapfile}:\n{bidsmaperror}\nThis may be due to invalid YAML syntax. You can check this using a YAML validator (e.g. https://www.yamllint.com)")
             bidsmap = {'Options': {}}
@@ -533,7 +533,7 @@ def test_bidscoin(bidsmapfile: Union[Path,dict], options: dict=None, testplugins
     if testtemplate:
         try:                # Moving the import to the top of this module will cause circular import issues
             from bidscoin import bids
-            success = bids.check_template(bidsmap) and success
+            success = bidsmap.check_template() and success
         except ImportError:
             LOGGER.info(f"Could not fully test: {bidsmap}")
 

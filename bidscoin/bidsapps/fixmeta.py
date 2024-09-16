@@ -53,10 +53,10 @@ def fixmeta(bidsfolder: str, pattern: str, metadata: dict, participant: list, bi
     LOGGER.info(f"Command: fixmeta {' '.join(sys.argv[1:])}")
 
     # Load the bidsmap data (-> plugins)
-    bidsmap, _ = bids.load_bidsmap(Path(bidsmap or 'bidsmap.yaml'), bidsdir/'code'/'bidscoin', checks=(False, False, False))
+    bidsmap, _ = bids.BidsMap(Path(bidsmap or 'bidsmap.yaml'), bidsdir/'code'/'bidscoin', checks=(False, False, False))
     if not bidsmap:
-        bidsmap, _ = bids.load_bidsmap(bidsmap_template, checks=(False, False, False))
-    plugins  = bidsmap['Options']['plugins']
+        bidsmap, _ = bids.BidsMap(bidsmap_template, checks=(False, False, False))
+    plugins  = bidsmap.plugins
     provdata = bids.bidsprov(bidsdir)
 
     # Loop over the subject/session-directories
@@ -83,7 +83,7 @@ def fixmeta(bidsfolder: str, pattern: str, metadata: dict, participant: list, bi
                         if isinstance(row['targets'], str) and target.name in row['targets']:
                             sourcedir = source
                     datasource = bids.get_datasource(Path(sourcedir), plugins)
-                    LOGGER.bcdebug(f"Datasource provenance: '{target.name}' -> '{datasource.path}'")
+                    LOGGER.bcdebug(f"Datasource provenance: '{target.name}' -> '{datasource}'")
 
                     # Load/copy over the source meta-data
                     jsonfile = target.with_suffix('').with_suffix('.json')

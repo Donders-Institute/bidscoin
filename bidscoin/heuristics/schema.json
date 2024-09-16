@@ -48,7 +48,7 @@
    },
 
    "additionalProperties": {
-      "description": "Dataformat key (this key is issued by the output of the handling plugin's `is_sourcefile()` function)",
+      "description": "Dataformat key (this key is issued by the output of the handling plugin's `has_support()` function)",
       "type": "object",
       "required": ["subject", "session"],
 

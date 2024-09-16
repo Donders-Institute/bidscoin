@@ -5,14 +5,13 @@ import sys
 import logging
 import copy
 import webbrowser
-import re
 import ast
 import json
 import csv
 import nibabel as nib
 from bids_validator import BIDSValidator
 from typing import Union, List, Dict
-from pydicom import dcmread
+from pydicom import dcmread, datadict
 from pathlib import Path
 from functools import partial
 from PyQt6 import QtCore, QtGui, QtWidgets
@@ -24,8 +23,7 @@ from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     sys.path.append(str(Path(__file__).parents[1]))
 from bidscoin import bcoin, bids, bidsversion, check_version, trackusage, bidsmap_template, __version__
-from bidscoin.bids import Bidsmap, Plugin, Run, extensions
-
+from bidscoin.bids import extensions, BidsMap, RunItem, DataType
 
 ROW_HEIGHT       = 22
 BIDSCOIN_LOGO    = Path(__file__).parent/'bidscoin_logo.png'
@@ -78,7 +76,7 @@ fallback: Appends unhandled dcm2niix suffixes to the `acq` label if 'y' (recomme
 
 class MainWindow(QMainWindow):
 
-    def __init__(self, bidsfolder: Path, input_bidsmap: Bidsmap, template_bidsmap: Bidsmap, datasaved: bool=False, reset: bool=False):
+    def __init__(self, bidsfolder: Path, input_bidsmap: BidsMap, template_bidsmap: BidsMap, datasaved: bool=False, reset: bool=False):
 
         # Set up the main window
         if not reset:
@@ -86,28 +84,32 @@ class MainWindow(QMainWindow):
             self.setWindowIcon(QtGui.QIcon(str(BIDSCOIN_ICON)))
             self.set_menu_statusbar()
 
-        if not input_bidsmap:
+        if not input_bidsmap.filepath.name:
             filename, _ = QFileDialog.getOpenFileName(self, 'Open a bidsmap file', str(bidsfolder), 'YAML Files (*.yaml *.yml);;All Files (*)')
             if filename:
-                input_bidsmap, _ = bids.load_bidsmap(Path(filename))
-                if input_bidsmap.get('Options'):
-                    template_bidsmap['Options'] = input_bidsmap['Options']      # Always use the options of the input bidsmap
+                input_bidsmap = BidsMap(Path(filename))
+                if input_bidsmap.options:
+                    template_bidsmap.options = input_bidsmap.options    # Always use the options of the input bidsmap
+                    template_bidsmap.plugins = input_bidsmap.plugins    # Always use the plugins of the input bidsmap
             else:
-                input_bidsmap = {'Options': template_bidsmap['Options']}
+                input_bidsmap = copy.deepcopy(template_bidsmap)
+                for dataformat in input_bidsmap.dataformats:
+                    for datatype in dataformat.datatypes:
+                        datatype.delete_runs()
 
         # Keep track of the EditWindow status
         self.editwindow_opened: Union[str,None] = None                   # The provenance string of the run-item that is opened in the EditWindow
 
         # Set the input data
         self.bidsfolder: Path            = Path(bidsfolder)              # The folder where the bids data is / will be stored
-        self.input_bidsmap: Bidsmap      = input_bidsmap                 # The original/unedited bidsmap
-        self.output_bidsmap: Bidsmap     = copy.deepcopy(input_bidsmap)  # The edited bidsmap
-        self.template_bidsmap: Bidsmap   = template_bidsmap              # The bidsmap from which new data type run-items are taken
+        self.input_bidsmap               = input_bidsmap                 # The original/unedited bidsmap
+        self.output_bidsmap              = copy.deepcopy(input_bidsmap)  # The edited bidsmap
+        self.template_bidsmap            = template_bidsmap              # The bidsmap from which new data type run-items are taken
         self.datasaved: bool             = datasaved                     # True if data has been saved on disk
-        self.dataformats: List[str]      = [dataformat for dataformat in input_bidsmap if dataformat and dataformat not in ('$schema','Options') and bids.dir_bidsmap(input_bidsmap, dataformat)]
-        self.bidsignore: List[str]       = input_bidsmap['Options']['bidscoin']['bidsignore']
-        self.unknowndatatypes: List[str] = input_bidsmap['Options']['bidscoin']['unknowntypes']
-        self.ignoredatatypes: List[str]  = input_bidsmap['Options']['bidscoin']['ignoretypes']
+        self.dataformats                 = [dataformat.dataformat for dataformat in input_bidsmap.dataformats if input_bidsmap.dir(dataformat)]
+        self.bidsignore: List[str]       = input_bidsmap.options['bidsignore']
+        self.unknowndatatypes: List[str] = input_bidsmap.options['unknowntypes']
+        self.ignoredatatypes: List[str]  = input_bidsmap.options['ignoretypes']
 
         # Set up the tabs, add the tables and put the bidsmap data in them
         tabwidget = self.tabwidget = QtWidgets.QTabWidget()
@@ -192,21 +194,20 @@ class MainWindow(QMainWindow):
         rowindex   = [index.row() for index in table.selectedIndexes() if index.column() == colindex]
         if rowindex and colindex in (-1, 0, 4):      # User clicked the index, the edit-button or elsewhere (i.e. not on an activated widget)
             return
-        runs  = []
-        subid = []
-        sesid = []
+        runs: List[RunItem] = []
+        subids: List[str]   = []
+        sesids: List[str]   = []
         for index in rowindex:
             datatype   = table.item(index, 2).text()
             provenance = table.item(index, 5).text()
-            runs.append(bids.find_run(self.output_bidsmap, provenance, dataformat, datatype))
-            subid.append(bids.get_bidsvalue(table.item(index, 3).text(), 'sub'))
-            sesid.append(bids.get_bidsvalue(table.item(index, 3).text(), 'ses'))
+            runs.append(self.output_bidsmap.find_run(provenance, dataformat, datatype))
+            subids.append(bids.get_bidsvalue(table.item(index, 3).text(), 'sub'))
+            sesids.append(bids.get_bidsvalue(table.item(index, 3).text(), 'ses'))
 
         # Get the datatypes for the dataformat(s)
         datatypes = set()
-        for dtype in self.template_bidsmap[dataformat]:
-            if dtype not in ('subject', 'session'):
-                datatypes.add(dtype)
+        for dtype in self.template_bidsmap.dataformat(dataformat).datatypes:
+            datatypes.add(dtype.datatype)
         datatypes = sorted(datatypes)
 
         # Pop-up the context-menu
@@ -229,22 +230,22 @@ class MainWindow(QMainWindow):
             if filenames:
                 datatype, ok = QInputDialog.getItem(self, 'Select the data type of the run-item(s)', 'datatype', datatypes, editable=False)
                 if datatype and ok:
-                    datasource = bids.DataSource()
+                    datasource = bids.DataSource(dataformat=dataformat)
                     for filename in filenames:
-                        datasource = bids.DataSource(filename, self.output_bidsmap['Options']['plugins'], dataformat, datatype)
-                        if datasource.is_datasource:
-                            run = bids.get_run(self.template_bidsmap, datatype, 0, datasource)
-                            run['properties']['filepath'] = datasource.properties('filepath')   # Make the added run a strict match (i.e. an exception)
-                            run['properties']['filename'] = datasource.properties('filename')   # Make the added run a strict match (i.e. an exception)
+                        datasource = bids.DataSource(filename, self.output_bidsmap.plugins, dataformat, self.output_bidsmap.options)
+                        if datasource.has_plugin():
+                            run = self.template_bidsmap.get_run(datatype, 0, datasource)
+                            run.properties['filepath'] = datasource.properties('filepath')   # Make the added run a strict match (i.e. an exception)
+                            run.properties['filename'] = datasource.properties('filename')   # Make the added run a strict match (i.e. an exception)
                             LOGGER.verbose(f"Expert usage: User adds run-item {dataformat}[{datatype}]: {filename}")
-                            if Path(filename) in bids.dir_bidsmap(self.output_bidsmap, dataformat):
+                            if Path(filename) in self.output_bidsmap.dir(dataformat):
                                 LOGGER.warning(f"Added run-item {dataformat}[{datatype}]: {filename} already exists")
-                            bids.insert_run(self.output_bidsmap, run, 0)                        # Put the run at the front (so it gets matching priority)
+                            self.output_bidsmap.insert_run(run, 0)                        # Put the run at the front (so it gets matching priority)
                             if dataformat not in self.ordered_file_index:
                                 self.ordered_file_index[dataformat] = {datasource.path: 0}
                             else:
                                 self.ordered_file_index[dataformat][datasource.path] = max(self.ordered_file_index[dataformat][fname] for fname in self.ordered_file_index[dataformat]) + 1
-                    if datasource.is_datasource:
+                    if datasource.has_plugin():
                         self.update_subses_samples(self.output_bidsmap, dataformat)
 
         elif action == delete:
@@ -258,12 +259,13 @@ class MainWindow(QMainWindow):
                                                   QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel, QMessageBox.StandardButton.Cancel)
                     if answer != QMessageBox.StandardButton.Yes: continue
                 LOGGER.verbose(f"Expert usage: User removes run-item {dataformat}[{datatype}]: {provenance}")
-                deleted = bids.delete_run(self.output_bidsmap, bids.find_run(self.output_bidsmap, provenance, dataformat, datatype))
+                self.output_bidsmap.delete_run(self.output_bidsmap.find_run(provenance, dataformat, datatype))
+                deleted = True
             if deleted:
                 self.update_subses_samples(self.output_bidsmap, dataformat)
 
         elif action == compare:
-            CompareWindow(runs, subid, sesid)
+            CompareWindow(runs, subids, sesids)
 
         elif action == edit:
             if len(rowindex) == 1:
@@ -284,14 +286,14 @@ class MainWindow(QMainWindow):
                         continue
 
                     # Get the new run from the template
-                    oldrun = bids.find_run(self.output_bidsmap, provenance, dataformat, datatype)
-                    newrun = bids.get_run(self.template_bidsmap, newdatatype, 0, oldrun['datasource'])
+                    oldrun = self.output_bidsmap.find_run(provenance, dataformat, datatype)
+                    newrun = self.template_bidsmap.get_run(newdatatype, 0, oldrun.datasource)
                     if not newrun:
                         QMessageBox.warning(self, 'Edit BIDS mapping', f"Cannot find the '{newdatatype}' data type in your template")
                         continue
 
                     # Insert the new run in our output bidsmap
-                    bids.update_bidsmap(self.output_bidsmap, datatype, newrun)
+                    self.output_bidsmap.update(datatype, newrun)
                     LOGGER.verbose(f"User sets run-item {dataformat}[{datatype} -> {newdatatype}]: {provenance}")
 
                 self.update_subses_samples(self.output_bidsmap, dataformat)
@@ -422,7 +424,7 @@ class MainWindow(QMainWindow):
         """Set the options tab"""
 
         # Create the bidscoin table
-        bidscoin_options = self.output_bidsmap['Options']['bidscoin']
+        bidscoin_options = self.output_bidsmap.options
         self.options_label['bidscoin'] = bidscoin_label = QLabel('BIDScoin')
         bidscoin_label.setToolTip(TOOLTIP_BIDSCOIN)
         self.options_table['bidscoin'] = bidscoin_table = MyQTableWidget()
@@ -449,7 +451,7 @@ class MainWindow(QMainWindow):
         layout.addWidget(bidscoin_table)
 
         # Add the plugin tables
-        for plugin, options in self.output_bidsmap['Options']['plugins'].items():
+        for plugin, options in self.output_bidsmap.plugins.items():
             plugin_label, plugin_table = self.plugin_table(plugin, options)
             layout.addWidget(plugin_label)
             layout.addWidget(plugin_table)
@@ -502,7 +504,7 @@ class MainWindow(QMainWindow):
 
         self.tabwidget.addTab(tab, 'Data browser')
 
-    def update_subses_samples(self, output_bidsmap: Bidsmap, dataformat: str):
+    def update_subses_samples(self, output_bidsmap: BidsMap, dataformat: str):
         """(Re)populates the sample list with bidsnames according to the bidsmap"""
 
         self.datachanged    = True
@@ -510,14 +512,14 @@ class MainWindow(QMainWindow):
 
         # Update the subject/session table
         subitem = MyWidgetItem('subject', iseditable=False)
-        subitem.setToolTip(bids.get_entityhelp('sub'))
+        subitem.setToolTip(get_entityhelp('sub'))
         sesitem = MyWidgetItem('session', iseditable=False)
-        sesitem.setToolTip(bids.get_entityhelp('ses'))
+        sesitem.setToolTip(get_entityhelp('ses'))
         subses_table = self.subses_table[dataformat]
         subses_table.setItem(0, 0, subitem)
         subses_table.setItem(1, 0, sesitem)
-        subses_table.setItem(0, 1, MyWidgetItem(output_bidsmap[dataformat]['subject']))
-        subses_table.setItem(1, 1, MyWidgetItem(output_bidsmap[dataformat]['session']))
+        subses_table.setItem(0, 1, MyWidgetItem(output_bidsmap.dataformat(dataformat).subject))
+        subses_table.setItem(1, 1, MyWidgetItem(output_bidsmap.dataformat(dataformat).session))
 
         # Update the run samples table
         idx           = 0
@@ -527,20 +529,20 @@ class MainWindow(QMainWindow):
         samples_table.setRowCount(num_files)
         samples_table.setSortingEnabled(False)
         samples_table.clearContents()
-        for datatype, runs in output_bidsmap[dataformat].items():
-            if not isinstance(runs, list): continue     # E.g. datatype = 'subject' or 'session'
-            for run in runs:
+        for datatype in output_bidsmap.dataformat(dataformat).datatypes:
+            for run in datatype.runitems:
 
                 # Check the run and get some data
-                validrun     = all(bids.check_run(datatype, run, checks=(False, False, False))[1:3])
-                provenance   = Path(run['provenance'])
-                subid        = output_bidsmap[dataformat]['subject']
-                sesid        = output_bidsmap[dataformat]['session']
-                subid, sesid = run['datasource'].subid_sesid(subid, sesid or '')
-                bidsname     = bids.get_bidsname(subid, sesid, run, not bids.check_ignore(datatype,self.bidsignore) and datatype not in self.ignoredatatypes)
+                dtype        = datatype.datatype
+                validrun     = all(run.check(dtype, checks=(False, False, False))[1:3])
+                provenance   = Path(run.provenance)
+                subid        = output_bidsmap.dataformat(dataformat).subject
+                sesid        = output_bidsmap.dataformat(dataformat).session
+                subid, sesid = run.datasource.subid_sesid(subid, sesid or '')
+                bidsname     = run.bidsname(subid, sesid, not bids.check_ignore(datatype,self.bidsignore) and dtype not in self.ignoredatatypes)
                 ignore       = bids.check_ignore(datatype, self.bidsignore) or bids.check_ignore(bidsname+'.json', self.bidsignore, 'file')
-                exceptions   = self.output_bidsmap['Options']['bidscoin']['notderivative']
-                if run['datasource'].dynamicvalue(run['bids']['suffix'], True, True) in bids.get_derivatives(datatype, exceptions):
+                exceptions   = self.output_bidsmap.options['notderivative']
+                if run.datasource.dynamicvalue(run.bids['suffix'], True, True) in bids.get_derivatives(dtype, exceptions):
                     session  = self.bidsfolder/'derivatives'/'[manufacturer]'/subid/sesid
                 else:
                     session  = self.bidsfolder/subid/sesid
@@ -548,8 +550,8 @@ class MainWindow(QMainWindow):
 
                 samples_table.setItem(idx, 0, MyWidgetItem(f"{row_index+1:03d}", iseditable=False))
                 samples_table.setItem(idx, 1, MyWidgetItem(provenance.name))
-                samples_table.setItem(idx, 2, MyWidgetItem(datatype))                           # Hidden column
-                samples_table.setItem(idx, 3, MyWidgetItem(Path(datatype)/(bidsname + '.*')))
+                samples_table.setItem(idx, 2, MyWidgetItem(dtype))                           # Hidden column
+                samples_table.setItem(idx, 3, MyWidgetItem(Path(dtype)/(bidsname + '.*')))
                 samples_table.setItem(idx, 5, MyWidgetItem(provenance))                         # Hidden column
 
                 samples_table.item(idx, 0).setFlags(QtCore.Qt.ItemFlag.NoItemFlags)
@@ -557,28 +559,28 @@ class MainWindow(QMainWindow):
                 samples_table.item(idx, 2).setFlags(QtCore.Qt.ItemFlag.ItemIsEnabled)
                 samples_table.item(idx, 1).setToolTip('Double-click to inspect the header information')
                 samples_table.item(idx, 1).setStatusTip(str(provenance.parent) + str(Path('/')))
-                if datatype not in self.ignoredatatypes:
+                if dtype not in self.ignoredatatypes:
                     samples_table.item(idx, 3).setStatusTip(str(session) + str(Path('/')))
 
                 if samples_table.item(idx, 3):
                     if ignore:
                         samples_table.item(idx, 3).setForeground(QtGui.QColor('darkorange'))
                         samples_table.item(idx, 3).setToolTip(f"Orange: This {datatype} item is ignored by BIDS-apps and BIDS-validators")
-                    elif datatype in self.ignoredatatypes:
+                    elif dtype in self.ignoredatatypes:
                         samples_table.item(idx, 1).setForeground(QtGui.QColor('gray'))
                         samples_table.item(idx, 3).setForeground(QtGui.QColor('gray'))
                         f = samples_table.item(idx, 3).font()
                         f.setStrikeOut(True)
                         samples_table.item(idx, 3).setFont(f)
                         samples_table.item(idx, 3).setToolTip('Gray/Strike-out: This imaging data type will be ignored and not converted BIDS')
-                    elif not validrun or datatype in self.unknowndatatypes:
+                    elif not validrun or dtype in self.unknowndatatypes:
                         samples_table.item(idx, 3).setForeground(QtGui.QColor('red'))
                         samples_table.item(idx, 3).setToolTip(f"Red: This {datatype} item is not BIDS-valid but will still be converted. You should edit this item or make sure it is in your bidsignore list ([Options] tab)")
                     else:
                         samples_table.item(idx, 3).setForeground(QtGui.QColor('green'))
                         samples_table.item(idx, 3).setToolTip(f"Green: This '{datatype}' data type is part of BIDS")
 
-                if validrun or ignore or datatype in self.ignoredatatypes:
+                if validrun or ignore or dtype in self.ignoredatatypes:
                     edit_button = QPushButton('Edit')
                     edit_button.setToolTip('Click to see more details and edit the BIDS output name')
                 else:
@@ -601,7 +603,7 @@ class MainWindow(QMainWindow):
     def set_ordered_file_index(self, dataformat: str) -> int:
         """Sets the mapping between the ordered provenance and an increasing file-index"""
 
-        provenances = bids.dir_bidsmap(self.output_bidsmap, dataformat)
+        provenances = self.output_bidsmap.dir(dataformat)
         if len(provenances) > len(self.ordered_file_index.get(dataformat,[])):
             ordered_index = {}
             for file_index, file_name in enumerate(provenances):
@@ -618,14 +620,14 @@ class MainWindow(QMainWindow):
         if colindex == 1 and dataformat in self.dataformats:
             key        = self.subses_table[dataformat].item(rowindex, 0).text().strip()
             value      = self.subses_table[dataformat].item(rowindex, 1).text().strip()
-            oldvalue   = self.output_bidsmap[dataformat][key]
+            oldvalue   = getattr(self.output_bidsmap.dataformat(dataformat), key)
             if oldvalue is None:
                 oldvalue = ''
 
             # Only if cell content was changed, update
             if key and value != oldvalue:
                 LOGGER.verbose(f"User sets {dataformat}['{key}'] from '{oldvalue}' to '{value}'")
-                self.output_bidsmap[dataformat][key] = value
+                setattr(self.output_bidsmap.dataformat(dataformat), key, value)
                 self.update_subses_samples(self.output_bidsmap, dataformat)
 
     def open_editwindow(self, provenance: Path=Path(), datatype: str=''):
@@ -645,8 +647,8 @@ class MainWindow(QMainWindow):
         # Check for open edit window, find the right data type index and open the edit window
         if not self.editwindow_opened:
             # Find the source index of the run in the list of runs (using the provenance) and open the edit window
-            for run in self.output_bidsmap[dataformat][datatype]:
-                if Path(run['provenance']) == Path(provenance):
+            for run in self.output_bidsmap.dataformat(dataformat).datatype(datatype).runitems:
+                if Path(run.provenance) == Path(provenance):
                     LOGGER.verbose(f'User is editing {provenance}')
                     self.editwindow        = EditWindow(run, self.output_bidsmap, self.template_bidsmap)
                     self.editwindow_opened = str(provenance)
@@ -667,7 +669,7 @@ class MainWindow(QMainWindow):
         """Allow a new edit window to be opened"""
         self.editwindow_opened = None
 
-    def plugin_table(self, name: str, plugin: Plugin) -> tuple:
+    def plugin_table(self, name: str, plugin: dict) -> tuple:
         """:return: a plugin-label and a filled plugin-table"""
 
         self.options_label[name] = plugin_label = QLabel(f"{name} - plugin")
@@ -703,9 +705,9 @@ class MainWindow(QMainWindow):
 
         for plugin,table in self.options_table.items():
             if plugin == 'bidscoin':
-                oldoptions = self.output_bidsmap['Options']['bidscoin']
+                oldoptions = self.output_bidsmap.options
             else:
-                oldoptions = self.output_bidsmap['Options']['plugins'].get(plugin,{})
+                oldoptions = self.output_bidsmap.plugins.get(plugin,{})
             newoptions = {}
             for rownr in range(table.rowCount()):
                 keyitem = table.item(rownr, 0)
@@ -722,14 +724,14 @@ class MainWindow(QMainWindow):
                         LOGGER.verbose(f"User sets the '{plugin}' option from '{key}: {oldoptions.get(key)}' to '{key}: {val}'")
                         self.datachanged = True
             if plugin == 'bidscoin':
-                self.output_bidsmap['Options']['bidscoin'] = newoptions
+                self.output_bidsmap.options = newoptions
                 self.unknowndatatypes  = newoptions.get('unknowntypes', [])
                 self.ignoredatatypes   = newoptions.get('ignoretypes', [])
                 self.bidsignore        = newoptions.get('bidsignore', [])
                 for dataformat in self.dataformats:
                     self.update_subses_samples(self.output_bidsmap, dataformat)
             else:
-                self.output_bidsmap['Options']['plugins'][plugin] = newoptions
+                self.output_bidsmap.plugins[plugin] = newoptions
 
             # Add an extra row if the table is full
             if rowindex + 1 == table.rowCount() and table.currentItem() and table.currentItem().text().strip():
@@ -769,20 +771,18 @@ class MainWindow(QMainWindow):
 
         # Check the selected plugin and get its options
         plugin = dropdown.currentText()
-        if plugin in self.output_bidsmap['Options']['plugins']:
+        if plugin in self.output_bidsmap.plugins:
             LOGGER.error(f"Cannot add the '{plugin}' plugin as it already exists in the bidsmap")
             return
         module  = bcoin.import_plugin(plugin)
-        options = self.input_bidsmap[   'Options']['plugins'].get(plugin,
-                  self.template_bidsmap['Options']['plugins'].get(plugin,
-                  module.OPTIONS if 'OPTIONS' in dir(module) else {}))
+        options = self.input_bidsmap.plugins.get(plugin, self.template_bidsmap.plugins.get(plugin, module.OPTIONS if 'OPTIONS' in dir(module) else {}))
 
         # Insert the selected plugin in the options_layout
         LOGGER.info(f"Adding the '{plugin}' plugin to bidsmap")
         plugin_label, plugin_table = self.plugin_table(plugin, options)
         self.options_layout.insertWidget(self.options_layout.count()-3, plugin_label)
         self.options_layout.insertWidget(self.options_layout.count()-3, plugin_table)
-        self.output_bidsmap['Options']['plugins'][plugin] = options
+        self.output_bidsmap.plugins[plugin] = options
         self.datachanged = True
 
         # Notify the user that the bidsmapper need to be re-run
@@ -791,7 +791,7 @@ class MainWindow(QMainWindow):
     def del_plugin(self, plugin: str):
         """Removes the plugin table from the Options-tab and the data from the bidsmap"""
 
-        LOGGER.info(f"Removing the '{plugin}' from bidsmap['Options']['plugins']")
+        LOGGER.info(f"Removing the '{plugin}' from bidsmap.plugins")
         plugin_label = self.options_label[plugin]
         plugin_table = self.options_table[plugin]
         self.options_layout.removeWidget(plugin_label)
@@ -800,13 +800,13 @@ class MainWindow(QMainWindow):
         plugin_table.deleteLater()
         self.options_label.pop(plugin, None)
         self.options_table.pop(plugin, None)
-        self.output_bidsmap['Options']['plugins'].pop(plugin, None)
+        self.output_bidsmap.plugins.pop(plugin, None)
         self.datachanged = True
 
     def test_plugin(self, plugin: str):
         """Test the plugin and show the result in a pop-up window"""
 
-        status = bcoin.test_plugin(Path(plugin), self.output_bidsmap['Options']['plugins'].get(plugin,{}))
+        status = bcoin.test_plugin(Path(plugin), self.output_bidsmap.plugins.get(plugin,{}))
         if not status or (status==3 and plugin=='dcm2niix2bids'):
             QMessageBox.information(self, 'Plugin test', f"Import of {plugin}: Passed\nSee terminal output for more info")
         else:
@@ -815,7 +815,7 @@ class MainWindow(QMainWindow):
     def test_bidscoin(self):
         """Test the bidsmap tool and show the result in a pop-up window"""
 
-        if not bcoin.test_bidscoin(self.input_bidsmap, options=self.output_bidsmap['Options'], testplugins=False, testgui=False, testtemplate=False):
+        if not bcoin.test_bidscoin(self.input_bidsmap, options=self.output_bidsmap.options, testplugins=False, testgui=False, testtemplate=False):
             QMessageBox.information(self, 'Tool test', f"BIDScoin test: Passed\nSee terminal output for more info")
         else:
             QMessageBox.warning(self, 'Tool test', f"BIDScoin test: Failed\nSee terminal output for more info")
@@ -824,9 +824,9 @@ class MainWindow(QMainWindow):
         """Test the runs in the study bidsmap"""
 
         LOGGER.info(' ')
-        bids.check_bidsmap(self.output_bidsmap)
+        self.output_bidsmap.check()
         LOGGER.info(' ')
-        bids.validate_bidsmap(self.output_bidsmap, 2)
+        self.output_bidsmap.validate(2)
 
     def reset(self):
         """Reset button: reset the window with the original input BIDS map"""
@@ -862,21 +862,20 @@ class MainWindow(QMainWindow):
         filename, _ = QFileDialog.getOpenFileName(self, 'Open File', str(self.bidsfolder/'code'/'bidscoin'/'bidsmap.yaml'), 'YAML Files (*.yaml *.yml);;All Files (*)')
         if filename:
             QtCore.QCoreApplication.setApplicationName(f"{filename} - BIDS editor {__version__}")
-            self.input_bidsmap, _ = bids.load_bidsmap(Path(filename))
+            self.input_bidsmap = BidsMap(Path(filename))
             self.reset()
 
     def save_bidsmap(self):
         """Check and save the bidsmap to file"""
 
         for dataformat in self.dataformats:
-            if self.output_bidsmap[dataformat].get('fmap'):
-                for run in self.output_bidsmap[dataformat]['fmap']:
-                    if not (run['meta'].get('B0FieldSource') or run['meta'].get('B0FieldIdentifier') or run['meta'].get('IntendedFor')):
-                        LOGGER.warning(f"B0FieldIdentifier/IntendedFor fieldmap value is empty for {dataformat} run-item: {run['provenance']}")
+            for run in self.output_bidsmap.dataformat(dataformat).datatype('fmap').runitems:
+                if not (run.meta.get('B0FieldSource') or run.meta.get('B0FieldIdentifier') or run.meta.get('IntendedFor')):
+                    LOGGER.warning(f"B0FieldIdentifier/IntendedFor fieldmap value is empty for {dataformat} run-item: {run}")
 
         filename,_ = QFileDialog.getSaveFileName(self, 'Save File',  str(self.bidsfolder/'code'/'bidscoin'/'bidsmap.yaml'), 'YAML Files (*.yaml *.yml);;All Files (*)')
         if filename:
-            bids.save_bidsmap(Path(filename), self.output_bidsmap)
+            self.output_bidsmap.save(Path(filename))
             QtCore.QCoreApplication.setApplicationName(f"{filename} - BIDS editor {__version__}")
             self.datasaved   = True
             self.datachanged = False
@@ -887,10 +886,11 @@ class MainWindow(QMainWindow):
         yamlfile, _ = QFileDialog.getOpenFileName(self, 'Select the (default) template bidsmap to save the options in',
                         str(bidsmap_template), 'YAML Files (*.yaml *.yml);;All Files (*)')
         if yamlfile:
-            LOGGER.info(f"Saving bidsmap['Options'] in: {yamlfile}")
+            LOGGER.info(f"Saving bidsmap options in: {yamlfile}")
             with open(yamlfile, 'r') as stream:
                 bidsmap = bids.yaml.load(stream)
-            bidsmap['Options'] = self.output_bidsmap['Options']
+            bidsmap.options = self.output_bidsmap.options
+            bidsmap.plugins = self.output_bidsmap.plugins
             with open(yamlfile, 'w') as stream:
                 bids.yaml.dump(bidsmap, stream)
 
@@ -949,28 +949,39 @@ class EditWindow(QDialog):
     """
 
     # Emit the new bidsmap when done (see docstring)
-    done_edit = QtCore.pyqtSignal(dict, str)
+    done_edit = QtCore.pyqtSignal(BidsMap, str)
 
-    def __init__(self, run: Run, bidsmap: Bidsmap, template_bidsmap: Bidsmap):
+    def __init__(self, run: RunItem, bidsmap: BidsMap, template_bidsmap: BidsMap):
         super().__init__()
+
         # Set the data
-        datasource: bids.DataSource      = run['datasource']
-        self.datasource                  = datasource
-        self.dataformat: str             = datasource.dataformat    # The data format of the run-item being edited (bidsmap[dataformat][datatype][run-item])
-        self.source_datatype: str        = datasource.datatype      # The BIDS data type of the original run-item
-        self.target_datatype: str        = datasource.datatype      # The BIDS data type that the edited run-item is being changed into
-        self.current_datatype: str       = datasource.datatype      # The BIDS datatype of the run-item just before it is being changed (again)
-        self.unknowndatatypes: List[str] = [datatype for datatype in bidsmap['Options']['bidscoin']['unknowntypes'] if datatype in template_bidsmap[self.dataformat]]
-        self.ignoredatatypes: List[str]  = [datatype for datatype in bidsmap['Options']['bidscoin']['ignoretypes']  if datatype in template_bidsmap[self.dataformat]]
-        self.bidsdatatypes: List[str]    = [datatype for datatype in template_bidsmap[self.dataformat] if datatype not in self.unknowndatatypes + self.ignoredatatypes + ['subject', 'session']]
-        self.bidsignore: List[str]       = bidsmap['Options']['bidscoin']['bidsignore']
-        self.source_bidsmap: Bidsmap     = bidsmap                  # The bidsmap at the start of the edit = output_bidsmap in the MainWindow
-        self.target_bidsmap: Bidsmap     = copy.deepcopy(bidsmap)   # The edited bidsmap -> will be returned as output_bidsmap in the MainWindow
-        self.template_bidsmap: Bidsmap   = template_bidsmap         # The bidsmap from which new datatype run-items are taken
-        self.source_run: Run             = run                      # The original run-item from the source bidsmap
-        self.target_run: Run             = copy.deepcopy(run)       # The edited run-item that is inserted in the target_bidsmap
-        self.get_allowed_suffixes()                                 # Set the possible suffixes the user can select for a given datatype
-        self.subid, self.sesid           = datasource.subid_sesid(bidsmap[self.dataformat]['subject'], bidsmap[self.dataformat]['session'] or '')
+        datasource             = run.datasource
+        self.datasource        = datasource
+        self.dataformat        = run.dataformat
+        """The data format of the run-item being edited (bidsmap[dataformat][datatype][run-item])"""
+        self.source_datatype   = run.datatype
+        """The BIDS data type of the original run-item"""
+        self.target_datatype   = run.datatype
+        """The BIDS data type that the edited run-item is being changed into"""
+        self.current_datatype  = run.datatype
+        """The BIDS datatype of the run-item just before it is being changed (again)"""
+        self.unknowndatatypes: List[str] = [datatype for datatype in bidsmap.options['unknowntypes'] if datatype in template_bidsmap.dataformat(self.dataformat).datatypes]
+        self.ignoredatatypes: List[str]  = [datatype for datatype in bidsmap.options['ignoretypes']  if datatype in template_bidsmap.dataformat(self.dataformat).datatypes]
+        self.bidsdatatypes     = [str(datatype) for datatype in template_bidsmap.dataformat(self.dataformat).datatypes if datatype not in self.unknowndatatypes + self.ignoredatatypes + ['subject', 'session']]
+        self.bidsignore        = bidsmap.options['bidsignore']
+        self.source_bidsmap    = bidsmap
+        """The bidsmap at the start of the edit = output_bidsmap in the MainWindow"""
+        self.target_bidsmap    = copy.deepcopy(bidsmap)
+        """The edited bidsmap -> will be returned as output_bidsmap in the MainWindow"""
+        self.template_bidsmap  = template_bidsmap
+        """The bidsmap from which new datatype run-items are taken"""
+        self.source_run        = run
+        """The original run-item from the source bidsmap"""
+        self.target_run        = copy.deepcopy(run)
+        """The edited run-item that is inserted in the target_bidsmap"""
+        self.allowed_suffixes  = self.get_allowed_suffixes()
+        """Set the possible suffixes the user can select for a given datatype"""
+        self.subid, self.sesid = datasource.subid_sesid(bidsmap.dataformat(run.dataformat).subject, bidsmap.dataformat(run.dataformat).session or '')
 
         # Set up the window
         self.setWindowIcon(QtGui.QIcon(str(BIDSCOIN_ICON)))
@@ -1005,7 +1016,7 @@ class EditWindow(QDialog):
         self.datatype_dropdown.currentIndexChanged.connect(self.datatype_dropdown_change)
         self.datatype_dropdown.setToolTip('The BIDS data type. First make sure this one is correct, then choose the right suffix')
         for n, datatype in enumerate(self.bidsdatatypes + self.unknowndatatypes):
-            self.datatype_dropdown.setItemData(n, bids.get_datatypehelp(datatype), QtCore.Qt.ItemDataRole.ToolTipRole)
+            self.datatype_dropdown.setItemData(n, get_datatypehelp(datatype), QtCore.Qt.ItemDataRole.ToolTipRole)
 
         # Set up the BIDS table
         self.bids_label = QLabel('Entities')
@@ -1093,7 +1104,7 @@ class EditWindow(QDialog):
     def reject(self, confirm=True):
         """Ask if the user really wants to close the window"""
 
-        if confirm and re.sub('<(?!.*<).*? object at .*?>','',str(self.target_run)) != re.sub('<(?!.*<).*? object at .*?>','',str(self.source_run)):    # Ignore the memory address of the datasource object
+        if confirm and self.target_run != self.source_run:
             self.raise_()
             answer = QMessageBox.question(self, 'Edit BIDS mapping', 'Closing window, do you want to save the changes you made?',
                                           QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No | QMessageBox.StandardButton.Cancel, QMessageBox.StandardButton.Yes)
@@ -1123,7 +1134,7 @@ class EditWindow(QDialog):
         if action == import_data:
 
             # Read all the meta-data from the table and store it in the target_run
-            metafile, _ = QFileDialog.getOpenFileName(self, 'Import meta data from file', str(self.source_run['provenance']),
+            metafile, _ = QFileDialog.getOpenFileName(self, 'Import meta data from file', str(self.source_run.provenance),
                                                       'JSON/YAML/CSV/TSV Files (*.json *.yaml *.yml *.txt *.csv *.tsv);;All Files (*)')
             if metafile:
 
@@ -1151,28 +1162,28 @@ class EditWindow(QDialog):
                     return
 
                 # Write all the meta-data to the target_run
-                self.target_run['meta'].update(metadata)
+                self.target_run.meta.update(metadata)
 
                 # Refresh the meta-table using the target_run
                 _, _, _, data_meta = self.run2data()
                 self.fill_table(self.meta_table, data_meta)
 
         elif action == clear_table:
-            self.target_run['meta'] = {}
+            self.target_run.meta = {}
             self.fill_table(self.meta_table, [])
 
-    def get_allowed_suffixes(self):
+    def get_allowed_suffixes(self) -> Dict[str, set]:
         """Derive the possible suffixes for each datatype from the template. """
 
         allowed_suffixes = {}
         for datatype in self.bidsdatatypes + self.unknowndatatypes + self.ignoredatatypes:
             allowed_suffixes[datatype] = set()
-            for run in self.template_bidsmap[self.dataformat].get(datatype, []):
-                suffix = self.datasource.dynamicvalue(run['bids']['suffix'], True)
+            for run in self.template_bidsmap.dataformat(self.dataformat).datatype(datatype).runitems:
+                suffix = self.datasource.dynamicvalue(run.bids['suffix'], True)
                 if suffix:
-                    allowed_suffixes[datatype].add(suffix)
+                    allowed_suffixes[str(datatype)].add(suffix)
 
-        self.allowed_suffixes: Dict[str, set] = allowed_suffixes
+        return allowed_suffixes
 
     def run2data(self) -> tuple:
         """Derive the tabular data from the target_run, needed to render the edit window
@@ -1184,33 +1195,33 @@ class EditWindow(QDialog):
         filename = self.datasource.properties('filename')
         filesize = self.datasource.properties('filesize')
         nrfiles  = self.datasource.properties('nrfiles')
-        data_properties = [[{'value': 'filepath',                        'iseditable': False},
-                            {'value': run['properties'].get('filepath'), 'iseditable': True},
-                            {'value': filepath,                          'iseditable': False}],
-                           [{'value': 'filename',                        'iseditable': False},
-                            {'value': run['properties'].get('filename'), 'iseditable': True},
-                            {'value': filename,                          'iseditable': False}],
-                           [{'value': 'filesize',                        'iseditable': False},
-                            {'value': run['properties'].get('filesize'), 'iseditable': True},
-                            {'value': filesize,                          'iseditable': False}],
-                           [{'value': 'nrfiles',                         'iseditable': False},
-                            {'value': run['properties'].get('nrfiles'),  'iseditable': True},
-                            {'value': nrfiles,                           'iseditable': False}]]
+        data_properties = [[{'value': 'filepath',                     'iseditable': False},
+                            {'value': run.properties.get('filepath'), 'iseditable': True},
+                            {'value': filepath,                       'iseditable': False}],
+                           [{'value': 'filename',                     'iseditable': False},
+                            {'value': run.properties.get('filename'), 'iseditable': True},
+                            {'value': filename,                       'iseditable': False}],
+                           [{'value': 'filesize',                     'iseditable': False},
+                            {'value': run.properties.get('filesize'), 'iseditable': True},
+                            {'value': filesize,                       'iseditable': False}],
+                           [{'value': 'nrfiles',                      'iseditable': False},
+                            {'value': run.properties.get('nrfiles'),  'iseditable': True},
+                            {'value': nrfiles,                        'iseditable': False}]]
 
         data_attributes = []
-        for key, value in run['attributes'].items():
+        for key, value in run.attributes.items():
             data_attributes.append([{'value': key,   'iseditable': False},
                                     {'value': value, 'iseditable': True}])
 
         data_bids = []
-        bidsname  = bids.get_bidsname(self.subid, self.sesid, run, False) + '.json'
+        bidsname  = run.bidsname(self.subid, self.sesid, False) + '.json'
         if bids.check_ignore(self.target_datatype, self.bidsignore) or bids.check_ignore(bidsname, self.bidsignore, 'file') or self.target_datatype in self.ignoredatatypes:
-            bidskeys = run['bids'].keys()
+            bidskeys = run.bids.keys()
         else:
             bidskeys = [bids.entities[entity]['name'] for entity in bids.entitiesorder if entity not in ('subject','session')] + ['suffix']   # Impose the BIDS-specified order + suffix
         for key in bidskeys:
-            if key in run['bids']:
-                value = run['bids'].get(key)
+            if key in run.bids:
+                value = run.bids.get(key)
                 if (self.target_datatype in self.bidsdatatypes and key=='suffix') or isinstance(value, list):
                     iseditable = False
                 else:
@@ -1219,7 +1230,7 @@ class EditWindow(QDialog):
                                   {'value': value, 'iseditable': iseditable}])          # NB: This can be a (menu) list
 
         data_meta = []
-        for key, value in run['meta'].items():
+        for key, value in run.meta.items():
             data_meta.append([{'value': key,   'iseditable': True},
                               {'value': value, 'iseditable': True}])
 
@@ -1249,33 +1260,33 @@ class EditWindow(QDialog):
         table.clearContents()
         addrow = []
         if table.objectName() == 'meta':
-            addrow = [[{'value':'', 'iseditable': True}, {'value':'', 'iseditable': True}]]
+            addrow = [[{'value': '', 'iseditable': True}, {'value': '', 'iseditable': True}]]
         table.setRowCount(len(data + addrow))
 
         for i, row in enumerate(data + addrow):
             key = row[0]['value']
-            if table.objectName()=='bids' and key=='suffix' and self.target_datatype in self.bidsdatatypes:
+            if table.objectName() == 'bids' and key == 'suffix' and self.target_datatype in self.bidsdatatypes:
                 table.setItem(i, 0, MyWidgetItem('suffix', iseditable=False))
-                suffix   = self.datasource.dynamicvalue(self.target_run['bids'].get('suffix',''))
-                suffixes = sorted(self.allowed_suffixes.get(self.target_datatype, ['']), key=str.casefold)
+                suffix   = self.datasource.dynamicvalue(self.target_run.bids.get('suffix',''))
+                suffixes = sorted(self.allowed_suffixes.get(self.target_datatype, set()), key=str.casefold)
                 suffix_dropdown = self.suffix_dropdown = QComboBox()
                 suffix_dropdown.addItems(suffixes)
                 suffix_dropdown.setCurrentIndex(suffix_dropdown.findText(suffix))
                 suffix_dropdown.currentIndexChanged.connect(self.suffix_dropdown_change)
                 suffix_dropdown.setToolTip('The suffix that sets the different run types apart. First make sure the "Data type" dropdown-menu is set correctly before choosing the right suffix here')
                 for n, suffix in enumerate(suffixes):
-                    suffix_dropdown.setItemData(n, bids.get_suffixhelp(suffix, self.target_datatype), QtCore.Qt.ItemDataRole.ToolTipRole)
+                    suffix_dropdown.setItemData(n, get_suffixhelp(suffix, self.target_datatype), QtCore.Qt.ItemDataRole.ToolTipRole)
                 table.setCellWidget(i, 1, self.spacedwidget(suffix_dropdown))
                 continue
             for j, item in enumerate(row):
                 value = item.get('value')
-                if table.objectName()=='bids' and isinstance(value, list):
+                if table.objectName() == 'bids' and isinstance(value, list):
                     value_dropdown = QComboBox()
                     value_dropdown.addItems(value[0:-1])
                     value_dropdown.setCurrentIndex(value[-1])
                     value_dropdown.currentIndexChanged.connect(partial(self.bidscell2run, i, j))
                     if j == 0:
-                        value_dropdown.setToolTip(bids.get_entityhelp(key))
+                        value_dropdown.setToolTip(get_entityhelp(key))
                     table.setCellWidget(i, j, self.spacedwidget(value_dropdown))
                 else:
                     value_item = MyWidgetItem(value, iseditable=item['iseditable'])
@@ -1283,13 +1294,13 @@ class EditWindow(QDialog):
                         if j == 1:
                             value_item.setToolTip('The (regex) matching pattern that for this property')
                         if j == 2:
-                            value_item.setToolTip(bids.get_propertieshelp(key))
-                    elif table.objectName()=='attributes' and j==0:
-                        value_item.setToolTip(bids.get_attributeshelp(key))
-                    elif table.objectName()=='bids' and j==0:
-                        value_item.setToolTip(bids.get_entityhelp(key))
-                    elif table.objectName()=='meta' and j==0:
-                        value_item.setToolTip(bids.get_metahelp(key))
+                            value_item.setToolTip(get_propertieshelp(key))
+                    elif table.objectName() == 'attributes' and j == 0:
+                        value_item.setToolTip(get_attributeshelp(key))
+                    elif table.objectName() == 'bids' and j == 0:
+                        value_item.setToolTip(get_entityhelp(key))
+                    elif table.objectName() == 'meta' and j == 0:
+                        value_item.setToolTip(get_metahelp(key))
                     table.setItem(i, j, value_item)
 
         table.blockSignals(False)
@@ -1301,7 +1312,7 @@ class EditWindow(QDialog):
         if colindex == 1:
             key      = self.properties_table.item(rowindex, 0).text().strip()
             value    = self.properties_table.item(rowindex, 1).text().strip()
-            oldvalue = self.target_run['properties'].get(key)
+            oldvalue = self.target_run.properties.get(key)
             if oldvalue is None:
                 oldvalue = ''
 
@@ -1311,8 +1322,8 @@ class EditWindow(QDialog):
                                               f'It is discouraged to change {self.dataformat} property values unless you are an expert user. Do you really want to change "{oldvalue}" to "{value}"?',
                                               QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
                 if answer == QMessageBox.StandardButton.Yes:
-                    LOGGER.verbose(f"Expert usage: User sets {self.dataformat}['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
-                    self.target_run['properties'][key] = value
+                    LOGGER.verbose(f"Expert usage: User sets {self.dataformat}['{key}'] from '{oldvalue}' to '{value}' for {self.target_run.provenance}")
+                    self.target_run.properties[key] = value
                 else:
                     self.properties_table.blockSignals(True)
                     self.properties_table.item(rowindex, 1).setText(oldvalue)
@@ -1325,7 +1336,7 @@ class EditWindow(QDialog):
         if colindex == 1:
             key      = self.attributes_table.item(rowindex, 0).text().strip()
             value    = self.attributes_table.item(rowindex, 1).text()
-            oldvalue = self.target_run['attributes'].get(key)
+            oldvalue = self.target_run.attributes.get(key)
             if oldvalue is None:
                 oldvalue = ''
 
@@ -1335,8 +1346,8 @@ class EditWindow(QDialog):
                                               f'It is discouraged to change {self.dataformat} attribute values unless you are an expert user. Do you really want to change "{oldvalue}" to "{value}"?',
                                               QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
                 if answer == QMessageBox.StandardButton.Yes:
-                    LOGGER.verbose(f"Expert usage: User sets {self.dataformat}['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
-                    self.target_run['attributes'][key] = value
+                    LOGGER.verbose(f"Expert usage: User sets {self.dataformat}['{key}'] from '{oldvalue}' to '{value}' for {self.target_run.provenance}")
+                    self.target_run.attributes[key] = value
                 else:
                     self.attributes_table.blockSignals(True)
                     self.attributes_table.item(rowindex, 1).setText(oldvalue)
@@ -1351,10 +1362,10 @@ class EditWindow(QDialog):
             if hasattr(self.bids_table.cellWidget(rowindex, 1), 'spacedwidget'):
                 dropdown = self.bids_table.cellWidget(rowindex, 1).spacedwidget
                 value    = [dropdown.itemText(n) for n in range(len(dropdown))] + [dropdown.currentIndex()]
-                oldvalue = self.target_run['bids'].get(key)
+                oldvalue = self.target_run.bids.get(key)
             else:
                 value    = self.bids_table.item(rowindex, 1).text().strip()
-                oldvalue = self.target_run['bids'].get(key)
+                oldvalue = self.target_run.bids.get(key)
             if oldvalue is None:
                 oldvalue = ''
 
@@ -1370,15 +1381,15 @@ class EditWindow(QDialog):
                                                   f'It is discouraged to remove the <<dynamic>> run-index. Do you really want to change "{oldvalue}" to "{value}"?',
                                                   QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
                     if answer == QMessageBox.StandardButton.Yes:
-                        LOGGER.verbose(f"Expert usage: User sets bids['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
+                        LOGGER.verbose(f"Expert usage: User sets bids['{key}'] from '{oldvalue}' to '{value}' for {self.target_run.provenance}")
                     else:
                         value = oldvalue
                         self.bids_table.item(rowindex, 1).setText(oldvalue)
-                        LOGGER.verbose(f"User sets bids['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
+                        LOGGER.verbose(f"User sets bids['{key}'] from '{oldvalue}' to '{value}' for {self.target_run.provenance}")
                 else:
-                    LOGGER.verbose(f"User sets bids['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
+                    LOGGER.verbose(f"User sets bids['{key}'] from '{oldvalue}' to '{value}' for {self.target_run.provenance}")
                 self.bids_table.blockSignals(False)
-                self.target_run['bids'][key] = value
+                self.target_run.bids[key] = value
                 self.refresh_bidsname()
 
     def metacell2run(self, rowindex: int, colindex: int):
@@ -1386,7 +1397,7 @@ class EditWindow(QDialog):
 
         key      = self.meta_table.item(rowindex, 0).text().strip()
         value    = self.meta_table.item(rowindex, 1).text().strip()
-        oldvalue = self.target_run['meta'].get(key)
+        oldvalue = self.target_run.meta.get(key)
         if oldvalue is None:
             oldvalue = ''
         if value != oldvalue:
@@ -1396,17 +1407,17 @@ class EditWindow(QDialog):
                 self.meta_table.blockSignals(True)
                 self.meta_table.item(rowindex, 1).setText(value)
                 self.meta_table.blockSignals(False)
-            LOGGER.verbose(f"User sets meta['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
+            LOGGER.verbose(f"User sets meta['{key}'] from '{oldvalue}' to '{value}' for {self.target_run.provenance}")
 
         # Read all the meta-data from the table and store it in the target_run
-        self.target_run['meta'] = {}
+        self.target_run.meta = {}
         for n in range(self.meta_table.rowCount()):
             key_   = self.meta_table.item(n, 0).text().strip()
             value_ = self.meta_table.item(n, 1).text().strip()
             if key_:
                 try: value_ = ast.literal_eval(value_)      # E.g. convert stringified list or int back to list or int
                 except (ValueError, SyntaxError): pass
-                self.target_run['meta'][key_] = value_
+                self.target_run.meta[key_] = value_
             elif value_:
                 QMessageBox.warning(self, 'Input error', f"Please enter a key-name (left cell) for the '{value_}' value in row {n+1}")
 
@@ -1422,28 +1433,28 @@ class EditWindow(QDialog):
         """
 
         # Add a check to see if we can still read the source data
-        if not Path(self.target_run['provenance']).is_file():
-            LOGGER.warning(f"Can no longer find the source file: {self.target_run['provenance']}")
-            QMessageBox.warning(self, 'Edit BIDS mapping', f"Cannot reliably change the datatype and/or suffix because the source file '{self.target_run['provenance']}' can no longer be found.\n\nPlease restore the source data or use the `bidsmapper -s` option to solve this issue. Resetting the run-item now...")
+        if not Path(self.target_run.provenance).is_file():
+            LOGGER.warning(f"Can no longer find the source file: {self.target_run.provenance}")
+            QMessageBox.warning(self, 'Edit BIDS mapping', f"Cannot reliably change the datatype and/or suffix because the source file '{self.target_run.provenance}' can no longer be found.\n\nPlease restore the source data or use the `bidsmapper -s` option to solve this issue. Resetting the run-item now...")
             self.reset()
             return
 
         # Get the new target_run from the template
-        new_target_run = bids.get_run(self.template_bidsmap, self.target_datatype, suffix_idx, self.datasource)
+        new_target_run = self.template_bidsmap.get_run(self.target_datatype, suffix_idx, self.datasource)
         if not new_target_run:
             QMessageBox.warning(self, 'Edit BIDS mapping', f"Cannot find the {self.target_datatype}[{suffix_idx}] datatype in your template. Resetting the run-item now...")
             self.reset()
             return
-        old_entities    = self.target_run['bids']
+        old_entities    = self.target_run.bids
         self.target_run = copy.deepcopy(new_target_run)
 
         # Transfer the old entity data to the new run-item if possible and if it's not there yet
         for key, val in old_entities.items():
-            if val and key in self.target_run['bids'] and not self.target_run['bids'][key]:
-                self.target_run['bids'][key] = val
+            if val and key in self.target_run.bids and not self.target_run.bids[key]:
+                self.target_run.bids[key] = val
 
         # Insert the new target_run in our target_bidsmap
-        bids.update_bidsmap(self.target_bidsmap, self.current_datatype, self.target_run)
+        self.target_bidsmap.update(self.current_datatype, self.target_run)
 
         # Now that we have updated the bidsmap, we can also update the current_datatype
         self.current_datatype = self.target_datatype
@@ -1456,7 +1467,7 @@ class EditWindow(QDialog):
 
         self.target_datatype = self.datatype_dropdown.currentText()
 
-        LOGGER.verbose(f"User changes the BIDS data type from '{self.current_datatype}' to '{self.target_datatype}' for {self.target_run['provenance']}")
+        LOGGER.verbose(f"User changes the BIDS data type from '{self.current_datatype}' to '{self.target_datatype}' for {self.target_run.provenance}")
 
         self.change_run(0)
 
@@ -1465,7 +1476,7 @@ class EditWindow(QDialog):
 
         target_suffix = self.suffix_dropdown.currentText()
 
-        LOGGER.verbose(f"User changes the BIDS suffix from '{self.target_run['bids'].get('suffix')}' to '{target_suffix}' for {self.target_run['provenance']}")
+        LOGGER.verbose(f"User changes the BIDS suffix from '{self.target_run.bids.get('suffix')}' to '{target_suffix}' for {self.target_run.provenance}")
 
         self.change_run(target_suffix)
 
@@ -1473,7 +1484,7 @@ class EditWindow(QDialog):
         """Updates the bidsname with the current (edited) bids values"""
 
         ignore   = bids.check_ignore(self.target_datatype,self.bidsignore) or self.target_datatype in self.ignoredatatypes
-        bidsname = (Path(self.target_datatype)/bids.get_bidsname(self.subid, self.sesid, self.target_run, not ignore)).with_suffix('.*')
+        bidsname = (Path(self.target_datatype)/self.target_run.bidsname(self.subid, self.sesid, not ignore)).with_suffix('.*')
 
         font = self.bidsname_textbox.font()
         if bids.check_ignore(self.target_datatype, self.bidsignore) or bids.check_ignore(bidsname.name, self.bidsignore, 'file'):
@@ -1488,7 +1499,7 @@ class EditWindow(QDialog):
             self.bidsname_textbox.setToolTip(f"Gray/Strike-out: This '{self.target_datatype}' data type will be ignored and not converted BIDS. Click 'OK' if you want your BIDS output data to look like this")
             self.bidsname_textbox.setTextColor(QtGui.QColor('gray'))
             font.setStrikeOut(True)
-        elif not all(bids.check_run(self.target_datatype, self.target_run, checks=(False, True, True))[1:3]):
+        elif not all(self.target_run.check(self.target_datatype, checks=(False, True, True))[1:3]):
             self.bidsname_textbox.setToolTip(f"Red: This name is not valid according to the BIDS standard -- see terminal output for more info")
             self.bidsname_textbox.setTextColor(QtGui.QColor('red'))
             font.setStrikeOut(False)
@@ -1533,7 +1544,7 @@ class EditWindow(QDialog):
 
         # Check if the bidsname is valid
         bidsname  = Path(self.bidsname_textbox.toPlainText())
-        validrun  = False not in bids.check_run(self.target_datatype, self.target_run, checks=(False, False, False))[1:3]
+        validrun  = False not in self.target_run.check(self.target_datatype, checks=(False, False, False))[1:3]
         bidsvalid = validrun
         if not (bids.check_ignore(self.target_datatype,self.bidsignore) or bids.check_ignore(bidsname.name,self.bidsignore,'file') or self.target_datatype in self.ignoredatatypes):
             for ext in extensions:      # NB: `ext` used to be '.json', which is more generic (but see https://github.com/bids-standard/bids-validator/issues/2113)
@@ -1547,9 +1558,9 @@ class EditWindow(QDialog):
             message = f'The run-item does not seem to be valid but the "{bidsname}" name does pass the bids-validator test'
         elif not validrun:
             message = f'The "{bidsname}" name is not valid according to the BIDS standard'
-        elif self.target_datatype=='fmap' and not (self.target_run['meta'].get('B0FieldSource') or
-                                                   self.target_run['meta'].get('B0FieldIdentifier') or
-                                                   self.target_run['meta'].get('IntendedFor')):
+        elif self.target_datatype=='fmap' and not (self.target_run.meta.get('B0FieldSource') or
+                                                   self.target_run.meta.get('B0FieldIdentifier') or
+                                                   self.target_run.meta.get('IntendedFor')):
             message = f'The "B0FieldIdentifier/IntendedFor" meta-data is left empty for {bidsname} (not recommended)'
         if message:
             answer = QMessageBox.question(self, 'Edit BIDS mapping', f'WARNING:\n{message}\n\nDo you want to go back and edit the run?',
@@ -1558,12 +1569,10 @@ class EditWindow(QDialog):
             LOGGER.warning(message)
 
         LOGGER.verbose(f'User approves the edit')
-        if re.sub('<(?!.*<).*? object at .*?>','',str(self.target_run)) != re.sub('<(?!.*<).*? object at .*?>','',str(self.source_run)):    # Ignore the memory address of the datasource object
-            bids.update_bidsmap(self.target_bidsmap, self.current_datatype, self.target_run)
-
+        if self.target_run != self.source_run:
+            self.target_bidsmap.update(self.current_datatype, self.target_run)
             self.done_edit.emit(self.target_bidsmap, self.dataformat)
             self.done(1)
-
         else:
             self.done(2)
 
@@ -1574,10 +1583,9 @@ class EditWindow(QDialog):
                                                   str(bidsmap_template), 'YAML Files (*.yaml *.yml);;All Files (*)')
         if yamlfile:
             LOGGER.info(f'Exporting run item: bidsmap[{self.dataformat}][{self.target_datatype}] -> {yamlfile}')
-            yamlfile   = Path(yamlfile)
-            bidsmap, _ = bids.load_bidsmap(yamlfile, checks=(False, False, False))
-            bids.insert_run(bidsmap, self.target_run)
-            bids.save_bidsmap(yamlfile, bidsmap)
+            bidsmap = BidsMap(Path(yamlfile), checks=(False, False, False))
+            bidsmap.insert_run(self.target_run)
+            bidsmap.save()
             QMessageBox.information(self, 'Edit BIDS mapping', f"Successfully exported:\n\nbidsmap[{self.dataformat}][{self.target_datatype}] -> {yamlfile}")
 
     def inspect_sourcefile(self, rowindex: int=None, colindex: int=None):
@@ -1585,9 +1593,9 @@ class EditWindow(QDialog):
 
         if colindex in (0,2):
             if rowindex == 0:
-                QtGui.QDesktopServices.openUrl(QtCore.QUrl.fromLocalFile(str(Path(self.target_run['provenance']).parent)))
+                QtGui.QDesktopServices.openUrl(QtCore.QUrl.fromLocalFile(str(Path(self.target_run.provenance).parent)))
             if rowindex == 1:
-                self.popup = InspectWindow(Path(self.target_run['provenance']))
+                self.popup = InspectWindow(Path(self.target_run.provenance))
                 self.popup.show()
                 self.popup.scrollbar.setValue(0)  # This can only be done after self.popup.show()
 
@@ -1616,7 +1624,7 @@ class EditWindow(QDialog):
 
 class CompareWindow(QDialog):
 
-    def __init__(self, runs: List[Run], subid: List[str], sesid: List[str]):
+    def __init__(self, runs: List[RunItem], subid: List[str], sesid: List[str]):
         super().__init__()
 
         # Set up the window
@@ -1637,7 +1645,7 @@ class CompareWindow(QDialog):
             properties_label.setToolTip('The filesystem properties that match with (identify) the source file')
             properties_table = self.fill_table(data_properties, 'properties')
             properties_table.setToolTip('The filesystem property that matches with the source file')
-            properties_table.cellDoubleClicked.connect(partial(self.inspect_sourcefile, run['provenance']))
+            properties_table.cellDoubleClicked.connect(partial(self.inspect_sourcefile, run.provenance))
 
             # Set up the attributes table
             attributes_label = QLabel('Attributes')
@@ -1657,8 +1665,8 @@ class CompareWindow(QDialog):
             meta_table = self.fill_table(data_meta, 'meta', minimum=False)
             meta_table.setToolTip('The key-value pair that will be appended to the (e.g. dcm2niix-produced) json sidecar file')
 
-            bidsname = bids.get_bidsname(subid[index], sesid[index], run, False) + '.*'
-            groupbox = QGroupBox(f"{run['datasource'].datatype}/{bidsname}")
+            bidsname = run.bidsname(subid[index], sesid[index], False) + '.*'
+            groupbox = QGroupBox(f"{run.datatype}/{bidsname}")
             layout   = QVBoxLayout()
             layout.addWidget(properties_label)
             layout.addWidget(properties_table)
@@ -1675,38 +1683,40 @@ class CompareWindow(QDialog):
 
         self.show()
 
-    def run2data(self, run) -> tuple:
+    @staticmethod
+    def run2data(run) -> tuple:
         """Derive the tabular data from the target_run, needed to render the compare window
         :return: (data_properties, data_attributes, data_bids, data_meta)
         """
 
-        data_properties = [['filepath', run['properties'].get('filepath'), run['datasource'].properties('filepath')],
-                           ['filename', run['properties'].get('filename'), run['datasource'].properties('filename')],
-                           ['filesize', run['properties'].get('filesize'), run['datasource'].properties('filesize')],
-                           ['nrfiles',  run['properties'].get('nrfiles'),  run['datasource'].properties('nrfiles')]]
+        data_properties = [['filepath', run.properties.get('filepath'), run.datasource.properties('filepath')],
+                           ['filename', run.properties.get('filename'), run.datasource.properties('filename')],
+                           ['filesize', run.properties.get('filesize'), run.datasource.properties('filesize')],
+                           ['nrfiles',  run.properties.get('nrfiles'),  run.datasource.properties('nrfiles')]]
 
         data_attributes = []
-        for key in sorted(run['attributes'].keys()):
-            value = run['attributes'].get(key)
+        for key in sorted(run.attributes.keys()):
+            value = run.attributes.get(key)
             data_attributes.append([key, value])
 
         data_bids = []
         bidskeys = [bids.entities[entity]['name'] for entity in bids.entitiesorder if entity not in ('subject','session')] + ['suffix']   # Impose the BIDS-specified order + suffix
         for key in bidskeys:
-            if key in run['bids']:
-                value = run['bids'].get(key)
+            if key in run.bids:
+                value = run.bids.get(key)
                 if isinstance(value, list):
                     value = value[value[-1]]
                 data_bids.append([key, value])
 
         data_meta = []
-        for key in sorted(run['meta'].keys()):
-            value = run['meta'].get(key)
+        for key in sorted(run.meta.keys()):
+            value = run.meta.get(key)
             data_meta.append([key, value])
 
         return data_properties, data_attributes, data_bids, data_meta
 
-    def fill_table(self, data: list, name: str, minimum: bool=True) -> QTableWidget:
+    @staticmethod
+    def fill_table(data: list, name: str, minimum: bool=True) -> QTableWidget:
         """Return a table widget filled with the data"""
 
         nrcolumns = len(data[0]) if data else 2         # Always at least two columns (i.e. key, value)
@@ -1823,7 +1833,13 @@ class MyWidgetItem(QTableWidgetItem):
 
         super().__init__()
         self.setText(value)
-        self.seteditable(iseditable)
+
+        self.iseditable = iseditable
+        if iseditable:
+            self.setFlags(QtCore.Qt.ItemFlag.ItemIsEnabled | QtCore.Qt.ItemFlag.ItemIsSelectable | QtCore.Qt.ItemFlag.ItemIsEditable)
+        else:
+            self.setFlags(QtCore.Qt.ItemFlag.ItemIsEnabled)
+            self.setForeground(QtGui.QColor('gray'))
 
     def setText(self, p_str):
         """Catch int and None"""
@@ -1833,16 +1849,139 @@ class MyWidgetItem(QTableWidgetItem):
 
         super(MyWidgetItem, self).setText(str(p_str))
 
-    def seteditable(self, iseditable: bool=True):
-        """Make the WidgetItem editable"""
 
-        self.iseditable = iseditable
+def get_propertieshelp(propertieskey: str) -> str:
+    """
+    Reads the description of a matching attributes key in the source dictionary
 
-        if iseditable:
-            self.setFlags(QtCore.Qt.ItemFlag.ItemIsEnabled | QtCore.Qt.ItemFlag.ItemIsSelectable | QtCore.Qt.ItemFlag.ItemIsEditable)
-        else:
-            self.setFlags(QtCore.Qt.ItemFlag.ItemIsEnabled)
-            self.setForeground(QtGui.QColor('gray'))
+    :param propertieskey:   The properties key for which the help text is obtained
+    :return:                The obtained help text
+    """
+
+    # Return the description from the DICOM dictionary or a default text
+    if propertieskey == 'filepath':
+        return 'The path of the source file that is matched against the (regex) pattern'
+    if propertieskey == 'filename':
+        return 'The name of the source file that is matched against the (regex) pattern'
+    if propertieskey == 'filesize':
+        return 'The size of the source file that is matched against the (regex) pattern'
+    if propertieskey == 'nrfiles':
+        return 'The nr of similar files in the folder that matched against the properties (regex) patterns'
+
+    return f"{propertieskey} is not a valid property-key"
+
+
+def get_attributeshelp(attributeskey: str) -> str:
+    """
+    Reads the description of a matching attributes key in the source dictionary
+
+    TODO: implement PAR/REC support
+
+    :param attributeskey:   The attribute key for which the help text is obtained
+    :return:                The obtained help text
+    """
+
+    if not attributeskey:
+        return 'Please provide a key-name'
+
+    # Return the description from the DICOM dictionary or a default text
+    try:
+        return f"{attributeskey}\nThe DICOM '{datadict.dictionary_description(attributeskey)}' attribute"
+
+    except ValueError:
+        return f"{attributeskey}\nAn unknown/private attribute"
+
+
+def get_datatypehelp(datatype: Union[str, DataType]) -> str:
+    """
+    Reads the description of the datatype in the schema/objects/datatypes.yaml file
+
+    :param datatype:    The datatype for which the help text is obtained
+    :return:            The obtained help text
+    """
+
+    datatype = str(datatype)
+
+    if not datatype:
+        return "Please provide a datatype"
+
+    # Return the description for the datatype or a default text
+    if datatype in bids.bidsdatatypesdef:
+        return f"{bids.bidsdatatypesdef[datatype]['display_name']}\n{bids.bidsdatatypesdef[datatype]['description']}"
+
+    return f"{datatype}\nAn unknown/private datatype"
+
+
+def get_suffixhelp(suffix: str, datatype: Union[str, DataType]) -> str:
+    """
+    Reads the description of the suffix in the schema/objects/suffixes.yaml file
+
+    :param suffix:      The suffix for which the help text is obtained
+    :param datatype:    The datatype of the suffix
+    :return:            The obtained help text
+    """
+
+    if not suffix:
+        return "Please provide a suffix"
+
+    isderivative = ''
+    if suffix in bids.get_derivatives(datatype):
+        isderivative = '\nNB: This is a BIDS derivatives datatype'
+
+    # Return the description for the suffix or a default text
+    if suffix in bids.suffixes:
+        return f"{bids.suffixes[suffix]['display_name']}\n{bids.suffixes[suffix]['description']}{isderivative}"
+
+    return f"{suffix}\nAn unknown/private suffix"
+
+
+def get_entityhelp(entitykey: str) -> str:
+    """
+    Reads the description of a matching entity=entitykey in the schema/entities.yaml file
+
+    :param entitykey:   The bids key for which the help text is obtained
+    :return:            The obtained help text
+    """
+
+    if not entitykey:
+        return "Please provide a key-name"
+
+    # Return the description from the entities or a default text
+    for entity in bids.entities:
+        if bids.entities[entity]['name'] == entitykey:
+            return f"{bids.entities[entity]['display_name']}\n{bids.entities[entity]['description']}"
+
+    return f"{entitykey}\nAn unknown/private entity"
+
+
+def get_metahelp(metakey: str) -> str:
+    """
+    Reads the description of a matching schema/metadata/metakey.yaml file
+
+    :param metakey: The meta key for which the help text is obtained
+    :return:        The obtained help text
+    """
+
+    if not metakey:
+        return "Please provide a key-name"
+
+    # Return the description from the metadata file or a default text
+    for field in bids.metafields:
+        if metakey == bids.metafields[field].get('name'):
+            description = bids.metafields[field]['description']
+            if metakey == 'IntendedFor':                            # IntendedFor is a special search-pattern field in BIDScoin
+                description += ('\nNB: These associated files can be dynamically searched for'
+                                '\nduring bidscoiner runtime with glob-style matching patterns,'
+                                '\n"such as <<Reward*_bold><Stop*_epi>>" or <<dwi/*acq-highres*>>'
+                                '\n(see documentation)')
+            if metakey in ('B0FieldIdentifier', 'B0FieldSource'):   # <<session>> is a special dynamic value in BIDScoin
+                description += ('\nNB: The `<<session>>` (sub)string will be replaced by the'
+                                '\nsession label during bidscoiner runtime. In this way you can'
+                                '\ncreate session-specific B0FieldIdentifier/Source tags (recommended)')
+
+            return f"{bids.metafields[field]['display_name']}\n{description}"
+
+    return f"{metakey}\nAn unknown/private meta key"
 
 
 def bidseditor(bidsfolder: str, bidsmap: str='', template: str=bidsmap_template) -> None:
@@ -1865,11 +2004,12 @@ def bidseditor(bidsfolder: str, bidsmap: str='', template: str=bidsmap_template)
     LOGGER.info(f">>> bidseditor bidsfolder={bidsfolder} bidsmap={bidsmapfile} template={templatefile}")
 
     # Obtain the initial bidsmap info
-    template_bidsmap, templatefile = bids.load_bidsmap(templatefile, checks=(True, True, False))
-    input_bidsmap, bidsmapfile     = bids.load_bidsmap(bidsmapfile,  bidsfolder/'code'/'bidscoin')
-    bids.check_template(template_bidsmap)
-    if input_bidsmap.get('Options'):
-        template_bidsmap['Options'] = input_bidsmap['Options']      # Always use the options of the input bidsmap
+    template_bidsmap = BidsMap(templatefile, checks=(True, True, False))
+    input_bidsmap    = BidsMap(bidsmapfile,  bidsfolder/'code'/'bidscoin')
+    template_bidsmap.check_template()
+    if input_bidsmap.options:
+        template_bidsmap.options = input_bidsmap.options    # Always use the options of the input bidsmap
+        template_bidsmap.plugins = input_bidsmap.plugins    # Always use the plugins of the input bidsmap
 
     # Start the Qt-application
     app = QApplication(sys.argv)

@@ -81,27 +81,25 @@ def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: 
 
     # Create a README file if it does not exist
     readme_file = bidsfolder/'README'
-    if not readme_file.is_file():
+    if not (readme_file.is_file() or next(bidsfolder.glob('README.*'))):
         LOGGER.info(f"Creating a template README file (adjust it to your needs): {readme_file}")
         try:
             urllib.request.urlretrieve('https://raw.githubusercontent.com/bids-standard/bids-starter-kit/main/templates/README.MD', readme_file)
         except urllib.error.URLError:
-            readme_file.write_text(
-                f"A free form text ( README ) describing the dataset in more details that SHOULD be provided. For an example, see e.g.:\n"
-                f"https://github.com/bids-standard/bids-starter-kit/blob/main/templates/README.MD\n\n"
-                f"The raw BIDS data was created using BIDScoin {__version__}\n"
-                f"All provenance information and settings can be found in ./code/bidscoin\n"
-                f"For more information see: https://github.com/Donders-Institute/bidscoin\n")
+            readme_file.write_text(f"A free form text ( README ) describing the dataset in more details that SHOULD be provided. For an example, see e.g.:\n"
+                                   f"https://github.com/bids-standard/bids-starter-kit/blob/main/templates/README.MD\n\n"
+                                   f"The raw BIDS data was created using BIDScoin {__version__}\n"
+                                   f"All provenance information and settings can be found in ./code/bidscoin\n"
+                                   f"For more information see: https://github.com/Donders-Institute/bidscoin\n")
 
     # Get the bidsmap heuristics from the bidsmap YAML-file
-    bidsmap, bidsmapfile = bids.load_bidsmap(bidsmapfile, bidscoinfolder)
-    dataformats          = [dataformat for dataformat in bidsmap if dataformat and dataformat not in ('$schema','Options')]
-    if not bidsmap:
+    bidsmap = bids.BidsMap(bidsmapfile, bidscoinfolder)
+    if not bidsmap.filepath.is_file():
         LOGGER.error(f"No bidsmap file found in {bidsfolder}. Please run the bidsmapper first and/or use the correct bidsfolder")
         return
 
     # Load the data conversion plugins
-    plugins = [bcoin.import_plugin(plugin, ('bidscoiner_plugin',)) for plugin,options in bidsmap['Options']['plugins'].items()]
+    plugins = [bcoin.import_plugin(plugin, ('bidscoiner_plugin',)) for plugin,options in bidsmap.plugins.items()]
     plugins = [plugin for plugin in plugins if plugin]          # Filter the empty items from the list
     if not plugins:
         LOGGER.warning(f"The plugins listed in your bidsmap['Options'] did not have a usable `bidscoiner_plugin` function, nothing to do")
@@ -110,7 +108,7 @@ def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: 
         return
 
     # Append options to the .bidsignore file
-    bidsignore_items = bidsmap['Options']['bidscoin']['bidsignore']
+    bidsignore_items = bidsmap.options['bidsignore']
     bidsignore_file  = bidsfolder/'.bidsignore'
     if bidsignore_items:
         LOGGER.verbose(f"Writing {bidsignore_items} entries to {bidsignore_file}")
@@ -121,8 +119,8 @@ def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: 
                 bidsignore.write(item + '\n')
 
     # Get the list of subjects
-    subprefix = bidsmap['Options']['bidscoin']['subprefix'].replace('*','')
-    sesprefix = bidsmap['Options']['bidscoin']['sesprefix'].replace('*','')
+    subprefix = bidsmap.options['subprefix'].replace('*','')
+    sesprefix = bidsmap.options['sesprefix'].replace('*','')
     if not participant:
         subjects = lsdirs(rawfolder, (subprefix if subprefix!='*' else '') + '*')
         if not subjects:
@@ -151,7 +149,7 @@ def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: 
             for subject in subjects:
 
                 # Check if we should skip the session-folder
-                datasource = bids.get_datasource(subject, bidsmap['Options']['plugins'])
+                datasource = bids.get_datasource(subject, bidsmap.plugins)
                 subid,_    = datasource.subid_sesid(bidsmap[datasource.dataformat]['subject'], bidsmap[datasource.dataformat]['session'])
                 if (bidsfolder/subid).is_dir() and not force:
                     LOGGER.info(f">>> Skipping already processed subject: {bidsfolder/subid} (you can use the -f option to overrule)")
@@ -257,11 +255,11 @@ def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: 
             for session in sessions:
 
                 # Unpack the data in a temporary folder if it is tarballed/zipped and/or contains a DICOMDIR file
-                sesfolders, unpacked = bids.unpack(session, bidsmap['Options']['bidscoin'].get('unzip',''))
+                sesfolders, unpacked = bids.unpack(session, bidsmap.options.get('unzip',''))
                 for sesfolder in sesfolders:
 
                     # Check if we should skip the session-folder
-                    datasource = bids.get_datasource(sesfolder, bidsmap['Options']['plugins'])
+                    datasource = bids.get_datasource(sesfolder, bidsmap.plugins)
                     if not datasource.dataformat:
                         LOGGER.info(f">>> No datasources found in '{sesfolder}'")
                         continue

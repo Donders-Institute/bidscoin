@@ -57,7 +57,7 @@ class TestDataSource:
         return bids.DataSource(ext_dcm_file, {'dcm2niix2bids': Plugin({})}, 'DICOM')
 
     def test_is_datasource(self, datasource):
-        assert datasource.is_datasource
+        assert datasource.has_plugin()
         assert datasource.dataformat == 'DICOM'
 
     def test_properties(self, datasource):
@@ -122,7 +122,7 @@ def test_get_dicomfile(dcm_file, dicomdir):
 
 def test_get_datasource(dicomdir):
     datasource = bids.get_datasource(dicomdir.parent, {'dcm2niix2bids': Plugin({})})
-    assert datasource.is_datasource
+    assert datasource.has_plugin()
     assert datasource.dataformat == 'DICOM'
 
 

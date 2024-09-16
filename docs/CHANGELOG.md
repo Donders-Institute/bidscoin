@@ -199,7 +199,7 @@
 - The option to remove decimals from age and discard acquisition dates from the metadata
 
 ### Changed
-- Plugins should now have a `is_sourcefile` and a `get_attribute` function and have a simpler/changed API (-> DataSource class)
+- Plugins should now have a `has_support` and a `get_attribute` function and have a simpler/changed API (-> DataSource class)
 - The intricate filtering of the `nrfiles` property by the other filesystem properties has been removed and is now a pure/unfiltered file-system property
 - The default `<<SourceFilePath>>` keyword has been replaced by the more flexible <\<filepath:/sub-(.*?)/>> property to extract the subject/session label
 - The dcm2bidsmap and the dcm2niix2bids plugins have been merged

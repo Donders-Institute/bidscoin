@@ -12,8 +12,8 @@ def test_bidsmapper(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir, subprefix, se
     resubprefix = '' if subprefix=='*' else re.escape(subprefix).replace(r'\-','-')
     resesprefix = '' if sesprefix=='*' else re.escape(sesprefix).replace(r'\-','-')
     bidsmap     = bidsmapper.bidsmapper(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir, bidsmap_template, [], subprefix, sesprefix, unzip='', store=store, automated=True, force=True)
-    assert bidsmap['Options']['bidscoin']['subprefix'] == subprefix
-    assert bidsmap['Options']['bidscoin']['sesprefix'] == sesprefix
+    assert bidsmap.options['subprefix'] == subprefix
+    assert bidsmap.options['sesprefix'] == sesprefix
     assert bidsmap['DICOM']['subject']                 == f"<<filepath:/{raw_dicomdir.name}/{resubprefix}(.*?)/>>"
     assert bidsmap['DICOM']['session']                 == f"<<filepath:/{raw_dicomdir.name}/{resubprefix}.*?/{resesprefix}(.*?)/>>"
     assert len(bidsmap['DICOM']['exclude'])            > 1

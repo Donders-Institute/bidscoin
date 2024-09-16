@@ -49,7 +49,7 @@ As can be seen in the API code snippet below (but also see the default plugins f
    are expected to be present:
 
    - test:                 A test function for the plugin + its bidsmap options. Can be called by the user from the bidseditor and the bidscoin utility
-   - is_sourcefile:        A function to assess whether a source file is supported by the plugin. The return value should correspond to a data format section in the bidsmap
+   - has_support:        A function to assess whether a source file is supported by the plugin. The return value should correspond to a data format section in the bidsmap
    - get_attribute:        A function to read an attribute value from a source file
    - bidsmapper_plugin:    A function to discover BIDS-mappings in a source data session
    - bidscoiner_plugin:    A function to convert a single source data session to bids according to the specified BIDS-mappings
@@ -148,7 +148,7 @@ As can be seen in the API code snippet below (but also see the default plugins f
        return 0
 
 
-   def is_sourcefile(file: Path) -> str:
+   def has_support(file: Path) -> str:
        """
        This plugin function assesses whether a sourcefile is of a supported dataformat
 
@@ -158,7 +158,7 @@ As can be seen in the API code snippet below (but also see the default plugins f
 
        if file.is_file():
 
-           LOGGER.verbose(f'This is a demo-plugin is_sourcefile routine, assessing whether "{file}" has a valid dataformat')
+           LOGGER.verbose(f'This is a demo-plugin has_support routine, assessing whether "{file}" has a valid dataformat')
            return 'dataformat' if file == 'supportedformat' else ''
 
         return ''

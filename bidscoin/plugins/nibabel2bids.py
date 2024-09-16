@@ -5,14 +5,13 @@ of data formats into NIfTI-files. Currently, the default template bidsmap is tai
 import logging
 import dateutil.parser
 import json
-import shutil
 import pandas as pd
 import nibabel as nib
 from bids_validator import BIDSValidator
 from typing import Union
 from pathlib import Path
 from bidscoin import bids
-from bidscoin.bids import Bidsmap, Plugin
+from bidscoin.bids import BidsMap, Plugin, Plugins
 
 try:
     from nibabel.testing import data_path
@@ -31,7 +30,7 @@ def test(options: Plugin=OPTIONS) -> int:
     """
     Performs a nibabel test
 
-    :param options: A dictionary with the plugin options, e.g. taken from the bidsmap['Options']['plugins']['nibabel2bids']
+    :param options: A dictionary with the plugin options, e.g. taken from the bidsmap.plugins['nibabel2bids']
     :return:        The errorcode: 0 for successful execution, 1 for general tool errors, 2 for `ext` option errors, 3 for `meta` option errors
     """
 
@@ -50,7 +49,7 @@ def test(options: Plugin=OPTIONS) -> int:
             return 3
 
         niifile = Path(data_path)/'anatomical.nii'
-        assert is_sourcefile(niifile) == 'Nibabel'
+        assert has_support(niifile) == 'Nibabel'
         assert str(get_attribute('Nibabel', niifile, 'descrip', options)) == "b'spm - 3D normalized'"
 
     except Exception as nibabelerror:
@@ -61,13 +60,17 @@ def test(options: Plugin=OPTIONS) -> int:
     return 0
 
 
-def is_sourcefile(file: Path) -> str:
+def has_support(file: Path, dataformat: Union[DataFormat, str]='') -> str:
     """
-    This plugin function supports assessing whether the file is a valid sourcefile
+    This plugin function assesses whether a sourcefile is of a supported dataformat
 
-    :param file:    The file that is assessed
-    :return:        The valid dataformat of the file for this plugin
+    :param file:        The sourcefile that is assessed
+    :param dataformat:  The requested dataformat (optional requirement)
+    :return:            The valid/supported dataformat of the sourcefile
     """
+
+    if dataformat and dataformat != 'Nibabel':
+        return ''
 
     ext = ''.join(file.suffixes)
     if file.is_file() and ext.lower() in sum((klass.valid_exts for klass in nib.imageclasses.all_image_classes), ('.nii.gz',)):
@@ -83,7 +86,7 @@ def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: Pl
     :param dataformat:  The bidsmap-dataformat of the sourcefile, e.g. DICOM of PAR
     :param sourcefile:  The sourcefile from which the attribute value should be read
     :param attribute:   The attribute key for which the value should be read
-    :param options:     A dictionary with the plugin options, e.g. taken from the bidsmap['Options']['plugins']
+    :param options:     A dictionary with the plugin options, e.g. taken from the bidsmap.plugins
     :return:            The attribute value
     """
 
@@ -102,7 +105,7 @@ def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: Pl
     return value
 
 
-def bidsmapper_plugin(session: Path, bidsmap_new: Bidsmap, bidsmap_old: Bidsmap, template: Bidsmap, store: dict) -> None:
+def bidsmapper_plugin(session: Path, bidsmap_new: BidsMap, bidsmap_old: BidsMap, template: BidsMap) -> None:
     """
     All the logic to map the Nibabel header fields onto bids labels go into this function
 
@@ -110,55 +113,46 @@ def bidsmapper_plugin(session: Path, bidsmap_new: Bidsmap, bidsmap_old: Bidsmap,
     :param bidsmap_new: The new study bidsmap that we are building
     :param bidsmap_old: The previous study bidsmap that has precedence over the template bidsmap
     :param template:    The template bidsmap with the default heuristics
-    :param store:       The paths of the source- and target-folder
     :return:
     """
 
     # Get started
-    plugins    = {'nibabel2bids': Plugin(bidsmap_new['Options']['plugins']['nibabel2bids'])}
+    plugins    = Plugins({'nibabel2bids': bidsmap_new.plugins['nibabel2bids']})
     datasource = bids.get_datasource(session, plugins, recurse=2)
     if not datasource.dataformat:
         return
-    if not (template[datasource.dataformat] or bidsmap_old[datasource.dataformat]):
+    if not (template.dataformat(datasource.dataformat) or bidsmap_old[datasource.dataformat]):
         LOGGER.error(f"No {datasource.dataformat} source information found in the bidsmap and template")
         return
 
     # Collect the different DICOM/PAR source files for all runs in the session
-    for sourcefile in [file for file in session.rglob('*') if is_sourcefile(file)]:
+    for sourcefile in [file for file in session.rglob('*') if has_support(file)]:
 
         # See if we can find a matching run in the old bidsmap
         datasource = bids.DataSource(sourcefile, plugins, datasource.dataformat)
-        run, match = bids.get_matching_run(datasource, bidsmap_old)
+        run, match = bidsmap_old.get_matching_run(datasource)
 
         # If not, see if we can find a matching run in the template
         if not match:
-            run, _ = bids.get_matching_run(datasource, template)
+            run, _ = template.get_matching_run(datasource)
 
         # See if we have collected the run somewhere in our new bidsmap
-        if not bids.exist_run(bidsmap_new, '', run):
+        if not bidsmap_new.exist_run(run):
 
             # Communicate with the user if the run was not present in bidsmap_old or in template, i.e. that we found a new sample
             if not match:
-                LOGGER.info(f"Discovered '{datasource.datatype}' {datasource.dataformat} sample: {sourcefile}")
+                LOGGER.info(f"Discovered data sample: {datasource}")
             else:
-                LOGGER.bcdebug(f"Known '{datasource.datatype}' {datasource.dataformat} sample: {sourcefile}")
-
-            # Now work from the provenance store
-            if store:
-                targetfile             = store['target']/sourcefile.relative_to(store['source'])
-                targetfile.parent.mkdir(parents=True, exist_ok=True)
-                LOGGER.verbose(f"Storing the discovered {datasource.dataformat} sample as: {targetfile}")
-                run['provenance']      = str(shutil.copyfile(sourcefile, targetfile))
-                run['datasource'].path = targetfile
+                LOGGER.bcdebug(f"Known data sample: {datasource}")
 
             # Copy the filled-in run over to the new bidsmap
-            bids.insert_run(bidsmap_new, run)
+            bidsmap_new.insert_run(run)
 
         else:
-            LOGGER.bcdebug(f"Existing/duplicate '{datasource.datatype}' {datasource.dataformat} sample: {sourcefile}")
+            LOGGER.bcdebug(f"Existing/duplicate sample: {datasource}")
 
 
-def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> None:
+def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> None:
     """
     The bidscoiner plugin to convert the session Nibabel source-files into BIDS-valid NIfTI-files in the
     corresponding bids session-folder
@@ -174,10 +168,10 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> None:
     sesid = bidsses.name if bidsses.name.startswith('ses-') else ''
 
     # Get started
-    options     = bidsmap['Options']['plugins']['nibabel2bids']
+    options     = bidsmap._data['Options']['plugins']['nibabel2bids']
     ext         = options.get('ext', '')
     meta        = options.get('meta', [])
-    sourcefiles = [file for file in session.rglob('*') if is_sourcefile(file)]
+    sourcefiles = [file for file in session.rglob('*') if has_support(file)]
     if not sourcefiles:
         LOGGER.info(f"--> No {__name__} sourcedata found in: {session}")
         return
@@ -194,11 +188,11 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> None:
     for source in sourcefiles:
 
         datasource = bids.DataSource(source, {'nibabel2bids':options})
-        run, runid = bids.get_matching_run(datasource, bidsmap, runtime=True)
+        run, runid = bidsmap.get_matching_run(datasource, runtime=True)
 
         # Check if we should ignore this run
-        if datasource.datatype in bidsmap['Options']['bidscoin']['ignoretypes']:
-            LOGGER.info(f"--> Leaving out: {source}")
+        if datasource.datatype in bidsmap.options['ignoretypes']:
+            LOGGER.info(f"--> Leaving out: {datasource}")
             bids.bidsprov(bidsses, source, runid, datasource.datatype)              # Write out empty provenance data
             continue
 
@@ -208,16 +202,16 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> None:
             bids.bidsprov(bidsses, source)                      # Write out empty provenance data
             continue
 
-        LOGGER.info(f"--> Coining: {source}")
+        LOGGER.info(f"--> Coining: {datasource}")
 
         # Create the BIDS session/datatype output folder
         outfolder = bidsses/datasource.datatype
         outfolder.mkdir(parents=True, exist_ok=True)
 
         # Compose the BIDS filename using the matched run
-        bidsignore = bids.check_ignore(datasource.datatype, bidsmap['Options']['bidscoin']['bidsignore'])
+        bidsignore = bids.check_ignore(datasource.datatype, bidsmap.options['bidsignore'])
         bidsname   = bids.get_bidsname(subid, sesid, run, not bidsignore, runtime=True)
-        bidsignore = bidsignore or bids.check_ignore(bidsname+'.json', bidsmap['Options']['bidscoin']['bidsignore'], 'file')
+        bidsignore = bidsignore or bids.check_ignore(bidsname+'.json', bidsmap.options['bidsignore'], 'file')
         bidsname   = bids.increment_runindex(outfolder, bidsname, run, scans_table)
         target     = (outfolder/bidsname).with_suffix(ext)
 
