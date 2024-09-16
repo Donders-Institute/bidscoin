@@ -21,8 +21,6 @@ from fnmatch import fnmatch
 from functools import lru_cache
 from pathlib import Path
 from typing import List, Set, Tuple, Union, Dict, Any, Iterable, NewType
-
-from numpy.f2py.f90mod_rules import options
 from pydicom import dcmread, fileset
 from importlib.util import find_spec
 if find_spec('bidscoin') is None:
@@ -84,15 +82,15 @@ class DataSource:
         :param options:     A (bidsmap) dictionary with 'subprefix' and 'sesprefix' fields
         """
 
-        self.path        = Path(sourcefile)
+        self.path        = Path(sourcefile or '')
         """The full path of a representative file for this data source"""
         self.dataformat  = dataformat
         """The dataformat name of the plugin that interacts with the data source, e.g. DICOM or PAR"""
         self.plugins     = plugins or {}
         """The plugins that are used to interact with the source data type"""
-        self.subprefix   = options['subprefix'] or ''
+        self.subprefix   = options['subprefix'] if options else ''
         """The subprefix used in the sourcefolder"""
-        self.sesprefix   = options['sesprefix'] or ''
+        self.sesprefix   = options['sesprefix'] if options else ''
         """The sesprefix used in the sourcefolder"""
         self._cache      = {}
 
@@ -953,10 +951,8 @@ class BidsMap:
 
                     # Add default data dictionaries if they are missing (e.g. "meta" or "properties")
                     for attr in ('properties', 'attributes', 'bids', 'meta'):
-                        datadict = getattr(runitem, attr)
-                        for key, val in getattr(runitem_, attr).items():
-                            if not datadict.get(key):
-                                datadict[key] = val
+                        datadict  = getattr(runitem,  attr)
+                        datadict  = datadict or getattr(runitem_, attr)
 
                     # Add missing bids entities
                     suffix = runitem.bids.get('suffix')
