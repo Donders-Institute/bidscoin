@@ -375,7 +375,7 @@ class RunItem:
         super().__setattr__('_data', data or {'provenance': '', 'properties': {}, 'attributes': {}, 'meta': {}})
 
         # Set the regular attributes
-        self.datasource = datasource = copy.deepcopy(datasource) if datasource else DataSource(self.provenance, plugins, dataformat, options)
+        self.datasource = datasource = copy.deepcopy(datasource) if datasource else DataSource(data.get('provenance') if data else '', plugins, dataformat, options)
         """The DataSource object that is deepcopied or created from the run-item provenance"""
         datasource.subprefix = options['subprefix'] if options else datasource.subprefix
         datasource.sesprefix = options['sesprefix'] if options else datasource.sesprefix
@@ -389,7 +389,7 @@ class RunItem:
         """The plugin dictionaries with their options"""
 
         # Set the default data attributes
-        self.provenance = data['provenance'] if data else str(datasource.path)
+        self.provenance = data.get('provenance','') if data else str(datasource.path)
         """The file path of the data source"""
         self.properties = Properties({'filepath': '', 'filename': '', 'filesize': '', 'nrfiles': None})
         """The file system properties from the data source that can be matched against other data sources"""
@@ -713,6 +713,10 @@ class DataType:
         else:
             return NotImplemented
 
+    def __hash__(self):
+
+        return hash(self.datatype)
+
     @property
     def runitems(self) -> List[RunItem]:
         """Returns a list of the RunItem objects for this datatype"""
@@ -804,6 +808,10 @@ class DataFormat:
             return str(self) == str(other)
         else:
             return NotImplemented
+
+    def __hash__(self):
+
+        return hash(self.datatype)
 
     @property
     def subject(self) -> str:
@@ -930,7 +938,6 @@ class BidsMap:
         """Gets a list of the DataFormat objects in the bidsmap (e.g. DICOM)"""
 
         # Add missing provenance info, run dictionaries and bids entities
-        runitem_ = RunItem()
         for dataformat in self.dataformats:
             for datatype in dataformat.datatypes:
                 for index, runitem in enumerate(datatype.runitems or []):
@@ -948,11 +955,6 @@ class BidsMap:
                                 if store.is_file():
                                     LOGGER.bcdebug(f"Updating provenance: {provenance} -> {store}")
                                     runitem.provenance = str(store)
-
-                    # Add default data dictionaries if they are missing (e.g. "meta" or "properties")
-                    for attr in ('properties', 'attributes', 'bids', 'meta'):
-                        datadict  = getattr(runitem,  attr)
-                        datadict  = datadict or getattr(runitem_, attr)
 
                     # Add missing bids entities
                     suffix = runitem.bids.get('suffix')
