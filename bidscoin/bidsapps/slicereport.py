@@ -50,7 +50,7 @@ def parse_options(options: list) -> str:
     for n, option in enumerate(options):
         if options[n-1] == 'l': continue                  # Skip checking the LUT string
         if not (option in ('L','l','i','e','t','n','u','s','c') or option.replace('.','').replace('-','').isdecimal()):
-            print(f"Invalid OPTIONS: {' '.join(options)}"); sys.exit(2)
+            raise SystemExit(f"[ERROR] Invalid OPTIONS: {' '.join(options)}")
         if option.isalpha():
             options[n] = '-' + options[n]
 
@@ -68,18 +68,18 @@ def parse_outputs(outputargs: list, name: str) -> tuple:
     isnumber = lambda arg: arg.replace('.','').replace('-','').isdecimal()
     for n, outputarg in enumerate(outputargs):
         if not (outputarg in ('x', 'y', 'z', 'a', 'A', 'S', 'LF') or isnumber(outputarg)):
-            print(f"Invalid {name}: '{outputarg}' in '{' '.join(outputargs)}'"); sys.exit(2)
+            raise SystemExit(f"[ERROR] Invalid {name}: '{outputarg}' in '{' '.join(outputargs)}'")
         if outputarg.isalpha() and outputarg != 'LF':
             slices += f"{'' if n==0 else '-' if outputargs[n-1]=='LF' else '+'} slice_tmp{n}.png "
             if outputarg == 'a':
                 outputs += f"-{outputarg} slice_tmp{n}.png "
             elif outputarg in ('x', 'y', 'z', 'A'):
                 if not isnumber(outputargs[n+1]):
-                    print(f"Invalid {name}: '{outputargs[n+1]}' in '{' '.join(outputargs)}'"); sys.exit(2)
+                    raise SystemExit(f"[ERROR] Invalid {name}: '{outputargs[n+1]}' in '{' '.join(outputargs)}'")
                 outputs += f"-{outputarg} {outputargs[n+1]} slice_tmp{n}.png "
             elif outputarg == 'S':
                 if not (isnumber(outputargs[n+1]) and isnumber(outputargs[n+2])):
-                    print(f"Invalid {name}: {outputarg} >> '{' '.join(outputargs)}'"); sys.exit(2)
+                    raise SystemExit(f"[ERROR] Invalid {name}: {outputarg} >> '{' '.join(outputargs)}'")
                 outputs += f"-{outputarg} {outputargs[n+1]} {outputargs[n+2]} slice_tmp{n}.png "
 
     return outputs, slices
@@ -135,7 +135,7 @@ def slicer_append(inputimage: Path, operations: str, outlineimage: Path, mainopt
         if process.stderr or process.returncode != 0:
             LOGGER.warning(f"{command}\nErrorcode {process.returncode}:\n{process.stdout}\n{process.stderr}")
         if process.returncode != 0:
-            sys.exit(process.returncode)
+            raise SystemExit(process.returncode)
 
 
 def slicereport(bidsfolder: str, pattern: str, outlinepattern: str, outlineimage: str, participant: list, reportfolder: str, xlinkfolder: str, qcscores: list, cluster: str, operations: str, suboperations: str, options: list, outputs: list, suboptions: list, suboutputs: list):
@@ -330,9 +330,9 @@ def main():
     try:
         slicereport(**vars(args))
 
-    except Exception:
+    except Exception as error:
         trackusage('slicereport_exception')
-        raise
+        raise error
 
 
 if __name__ == '__main__':

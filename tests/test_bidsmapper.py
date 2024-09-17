@@ -1,6 +1,7 @@
 import pytest
 import re
 from bidscoin import bcoin, bidsmapper, bidsmap_template
+from pathlib import Path
 
 bcoin.setup_logging()
 
@@ -14,11 +15,11 @@ def test_bidsmapper(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir, subprefix, se
     bidsmap     = bidsmapper.bidsmapper(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir, bidsmap_template, [], subprefix, sesprefix, unzip='', store=store, automated=True, force=True)
     assert bidsmap.options['subprefix'] == subprefix
     assert bidsmap.options['sesprefix'] == sesprefix
-    assert bidsmap['DICOM']['subject']                 == f"<<filepath:/{raw_dicomdir.name}/{resubprefix}(.*?)/>>"
-    assert bidsmap['DICOM']['session']                 == f"<<filepath:/{raw_dicomdir.name}/{resubprefix}.*?/{resesprefix}(.*?)/>>"
-    assert len(bidsmap['DICOM']['exclude'])            > 1
-    for run in bidsmap['DICOM']['exclude']:
-        assert 'LOCALIZER' in run['attributes']['SeriesDescription'] or 'DERIVED' in run['attributes']['ImageType']
+    assert bidsmap.dataformat('DICOM').subject                           == f"<<filepath:/{raw_dicomdir.name}/{resubprefix}(.*?)/>>"
+    assert bidsmap.dataformat('DICOM').session                           == f"<<filepath:/{raw_dicomdir.name}/{resubprefix}.*?/{resesprefix}(.*?)/>>"
+    assert len(bidsmap.dataformat('DICOM').datatype('exclude').runitems) > 1
+    for run in bidsmap.dataformat('DICOM').datatype('exclude').runitems:
+        assert 'LOCALIZER' in run.attributes['SeriesDescription'] or 'DERIVED' in run.attributes['ImageType']
     assert bidsmap_dicomdir.is_file()
     assert 'Doe^Archibald' in bidsmap_dicomdir.read_text()                                      # Make sure we have discovered `Archibald` samples (-> provenance)
     assert 'Doe^Peter' in bidsmap_dicomdir.read_text()                                          # Make sure we have discovered `Peter` samples (-> provenance)

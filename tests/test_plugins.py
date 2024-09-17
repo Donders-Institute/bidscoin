@@ -9,12 +9,12 @@ import inspect
 from bidscoin import bcoin, bids, bidsmap_template
 
 bcoin.setup_logging()
-template, _ = bids.load_bidsmap(bidsmap_template, checks=(False, False, False))
+template = bids.BidsMap(bidsmap_template, checks=(False, False, False))
 
 
 # Test all plugins using the template & default options
 @pytest.mark.parametrize('plugin', bcoin.list_plugins()[0])
-@pytest.mark.parametrize('options', [template['Options']['plugins'], {}])
+@pytest.mark.parametrize('options', [template.plugins, {}])
 def test_plugin(plugin, options):
 
     # First test to see if we can import the plugin

@@ -216,9 +216,9 @@ def main():
     try:
         sortsessions(**vars(args))
 
-    except Exception:
+    except Exception as error:
         trackusage('dicomsort_exception')
-        raise
+        raise error
 
 
 if __name__ == "__main__":

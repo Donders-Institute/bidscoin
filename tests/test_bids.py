@@ -4,14 +4,13 @@ import pytest
 import shutil
 import re
 import json
-import ruamel.yaml.comments
 from datetime import datetime, timedelta
 from importlib.util import find_spec
 from pathlib import Path
 from nibabel.testing import data_path
 from pydicom.data import get_testdata_file
 from bidscoin import bcoin, bids, bidsmap_template
-from bidscoin.bids import Run, Plugin, Meta
+from bidscoin.bids import BidsMap, RunItem, DataSource, Plugin, Meta
 
 bcoin.setup_logging()
 
@@ -47,14 +46,14 @@ class TestDataSource:
 
     @pytest.fixture()
     def datasource(self, dcm_file):
-        return bids.DataSource(dcm_file, {'dcm2niix2bids': Plugin({})}, 'DICOM')
+        return DataSource(dcm_file, {'dcm2niix2bids': Plugin({})}, 'DICOM')
 
     @pytest.fixture()
     def extdatasource(self, dcm_file, tmp_path):
         ext_dcm_file = shutil.copyfile(dcm_file, tmp_path/dcm_file.name)
         with ext_dcm_file.with_suffix('.json').open('w') as sidecar:
             json.dump({'PatientName': 'ExtendedAttributesTest'}, sidecar)
-        return bids.DataSource(ext_dcm_file, {'dcm2niix2bids': Plugin({})}, 'DICOM')
+        return DataSource(ext_dcm_file, {'dcm2niix2bids': Plugin({})}, 'DICOM')
 
     def test_is_datasource(self, datasource):
         assert datasource.has_plugin()
@@ -78,7 +77,8 @@ class TestDataSource:
         subsesdir     = tmp_path/'data'/subid/sesid
         subsesdir.mkdir(parents=True)
         subses_file   = shutil.copy(dcm_file, subsesdir)
-        subses_source = bids.DataSource(subses_file, {'dcm2niix2bids': Plugin({})}, 'DICOM', subprefix=subprefix, sesprefix=sesprefix)
+        options       = {'subprefix': subprefix, 'sesprefix': sesprefix}
+        subses_source = DataSource(subses_file, {'dcm2niix2bids': Plugin({})}, 'DICOM', options)
         sub, ses      = subses_source.subid_sesid(f"<<filepath:/data/{subses_source.resubprefix}(.*?)/>>", f"<<filepath:/data/{subses_source.resubprefix}.*?/{subses_source.resesprefix}(.*?)/>>")
         expected_sub  = 'sub-' + bids.sanitize(re.sub(f"^{subses_source.resubprefix}", '', subid)  if subid.startswith(subprefix) or subprefix=='*' else '')  # NB: this expression is too complicated/resembles the actual code too much :-/
         expected_ses  = 'ses-' + bids.sanitize(re.sub(f"^{subses_source.resesprefix}", '', sesid)) if (subid.startswith(subprefix) or subprefix=='*') and (sesid.startswith(sesprefix) or sesprefix=='*') and sesid else ''
@@ -98,6 +98,396 @@ class TestDataSource:
         assert datasource.dynamicvalue(r'<0x10,0x10>')                                           == 'CompressedSamplesMR1'
         assert datasource.dynamicvalue(r'<(0x10, 0x10)>')                                        == 'CompressedSamplesMR1'
         assert datasource.dynamicvalue(r'<(0010, 0010)>')                                        == 'CompressedSamplesMR1'
+
+
+class TestRunItem:
+    """Test the bids.RunItem class"""
+
+    def test_check_run(self):
+
+        # Create a valid func run-item (NB: this is dependent on the BIDS version)
+        runitem = RunItem('DICOM', 'func', {'bids': {'task':'rest', 'acq':'', 'ce':'', 'dir':'', 'rec':'', 'run':'<<>>', 'echo':'1', 'part': ['','mag','phase','real','imag',0], 'chunk':'', 'suffix':'bold'}})
+        checks  = (True, True, True)             # = (keys, suffixes, values)
+
+        # Check various data types
+        runitem.datatype = 'foo';  assert runitem.check(checks) == (None, None,  None)
+        runitem.datatype = 'anat'; assert runitem.check(checks) == (None, False, None)
+        runitem.datatype = 'func'; assert runitem.check(checks) == (True, True,  True)
+
+        # Check bids-keys
+        runitem.bids['flip'] = 'foo'    # Add a false key
+        assert runitem.check(checks) == (False, True, None)
+        del runitem.bids['flip']        # Remove the false key
+        del runitem.bids['acq']         # Remove a valid key
+        assert runitem.check(checks) == (False, True, True)
+        runitem.bids['acq'] = 'foo'     # Restore the valid key
+
+        # Check bids-suffix
+        runitem.bids['suffix'] = 'T1w'  # Set an invalid suffix
+        assert runitem.check(checks) == (None, False, None)
+        runitem.bids['suffix'] = 'bold' # Restore the suffix
+
+        # Check bids-values
+        runitem.bids['task'] = ''       # Remove a required value
+        assert runitem.check(checks) == (True, True, False)
+        runitem.bids['task'] = 'f##'    # Add invalid characters
+        assert runitem.check(checks) == (True, True, False)
+        runitem.bids['task'] = 'rest'   # Restore the value
+        runitem.bids['run']  = 'a'      # Add an invalid (non-numeric) index
+        assert runitem.check(checks) == (True, True, False)
+
+    def test_get_bidsname(self, raw_dicomdir):
+
+        dicomfile = raw_dicomdir/'Doe^Archibald'/'01-XR C Spine Comp Min 4 Views'/'001-Cervical LAT'/'6154'
+
+        # Get a run-item from a bidsmap
+        datasource = DataSource(dicomfile, {'dcm2niix2bids': Plugin({})}, 'DICOM')
+        runitem    = RunItem('DICOM', '', {'bids': {'acq':'py#dicom', 'foo@':'bar#123', 'run':'<<SeriesNumber>>', 'suffix':'T0w'}}, datasource)
+        
+        bidsname = runitem.bidsname('sub-001', 'ses-01', validkeys=False, cleanup=False)  # Test default: runtime=False
+        assert bidsname == 'sub-001_ses-01_acq-py#dicom_run-<<SeriesNumber>>_foo@-bar#123_T0w'
+
+        bidsname = runitem.bidsname('sub-001', 'ses-01', validkeys=False, runtime=False, cleanup=True)
+        assert bidsname == 'sub-001_ses-01_acq-pydicom_run-SeriesNumber_foo@-bar123_T0w'
+
+        bidsname = runitem.bidsname('sub-001', 'ses-01', validkeys=False, runtime=True,  cleanup=False)
+        assert bidsname == 'sub-001_ses-01_acq-py#dicom_run-1_foo@-bar#123_T0w'
+
+        bidsname = runitem.bidsname('sub-001', 'ses-01', validkeys=True,  runtime=True,  cleanup=False)
+        assert bidsname == 'sub-001_ses-01_acq-py#dicom_run-1_T0w'
+
+        runitem.bids['run'] = '<<1>>'
+        bidsname = runitem.bidsname('sub-001', '', validkeys=True, runtime=True)          # Test default: cleanup=True
+        assert bidsname == 'sub-001_acq-pydicom_run-1_T0w'
+
+        runitem.bids['run'] = '<<>>'
+        bidsname = runitem.bidsname('sub-001', '', validkeys=True, runtime=True)          # Test default: cleanup=True
+        assert bidsname == 'sub-001_acq-pydicom_T0w'
+
+    def test_increment_runindex(self, tmp_path):
+        """Test if run-index is preserved or added to the bidsname, files are renamed and scans-table updated"""
+
+        # Define the test data
+        outfolder = tmp_path/'bids'/'sub-01'/'anat'
+        outfolder.mkdir(parents=True)
+        runless   = 'sub-01_T1w'
+        run1      = 'sub-01_run-1_T1w'
+        run2      = 'sub-01_run-2_T1w'
+        run3      = 'sub-01_run-3_T1w'
+
+        # ------- Tests with no existing output files -------
+
+        runitem  = RunItem('', '', {'bids': {'run': '<<>>'}})
+        bidsname = runitem.increment_runindex(outfolder, runless)
+        assert bidsname == runless
+
+        runitem  = RunItem('', '', {'bids': {'run': '<<1>>'}})
+        bidsname = runitem.increment_runindex(outfolder, run1 + '.nii')
+        assert bidsname == run1 + '.nii'
+
+        runitem  = RunItem('', '', {'bids': {'run': '<<2>>'}})
+        bidsname = runitem.increment_runindex(outfolder, run2 + '.nii.gz')
+        assert bidsname == run2 + '.nii.gz'
+
+        # ------- Tests with run-less output files -------
+
+        # Create run-less output files
+        for suffix in ('.nii.gz', '.json'):
+            (outfolder/runless).with_suffix(suffix).touch()
+
+        # Test renaming of run-less to run-1 + updating scans_table
+        runitem  = RunItem('', '', {'bids': {'run': '<<>>'}})
+        bidsname = runitem.increment_runindex(outfolder, runless)
+        assert bidsname == run2
+        for suffix in ('.nii.gz', '.json'):
+            assert (outfolder/runless).with_suffix(suffix).is_file() is False
+            assert (outfolder/run1   ).with_suffix(suffix).is_file() is True
+
+        # We now have run-1 files only
+        runitem  = RunItem('', '', {'bids': {'run': '<<1>>'}})
+        bidsname = runitem.increment_runindex(outfolder, run1)
+        assert bidsname == run2
+
+        # ------- Tests with run-1 & run-2 output files -------
+
+        # Create run-2 output files
+        for suffix in ('.nii.gz', '.json'):
+            (outfolder/run2).with_suffix(suffix).touch()
+
+        runitem  = RunItem('', '', {'bids': {'run': '<<>>'}})
+        bidsname = runitem.increment_runindex(outfolder, runless + '.nii.gz')
+        assert bidsname == run3 + '.nii.gz'
+
+        runitem  = RunItem('', '', {'bids': {'run': '<<1>>'}})
+        bidsname = runitem.increment_runindex(outfolder, run1)
+        assert bidsname == run3
+
+        runitem  = RunItem('', '', {'bids': {'run': '<<AttrKey>>'}})
+        bidsname = runitem.increment_runindex(outfolder, run1)
+        assert bidsname == run1                         # -> Must remain untouched
+
+        runitem  = RunItem('', '', {'bids': {'run': '2'}})
+        bidsname = runitem.increment_runindex(outfolder, run1)
+        assert bidsname == run1                         # -> Must remain untouched
+
+    def test_strip_suffix(self):
+        pass
+
+
+class TestDataType:
+    """Test the bids.DataType class"""
+
+    def test_runitems(self):
+        pass
+
+    def test_delete_runs(self):
+        pass
+
+    def test_isert_run(self):
+        pass
+
+    def test_replace_run(self):
+        pass
+
+
+class TestDataFormat:
+    """Test the bids.DataFormat class"""
+
+    def test_subject(self):
+        pass
+
+    def test_session(self):
+        pass
+
+    def test_datatypes(self):
+        pass
+
+    def test_datatype(self):
+        pass
+
+    def test_add_datatype(self):
+        pass
+
+    def test_delete_run(self):
+        pass
+
+
+class TestBidsMap:
+    """Test the bids.BidsMap class"""
+
+    def test_init(self, study_bidsmap):
+
+        # Test loading with standard arguments
+        bidsmap = BidsMap(Path(study_bidsmap.name), study_bidsmap.parent)
+        assert bidsmap.filepath == study_bidsmap
+        assert bidsmap.dataformat('DICOM').datatype('anat').runitems[0].provenance == '/Users/galassiae/Projects/bidscoin/bidscointutorial/raw/sub-001/ses-01/007-t1_mprage_sag_ipat2_1p0iso/00001_1.3.12.2.1107.5.2.43.66068.2020042808523182387402502.IMA'
+        assert bidsmap.dataformat('DICOM').datatype('func').runitems[0].bids['part'] == ['', 'mag', 'phase', 'real', 'imag', 0]
+        assert bidsmap.dataformat('DICOM').datatype('func').runitems[1].bids['part'] == ['', 'mag', 'phase', 'real', 'imag', 3]
+        assert bidsmap.dataformat('DICOM').datatype('func').runitems[2].bids['part'] == ['', 'mag', 'phase', 'real', 'imag', 0]
+
+        # Test loading with fullpath argument
+        bidsmap = BidsMap(study_bidsmap)
+        assert bidsmap.dataformat('DICOM').datatype('anat').runitems[0].provenance == '/Users/galassiae/Projects/bidscoin/bidscointutorial/raw/sub-001/ses-01/007-t1_mprage_sag_ipat2_1p0iso/00001_1.3.12.2.1107.5.2.43.66068.2020042808523182387402502.IMA'
+
+        # Test loading with standard argument for the template bidsmap
+        bidsmap = BidsMap(Path('bidsmap_dccn'))
+        assert bidsmap.dataformat('DICOM').datatype('anat').runitems[0].provenance == str(Path('sub-unknown/ses-unknown/DICOM_anat_id001'))     # Account for Windows paths
+
+        # Test loading with a dummy argument
+        bidsmap = BidsMap(Path('dummy'))
+        assert len(bidsmap.dataformats) == 0
+        assert bidsmap.filepath.name    == ''
+
+    @pytest.mark.parametrize('template', bcoin.list_plugins()[1])   # Pass the default template bidsmaps
+    def test_check_templates(self, template: Path):
+
+        # Load a valid template
+        bidsmap = BidsMap(template, checks=(False, False, False))
+        assert bidsmap.check_template() is True
+
+        # Add and remove an invalid data type
+        bidsmap.dataformats[0].add_datatype('foo')
+        assert bidsmap.check_template() is False
+        bidsmap.dataformats[0].remove_datatype('foo')
+        assert bidsmap.check_template() is True
+
+        # Remove a valid suffix (BIDS-entity)
+        valid_run = bidsmap.dataformats[0].datatype('anat').runitems[-2].provenance     # NB: [-2] -> The first item(s) can be non-unique, the last item can be a non-BIDS entity, i.e. CT
+        bidsmap.dataformats[0].datatype('anat').delete_run(valid_run)
+        assert bidsmap.check_template() is False
+
+    def test_dataformat(self):
+        pass
+
+    def test_add_dataformat(self):
+        pass
+
+    def test_remove_dataformat(self):
+        pass
+
+    def test_validate(self, study_bidsmap):
+
+        # Load a BIDS-valid study bidsmap
+        bidsmap = BidsMap(study_bidsmap)
+        assert bidsmap.validate() is True
+
+        # Validate the bids-keys
+        runitem = bidsmap.dataformat('DICOM').datatype('func').runitems[0]
+        runitem.bids['flip'] = 'foo'     # Add a false key
+        assert bidsmap.validate() is False
+        del runitem.bids['flip']
+        del runitem.bids['task']         # Remove a required key
+        assert bidsmap.validate() is False
+        runitem.bids['task'] = 'foo'
+
+        # Check bids-suffix
+        runitem.bids['suffix'] = 'T1w'   # Set an invalid suffix
+        assert bidsmap.validate() is False
+        runitem.bids['suffix'] = 'bold'
+
+        # Check bids-values
+        runitem.bids['task'] = ''        # Remove a required value
+        assert bidsmap.validate() is False
+        runitem.bids['task'] = 'f##'     # Add invalid characters (they are cleaned out)
+        assert bidsmap.validate() is True
+        runitem.bids['task'] = 'foo'
+        runitem.bids['run']  = 'a'       # Add an invalid (non-numeric) index
+        assert bidsmap.validate() is False
+
+
+    def test_check(self, study_bidsmap):
+
+        # Load a template and a study bidsmap
+        templatebidsmap = BidsMap(bidsmap_template, checks=(True, True, False))
+        studybidsmap    = BidsMap(study_bidsmap)
+
+        # Test the output of the template bidsmap
+        checks   = (True, True, False)              # Check keys and suffixes, but not the values (as that makes no sense for a template bidsmap)
+        is_valid = templatebidsmap.check(checks)
+        for valid, check in zip(is_valid, checks):
+            assert valid in (None, True, False)
+            if check:
+                assert valid in (None, True)
+
+        # Test the output of the study bidsmap
+        checks   = (True, True, True)               # Check keys, suffixes and values (should all be checked for a study bidsmap)
+        is_valid = studybidsmap.check(checks)
+        for valid, check in zip(is_valid, checks):
+            assert valid in (None, True, False)
+            if check:
+                assert valid is True
+
+    def test_find_run(self, study_bidsmap):
+
+        # Load a bidsmap and create a duplicate dataformat section named PET
+        bidsmap = BidsMap(study_bidsmap)
+        dformat = copy.deepcopy(bidsmap.dataformat('DICOM'))
+        dformat.dataformat = 'PET'
+        bidsmap.add_dataformat(dformat)
+
+        # Collect provenance of the first anat run-item
+        provenance = bidsmap.dataformat('DICOM').datatype('anat').runitems[0].provenance
+        provtag    = '123456789'
+        bidsmap.dataformat('PET').datatype('anat').runitems[0].provenance = provtag
+
+        # Find run with the wrong dataformat
+        run = bidsmap.find_run(provenance, dataformat='PET')
+        assert run is None
+
+        # Find run with the wrong data type
+        run = bidsmap.find_run(provenance, datatype='func')
+        assert run is None
+
+        # Find run with partial provenance
+        run = bidsmap.find_run('sub-001')
+        assert run is None
+
+        # Find run with full provenance
+        run = bidsmap.find_run(provenance)
+        assert isinstance(run, RunItem)
+        run = bidsmap.find_run(provtag, dataformat='PET', datatype='anat')
+        assert run.provenance == provtag
+
+
+    def test_delete_run(self, study_bidsmap):
+
+        # Load a study bidsmap and delete one anat run
+        bidsmap    = BidsMap(study_bidsmap)
+        nritems    = len(bidsmap.dataformat('DICOM').datatype('anat').runitems)
+        provenance = bidsmap.dataformat('DICOM').datatype('anat').runitems[0].provenance
+        bidsmap.delete_run(provenance)
+
+        assert len(bidsmap.dataformat('DICOM').datatype('anat').runitems) == nritems - 1
+        assert bidsmap.find_run(provenance) is None
+
+
+    def test_insert_run(self, study_bidsmap):
+
+        # Load a study bidsmap and delete one anat run
+        bidsmap = BidsMap(study_bidsmap)
+
+        # Get and modify the first anat run-item
+        runitem              = copy.deepcopy(bidsmap.dataformat('DICOM').datatype('anat').runitems[0])
+        runitem.dataformat   = 'Foo'
+        runitem.datatype     = 'Bar'
+        runitem.bids['part'] = ['', 'mag', 'phase', 'real', 'imag', 3]
+
+        # Insert the run elsewhere in the bidsmap
+        bidsmap.insert_run(runitem)
+        assert Path(bidsmap.dataformat(  'Foo').datatype( 'Bar').runitems[0].provenance) == Path(runitem.provenance)
+        assert Path(bidsmap.dataformat('DICOM').datatype('anat').runitems[0].provenance) == Path(runitem.provenance)
+        assert bidsmap.dataformat(  'Foo').datatype( 'Bar').runitems[0].bids['part']     == ['', 'mag', 'phase', 'real', 'imag', 3]
+        assert bidsmap.dataformat('DICOM').datatype('anat').runitems[0].bids['part']     == ['', 'mag', 'phase', 'real', 'imag', 0]
+
+        # Insert another run at the end and at the front of the list
+        runitem = copy.deepcopy(runitem)
+        runitem.bids['part'] = ['', 'mag', 'phase', 'real', 'imag', 4]
+        bidsmap.insert_run(runitem)
+        bidsmap.insert_run(runitem, 0)
+        assert bidsmap.dataformat('Foo').datatype('Bar').runitems[0].bids['part'] == ['', 'mag', 'phase', 'real', 'imag', 4]
+        assert bidsmap.dataformat('Foo').datatype('Bar').runitems[1].bids['part'] == ['', 'mag', 'phase', 'real', 'imag', 3]
+        assert bidsmap.dataformat('Foo').datatype('Bar').runitems[2].bids['part'] == ['', 'mag', 'phase', 'real', 'imag', 4]
+
+    def test_update_bidsmap(self, study_bidsmap):
+
+        # Load a study bidsmap and move the first run-item from func to anat
+        bidsmap = BidsMap(study_bidsmap)
+
+        # Collect and modify the first func run-item
+        runitem          = copy.deepcopy(bidsmap.dataformat('DICOM').datatype('func').runitems[0])
+        runitem.datatype = 'anat'
+
+        # Update the bidsmap
+        bidsmap.update('func', runitem)
+        assert Path(bidsmap.dataformat('DICOM').datatype('anat').runitems[-1].provenance) == Path(runitem.provenance)
+        assert Path(bidsmap.dataformat('DICOM').datatype('func').runitems[ 0].provenance) != Path(runitem.provenance)
+
+        # Modify the last anat run-item and update the bidsmap
+        runitem.bids['foo'] = 'bar'
+        bidsmap.update('anat', runitem)
+        assert bidsmap.dataformat('DICOM').datatype('anat').runitems[-1].bids['foo'] == 'bar'
+
+    def test_exist_run(self, study_bidsmap):
+
+        # Load a bidsmap
+        bidsmap = BidsMap(study_bidsmap)
+
+        # Collect the first anat run-item
+        runitem = copy.deepcopy(bidsmap.dataformat('DICOM').datatype('anat').runitems[0])
+
+        # Find the run in the wrong data type
+        assert bidsmap.exist_run(runitem, 'func') is False
+
+        # Find run with in the right data type and in all datatypes
+        assert bidsmap.exist_run(runitem, 'anat') is True
+        assert bidsmap.exist_run(runitem) is True
+
+        # Find the wrong run in all datatypes
+        runitem.attributes['ProtocolName'] = 'abcdefg'
+        assert bidsmap.exist_run(runitem) is False
+        runitem.attributes['ProtocolName'] = ''
+        assert bidsmap.exist_run(runitem) is False
+
 
 def test_unpack(dicomdir, tmp_path):
     sessions, unpacked = bids.unpack(dicomdir.parent, '', tmp_path, None)   # None -> simulate commandline usage of dicomsort()
@@ -121,7 +511,7 @@ def test_get_dicomfile(dcm_file, dicomdir):
 
 
 def test_get_datasource(dicomdir):
-    datasource = bids.get_datasource(dicomdir.parent, {'dcm2niix2bids': Plugin({})})
+    datasource = bids.get_datasource(dicomdir.parent, {'dcm2niix2bids': {}})
     assert datasource.has_plugin()
     assert datasource.dataformat == 'DICOM'
 
@@ -169,26 +559,6 @@ def test_get_dicomfield(dcm_file_csa):
         assert value == 'N4_VB17A_LATEST_20090307'
 
 
-@pytest.mark.parametrize('template', bcoin.list_plugins()[1])
-def test_load_check_template(template: Path):
-
-    # Load a valid template
-    bidsmap, _ = bids.load_bidsmap(template, checks=(False, False, False))
-    for dataformat in bidsmap:
-        if dataformat not in ('$schema', 'Options'): break
-    assert isinstance(bidsmap, dict) and bidsmap
-    assert bids.check_template(bidsmap) is True
-
-    # Add an invalid data type
-    bidsmap[dataformat]['foo'] = bidsmap[dataformat]['extra_data']
-    assert bids.check_template(bidsmap) is False
-    del bidsmap[dataformat]['foo']
-
-    # Remove a valid suffix (BIDS-entity)
-    bidsmap[dataformat]['anat'].pop(-2)        # NB: Assumes CT is the last item, MTR the second last
-    assert bids.check_template(bidsmap) is False
-
-
 def test_match_runvalue():
     assert bids.match_runvalue('my_pulse_sequence_name', '_name')      is False
     assert bids.match_runvalue('my_pulse_sequence_name', '^my.*name$') is True
@@ -205,125 +575,6 @@ def test_match_runvalue():
     assert bids.match_runvalue( '[1, 2, 3]',    [1, 2, 3])             is True
     assert bids.match_runvalue( '[1,2,  3]',    [1,2,  3])             is False
     assert bids.match_runvalue(r'\[1, 2, 3\]',  [1, 2, 3])             is False
-
-
-def test_load_bidsmap(study_bidsmap):
-
-    # Test loading with standard arguments for load_bidsmap
-    bidsmap, filepath = bids.load_bidsmap(Path(study_bidsmap.name), study_bidsmap.parent)
-    assert type(bidsmap) == ruamel.yaml.comments.CommentedMap
-    assert bidsmap != {}
-    assert filepath == study_bidsmap
-    assert bidsmap['DICOM']['anat'][0]['provenance'] == '/Users/galassiae/Projects/bidscoin/bidscointutorial/raw/sub-001/ses-01/007-t1_mprage_sag_ipat2_1p0iso/00001_1.3.12.2.1107.5.2.43.66068.2020042808523182387402502.IMA'
-    assert bidsmap['DICOM']['func'][0]['bids']['part'] == ['', 'mag', 'phase', 'real', 'imag', 0]
-    assert bidsmap['DICOM']['func'][1]['bids']['part'] == ['', 'mag', 'phase', 'real', 'imag', 3]
-    assert bidsmap['DICOM']['func'][2]['bids']['part'] == ['', 'mag', 'phase', 'real', 'imag', 0]
-
-    # Test loading with fullpath argument
-    bidsmap, _ = bids.load_bidsmap(study_bidsmap)
-    assert type(bidsmap) == ruamel.yaml.comments.CommentedMap
-    assert bidsmap != {}
-    assert bidsmap['DICOM']['anat'][0]['provenance'] == '/Users/galassiae/Projects/bidscoin/bidscointutorial/raw/sub-001/ses-01/007-t1_mprage_sag_ipat2_1p0iso/00001_1.3.12.2.1107.5.2.43.66068.2020042808523182387402502.IMA'
-
-    # Test loading with standard argument for the template bidsmap
-    bidsmap, _ = bids.load_bidsmap(Path('bidsmap_dccn'))
-    assert type(bidsmap) == ruamel.yaml.comments.CommentedMap
-    assert bidsmap != {}
-    assert bidsmap['DICOM']['anat'][0]['provenance'] == str(Path('sub--unknown/ses--unknown/DICOM_anat_id001'))     # Account for Windows paths
-
-    # Test loading with a dummy argument
-    bidsmap, filepath = bids.load_bidsmap(Path('dummy'))
-    assert bidsmap  == {}
-    assert filepath == bids.templatefolder/'dummy.yaml'
-
-
-def test_validate_bidsmap(study_bidsmap):
-
-    # Load a BIDS-valid study bidsmap
-    bidsmap, _ = bids.load_bidsmap(study_bidsmap)
-    run        = bidsmap['DICOM']['func'][0]
-    assert bids.validate_bidsmap(bidsmap) is True
-
-    # Validate the bids-keys
-    run['bids']['flip'] = 'foo'     # Add a false key
-    assert bids.validate_bidsmap(bidsmap) is False
-    del run['bids']['flip']
-    del run['bids']['task']         # Remove a required key
-    assert bids.validate_bidsmap(bidsmap) is False
-    run['bids']['task'] = 'foo'
-
-    # Check bids-suffix
-    run['bids']['suffix'] = 'T1w'   # Set an invalid suffix
-    assert bids.validate_bidsmap(bidsmap) is False
-    run['bids']['suffix'] = 'bold'
-
-    # Check bids-values
-    run['bids']['task'] = ''        # Remove a required value
-    assert bids.validate_bidsmap(bidsmap) is False
-    run['bids']['task'] = 'f##'     # Add invalid characters (they are cleaned out)
-    assert bids.validate_bidsmap(bidsmap) is True
-    run['bids']['task'] = 'foo'
-    run['bids']['run']  = 'a'       # Add an invalid (non-numeric) index
-    assert bids.validate_bidsmap(bidsmap) is False
-
-
-def test_check_bidsmap(study_bidsmap):
-
-    # Load a template and a study bidsmap
-    templatebidsmap, _ = bids.load_bidsmap(bidsmap_template, checks=(True, True, False))
-    studybidsmap, _    = bids.load_bidsmap(study_bidsmap)
-
-    # Test the output of the template bidsmap
-    checks   = (True, True, False)
-    is_valid = bids.check_bidsmap(templatebidsmap, checks)
-    for each, check in zip(is_valid, checks):
-        assert each in (None, True, False)
-        if check:
-            assert each in (None, True)
-
-    # Test the output of the study bidsmap
-    is_valid = bids.check_bidsmap(studybidsmap, checks)
-    for each, check in zip(is_valid, checks):
-        assert each in (None, True, False)
-        if check:
-            assert each is True
-
-
-def test_check_run(study_bidsmap):
-
-    # Load a bidsmap
-    bidsmap, _ = bids.load_bidsmap(study_bidsmap)
-
-    # Collect the first func run-item
-    checks = (True, True, True)             # = (keys, suffixes, values)
-    run    = bidsmap['DICOM']['func'][0]
-
-    # Check data type
-    assert bids.check_run('func', run, checks) == (True, True, True)
-    assert bids.check_run('anat', run, checks) == (None, False, None)
-    assert bids.check_run('foo',  run, checks) == (None, None, None)
-
-    # Check bids-keys
-    run['bids']['flip'] = 'foo'     # Add a false key
-    assert bids.check_run('func', run, checks) == (False, True, None)
-    del run['bids']['flip']
-    del run['bids']['acq']          # Remove a valid key
-    assert bids.check_run('func', run, checks) == (False, True, True)
-    run['bids']['acq'] = 'foo'
-
-    # Check bids-suffix
-    run['bids']['suffix'] = 'T1w'   # Set an invalid suffix
-    assert bids.check_run('func', run, checks) == (None, False, None)
-    run['bids']['suffix'] = 'bold'
-
-    # Check bids-values
-    run['bids']['task'] = ''        # Remove a required value
-    assert bids.check_run('func', run, checks) == (True, True, False)
-    run['bids']['task'] = 'f##'     # Add invalid characters
-    assert bids.check_run('func', run, checks) == (True, True, False)
-    run['bids']['task'] = 'foo'
-    run['bids']['run']  = 'a'       # Add an invalid (non-numeric) index
-    assert bids.check_run('func', run, checks) == (True, True, False)
 
 
 def test_check_ignore():
@@ -348,118 +599,6 @@ def test_sanitize():
     assert bids.sanitize("Joe's reward_task") == 'Joesrewardtask'
 
 
-def test_find_run(study_bidsmap):
-
-    # Load a bidsmap and create a duplicate dataformat section
-    bidsmap, _     = bids.load_bidsmap(study_bidsmap)
-    bidsmap['PET'] = copy.deepcopy(bidsmap['DICOM'])
-
-    # Collect provenance of the first anat run-item
-    provenance                              = bidsmap['DICOM']['anat'][0]['provenance']
-    tag                                     = '123456789'
-    bidsmap['PET']['anat'][0]['provenance'] = tag
-
-    # Find run with the wrong dataformat
-    run = bids.find_run(bidsmap, provenance, dataformat='PET')
-    assert run == {}
-
-    # Find run with the wrong data type
-    run = bids.find_run(bidsmap, provenance, datatype='func')
-    assert run == {}
-
-    # Find run with partial provenance
-    run = bids.find_run(bidsmap, 'sub-001')
-    assert run == {}
-
-    # Find run with full provenance
-    run = bids.find_run(bidsmap, provenance)
-    assert isinstance(run, dict)
-    run = bids.find_run(bidsmap, tag, dataformat='PET', datatype='anat')
-    assert run.get('provenance') == tag
-
-
-def test_delete_run(study_bidsmap):
-
-    # Load a study bidsmap and delete one anat run
-    bidsmap, _ = bids.load_bidsmap(study_bidsmap)
-    nritems    = len(bidsmap['DICOM']['anat'])
-    provenance = bidsmap['DICOM']['anat'][0]['provenance']
-    bids.delete_run(bidsmap, provenance)
-
-    assert len(bidsmap['DICOM']['anat']) == nritems - 1
-    assert bids.find_run(bidsmap, provenance) == {}
-
-
-def test_insert_run(study_bidsmap):
-
-    # Load a study bidsmap and delete one anat run
-    bidsmap, _ = bids.load_bidsmap(study_bidsmap)
-
-    # Collect and modify the first anat run-item
-    datasource                   = bidsmap['DICOM']['anat'][0]['datasource']
-    run                          = bids.create_run(datasource, bidsmap)
-    run['datasource'].dataformat = 'Foo'
-    run['datasource'].datatype   = 'Bar'
-    run['bids']['part']          = ['', 'mag', 'phase', 'real', 'imag', 3]
-
-    # Insert the run elsewhere in the bidsmap
-    bids.insert_run(bidsmap, run)
-    assert Path(bidsmap['Foo']['Bar'][0]['provenance'])     == Path(run['provenance'])
-    assert Path(bidsmap['DICOM']['anat'][0]['provenance'])  == Path(run['provenance'])
-    assert bidsmap['Foo']['Bar'][0]['bids']['part']         == ['', 'mag', 'phase', 'real', 'imag', 3]
-    assert bidsmap['DICOM']['anat'][0]['bids']['part']      == ['', 'mag', 'phase', 'real', 'imag', 0]
-
-    # Insert another run at the end and at the front of the list
-    run['bids']['part']          = ['', 'mag', 'phase', 'real', 'imag', 4]
-    bids.insert_run(bidsmap, run)
-    bids.insert_run(bidsmap, run, 0)
-    assert bidsmap['Foo']['Bar'][0]['bids']['part']         == ['', 'mag', 'phase', 'real', 'imag', 4]
-    assert bidsmap['Foo']['Bar'][1]['bids']['part']         == ['', 'mag', 'phase', 'real', 'imag', 3]
-    assert bidsmap['Foo']['Bar'][2]['bids']['part']         == ['', 'mag', 'phase', 'real', 'imag', 4]
-
-
-def test_update_bidsmap(study_bidsmap):
-
-    # Load a study bidsmap and move the first run-item from func to anat
-    bidsmap, _ = bids.load_bidsmap(study_bidsmap)
-
-    # Collect and modify the first func run-item
-    run                        = copy.deepcopy(bidsmap['DICOM']['func'][0])
-    run['datasource'].datatype = 'anat'
-
-    # Update the bidsmap
-    bids.update_bidsmap(bidsmap, 'func', run)
-    assert Path(bidsmap['DICOM']['anat'][-1]['provenance']) == Path(run['provenance'])
-    assert Path(bidsmap['DICOM']['func'] [0]['provenance']) != Path(run['provenance'])
-
-    # Modify the last anat run-item and update the bidsmap
-    run['bids']['foo'] = 'bar'
-    bids.update_bidsmap(bidsmap, 'anat', run)
-    assert bidsmap['DICOM']['anat'][-1]['bids']['foo'] == 'bar'
-
-
-def test_exist_run(study_bidsmap):
-
-    # Load a bidsmap
-    bidsmap, _ = bids.load_bidsmap(study_bidsmap)
-
-    # Collect the first anat run-item
-    run = copy.deepcopy(bidsmap['DICOM']['anat'][0])
-
-    # Find the run in the wrong data type
-    assert bids.exist_run(bidsmap, 'func', run) is False
-
-    # Find run with in the right data type and in all datatypes
-    assert bids.exist_run(bidsmap, 'anat', run) is True
-    assert bids.exist_run(bidsmap, '',     run) is True
-
-    # Find the wrong run in all datatypes
-    run['attributes']['ProtocolName'] = 'abcdefg'
-    assert bids.exist_run(bidsmap, '', run)     is False
-    run['attributes']['ProtocolName'] = ''
-    assert bids.exist_run(bidsmap, '', run)     is False
-
-
 def test_insert_bidskeyval():
 
     bidsname = bids.insert_bidskeyval(Path('bids')/'sub-01'/'anat'/'sub-01_T1w', 'run', '1', True)
@@ -473,64 +612,6 @@ def test_insert_bidskeyval():
 
     bidsname = bids.insert_bidskeyval('anat/sub-01_foo-bar_T1w.nii', 'foo', 'baz', False)
     assert bidsname == str(Path('anat/sub-01_foo-baz_T1w.nii'))
-
-
-def test_increment_runindex(tmp_path):
-    """Test if run-index is preserved or added to the bidsname, files are renamed and scans-table updated"""
-
-    # Define the test data
-    outfolder = tmp_path/'bids'/'sub-01'/'anat'
-    outfolder.mkdir(parents=True)
-    runless   = 'sub-01_T1w'
-    run1      = 'sub-01_run-1_T1w'
-    run2      = 'sub-01_run-2_T1w'
-    run3      = 'sub-01_run-3_T1w'
-
-    # ------- Tests with no existing data -------
-
-    bidsname = bids.increment_runindex(outfolder, runless, Run({'bids': {'run': '<<>>'}}))
-    assert bidsname == runless
-
-    bidsname = bids.increment_runindex(outfolder, run1 + '.nii', Run({'bids': {'run': '<<1>>'}}))
-    assert bidsname == run1 + '.nii'
-
-    bidsname = bids.increment_runindex(outfolder, run2 + '.nii.gz', Run({'bids': {'run': '<<2>>'}}))
-    assert bidsname == run2 + '.nii.gz'
-
-    # ------- Tests with run-less data -------
-
-    # Create the run-less files
-    for suffix in ('.nii.gz', '.json'):
-        (outfolder/runless).with_suffix(suffix).touch()
-
-    # Test renaming of run-less to run-1 + updating scans_table
-    bidsname = bids.increment_runindex(outfolder, runless, Run({'bids': {'run': '<<>>'}}))
-    assert bidsname == run2
-    for suffix in ('.nii.gz', '.json'):
-        assert (outfolder/runless).with_suffix(suffix).is_file() is False
-        assert (outfolder/run1   ).with_suffix(suffix).is_file() is True
-
-    # We now have run-1 files only
-    bidsname = bids.increment_runindex(outfolder, run1, Run({'bids': {'run': '<<1>>'}}))
-    assert bidsname == run2
-
-    # ------- Tests with run-1 & run-2 data -------
-
-    # Create the run-2 files
-    for suffix in ('.nii.gz', '.json'):
-        (outfolder/run2).with_suffix(suffix).touch()
-
-    bidsname = bids.increment_runindex(outfolder, runless + '.nii.gz', Run({'bids': {'run': '<<>>'}}))
-    assert bidsname == run3 + '.nii.gz'
-
-    bidsname = bids.increment_runindex(outfolder, run1, Run({'bids': {'run': '<<1>>'}}))
-    assert bidsname == run3
-
-    bidsname = bids.increment_runindex(outfolder, run1, Run({'bids': {'run': '<<AttrKey>>'}}))
-    assert bidsname == run1                         # -> Must remain untouched
-
-    bidsname = bids.increment_runindex(outfolder, run1, Run({'bids': {'run': '2'}}))
-    assert bidsname == run1                         # -> Must remain untouched
 
 
 def test_check_runindices(tmp_path):
@@ -561,33 +642,6 @@ def test_check_runindices(tmp_path):
     assert bids.check_runindices(tmp_path) is False
 
 
-def test_get_bidsname(raw_dicomdir):
-
-    dicomfile   = raw_dicomdir/'Doe^Archibald'/'01-XR C Spine Comp Min 4 Views'/'001-Cervical LAT'/'6154'
-    run         = {'datasource': bids.DataSource(dicomfile, {'dcm2niix2bids': Plugin({})}, 'DICOM')}
-    run['bids'] = {'acq':'py#dicom', 'foo@':'bar#123', 'run':'<<SeriesNumber>>', 'suffix':'T0w'}
-
-    bidsname = bids.get_bidsname('sub-001', 'ses-01', run, validkeys=False, cleanup=False)  # Test default: runtime=False
-    assert bidsname == 'sub-001_ses-01_acq-py#dicom_run-<<SeriesNumber>>_foo@-bar#123_T0w'
-
-    bidsname = bids.get_bidsname('sub-001', 'ses-01', run, validkeys=False, runtime=False, cleanup=True)
-    assert bidsname == 'sub-001_ses-01_acq-pydicom_run-SeriesNumber_foo@-bar123_T0w'
-
-    bidsname = bids.get_bidsname('sub-001', 'ses-01', run, validkeys=False, runtime=True,  cleanup=False)
-    assert bidsname == 'sub-001_ses-01_acq-py#dicom_run-1_foo@-bar#123_T0w'
-
-    bidsname = bids.get_bidsname('sub-001', 'ses-01', run, validkeys=True,  runtime=True,  cleanup=False)
-    assert bidsname == 'sub-001_ses-01_acq-py#dicom_run-1_T0w'
-
-    run['bids']['run'] = '<<1>>'
-    bidsname = bids.get_bidsname('sub-001', '', run, validkeys=True, runtime=True)          # Test default: cleanup=True
-    assert bidsname == 'sub-001_acq-pydicom_run-1_T0w'
-
-    run['bids']['run'] = '<<>>'
-    bidsname = bids.get_bidsname('sub-001', '', run, validkeys=True, runtime=True)          # Test default: cleanup=True
-    assert bidsname == 'sub-001_acq-pydicom_T0w'
-
-
 def test_get_bidsvalue():
 
     bidsfile = Path('/bids/sub-01/anat/sub-01_acq-foo_run-1_T1w.nii.gz')
@@ -612,7 +666,7 @@ def test_updatemetadata(dcm_file, tmp_path):
     sourcefile.with_suffix('.jsn').touch()
     with sourcefile.with_suffix('.json').open('w') as fid:
         json.dump({'PatientName': 'SourceTest'}, fid)
-    extdatasource = bids.DataSource(sourcefile, {'dcm2niix2bids': Plugin({})}, 'DICOM')
+    extdatasource = DataSource(sourcefile, {'dcm2niix2bids': Plugin({})}, 'DICOM')
 
     # Create the metadata sidecar file
     outfolder = tmp_path/'bids'/'sub-001'/'ses-01'/'anat'

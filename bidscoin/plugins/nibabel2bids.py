@@ -11,7 +11,7 @@ from bids_validator import BIDSValidator
 from typing import Union
 from pathlib import Path
 from bidscoin import bids
-from bidscoin.bids import BidsMap, Plugin, Plugins
+from bidscoin.bids import BidsMap, DataFormat, Plugin, Plugins
 
 try:
     from nibabel.testing import data_path
@@ -79,7 +79,7 @@ def has_support(file: Path, dataformat: Union[DataFormat, str]='') -> str:
     return ''
 
 
-def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: Plugin) -> Union[str, int, float, list]:
+def get_attribute(dataformat: Union[DataFormat, str], sourcefile: Path, attribute: str, options: Plugin) -> Union[str, int, float, list]:
     """
     This plugin supports reading attributes from DICOM and PAR dataformats
 
@@ -121,8 +121,8 @@ def bidsmapper_plugin(session: Path, bidsmap_new: BidsMap, bidsmap_old: BidsMap,
     datasource = bids.get_datasource(session, plugins, recurse=2)
     if not datasource.dataformat:
         return
-    if not (template.dataformat(datasource.dataformat) or bidsmap_old[datasource.dataformat]):
-        LOGGER.error(f"No {datasource.dataformat} source information found in the bidsmap and template")
+    if datasource.dataformat not in template.dataformats + bidsmap_old.dataformats:
+        LOGGER.error(f"No {datasource} source information found in the bidsmap and template")
         return
 
     # Collect the different DICOM/PAR source files for all runs in the session
@@ -168,9 +168,7 @@ def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> None:
     sesid = bidsses.name if bidsses.name.startswith('ses-') else ''
 
     # Get started
-    options     = bidsmap._data['Options']['plugins']['nibabel2bids']
-    ext         = options.get('ext', '')
-    meta        = options.get('meta', [])
+    options     = bidsmap.plugins['nibabel2bids']
     sourcefiles = [file for file in session.rglob('*') if has_support(file)]
     if not sourcefiles:
         LOGGER.info(f"--> No {__name__} sourcedata found in: {session}")
@@ -187,36 +185,36 @@ def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> None:
     # Collect the different Nibabel source files for all files in the session
     for source in sourcefiles:
 
-        datasource = bids.DataSource(source, {'nibabel2bids':options})
+        datasource = bids.DataSource(source, {'nibabel2bids': options})
         run, runid = bidsmap.get_matching_run(datasource, runtime=True)
 
         # Check if we should ignore this run
-        if datasource.datatype in bidsmap.options['ignoretypes']:
+        if run.datatype in bidsmap.options['ignoretypes']:
             LOGGER.info(f"--> Leaving out: {datasource}")
-            bids.bidsprov(bidsses, source, runid, datasource.datatype)              # Write out empty provenance data
+            bids.bidsprov(bidsses, source, runid, run.datatype)     # Write out empty provenance data
             continue
 
         # Check if we already know this run
         if not runid:
-            LOGGER.error(f"Skipping unknown '{datasource.datatype}' run: {source}\n-> Re-run the bidsmapper and delete {bidsses} to solve this warning")
-            bids.bidsprov(bidsses, source)                      # Write out empty provenance data
+            LOGGER.error(f"Skipping unknown '{run.datatype}' run: {source}\n-> Re-run the bidsmapper and delete {bidsses} to solve this warning")
+            bids.bidsprov(bidsses, source)                          # Write out empty provenance data
             continue
 
         LOGGER.info(f"--> Coining: {datasource}")
 
         # Create the BIDS session/datatype output folder
-        outfolder = bidsses/datasource.datatype
+        outfolder = bidsses/run.datatype
         outfolder.mkdir(parents=True, exist_ok=True)
 
         # Compose the BIDS filename using the matched run
-        bidsignore = bids.check_ignore(datasource.datatype, bidsmap.options['bidsignore'])
-        bidsname   = bids.get_bidsname(subid, sesid, run, not bidsignore, runtime=True)
+        bidsignore = bids.check_ignore(run.datatype, bidsmap.options['bidsignore'])
+        bidsname   = run.bidsname(subid, sesid, not bidsignore, runtime=True)
         bidsignore = bidsignore or bids.check_ignore(bidsname+'.json', bidsmap.options['bidsignore'], 'file')
-        bidsname   = bids.increment_runindex(outfolder, bidsname, run, scans_table)
-        target     = (outfolder/bidsname).with_suffix(ext)
+        bidsname   = run.increment_runindex(outfolder, bidsname, scans_table)
+        target     = (outfolder/bidsname).with_suffix(options.get('ext', ''))
 
         # Check if the bidsname is valid
-        bidstest = (Path('/')/subid/sesid/datasource.datatype/bidsname).with_suffix('.nii').as_posix()
+        bidstest = (Path('/')/subid/sesid/run.datatype/bidsname).with_suffix('.nii').as_posix()
         isbids   = BIDSValidator().is_bids(bidstest)
         if not isbids and not bidsignore:
             LOGGER.warning(f"The '{bidstest}' output name did not pass the bids-validator test")
@@ -226,9 +224,9 @@ def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> None:
             LOGGER.warning(f"{target} already exists and will be deleted -- check your results carefully!")
             target.unlink()
 
-        # Save the sourcefile as a BIDS NIfTI file and out provenance data
+        # Save the sourcefile as a BIDS NIfTI file and write out provenance data
         nib.save(nib.load(source), target)
-        bids.bidsprov(bidsses, source, runid, datasource.datatype, [target] if target.is_file() else [])
+        bids.bidsprov(bidsses, source, runid, run.datatype, [target] if target.is_file() else [])
 
         # Check the output
         if not target.is_file():
@@ -237,7 +235,7 @@ def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> None:
 
         # Load/copy over the source meta-data
         sidecar  = target.with_suffix('').with_suffix('.json')
-        metadata = bids.updatemetadata(datasource, sidecar, run['meta'], meta)
+        metadata = bids.updatemetadata(datasource, sidecar, run.meta, options.get('meta', []))
         if metadata:
             with sidecar.open('w') as json_fid:
                 json.dump(metadata, json_fid, indent=4)

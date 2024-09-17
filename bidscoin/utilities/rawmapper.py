@@ -29,8 +29,7 @@ def rawmapper(sourcefolder, outfolder: str='', sessions: tuple=(), rename: bool=
     # Input checking
     rawfolder = Path(sourcefolder).resolve()
     if not rawfolder.is_dir():
-        print(f"Rawfolder '{rawfolder}' not found")
-        return
+        raise SystemExit(f"\n[ERROR] Exiting the program because your sourcefolder argument '{sourcefolder}' was not found")
     print(f"Mapping: {rawfolder}")
     if not outfolder or not Path(outfolder).name:
         outfolder = rawfolder
@@ -68,7 +67,7 @@ def rawmapper(sourcefolder, outfolder: str='', sessions: tuple=(), rename: bool=
     for session in sorted(sessions):
 
         # Get the (uncleaned) subject and session identifiers from the sourcefolder
-        datasource = bids.DataSource(session/'dum.my', subprefix=subprefix, sesprefix=sesprefix)
+        datasource = bids.DataSource(session/'dum.my', options={'subprefix': subprefix, 'sesprefix': sesprefix})
         subid      = datasource.dynamicvalue(f"<filepath:/{datasource.resubprefix}(.*?)/>", cleanup=False)
         sesid      = datasource.dynamicvalue(f"<filepath:/{datasource.resubprefix}.*?/{datasource.resesprefix}(.*?)/>", cleanup=False) if sesprefix else ''
 
@@ -147,9 +146,9 @@ def main():
     try:
         rawmapper(**vars(args))
 
-    except Exception:
+    except Exception as error:
         trackusage('rawmapper_exception')
-        raise
+        raise error
 
 
 if __name__ == "__main__":

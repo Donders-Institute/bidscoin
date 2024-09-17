@@ -245,9 +245,9 @@ def main():
     try:
         skullstrip(**vars(args))
 
-    except Exception:
+    except Exception as error:
         trackusage('skullstrip_exception')
-        raise
+        raise error
 
 
 if __name__ == '__main__':

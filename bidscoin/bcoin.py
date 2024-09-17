@@ -498,11 +498,11 @@ def test_bidsmap(bidsmapfile: str):
     return bidsmap.validate(1)
 
 
-def test_bidscoin(bidsmapfile: Path, options: dict=None, testplugins: bool=True, testgui: bool=True, testtemplate: bool=True) -> int:
+def test_bidscoin(bidsmapfile, options: dict=None, testplugins: bool=True, testgui: bool=True, testtemplate: bool=True) -> int:
     """
     Performs a bidscoin installation test
 
-    :param bidsmapfile: The bidsmap or the full pathname/basename of the bidsmap yaml-file
+    :param bidsmapfile: The full pathname/basename of the bidsmap yaml-file or the bidsmap object itself
     :param options:     The bidscoin options. If empty, the default options are used
     :return:            0 if the test was successful, otherwise 1
     """
@@ -568,8 +568,7 @@ def test_bidscoin(bidsmapfile: Path, options: dict=None, testplugins: bool=True,
     list_executables(True)
 
     # Test the plugins
-    options = bidsmap['Options'] if not options and bidsmap else {}
-    if not options.get('plugins'):
+    if not bidsmap.plugins:
         LOGGER.warning('No plugins found in the bidsmap (BIDScoin will likely not do anything)')
     if testplugins:
 
@@ -577,7 +576,7 @@ def test_bidscoin(bidsmapfile: Path, options: dict=None, testplugins: bool=True,
         list_plugins(True)
         for plugin in pluginfolder.glob('*.py'):
             if plugin.stem != '__init__':
-                errorcode = test_plugin(plugin.stem, options['plugins'].get(plugin.stem,{}) if options else {})
+                errorcode = test_plugin(plugin.stem, bidsmap.plugins.get(plugin.stem, {}))
                 success   = not errorcode and success
                 if errorcode:
                     LOGGER.warning(f"Failed test: {plugin.stem}")
@@ -705,9 +704,9 @@ def main():
         settracking(value=args.tracking)
         reportcredits(args=args.credits)
 
-    except Exception:
+    except Exception as error:
         trackusage('bidscoin_exception')
-        raise
+        raise error
 
 
 if __name__ == "__main__":

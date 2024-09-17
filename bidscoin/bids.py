@@ -74,7 +74,7 @@ class DataSource:
 
     def __init__(self, sourcefile: Union[str, Path]='', plugins: Plugins=None, dataformat: str='', options: Options=None):
         """
-        Reads the properties and attributes from a source data file
+        Reads (cached) properties and attributes from a source data file
 
         :param sourcefile:  The full filepath of the data source
         :param plugins:     The plugin dictionaries with their options
@@ -144,20 +144,20 @@ class DataSource:
                     LOGGER.exception(f"The {plugin} plugin crashed while reading {self.path}\n{moderror}")
                 if supported:
                     if self.dataformat and self.dataformat != supported:
-                        LOGGER.debug(f"Inconsistent dataformat found, updating: {self.dataformat} -> {supported}")
+                        LOGGER.bcdebug(f"Inconsistent dataformat found, updating: {self.dataformat} -> {supported}")
                     self.dataformat: str = supported
                     return True
 
         return False
 
-    def properties(self, tagname: str, run=None) -> Union[str, int]:
+    def properties(self, tagname: str, runitem=None) -> Union[str, int]:
         """
         Gets the 'filepath[:regex]', 'filename[:regex]', 'filesize' or 'nrfiles' filesystem property. The filepath (with trailing "/")
         and filename can be parsed using an optional regular expression re.findall(regex, filepath/filename). The last match is returned
         for the filepath, the first match for the filename
 
         :param tagname: The name of the filesystem property key, e.g. 'filename', 'filename:sub-(.*?)_' or 'nrfiles'
-        :param run:     If given and tagname == 'nrfiles' then the nrfiles is dependent on the other filesystem matching-criteria
+        :param runitem: If given and tagname == 'nrfiles' then the nrfiles is dependent on the other filesystem matching-criteria
         :return:        The property value (posix with a trailing "/" if tagname == 'filepath') or '' if the property could not be parsed from the datasource
         """
 
@@ -190,10 +190,10 @@ class DataSource:
                 return f"{size:.2f} {label[n]}B"
 
             if tagname == 'nrfiles' and self.path.is_file():
-                if run:                                         # Currently not used but keep the option open for future use
-                    def match(file): return ((match_runvalue(file.parent, run['properties']['filepath']) or not run['properties']['filepath']) and
-                                             (match_runvalue(file.name, run['properties']['filename']) or not run['properties']['filename']) and
-                                             (match_runvalue(file.stat().st_size, run['properties']['filesize']) or not run['properties']['filesize']))
+                if runitem:                                         # Currently not used but keep the option open for future use
+                    def match(file): return ((match_runvalue(file.parent,         runitem.properties['filepath']) or not runitem.properties['filepath']) and
+                                             (match_runvalue(file.name,           runitem.properties['filename']) or not runitem.properties['filename']) and
+                                             (match_runvalue(file.stat().st_size, runitem.properties['filesize']) or not runitem.properties['filesize']))
                     return len([file for file in self.path.parent.iterdir() if match(file)])
                 else:
                     return len(list(self.path.parent.iterdir()))
@@ -308,7 +308,7 @@ class DataSource:
         subid_ = self.dynamicvalue(subid, runtime=True)
         sesid  = self.dynamicvalue(sesid, runtime=True)
         if not subid_:
-            LOGGER.error(f"Could not parse required sub-<label> label from {self.path} using: {subid} -> 'sub-'")
+            LOGGER.error(f"Could not parse required sub-<label> label from {self} using: {subid} -> 'sub-'")
         subid = subid_
 
         # Add sub- and ses- prefixes if they are not there
@@ -372,10 +372,14 @@ class RunItem:
         :param plugins:    The plugin dictionaries with their options
         """
 
-        super().__setattr__('_data', data or {'provenance': '', 'properties': {}, 'attributes': {}, 'meta': {}})
+        # Create a YAML data dictionary with all required attribute keys
+        data = {} if data is None else data
+        for key, val in {'provenance': '', 'properties': {}, 'attributes': {}, 'bids': {'suffix':''}, 'meta': {}}.items():
+            if key not in data: data[key] = val
+        super().__setattr__('_data', data)
 
         # Set the regular attributes
-        self.datasource = datasource = copy.deepcopy(datasource) if datasource else DataSource(data.get('provenance') if data else '', plugins, dataformat, options)
+        self.datasource = datasource = copy.deepcopy(datasource) if datasource else DataSource(data['provenance'] if data else '', plugins, dataformat, options)
         """The DataSource object that is deepcopied or created from the run-item provenance"""
         datasource.subprefix = options['subprefix'] if options else datasource.subprefix
         datasource.sesprefix = options['sesprefix'] if options else datasource.sesprefix
@@ -388,22 +392,20 @@ class RunItem:
         self.plugins    = plugins or datasource.plugins
         """The plugin dictionaries with their options"""
 
-        # Set the default data attributes
-        self.provenance = data.get('provenance','') if data else str(datasource.path)
+        # Set the data attributes. TODO: create data classes instead?
+        self.provenance = data['provenance'] or str(datasource.path if datasource.path.name else '')
         """The file path of the data source"""
-        self.properties = Properties({'filepath': '', 'filename': '', 'filesize': '', 'nrfiles': None})
+        self.properties = Properties(data['properties'])
         """The file system properties from the data source that can be matched against other data sources"""
-        self.attributes = Attributes({})
+        for key, val in {'filepath': '', 'filename': '', 'filesize': '', 'nrfiles': None}.items():
+            if key not in self.properties:
+                self.properties[key] = val
+        self.attributes = Attributes(data['attributes'])
         """The (header) attributes from the data source that can be matched against other data sources"""
-        self.bids       = Bids({'suffix': ''})
+        self.bids       = Bids(data['bids'])
         """The BIDS output dictionary (used for construting the BIDS filename)"""
-        self.meta       = Meta({})
+        self.meta       = Meta(data['meta'])
         """The meta output dictionary (will be appended to the json sidecar file)"""
-
-        # Populate the data attributes with the given data (except provenance, which was already stored above)
-        for key in data or []:
-            if key != 'provenance':
-                setattr(self, key, copy.copy(data[key]))    # This should remove the YAML comments and bounds
 
     def __getattr__(self, name: str):
 
@@ -453,11 +455,10 @@ class RunItem:
         else:
             return NotImplemented
 
-    def check(self, datatype: str, checks: Tuple[bool, bool, bool]=(False, False, False)) -> Tuple[Union[bool, None], Union[bool, None], Union[bool, None]]:
+    def check(self, checks: Tuple[bool, bool, bool]=(False, False, False)) -> Tuple[Union[bool, None], Union[bool, None], Union[bool, None]]:
         """
         Check run for required and optional entities using the BIDS schema files
 
-        :param datatype:    The datatype that is checked, e.g. 'anat'
         :param checks:      Booleans to report if all (bidskeys, bids-suffixes, bids-values) in the run are present according to the BIDS schema specifications
         :return:            True/False if the keys, suffixes or values are bids-valid or None if they cannot be checked
         """
@@ -465,7 +466,7 @@ class RunItem:
         run_keysok   = None
         run_suffixok = None
         run_valsok   = None
-        datatype     = str(datatype)                            # To support DataType objects
+        datatype     = self.datatype
 
         # Check if we have provenance info
         if all(checks) and not self.provenance:
@@ -525,22 +526,23 @@ class RunItem:
 
                 break
 
-        # Hack: There are physio, stim and events entities in the 'task'-rules, which can be added to any datatype
+        # Hack: There are physio, stim and events entities in the 'task'-rules, which can be added to any datatype. They can have a `.tsv` or a `.tsv.gz` file extension
         if suffix in datatyperules['task']['events']['suffixes'] + datatyperules['task']['timeseries']['suffixes']:
-            bidsname     = self.bidsname(validkeys=False, runtime=self.datasource.path.is_file())
-            run_suffixok = bids_validator.BIDSValidator().is_bids(f"/sub-foo/{datatype}/{bidsname}.json")  # NB: Using the BIDSValidator sounds nice but doesn't give any control over the BIDS-version
-            run_valsok   = run_suffixok
-            LOGGER.bcdebug(f"bidsname={run_suffixok}: /sub-foo/{datatype}/{bidsname}.json")
+            bidsname = self.bidsname(validkeys=False, runtime=self.datasource.path.is_file())
+            for ext in ('.tsv', '.tsv.gz'):  # NB: `ext` used to be '.json', which is more generic (but see https://github.com/bids-standard/bids-validator/issues/2113)
+                if run_suffixok := bids_validator.BIDSValidator().is_bids(f"/sub-unknown/{datatype}/{bidsname}{ext}"): break    # NB: Using the BIDSValidator sounds nice but doesn't give any control over the BIDS-version
+            run_valsok = run_suffixok
+            LOGGER.bcdebug(f"bidsname={run_suffixok}: /sub-unknown/{datatype}/{bidsname}.*")
 
         if checks[0] and run_keysok in (None, False):
-            LOGGER.bcdebug(f'Invalid "{run_keysok}" key-checks in run-item: "{self.bids["suffix"]}" ({datatype} -> {self.provenance})\nRun["bids"]:\n{self.bids}')
+            LOGGER.bcdebug(f'Invalid "{run_keysok}" key-checks in run-item: "{self.bids["suffix"]}" ({datatype} -> {self.provenance})\nRun["bids"]:\t{self.bids}')
 
         if checks[1] and run_suffixok is False:
             LOGGER.warning(f'Invalid run-item with suffix: "{self.bids["suffix"]}" ({datatype} -> {self.provenance})')
-            LOGGER.bcdebug(f"Run['bids']:\n{self.bids}")
+            LOGGER.bcdebug(f"Run['bids']:\t{self.bids}")
 
         if checks[2] and run_valsok in (None, False):
-            LOGGER.bcdebug(f'Invalid "{run_valsok}" val-checks in run-item: "{self.bids["suffix"]}" ({datatype} -> {self.provenance})\nRun["bids"]:\n{self.bids}')
+            LOGGER.bcdebug(f'Invalid "{run_valsok}" val-checks in run-item: "{self.bids["suffix"]}" ({datatype} -> {self.provenance})\nRun["bids"]:\t{self.bids}')
 
         return run_keysok, run_suffixok, run_valsok
 
@@ -694,7 +696,7 @@ class DataType:
         """The dictionary with the BIDScoin options"""
         self.plugins = plugins
         """The plugin dictionaries with their options"""
-        self._data   = data or []
+        self._data   = data
         """The YAML datatype dictionary, i.e. a list of runitems"""
 
     def __str__(self):
@@ -715,7 +717,7 @@ class DataType:
 
     def __hash__(self):
 
-        return hash(self.datatype)
+        return hash(str(self))
 
     @property
     def runitems(self) -> List[RunItem]:
@@ -732,25 +734,22 @@ class DataType:
 
         for index, runitem in enumerate(self.runitems):
             if Path(runitem.provenance) == Path(provenance):
+                LOGGER.bcdebug(f"Deleting run: {runitem}")
                 del self._data[index]
                 return
 
-        LOGGER.error(f"Could not find (and delete) this [{self.dataformat}][{self.datatype}] run: '{provenance}")
-
-    def delete_runs(self):
-        """Delete all run-items from the datatype section"""
-
-        self._data = []
+        LOGGER.error(f"Could not find (and delete) this [{self.dataformat}][{self}] run: '{provenance}")
 
     def insert_run(self, runitem: RunItem, position: int=None):
         """
-        Inserts a run-item to the DataType
+        Inserts a run-item (as is) to the DataType
 
-        :param runitem:     The run item that is appended to the list of run items of its datatype
+        :param runitem:     The run item that is inserted in the list of run items
         :param position:    The position at which the run is inserted. The run is appended at the end if position is None
         """
 
-        self._data.insert(len(self._data) if position is None else position, runitem)
+        LOGGER.bcdebug(f"Inserting run: {runitem}")
+        self._data.insert(len(self._data) if position is None else position, runitem._data)
 
     def replace_run(self, runitem: RunItem):
         """
@@ -759,9 +758,10 @@ class DataType:
         :param runitem: The new run-item
         """
 
-        for index, run in enumerate(self._data):
-            if Path(run.provenance) == Path(runitem.provenance):
-                self._data[index] = runitem
+        for index, rundata in enumerate(self._data):
+            if Path(rundata.get('provenance') or '') == Path(runitem.provenance):
+                LOGGER.bcdebug(f"Replacing run: {runitem} (unchanged = {self._data[index] == runitem._data})")
+                self._data[index] = runitem._data
                 return
 
         LOGGER.error(f"Could not replace {runitem} because it could not be found")
@@ -811,7 +811,7 @@ class DataFormat:
 
     def __hash__(self):
 
-        return hash(self.datatype)
+        return hash(str(self))
 
     @property
     def subject(self) -> str:
@@ -843,16 +843,34 @@ class DataFormat:
     def datatype(self, datatype: Union[str, DataType]) -> DataType:
         """Gets the DataType object for the dataformat"""
 
-        return DataType(self.dataformat, str(datatype), self._data.get(str(datatype),[]), self.options, self.plugins)
+        return DataType(self.dataformat, str(datatype), self._data[str(datatype)], self.options, self.plugins)
 
     def add_datatype(self, datatype: Union[str, DataType]):
-        """Adds a new empty datatype item to the dataformat"""
+        """Adds a new datatype item to the dataformat"""
+
+        _data    = datatype._data if isinstance(datatype, DataType) else []
+        datatype = str(datatype)
+        if datatype not in self._data:
+            self._data[datatype] = _data
+            LOGGER.bcdebug(f"Adding the '{datatype}' datatype to {self}")
+        else:
+            LOGGER.bcdebug(f"The {self} dataformat already contains the '{datatype}' datatype")
+
+    def remove_datatype(self, datatype: Union[str, DataType]):
+        """Removes a datatype from the dataformat"""
 
         datatype = str(datatype)
         if datatype not in self._data:
-            self._data[datatype] = []
+            LOGGER.bcdebug(f"The '{datatype}' datatype could not be removed from {self}")
+            return
         else:
-            LOGGER.debug(f"The {self.dataformat} dataformat already contains the datatype '{datatype}'")
+            self._data.pop(datatype, None)
+            LOGGER.bcdebug(f"The '{datatype}' datatype was removed from {self}")
+
+    def delete_runs(self, datatype: Union[str, DataType]):
+        """Delete all run-items from the datatype section"""
+
+        self._data[str(datatype)] = []
 
 
 class BidsMap:
@@ -883,10 +901,10 @@ class BidsMap:
         if len(yamlfile.parents) == 1 and not yamlfile.is_file():
             yamlfile = folder/yamlfile                              # Get the full path to the bidsmap yaml-file
         yamlfile = yamlfile.resolve()
-        self.filepath = yamlfile if yamlfile.is_file() else Path()  # Can be used to signal that the bidsmap is empty
+        self.filepath = yamlfile if yamlfile.is_file() else Path()
         """The full path to the bidsmap yaml-file"""
         if not yamlfile.is_file():
-            if yamlfile.name: LOGGER.info(f"No existing bidsmap file found: {yamlfile}")
+            if yamlfile.name: LOGGER.info(f"No bidsmap file found: {yamlfile}")
             return
 
         # Read the heuristics from the bidsmap file
@@ -934,13 +952,10 @@ class BidsMap:
                         LOGGER.info(f"Adding default bidsmappings from the {plugin} plugin")
                         bidsmap[dataformat] = datasection
 
-        self.dataformats = [DataFormat(dataformat, bidsmap[dataformat], self.options, self.plugins) for dataformat in bidsmap if dataformat not in ('$schema', 'Options')]
-        """Gets a list of the DataFormat objects in the bidsmap (e.g. DICOM)"""
-
         # Add missing provenance info, run dictionaries and bids entities
         for dataformat in self.dataformats:
             for datatype in dataformat.datatypes:
-                for index, runitem in enumerate(datatype.runitems or []):
+                for index, runitem in enumerate(datatype.runitems):
 
                     # Add missing provenance info
                     if not runitem.provenance:
@@ -1014,10 +1029,38 @@ class BidsMap:
             self._data['Options'] = {}
         self._data['Options']['plugins'] = plugins
 
+    @property
+    def dataformats(self):
+        """Gets a list of the DataFormat objects in the bidsmap (e.g. DICOM)"""
+
+        return [DataFormat(dataformat, self._data[dataformat], self.options, self.plugins) for dataformat in self._data if dataformat not in ('$schema', 'Options')]
+
     def dataformat(self, dataformat: str) -> DataFormat:
         """Gets the DataFormat object from the bidsmap"""
 
-        return DataFormat(dataformat, self._data.get(dataformat,{}), self.options, self.plugins)
+        return DataFormat(dataformat, self._data[dataformat], self.options, self.plugins)
+
+    def add_dataformat(self, dataformat: Union[str, DataFormat]):
+        """Adds a DataFormat to the bidsmap"""
+
+        _data      = dataformat._data if isinstance(dataformat, DataFormat) else {}
+        dataformat = str(dataformat)
+        if dataformat not in self._data:
+            LOGGER.bcdebug(f"Adding the '{dataformat}' dataformat to {self}")
+            self._data[dataformat] = _data
+        else:
+            LOGGER.bcdebug(f"The {self} bidsmap already contains the '{dataformat}' dataformat")
+
+    def remove_dataformat(self, dataformat: str):
+        """Removes a DataFormat from the bidsmap"""
+
+        dataformat = str(dataformat)
+        if dataformat not in self._data:
+            LOGGER.bcdebug(f"The '{dataformat}' dataformat could not be removed from {self}")
+            return
+        else:
+            self._data.pop(dataformat, None)
+            LOGGER.bcdebug(f"The '{dataformat}' dataformat was removed from {self}")
 
     def save(self, filename: Path=None):
         """
@@ -1032,7 +1075,7 @@ class BidsMap:
 
         filename = filename or self.filepath
         filename.parent.mkdir(parents=True, exist_ok=True)
-        LOGGER.info(f"Writing bidsmap to: {filename}")
+        LOGGER.info(f"Saving bidsmap in: {filename}")
         with filename.open('w') as stream:
             yaml.dump(self._data, stream)
 
@@ -1100,7 +1143,7 @@ class BidsMap:
                 for runitem in datatype.runitems:
                     bidsname = runitem.bidsname(validkeys=False)
                     if check_ignore(bidsname+'.json', self.options['bidsignore'], 'file'): continue
-                    isvalid = runitem.check(datatype, checks)
+                    isvalid = runitem.check(checks)
                     results = [result and valid for result, valid in zip(results, isvalid)]
 
         if all([result is True for result, check in zip(results, checks) if check is True]):
@@ -1176,7 +1219,7 @@ class BidsMap:
         for datatype in self.dataformat(str(dataformat)).datatypes:
             for runitem in datatype.runitems:
                 if not runitem.provenance:
-                    LOGGER.warning(f'The bidsmap run {datatype} run does not contain provenance data')
+                    LOGGER.warning(f'The bidsmap {datatype} run does not contain provenance data')
                 else:
                     provenance.append(Path(runitem.provenance))
 
@@ -1204,20 +1247,20 @@ class BidsMap:
         if datatype not in self.dataformat(runitem.dataformat).datatypes:
             return False
 
-        for run in self.dataformat(runitem.dataformat).datatype(datatype).runitems:
+        for _runitem in self.dataformat(runitem.dataformat).datatype(datatype).runitems:
 
-            # Begin with match = True unless all properties and attributes are empty
-            match = any([getattr(run, attr)[key] not in (None,'') for attr in ('properties','attributes') for key in getattr(run, attr)])
+            # Begin with match = True unless all run properties and attributes are empty
+            match = any([getattr(_runitem, attr)[key] not in (None,'') for attr in ('properties','attributes') for key in getattr(_runitem, attr)])
 
             # TODO: Test if the run has more attributes than the runitem
 
             # Test if all properties and attributes of the runitem match with the run
             for attr in ('properties', 'attributes'):
                 for itemkey, itemvalue in getattr(runitem, attr).items():
-                    value = getattr(run, attr).get(itemkey)     # Matching labels which exist in one datatype but not in the other -> None
+                    value = getattr(_runitem, attr).get(itemkey)     # Matching labels which exist in one datatype but not in the other -> None
                     match = match and match_runvalue(itemvalue, value)
                     if not match:
-                        break                                   # There is no point in searching further within the run now that we've found a mismatch
+                        break                                       # There is no point in searching further within the run now that we've found a mismatch
 
             # Stop searching if we found a matching runitem (i.e. which is the case if match is still True after all run tests)
             if match:
@@ -1233,42 +1276,45 @@ class BidsMap:
 
         ignoredatatypes (e.g. 'exclude') -> normal bidsdatatypes (e.g. 'anat') -> unknowndatatypes (e.g. 'extra_data')
 
-        :param datasource:  The data source from which the attributes are read. NB: The datasource.datatype attribute is updated
+        :param datasource:  The data source from which the attributes are read
         :param runtime:     Dynamic <<values>> are expanded if True
-        :return:            (run, provenance) The returned run has all its attributes populated with the source file attributes.
-                            If there is a match, the provenance of the bidsmap entry is returned, otherwise it will be ''.
-                            NB: The run._data dictionary is NOT bounded to the bidsmap._data dictionary!
+        :return:            (run, provenance) A vanilla run that has all its attributes populated with the source file attributes.
+                            If there is a match, the provenance of the bidsmap entry is returned, otherwise it will be ''
         """
 
-        unknowndatatypes = self.options.get('unknowntypes') or []
+        unknowndatatypes = self.options.get('unknowntypes') or ['unknown_data']
         ignoredatatypes  = self.options.get('ignoretypes') or []
         bidsdatatypes    = [dtype.datatype for dtype in self.dataformat(datasource.dataformat).datatypes if dtype not in unknowndatatypes + ignoredatatypes]
-        run_             = RunItem('', '', {}, datasource, self.options, self.plugins)
-        """The cleanly populated output run item"""
+        datasource       = copy.deepcopy(datasource)
+        rundata          = {'provenance': str(datasource.path), 'properties': {}, 'attributes': {}, 'bids': {}, 'meta': {}}
+        """The a run-item data structure. NB: Keep in sync with the RunItem() data attributes"""
 
-        # Loop through all datatypes and runs; all info goes cleanly into run_ (to avoid formatting problem of the CommentedMap)
+        # Loop through all datatypes and runs; all info goes cleanly into runitem (to avoid formatting problem of the CommentedMap)
         if 'fmap' in bidsdatatypes:
             bidsdatatypes.insert(0, bidsdatatypes.pop(bidsdatatypes.index('fmap')))  # Put fmap at the front (to catch inverted polarity scans first
-        for datatype in ignoredatatypes + bidsdatatypes + unknowndatatypes:         # The ordered datatypes in which a matching run is searched for
-
-            for run in self.dataformat(datasource.dataformat).datatype(datatype).runitems:
+        for datatype in ignoredatatypes + bidsdatatypes + unknowndatatypes:                 # The ordered datatypes in which a matching run is searched for
+            if datatype not in self.dataformat(datasource.dataformat).datatypes: continue
+            for runitem in self.dataformat(datasource.dataformat).datatype(datatype).runitems:
 
                 # Begin with match = True unless all properties and attributes are empty
-                match = any([getattr(run, attr)[key] not in (None,'') for attr in ('properties','attributes') for key in getattr(run, attr)])
-                run_  = RunItem('', datatype, {}, datasource, self.options, self.plugins)     # (Re)populate the run item
+                match = any([getattr(runitem, attr)[key] not in (None,'') for attr in ('properties','attributes') for key in getattr(runitem, attr)])
 
-                # Test if the data source matches all the non-empty run-item properties, but do not populate them
-                for propkey, propvalue in run.properties.items():
+                # Initialize a clean run-item data structure
+                rundata = {'provenance': str(datasource.path), 'properties': {}, 'attributes': {}, 'bids': {}, 'meta': {}}
 
+                # Test if the data source matches all the non-empty run-item properties, but do NOT populate them
+                for propkey, propvalue in runitem.properties.items():
+
+                    # Check if the property value matches with the info from the sourcefile
                     if propvalue:
                         sourcevalue = datasource.properties(propkey)
                         match       = match and match_runvalue(sourcevalue, propvalue)
 
-                    # Do not populate the empty attribute with the info from the sourcefile but keep the matching expression
-                    run_.properties[propkey] = propvalue
+                    # Keep the matching expression
+                    rundata['properties'][propkey] = propvalue
 
                 # Test if the data source matches all the run-item attributes and populate all of them
-                for attrkey, attrvalue in run.attributes.items():
+                for attrkey, attrvalue in runitem.attributes.items():
 
                     # Check if the attribute value matches with the info from the sourcefile
                     sourcevalue = datasource.attributes(attrkey, validregexp=True)
@@ -1276,47 +1322,46 @@ class BidsMap:
                         match = match and match_runvalue(sourcevalue, attrvalue)
 
                     # Populate the empty attribute with the info from the sourcefile
-                    run_.attributes[attrkey] = sourcevalue
+                    rundata['attributes'][attrkey] = sourcevalue
 
                 # Try to fill the bids-labels
-                for bidskey, bidsvalue in run.bids.items():
-
-                    # NB: bidsvalue can be a (mutable) list
-                    bidsvalue = copy.copy(bidsvalue)
+                for bidskey, bidsvalue in runitem.bids.items():
 
                     # Replace the dynamic bids values, except the dynamic run-index (e.g. <<>>)
                     if bidskey == 'run' and bidsvalue and (bidsvalue.replace('<','').replace('>','').isdecimal() or bidsvalue == '<<>>'):
-                        run_.bids[bidskey] = bidsvalue
+                        rundata['bids'][bidskey] = bidsvalue
                     else:
-                        run_.bids[bidskey] = datasource.dynamicvalue(bidsvalue, runtime=runtime)
-
-                    # SeriesDescriptions (and ProtocolName?) may get a suffix like '_SBRef' from the vendor, try to strip it off
-                    run_ = run_.strip_suffix()
+                        rundata['bids'][bidskey] = datasource.dynamicvalue(bidsvalue, runtime=runtime)
 
                 # Try to fill the meta-data
-                for metakey, metavalue in run.meta.items():
-
-                    # NB: metavalue can be a (mutable) list
-                    metavalue = copy.copy(metavalue)
+                for metakey, metavalue in runitem.meta.items():
 
                     # Replace the dynamic meta values, except the IntendedFor value (e.g. <<task>>)
                     if metakey == 'IntendedFor':
-                        run_.meta[metakey] = metavalue
+                        rundata['meta'][metakey] = metavalue
                     elif metakey in ('B0FieldSource', 'B0FieldIdentifier') and fnmatch(str(metavalue), '*<<session*>>*'):
-                        run_.meta[metakey] = metavalue
+                        rundata['meta'][metakey] = metavalue
                     else:
-                        run_.meta[metakey] = datasource.dynamicvalue(metavalue, cleanup=False, runtime=runtime)
+                        rundata['meta'][metakey] = datasource.dynamicvalue(metavalue, cleanup=False, runtime=runtime)
 
                 # Stop searching the bidsmap if we have a match
                 if match:
-                    LOGGER.bcdebug(f"Found bidsmap match: {run} -> {run_}")
-                    return run_, run.provenance
+                    LOGGER.bcdebug(f"Found bidsmap match: {runitem} -> {runitem}")
+                    runitem = RunItem('', datatype, copy.deepcopy(rundata), datasource, self.options, self.plugins)
+
+                    # SeriesDescriptions (and ProtocolName?) may get a suffix like '_SBRef' from the vendor, try to strip it off
+                    runitem.strip_suffix()
+
+                    return runitem, runitem.provenance
 
         # We don't have a match (all tests failed, so datatype should be the *last* one, e.g. unknowndatatype)
-        LOGGER.bcdebug(f"Found no bidsmap match for: {run_.provenance}")
-        if run_.datatype not in unknowndatatypes:
-            LOGGER.warning(f"Datatype was expected to be in {unknowndatatypes}, instead it is {run_.datatype} -> {run_.provenance}")
-        return run_, ''
+        LOGGER.bcdebug(f"Found no bidsmap match for: {datasource.path}")
+        if datatype not in unknowndatatypes:
+            LOGGER.warning(f"Datatype was expected to be in {unknowndatatypes}, instead it is '{datatype}' -> {datasource.path}")
+
+        runitem = RunItem('', datatype, copy.deepcopy(rundata), datasource, self.options, self.plugins)
+        runitem.strip_suffix()
+        return runitem, ''
 
     def get_run(self, datatype: Union[str, DataType], suffix_idx: Union[int, str], datasource: DataSource) -> RunItem:
         """
@@ -1325,14 +1370,17 @@ class BidsMap:
         :param datatype:    The datatype in which a matching run is searched for (e.g. 'anat')
         :param suffix_idx:  The name of the suffix that is searched for (e.g. 'bold') or the datatype index number
         :param datasource:  The datasource with the provenance file from which the properties, attributes and dynamic values are read
-        :return:            The clean (filled) run item in the bidsmap[dataformat][bidsdatatype] with the matching suffix_idx,
+        :return:            A populated run-item that is deepcopied from bidsmap[dataformat][bidsdatatype] with the matching suffix_idx,
                             otherwise an empty dict
         """
 
         datatype = str(datatype)
 
-        for index, runitem in enumerate(self.dataformat(datasource.dataformat).datatype(datatype).runitems):
-            if index == suffix_idx or runitem.bids['suffix'] == suffix_idx:
+        for index, _runitem in enumerate(self.dataformat(datasource.dataformat).datatype(datatype).runitems):
+            if index == suffix_idx or _runitem.bids['suffix'] == suffix_idx:
+
+                runitem = copy.deepcopy(_runitem)
+                runitem.provenance = str(datasource.path)
 
                 for propkey, propvalue in runitem.properties.items():
                     runitem.properties[propkey] = propvalue
@@ -1346,8 +1394,6 @@ class BidsMap:
                 # Replace the dynamic bids values, except the dynamic run-index (e.g. <<>>)
                 for bidskey, bidsvalue in runitem.bids.items():
 
-                    # NB: bidsvalue can be a (mutable) list
-                    bidsvalue = copy.copy(bidsvalue)
                     if bidskey == 'run' and bidsvalue and (bidsvalue.replace('<','').replace('>','').isdecimal() or bidsvalue == '<<>>'):
                         runitem.bids[bidskey] = bidsvalue
                     else:
@@ -1356,8 +1402,6 @@ class BidsMap:
                 # Replace the dynamic meta values, except the IntendedFor value (e.g. <<task>>)
                 for metakey, metavalue in runitem.meta.items():
 
-                    # NB: metavalue can be a (mutable) list
-                    metavalue = copy.copy(metavalue)
                     if metakey == 'IntendedFor':
                         runitem.meta[metakey] = metavalue
                     elif metakey in ('B0FieldSource', 'B0FieldIdentifier') and fnmatch(str(metavalue), '*<<session*>>*'):
@@ -1376,14 +1420,14 @@ class BidsMap:
         :param provenance:  The unique provenance that is used to identify the run
         :param dataformat:  The dataformat section in the bidsmap in which a matching run is searched for, e.g. 'DICOM'. Otherwise, all dataformats are searched
         :param datatype:    The datatype in which a matching run is searched for (e.g. 'anat'). Otherwise, all datatypes are searched
-        :return:            The (unfilled) run item from the bidsmap[dataformat][bidsdatatype]
+        :return:            The unpopulated run-item that is taken as is from the bidsmap[dataformat][bidsdatatype]
         """
 
         dataformat = str(dataformat)
         datatype   = str(datatype)
 
         for dataformat in [self.dataformat(dataformat)] if dataformat else self.dataformats:
-            datatypes = [dataformat.datatype(datatype)] if datatype else dataformat.datatypes
+            datatypes = [dataformat.datatype(datatype)] if datatype in dataformat.datatypes else [] if datatype else dataformat.datatypes
             for dtype in datatypes:
                 for runitem in dtype.runitems:
                     if Path(runitem.provenance) == Path(provenance):
@@ -1393,7 +1437,7 @@ class BidsMap:
 
     def delete_run(self, provenance: Union[RunItem, str], datatype: Union[str, DataType]='', dataformat: Union[str, DataFormat]=''):
         """
-        Delete the first matching run from the BIDS map
+        Delete the first matching run from the BIDS map using its provenance
 
         :param provenance:  The provenance identifier of/or the run-item that is deleted
         :param datatype:    The datatype that of the deleted runitem, e.g. 'anat'
@@ -1415,22 +1459,24 @@ class BidsMap:
 
     def insert_run(self, runitem: RunItem, position: int=None):
         """
-        Inserts a run-item to the BIDS map (e.g. allowing you to insert a run-item from another bidsmap).
+        Inserts a run-item (as is) to the BIDS map (e.g. allowing you to insert a run-item from another bidsmap).
         Optionally, a copy of the datasource is stored in the provenance store
 
-        :param runitem:     The (cleaned orphan) run item that is appended to the list of run items of its datatype
+        :param runitem:     The (typically cleaned orphan) run item that is appended to the list of run items of its datatype
         :param position:    The position at which the run is inserted. The run is appended at the end if position is None
         """
 
         # Work from the provenance store if given (the store source and target are set during bidsmapper runtime)
-        if self.store and runitem.datasource.path.is_file():
-            targetfile = self.store['target']/runitem.datasource.path.relative_to(self.store['source'])
+        sourcefile = Path(runitem.provenance)
+        if self.store and sourcefile.is_file():
+            targetfile = self.store['target']/sourcefile.relative_to(self.store['source'])
             if not targetfile.is_file():
                 targetfile.parent.mkdir(parents=True, exist_ok=True)
                 LOGGER.verbose(f"Storing a copy of the discovered sample: {targetfile}")
-                runitem.provenance = str(shutil.copyfile(runitem.datasource.path, targetfile))
+                runitem.provenance = str(shutil.copyfile(sourcefile, targetfile))
 
         # Insert the run item
+        self.add_dataformat(runitem.dataformat)                             # Add the dataformat if it doesn't exist
         self.dataformat(runitem.dataformat).add_datatype(runitem.datatype)  # Add the datatype if it doesn't exist
         self.dataformat(runitem.dataformat).datatype(runitem.datatype).insert_run(runitem, position)
 
@@ -1448,27 +1494,28 @@ class BidsMap:
         :param runitem:         The run item that is being moved to its new runitem.datatype
         """
 
-        dataformat   = runitem.dataformat
         new_datatype = runitem.datatype
-        num_runs_in  = len(self.dir(dataformat))
+        num_runs_in  = len(self.dir(runitem.dataformat))
 
-        # Warn the user if the target run already exists when the run is moved to another datatype
         if source_datatype != new_datatype:
-            if self.exist_run(runitem, new_datatype):
-                LOGGER.error(f'The "{source_datatype}" run already exists in {new_datatype}...')
+
+            # Warn the user if the target run already exists when the run is moved to another datatype
+            if self.find_run(runitem.provenance, runitem.dataformat, new_datatype):
+                LOGGER.error(f'The "{source_datatype}" run already exists in {runitem}')
 
             # Delete the source run
-            self.delete_run(runitem, source_datatype)
+            self.delete_run(runitem, source_datatype, runitem.dataformat)
 
             # Append the (cleaned-up) target run
             self.insert_run(runitem)
 
         else:
-            self.dataformat(dataformat).datatype(new_datatype).replace_run(runitem)
 
-        num_runs_out = len(self.dir(dataformat))
+            self.dataformat(runitem.dataformat).datatype(new_datatype).replace_run(runitem)
+
+        num_runs_out = len(self.dir(runitem.dataformat))
         if num_runs_out != num_runs_in:
-            LOGGER.error(f"Number of runs in bidsmap['{dataformat}'] changed unexpectedly: {num_runs_in} -> {num_runs_out}")
+            LOGGER.error(f"Number of runs in bidsmap['{runitem.dataformat}'] changed unexpectedly: {num_runs_in} -> {num_runs_out}")
 
 
 def unpack(sesfolder: Path, wildcard: str='', workfolder: Path='', _subprefix: Union[str,None]='') -> Tuple[Set[Path], bool]:
@@ -1643,15 +1690,15 @@ def get_datasource(sourcedir: Path, plugins: Plugins, recurse: int=8) -> DataSou
 
     datasource = DataSource()
     if sourcedir.is_dir():
-        for item in sorted(sourcedir.iterdir()):
-            if item.name.startswith('.'):
-                LOGGER.verbose(f"Ignoring hidden data-source: {item}")
+        for sourcepath in sorted(sourcedir.iterdir()):
+            if sourcepath.name.startswith('.'):
+                LOGGER.verbose(f"Ignoring hidden data-source: {sourcepath}")
                 continue
-            if item.is_dir() and recurse:
-                datasource = get_datasource(item, plugins, recurse-1)
-            elif item.is_file():
-                datasource = DataSource(item, plugins)
-            if datasource.dataformat:
+            if sourcepath.is_dir() and recurse:
+                datasource = get_datasource(sourcepath, plugins, recurse-1)
+            elif sourcepath.is_file():
+                datasource = DataSource(sourcepath, plugins)
+            if datasource.has_plugin():
                 return datasource
 
     return datasource
@@ -2217,9 +2264,9 @@ def insert_bidskeyval(bidsfile: Union[str, Path], bidskey: str, newvalue: str, v
     bidsext  = ''.join(Path(bidsfile).suffixes)
 
     # Parse the key-value pairs and store all the run info
-    run   = RunItem()
-    subid = ''
-    sesid = ''
+    runitem = RunItem()
+    subid   = ''
+    sesid   = ''
     for keyval in bidsname.split('_'):
         if '-' in keyval:
             key, val = keyval.split('-', 1)
@@ -2228,11 +2275,11 @@ def insert_bidskeyval(bidsfile: Union[str, Path], bidskey: str, newvalue: str, v
             elif key == 'ses':
                 sesid = keyval
             else:
-                run.bids[key] = val
+                runitem.bids[key] = val
         else:
-            run.bids['suffix'] = f"{run.bids.get('suffix','')}_{keyval}"     # account for multiple suffixes (e.g. _bold_e1_ph from dcm2niix)
-    if run.bids.get('suffix','').startswith('_'):
-        run.bids['suffix'] = run.bids['suffix'][1:]
+            runitem.bids['suffix'] = f"{runitem.bids.get('suffix','')}_{keyval}"     # account for multiple suffixes (e.g. _bold_e1_ph from dcm2niix)
+    if runitem.bids.get('suffix','').startswith('_'):
+        runitem.bids['suffix'] = runitem.bids['suffix'][1:]
 
     # Insert the key-value pair in the run
     if bidskey == 'sub':
@@ -2240,10 +2287,10 @@ def insert_bidskeyval(bidsfile: Union[str, Path], bidskey: str, newvalue: str, v
     elif bidskey == 'ses':
         sesid = newvalue
     else:
-        run.bids[bidskey] = newvalue
+        runitem.bids[bidskey] = newvalue
 
     # Compose the new filename
-    newbidsfile = (bidspath / run.bidsname(subid, sesid, validkeys, cleanup=False)).with_suffix(bidsext)
+    newbidsfile = (bidspath/runitem.bidsname(subid, sesid, validkeys, cleanup=False)).with_suffix(bidsext)
 
     if isinstance(bidsfile, str):
         newbidsfile = str(newbidsfile)

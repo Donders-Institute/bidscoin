@@ -55,8 +55,9 @@ def bidsmapper(sourcefolder: str, bidsfolder: str, bidsmap: str, template: str, 
     if [char for char in sesprefix or '' if char in ('^', '$', '+', '{', '}', '[', ']', '\\', '|', '(', ')')]:
         LOGGER.bcdebug(f"Regular expression metacharacters found in {sesprefix}, this may cause errors later on...")
     if not rawfolder.is_dir():
-        print(f"Rawfolder '{rawfolder}' not found")
-        exit(1)
+        raise SystemExit(f"\n[ERROR] Exiting the program because your sourcefolder argument '{sourcefolder}' was not found")
+    if not templatefile.is_file():
+        raise SystemExit(f"\n[ERROR] Exiting the program because your template bidsmap '{templatefile}' was not found")
 
     # Start logging
     if force:
@@ -75,21 +76,22 @@ def bidsmapper(sourcefolder: str, bidsfolder: str, bidsmap: str, template: str, 
     template    = BidsMap(templatefile, plugins=plugins, checks=(True, True, False))
     template.check_template()
 
-    # Create the new bidsmap as a copy / bidsmap skeleton with no data type entries (i.e. bidsmap with empty lists)
+    # Create the new bidsmap as a copy / bidsmap skeleton with only data types without run-items (i.e. empty lists)
     if force and bidsmap_old.filepath.name:
         LOGGER.info(f"Deleting previous bidsmap: {bidsmap_old.filepath}")
         bidsmap_old.filepath.unlink()
         bidsmap_old.filepath = Path()
-    bidsmap_new      = copy.deepcopy(bidsmap_old if bidsmap_old.filepath.name else template)
-    template.options = bidsmap_new.options              # Always use the options of the new bidsmap
-    template.plugins = bidsmap_new.plugins              # Always use the plugins of the new bidsmap
+    bidsmap_new          = copy.deepcopy(bidsmap_old if bidsmap_old.filepath.name else template)
+    bidsmap_new.filepath = bidsmapfile
+    template.options     = bidsmap_new.options      # Always use the options of the new bidsmap
+    template.plugins     = bidsmap_new.plugins      # Always use the plugins of the new bidsmap
     if unzip:
         bidsmap_new.options['unzip'] = unzip
     else:
         unzip = bidsmap_new.options.get('unzip','')
     for dataformat in bidsmap_new.dataformats:
         for datatype in dataformat.datatypes:
-            datatype.delete_runs()
+            dataformat.delete_runs(datatype)
 
     # Store/retrieve the empty or user-defined sub-/ses-prefix. The new bidsmap is now ready to be populated
     subprefix, sesprefix = setprefix(bidsmap_new, subprefix, sesprefix, rawfolder, update = not no_update)
@@ -236,9 +238,9 @@ def main():
     try:
         bidsmapper(**vars(args))
 
-    except Exception:
+    except Exception as error:
         trackusage('bidsmapper_exception')
-        raise
+        raise error
 
 
 if __name__ == "__main__":

@@ -44,8 +44,7 @@ def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: 
     bidscoinfolder = bidsfolder/'code'/'bidscoin'
     bidscoinfolder.mkdir(parents=True, exist_ok=True)
     if not rawfolder.is_dir():
-        print(f"Rawfolder '{rawfolder}' not found")
-        return
+        raise SystemExit(f"\n[ERROR] Exiting the program because your sourcefolder argument '{sourcefolder}' was not found")
 
     # Start logging
     bcoin.setup_logging(bidscoinfolder/'bidscoiner.log')
@@ -81,7 +80,7 @@ def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: 
 
     # Create a README file if it does not exist
     readme_file = bidsfolder/'README'
-    if not (readme_file.is_file() or next(bidsfolder.glob('README.*'))):
+    if not (readme_file.is_file() or next(bidsfolder.glob('README.*'), None)):
         LOGGER.info(f"Creating a template README file (adjust it to your needs): {readme_file}")
         try:
             urllib.request.urlretrieve('https://raw.githubusercontent.com/bids-standard/bids-starter-kit/main/templates/README.MD', readme_file)
@@ -150,7 +149,7 @@ def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: 
 
                 # Check if we should skip the session-folder
                 datasource = bids.get_datasource(subject, bidsmap.plugins)
-                subid,_    = datasource.subid_sesid(bidsmap[datasource.dataformat]['subject'], bidsmap[datasource.dataformat]['session'])
+                subid,_    = datasource.subid_sesid(bidsmap.dataformat(datasource.dataformat).subject, bidsmap.dataformat(datasource.dataformat).session)
                 if (bidsfolder/subid).is_dir() and not force:
                     LOGGER.info(f">>> Skipping already processed subject: {bidsfolder/subid} (you can use the -f option to overrule)")
                     continue
@@ -263,15 +262,15 @@ def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: 
                     if not datasource.dataformat:
                         LOGGER.info(f">>> No datasources found in '{sesfolder}'")
                         continue
-                    subid        = bidsmap[datasource.dataformat]['subject']
-                    sesid        = bidsmap[datasource.dataformat]['session']
+                    subid        = bidsmap.dataformat(datasource.dataformat).subject
+                    sesid        = bidsmap.dataformat(datasource.dataformat).session
                     subid, sesid = datasource.subid_sesid(subid, sesid or '')
                     bidssession  = bidsfolder/subid/sesid       # TODO: Support DICOMDIR with multiple subjects (as in PYDICOMDIR)
                     if not force and bidssession.is_dir():
                         datatypes = set()
-                        for dataformat in dataformats:
-                            for datatype in lsdirs(bidssession):                               # See what datatypes we already have in the bids session-folder
-                                if list(datatype.iterdir()) and bidsmap[dataformat].get(datatype.name): # See if we are going to add data for this datatype
+                        for datatype in [dtype for dtype in lsdirs(bidssession) if next(dtype.iterdir())]:  # See what non-empty datatypes we already have in the bids session-folder
+                            for dataformat in bidsmap.dataformats:
+                                if datatype.name in dataformat.datatypes:                                   # See if we are going to add data for this datatype
                                     datatypes.add(datatype.name)
                         if datatypes:
                             LOGGER.info(f">>> Skipping processed session: {bidssession} already has {datatypes} data (you can carefully use the -f option to overrule)")
@@ -320,9 +319,9 @@ def main():
     try:
         bidscoiner(**vars(args))
 
-    except Exception:
+    except Exception as error:
         trackusage('bidscoiner_exception')
-        raise
+        raise error
 
 
 if __name__ == "__main__":

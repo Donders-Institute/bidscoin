@@ -53,9 +53,9 @@ def fixmeta(bidsfolder: str, pattern: str, metadata: dict, participant: list, bi
     LOGGER.info(f"Command: fixmeta {' '.join(sys.argv[1:])}")
 
     # Load the bidsmap data (-> plugins)
-    bidsmap, _ = bids.BidsMap(Path(bidsmap or 'bidsmap.yaml'), bidsdir/'code'/'bidscoin', checks=(False, False, False))
-    if not bidsmap:
-        bidsmap, _ = bids.BidsMap(bidsmap_template, checks=(False, False, False))
+    bidsmap = bids.BidsMap(Path(bidsmap or 'bidsmap.yaml'), bidsdir/'code'/'bidscoin', checks=(False, False, False))
+    if not bidsmap.filepath:
+        bidsmap = bids.BidsMap(bidsmap_template, checks=(False, False, False))
     plugins  = bidsmap.plugins
     provdata = bids.bidsprov(bidsdir)
 
@@ -117,9 +117,9 @@ def main():
     try:
         fixmeta(**vars(args))
 
-    except Exception:
+    except Exception as error:
         trackusage('fixmeta_exception')
-        raise
+        raise error
 
 
 if __name__ == '__main__':

@@ -4,7 +4,6 @@ implementation that supports the conversion of Philips SPAR/SDAT files, Siemens 
 in conjunction with BIDS sidecar files"""
 
 import logging
-import shutil
 import json
 import pandas as pd
 import dateutil.parser
@@ -12,7 +11,7 @@ from typing import Union
 from bids_validator import BIDSValidator
 from pathlib import Path
 from bidscoin import bcoin, bids, due, Doi
-from bidscoin.bids import BidsMap, Plugin
+from bidscoin.bids import BidsMap, DataFormat, Plugin, Plugins
 
 LOGGER = logging.getLogger(__name__)
 
@@ -70,7 +69,7 @@ def has_support(file: Path, dataformat: Union[DataFormat, str]='') -> str:
     return ''
 
 
-def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: Plugin) -> str:
+def get_attribute(dataformat: Union[DataFormat, str], sourcefile: Path, attribute: str, options: Plugin) -> str:
     """
     This plugin function reads attributes from the supported sourcefile
 
@@ -103,7 +102,7 @@ def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: Pl
     LOGGER.error(f"Unsupported MRS data-format: {dataformat}")
 
 
-def bidsmapper_plugin(session: Path, bidsmap_new: BidsMap, bidsmap_old: BidsMap, template: BidsMap, store: dict) -> None:
+def bidsmapper_plugin(session: Path, bidsmap_new: BidsMap, bidsmap_old: BidsMap, template: BidsMap) -> None:
     """
     All the heuristics spec2nii2bids attributes and properties onto bids labels and meta-data go into this plugin function.
     The function is expected to update/append new runs to the bidsmap_new data structure. The bidsmap options for this plugin
@@ -115,25 +114,20 @@ def bidsmapper_plugin(session: Path, bidsmap_new: BidsMap, bidsmap_old: BidsMap,
     :param bidsmap_new: The new study bidsmap that we are building
     :param bidsmap_old: The previous study bidsmap that has precedence over the template bidsmap
     :param template:    The template bidsmap with the default heuristics
-    :param store:       The paths of the source- and target-folder
     :return:
     """
 
     # Get the plugin settings
-    plugins = {'spec2nii2bids': Plugin(bidsmap_new['Options']['plugins']['spec2nii2bids'])}
+    plugins = Plugins({'spec2nii2bids': bidsmap_new.plugins['spec2nii2bids']})
 
     # Update the bidsmap with the info from the source files
     for sourcefile in [file for file in session.rglob('*') if has_support(file)]:
 
         datasource = bids.DataSource(sourcefile, plugins)
-        dataformat = datasource.dataformat
 
         # Input checks
-        if not template[dataformat] and not bidsmap_old[dataformat]:
-            LOGGER.error(f"No {dataformat} source information found in the bidsmap and template for: {sourcefile}")
-            return
-        if not template.get(dataformat) and not bidsmap_old.get(dataformat):
-            LOGGER.error(f"No {dataformat} source information found in the bidsmap and template for: {sourcefile}")
+        if datasource.dataformat not in template.dataformats + bidsmap_old.dataformats:
+            LOGGER.error(f"No {datasource} information found in the bidsmap and template for: {sourcefile}")
             return
 
         # See if we can find a matching run in the old bidsmap
@@ -179,7 +173,7 @@ def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> Union[N
 
     # Get started and see what dataformat we have
     options     = bidsmap.plugins['spec2nii2bids']
-    datasource  = bids.get_datasource(session, {'spec2nii2bids':options})
+    datasource  = bids.get_datasource(session, {'spec2nii2bids': options})
     dataformat  = datasource.dataformat
     sourcefiles = [file for file in session.rglob('*') if has_support(file)]
     if not sourcefiles:
@@ -202,32 +196,32 @@ def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> Union[N
         run, runid = bidsmap.get_matching_run(datasource, runtime=True)
 
         # Check if we should ignore this run
-        if datasource.datatype in bidsmap.options['ignoretypes']:
+        if run.datatype in bidsmap.options['ignoretypes']:
             LOGGER.info(f"--> Leaving out: {source}")
-            bids.bidsprov(bidsses, source, runid, datasource.datatype)              # Write out empty provenance data
+            bids.bidsprov(bidsses, source, runid, run.datatype)              # Write out empty provenance data
             continue
 
         # Check that we know this run
         if not runid:
-            LOGGER.error(f"Skipping unknown '{datasource.datatype}' run: {source}\n-> Re-run the bidsmapper and delete the MRS output data in {bidsses} to solve this warning")
+            LOGGER.error(f"Skipping unknown '{run.datatype}' run: {source}\n-> Re-run the bidsmapper and delete the MRS output data in {bidsses} to solve this warning")
             bids.bidsprov(bidsses, source)                  # Write out empty provenance data
             continue
 
         LOGGER.info(f"--> Coining: {source}")
 
         # Create the BIDS session/datatype output folder
-        outfolder = bidsses/datasource.datatype
+        outfolder = bidsses/run.datatype
         outfolder.mkdir(parents=True, exist_ok=True)
 
         # Compose the BIDS filename using the matched run
-        bidsignore = bids.check_ignore(datasource.datatype, bidsmap.options['bidsignore'])
-        bidsname   = bids.get_bidsname(subid, sesid, run, not bidsignore, runtime=True)
+        bidsignore = bids.check_ignore(run.datatype, bidsmap.options['bidsignore'])
+        bidsname   = run.get_bidsname(subid, sesid, not bidsignore, runtime=True)
         bidsignore = bidsignore or bids.check_ignore(bidsname+'.json', bidsmap.options['bidsignore'], 'file')
-        bidsname   = bids.increment_runindex(outfolder, bidsname, run, scans_table)
+        bidsname   = run.increment_runindex(outfolder, bidsname, scans_table)
         target     = (outfolder/bidsname).with_suffix('.nii.gz')
 
         # Check if the bidsname is valid
-        bidstest = (Path('/')/subid/sesid/datasource.datatype/bidsname).with_suffix('.nii').as_posix()
+        bidstest = (Path('/')/subid/sesid/run.datatype/bidsname).with_suffix('.nii').as_posix()
         isbids   = BIDSValidator().is_bids(bidstest)
         if not isbids and not bidsignore:
             LOGGER.warning(f"The '{bidstest}' output name did not pass the bids-validator test")
@@ -254,7 +248,7 @@ def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> Union[N
             return
         command = options.get('command', 'spec2nii')
         errcode = bcoin.run_command(f'{command} {dformat} -j -f "{bidsname}" -o "{outfolder}" {args} {arg} "{source}"')
-        bids.bidsprov(bidsses, source, runid, datasource.datatype, [target] if target.is_file() else [])
+        bids.bidsprov(bidsses, source, runid, run.datatype, [target] if target.is_file() else [])
         if not target.is_file():
             if not errcode:
                 LOGGER.error(f"Output file not found: {target}")
@@ -262,7 +256,7 @@ def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> Union[N
 
         # Load/copy over and adapt the newly produced json sidecar-file
         sidecar  = target.with_suffix('').with_suffix('.json')
-        metadata = bids.updatemetadata(datasource, sidecar, run['meta'], options.get('meta',[]))
+        metadata = bids.updatemetadata(datasource, sidecar, run.meta, options.get('meta',[]))
         if metadata:
             with sidecar.open('w') as json_fid:
                 json.dump(metadata, json_fid, indent=4)
@@ -290,7 +284,7 @@ def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> Union[N
 
     # Write the scans_table to disk
     LOGGER.verbose(f"Writing acquisition time data to: {scans_tsv}")
-    scans_table.sort_values(by=['acq_time','filename'], inplace=True)
+    scans_table.sort_values(by=['acq_time', 'filename'], inplace=True)
     scans_table.replace('','n/a').to_csv(scans_tsv, sep='\t', encoding='utf-8', na_rep='n/a')
 
     # Collect personal data for the participants.tsv file

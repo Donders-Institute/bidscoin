@@ -215,9 +215,9 @@ def main():
     try:
         medeface(**vars(args))
 
-    except Exception:
+    except Exception as error:
         trackusage('medeface_exception')
-        raise
+        raise error
 
 
 if __name__ == '__main__':

@@ -15,7 +15,7 @@ from typing import Union, List
 from pathlib import Path
 from bidscoin import bcoin, bids, lsdirs, due, Doi
 from bidscoin.utilities import physio
-from bidscoin.bids import BidsMap, Plugin, Plugins, DataFormat
+from bidscoin.bids import BidsMap, DataFormat, Plugin, Plugins
 try:
     from nibabel.testing import data_path
 except ImportError:
@@ -91,7 +91,7 @@ def has_support(file: Path, dataformat: Union[DataFormat, str]='') -> str:
     return ''
 
 
-def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options) -> Union[str, int]:
+def get_attribute(dataformat: Union[DataFormat, str], sourcefile: Path, attribute: str, options) -> Union[str, int]:
     """
     This plugin supports reading attributes from DICOM and PAR dataformats
 
@@ -168,7 +168,7 @@ def bidsmapper_plugin(session: Path, bidsmap_new: BidsMap, bidsmap_old: BidsMap,
 
                 # Try to automagically set the {part: phase/imag/real} (should work for Siemens data)
                 if not run.datatype == '' and 'part' in run.bids and not run.bids['part'][-1] and run.attributes.get('ImageType'):    # part[-1]==0 -> part is not specified
-                    imagetype = ast.literal_eval(run['attributes']['ImageType'])                            # E.g. ImageType = "['ORIGINAL', 'PRIMARY', 'M', 'ND']"
+                    imagetype = ast.literal_eval(run.attributes['ImageType'])                               # E.g. ImageType = "['ORIGINAL', 'PRIMARY', 'M', 'ND']"
                     if 'P' in imagetype:
                         run.bids['part'][-1] = run.bids['part'].index('phase')                              # E.g. part = ['', mag, phase, real, imag, 0]
                     # elif 'M' in imagetype:
@@ -178,7 +178,7 @@ def bidsmapper_plugin(session: Path, bidsmap_new: BidsMap, bidsmap_old: BidsMap,
                     elif 'R' in imagetype:
                         run.bids['part'][-1] = run.bids['part'].index('real')
                     if run.bids['part'][-1]:
-                        LOGGER.verbose(f"Updated {dataformat}/{datasource.datatype} entity: 'part' -> '{run.bids['part'][run.bids['part'][-1]]}' ({imagetype})")
+                        LOGGER.verbose(f"Updated {run} entity: 'part' -> '{run.bids['part'][run.bids['part'][-1]]}' ({imagetype})")
 
             else:
                 LOGGER.bcdebug(f"Known sample: {datasource}")
@@ -441,7 +441,7 @@ def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> Union[N
                         LOGGER.warning(f"The {newbidsname} image is a derivate / not BIDS-compliant -- you can probably delete it safely and update {scans_tsv}")
 
                 # Save the NIfTI file with the newly constructed name
-                newbidsname = bids.increment_runindex(outfolder, newbidsname, run, scans_table, targets)        # Update the runindex now that the name has changed
+                newbidsname = run.increment_runindex(outfolder, newbidsname, scans_table, targets)        # Update the runindex now that the name has changed
                 newbidsfile = outfolder/newbidsname
                 LOGGER.verbose(f"Found dcm2niix {postfixes} postfixes, renaming\n{dcm2niixfile} ->\n{newbidsfile}")
                 if newbidsfile.is_file():
@@ -454,7 +454,7 @@ def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> Union[N
                     oldfile.replace(newbidsfile.with_suffix('').with_suffix(''.join(oldfile.suffixes)))
 
         # Write out provenance data
-        bids.bidsprov(bidsses, source, runid, datasource.datatype, targets)
+        bids.bidsprov(bidsses, source, runid, run.datatype, targets)
 
         # Loop over all non-derivative targets (i.e. the produced output files) and edit the json sidecar data
         for target in sorted(targets):
@@ -470,9 +470,9 @@ def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> Union[N
             metadata = bids.updatemetadata(datasource, jsonfile, run.meta, options.get('meta',[]))
 
             # Remove the bval/bvec files of sbref- and inv-images (produced by dcm2niix but not allowed by the BIDS specifications)
-            if ((datasource.datatype == 'dwi'  and suffix == 'sbref') or
-                (datasource.datatype == 'fmap' and suffix == 'epi')   or
-                (datasource.datatype == 'anat' and suffix == 'MP2RAGE')):
+            if ((run.datatype == 'dwi'  and suffix == 'sbref') or
+                (run.datatype == 'fmap' and suffix == 'epi')   or
+                (run.datatype == 'anat' and suffix == 'MP2RAGE')):
                 for ext in ('.bval', '.bvec'):
                     bfile = target.with_suffix('').with_suffix(ext)
                     if bfile.is_file() and not bids.check_ignore(bfile.name, bidsignore, 'file'):

@@ -167,9 +167,9 @@ def main():
     try:
         deface(**vars(args))
 
-    except Exception:
+    except Exception as error:
         trackusage('deface_exception')
-        raise
+        raise error
 
 
 if __name__ == '__main__':

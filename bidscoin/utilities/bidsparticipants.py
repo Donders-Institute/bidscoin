@@ -11,10 +11,10 @@ if find_spec('bidscoin') is None:
     import sys
     sys.path.append(str(Path(__file__).parents[2]))
 from bidscoin import bcoin, bids, lsdirs, trackusage, __version__
-from bidscoin.bids import Bidsmap
+from bidscoin.bids import BidsMap
 
 
-def scanpersonals(bidsmap: Bidsmap, session: Path, personals: dict, keys: list) -> bool:
+def scanpersonals(bidsmap: BidsMap, session: Path, personals: dict, keys: list) -> bool:
     """
     Converts the session source-files into BIDS-valid NIfTI-files in the corresponding bidsfolder and
     extracts personals (e.g. Age, Sex) from the source header
@@ -69,11 +69,9 @@ def bidsparticipants(sourcefolder: str, bidsfolder: str, keys: list, bidsmap: st
     rawfolder  = Path(sourcefolder).resolve()
     bidsfolder = Path(bidsfolder).resolve()
     if not rawfolder.is_dir():
-        print(f"Rawfolder '{rawfolder}' not found")
-        return
+        raise SystemExit(f"\n[ERROR] Exiting the program because your sourcefolder argument '{sourcefolder}' was not found")
     if not bidsfolder.is_dir():
-        print(f"Bidsfolder '{bidsfolder}' not found")
-        return
+        raise SystemExit(f"\n[ERROR] Exiting the program because your bidsfolder argument '{bidsfolder}' was not found")
 
     # Start logging
     if dryrun:
@@ -85,8 +83,8 @@ def bidsparticipants(sourcefolder: str, bidsfolder: str, keys: list, bidsmap: st
     LOGGER.info(f">>> bidsparticipants sourcefolder={rawfolder} bidsfolder={bidsfolder} bidsmap={bidsmap}")
 
     # Get the bidsmap sub-/ses-prefix from the bidsmap YAML-file
-    bidsmap,_ = bids.load_bidsmap(Path(bidsmap), bidsfolder/'code'/'bidscoin', checks=(False, False, False))
-    if not bidsmap:
+    bidsmap = BidsMap(Path(bidsmap), bidsfolder/'code'/'bidscoin', checks=(False, False, False))
+    if not bidsmap.filepath.name:
         LOGGER.info('Make sure to run "bidsmapper" first, exiting now')
         return
     subprefix = bidsmap.options['subprefix']
@@ -122,7 +120,7 @@ def bidsparticipants(sourcefolder: str, bidsfolder: str, keys: list, bidsmap: st
             for session in sessions:
 
                 success      = False            # Only take data from the first session -> BIDS specification
-                subid, sesid = bids.DataSource(session/'dum.my', subprefix=subprefix, sesprefix=sesprefix).subid_sesid()
+                subid, sesid = bids.DataSource(session/'dum.my', bidsmap.plugins, '', bidsmap.options).subid_sesid()
 
                 # Unpack the data in a temporary folder if it is tarballed/zipped and/or contains a DICOMDIR file
                 sesfolders, unpacked = bids.unpack(session, bidsmap.options.get('unzip',''))
@@ -163,9 +161,9 @@ def main():
     try:
         bidsparticipants(**vars(args))
 
-    except Exception:
+    except Exception as error:
         trackusage('bidsparticipants_exception')
-        raise
+        raise error
 
 
 if __name__ == "__main__":
