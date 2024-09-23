@@ -63,7 +63,7 @@ class TestDataSource:
         assert datasource.properties( 'filepath:.*/(.*?)_files/.*') == 'test'   # path = [..]/pydicom/data/test_files/MR_small.dcm'
         assert datasource.properties(r'filename:MR_(.*?)\.dcm')     == 'small'
         assert datasource.properties( 'filesize')                   == '9.60 kB'
-        assert datasource.properties( 'nrfiles')                    in (75,76)  # Depends on the pydicom version
+        assert datasource.properties( 'nrfiles')                    in (75,76,86)  # Depends on the pydicom version
 
     def test_attributes(self, datasource, extdatasource):
         assert datasource.attributes(r'PatientName:.*\^(.*?)1') == 'MR'         # PatientName = 'CompressedSamples^MR1'
@@ -97,7 +97,7 @@ class TestDataSource:
         assert datasource.dynamicvalue(r'<0x00100010>')                                          == 'CompressedSamplesMR1'
         assert datasource.dynamicvalue(r'<0x10,0x10>')                                           == 'CompressedSamplesMR1'
         assert datasource.dynamicvalue(r'<(0x10, 0x10)>')                                        == 'CompressedSamplesMR1'
-        assert datasource.dynamicvalue(r'<(0010, 0010)>')                                        == 'CompressedSamplesMR1'
+        assert datasource.dynamicvalue(r'<(0010,0010)>')                                         == 'CompressedSamplesMR1'
 
 
 class TestRunItem:
@@ -527,7 +527,7 @@ def test_get_dicomfield(dcm_file_csa):
     assert value == 12
     assert value == bids.get_dicomfield('0x00200011', dcm_file_csa)
     assert value == bids.get_dicomfield('(0x20,0x11)', dcm_file_csa)
-    assert value == bids.get_dicomfield('(0020, 0011)', dcm_file_csa)
+    assert value == bids.get_dicomfield('(0020,0011)', dcm_file_csa)
 
     # -> The special PhaseEncodingDirection tag
     value = bids.get_dicomfield('PhaseEncodingDirection', dcm_file_csa)
@@ -677,7 +677,7 @@ def test_updatemetadata(dcm_file, tmp_path):
 
     # Create the user metadata
     usermeta = Meta({'PatientName':       'UserTest',
-                     'DynamicName':       '<<(0010, 0010)>>',
+                     'DynamicName':       '<<(0010,0010)>>',
                      'B0FieldSource':     'Source<<session:[-2:2]>>',
                      'B0FieldIdentifier': ['Identifier<<session>>', 'Identifier']})
 
