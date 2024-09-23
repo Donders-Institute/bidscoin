@@ -1284,7 +1284,7 @@ class BidsMap:
 
         unknowndatatypes = self.options.get('unknowntypes') or ['unknown_data']
         ignoredatatypes  = self.options.get('ignoretypes') or []
-        bidsdatatypes    = [dtype.datatype for dtype in self.dataformat(datasource.dataformat).datatypes if dtype not in unknowndatatypes + ignoredatatypes]
+        bidsdatatypes    = sorted([dtype.datatype for dtype in self.dataformat(datasource.dataformat).datatypes if dtype not in unknowndatatypes + ignoredatatypes])
         datasource       = copy.deepcopy(datasource)
         rundata          = {'provenance': str(datasource.path), 'properties': {}, 'attributes': {}, 'bids': {}, 'meta': {}}
         """The a run-item data structure. NB: Keep in sync with the RunItem() data attributes"""
