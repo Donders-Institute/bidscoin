@@ -710,7 +710,7 @@ class DataType:
     def __eq__(self, other):
         """A shallow test if the DataType name is equal (so irrespective whether their runitems differ)"""
 
-        if isinstance(other, Union[DataType, str]):
+        if isinstance(other, DataType) or isinstance(other, str):
             return str(self) == str(other)
         else:
             return NotImplemented
@@ -867,10 +867,14 @@ class DataFormat:
             self._data.pop(datatype, None)
             LOGGER.bcdebug(f"The '{datatype}' datatype was removed from {self}")
 
-    def delete_runs(self, datatype: Union[str, DataType]):
-        """Delete all run-items from the datatype section"""
+    def delete_runs(self, datatype: Union[str, DataType]=''):
+        """Delete all run-items from the dataformat or only from a datatype section"""
 
-        self._data[str(datatype)] = []
+        if not datatype:
+            for datatype in self.datatypes:
+                self.delete_runs(datatype)
+        else:
+            self._data[str(datatype)] = []
 
 
 class BidsMap:
@@ -1461,8 +1465,7 @@ class BidsMap:
         """Delete all run-items from the bidsmap"""
 
         for dataformat in self.dataformats:
-            for datatype in dataformat.datatypes:
-                dataformat.delete_runs(datatype)
+            dataformat.delete_runs()
 
     def insert_run(self, runitem: RunItem, position: int=None):
         """
@@ -1751,7 +1754,7 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
 
     Another hack is to get 'PhaseEncodingDirection` (see https://neurostars.org/t/determining-bids-phaseencodingdirection-from-dicom/612/10)
 
-    :param tagname:     DICOM attribute name (e.g. 'SeriesNumber') or Pydicom-style tag number (e.g. '0x00200011', '(0x20,0x11)', '(0020, 0011)')
+    :param tagname:     DICOM attribute name (e.g. 'SeriesNumber') or Pydicom-style tag number (e.g. '0x00200011', '(0x20,0x11)', '(0020,0011)')
     :param dicomfile:   The full pathname of the dicom-file
     :return:            Extracted tag-values as a flat string
     """
@@ -1810,7 +1813,7 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
                     # XA enhanced DICOM hack: Catch missing EchoNumbers from the private ICE_Dims field (0x21, 0x1106)
                     if tagname in ('EchoNumber', 'EchoNumbers') and not value:
                         for elem in dicomdata.iterall():
-                            if elem.tag == (0x21, 0x1106):
+                            if elem.tag == (0x21,0x1106):
                                 value = elem.value.split('_')[1] if '_' in elem.value else ''
                                 LOGGER.bcdebug(f"Parsed `EchoNumber(s)` from Siemens ICE_Dims `{elem.value}` as: {value}")
                                 break
