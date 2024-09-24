@@ -710,7 +710,7 @@ class DataType:
     def __eq__(self, other):
         """A shallow test if the DataType name is equal (so irrespective whether their runitems differ)"""
 
-        if isinstance(other, DataType) or isinstance(other, str):
+        if isinstance(other, (DataType, str)):
             return str(self) == str(other)
         else:
             return NotImplemented
@@ -804,7 +804,7 @@ class DataFormat:
     def __eq__(self, other):
         """A shallow test if the DataFormat name is equal (so irrespective whether their datatypes differ)"""
 
-        if isinstance(other, Union[DataFormat, str]):
+        if isinstance(other, (DataFormat, str)):
             return str(self) == str(other)
         else:
             return NotImplemented
