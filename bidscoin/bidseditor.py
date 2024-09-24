@@ -93,9 +93,7 @@ class MainWindow(QMainWindow):
                     template_bidsmap.plugins = input_bidsmap.plugins    # Always use the plugins of the input bidsmap
             else:
                 input_bidsmap = copy.deepcopy(template_bidsmap)
-                for dataformat in input_bidsmap.dataformats:
-                    for datatype in dataformat.datatypes:
-                        dataformat.delete_runs(datatype)
+                input_bidsmap.delete_runs()
 
         # Keep track of the EditWindow status
         self.editwindow_opened: Union[str,None] = None

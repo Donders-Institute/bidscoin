@@ -1284,7 +1284,7 @@ class BidsMap:
 
         unknowndatatypes = self.options.get('unknowntypes') or ['unknown_data']
         ignoredatatypes  = self.options.get('ignoretypes') or []
-        bidsdatatypes    = sorted([dtype.datatype for dtype in self.dataformat(datasource.dataformat).datatypes if dtype not in unknowndatatypes + ignoredatatypes])
+        bidsdatatypes    = [dtype.datatype for dtype in self.dataformat(datasource.dataformat).datatypes if dtype not in unknowndatatypes + ignoredatatypes]
         datasource       = copy.deepcopy(datasource)
         rundata          = {'provenance': str(datasource.path), 'properties': {}, 'attributes': {}, 'bids': {}, 'meta': {}}
         """The a run-item data structure. NB: Keep in sync with the RunItem() data attributes"""
@@ -1456,6 +1456,13 @@ class BidsMap:
         dformat = self.dataformat(str(dataformat) or runitem.dataformat)
         dtype   = dformat.datatype(str(datatype) or runitem.datatype)
         dtype.delete_run(provenance)
+
+    def delete_runs(self):
+        """Delete all run-items from the bidsmap"""
+
+        for dataformat in self.dataformats:
+            for datatype in dataformat.datatypes:
+                dataformat.delete_runs(datatype)
 
     def insert_run(self, runitem: RunItem, position: int=None):
         """
