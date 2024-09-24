@@ -23,7 +23,7 @@ from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     sys.path.append(str(Path(__file__).parents[1]))
 from bidscoin import bcoin, bids, bidsversion, check_version, trackusage, bidsmap_template, __version__
-from bidscoin.bids import extensions, BidsMap, RunItem, DataType
+from bidscoin.bids import BidsMap, RunItem, DataType
 
 ROW_HEIGHT       = 22
 BIDSCOIN_LOGO    = Path(__file__).parent/'bidscoin_logo.png'
@@ -1004,7 +1004,7 @@ class EditWindow(QDialog):
         self.datatype_dropdown.setCurrentIndex(self.datatype_dropdown.findText(self.target_run.datatype))
         self.datatype_dropdown.currentIndexChanged.connect(self.datatype_dropdown_change)
         self.datatype_dropdown.setToolTip('The BIDS data type. First make sure this one is correct, then choose the right suffix')
-        for n, datatype in enumerate(self.bidsdatatypes + self.unknowndatatypes):
+        for n, datatype in enumerate(self.bidsdatatypes + self.unknowndatatypes + self.ignoredatatypes):
             self.datatype_dropdown.setItemData(n, get_datatypehelp(datatype), QtCore.Qt.ItemDataRole.ToolTipRole)
 
         # Set up the BIDS table
@@ -1207,7 +1207,7 @@ class EditWindow(QDialog):
         if bids.check_ignore(runitem.datatype, self.bidsignore) or bids.check_ignore(bidsname, self.bidsignore, 'file') or runitem.datatype in self.ignoredatatypes:
             bidskeys = runitem.bids.keys()
         else:
-            bidskeys = [bids.entities[entity]['name'] for entity in bids.entitiesorder if entity not in ('subject','session')] + ['suffix']   # Impose the BIDS-specified order + suffix
+            bidskeys = [bids.entities[entity].name for entity in bids.entityrules if entity not in ('subject', 'session')] + ['suffix']   # Impose the BIDS-specified order + suffix
         for key in bidskeys:
             if key in runitem.bids:
                 value = runitem.bids.get(key)
@@ -1533,7 +1533,7 @@ class EditWindow(QDialog):
         bidsvalid = validrun
         datatype  = self.target_run.datatype
         if not (bids.check_ignore(datatype,self.bidsignore) or bids.check_ignore(bidsname.name,self.bidsignore,'file') or datatype in self.ignoredatatypes):
-            for ext in extensions:      # NB: `ext` used to be '.json', which is more generic (but see https://github.com/bids-standard/bids-validator/issues/2113)
+            for ext in bids.extensions:     # NB: `ext` used to be '.json', which is more generic (but see https://github.com/bids-standard/bids-validator/issues/2113)
                 if bidsvalid := BIDSValidator().is_bids((Path('/')/self.subid/self.sesid/bidsname).with_suffix(ext).as_posix()): break
 
         # If the bidsname is not valid, ask the user if that's OK
@@ -1686,7 +1686,7 @@ class CompareWindow(QDialog):
             data_attributes.append([key, value])
 
         data_bids = []
-        bidskeys = [bids.entities[entity]['name'] for entity in bids.entitiesorder if entity not in ('subject','session')] + ['suffix']   # Impose the BIDS-specified order + suffix
+        bidskeys = [bids.entities[entity].name for entity in bids.entityrules if entity not in ('subject', 'session')] + ['suffix']   # Impose the BIDS-specified order + suffix
         for key in bidskeys:
             if key in runitem.bids:
                 value = runitem.bids.get(key)
@@ -1892,8 +1892,13 @@ def get_datatypehelp(datatype: Union[str, DataType]) -> str:
         return "Please provide a datatype"
 
     # Return the description for the datatype or a default text
-    if datatype in bids.bidsdatatypesdef:
-        return f"{bids.bidsdatatypesdef[datatype]['display_name']}\n{bids.bidsdatatypesdef[datatype]['description']}"
+    bidsdatatypes = bids.bidsschema.objects.datatypes
+    if datatype in bidsdatatypes:
+        return f"{bidsdatatypes[datatype].display_name}\n{bidsdatatypes[datatype].description}"
+    elif datatype == 'exclude':
+        return 'Source data that is to be excluded / not converted to BIDS'
+    elif datatype == 'extra_data':
+        return 'Source data that is converted to BIDS-like output data'
 
     return f"{datatype}\nAn unknown/private datatype"
 
@@ -1915,8 +1920,9 @@ def get_suffixhelp(suffix: str, datatype: Union[str, DataType]) -> str:
         isderivative = '\nNB: This is a BIDS derivatives datatype'
 
     # Return the description for the suffix or a default text
-    if suffix in bids.suffixes:
-        return f"{bids.suffixes[suffix]['display_name']}\n{bids.suffixes[suffix]['description']}{isderivative}"
+    suffixes = bids.bidsschema.objects.suffixes
+    if suffix in suffixes:
+        return f"{suffixes[suffix].display_name}\n{suffixes[suffix].description}{isderivative}"
 
     return f"{suffix}\nAn unknown/private suffix"
 
@@ -1934,8 +1940,8 @@ def get_entityhelp(entitykey: str) -> str:
 
     # Return the description from the entities or a default text
     for entity in bids.entities:
-        if bids.entities[entity]['name'] == entitykey:
-            return f"{bids.entities[entity]['display_name']}\n{bids.entities[entity]['description']}"
+        if bids.entities[entity].name == entitykey:
+            return f"{bids.entities[entity].display_name}\n{bids.entities[entity].description}"
 
     return f"{entitykey}\nAn unknown/private entity"
 
@@ -1952,9 +1958,10 @@ def get_metahelp(metakey: str) -> str:
         return "Please provide a key-name"
 
     # Return the description from the metadata file or a default text
-    for field in bids.metafields:
-        if metakey == bids.metafields[field].get('name'):
-            description = bids.metafields[field]['description']
+    metafields = bids.bidsschema.objects.metadata
+    for field in metafields:
+        if metakey == metafields[field].name:
+            description = metafields[field].description
             if metakey == 'IntendedFor':                            # IntendedFor is a special search-pattern field in BIDScoin
                 description += ('\nNB: These associated files can be dynamically searched for'
                                 '\nduring bidscoiner runtime with glob-style matching patterns,'
@@ -1965,7 +1972,7 @@ def get_metahelp(metakey: str) -> str:
                                 '\nsession label during bidscoiner runtime. In this way you can'
                                 '\ncreate session-specific B0FieldIdentifier/Source tags (recommended)')
 
-            return f"{bids.metafields[field]['display_name']}\n{description}"
+            return f"{metafields[field].display_name}\n{description}"
 
     return f"{metakey}\nAn unknown/private meta key"
 

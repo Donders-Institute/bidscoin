@@ -33,7 +33,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install .[all] jsonschema pytest duecredit
+          pip install .[all] pytest
 
       - name: Install dcm2niix posix
         if: runner.os != 'Windows'

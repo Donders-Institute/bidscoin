@@ -82,6 +82,7 @@ def bidsmapper(sourcefolder: str, bidsfolder: str, bidsmap: str, template: str, 
         bidsmap_old.filepath.unlink()
         bidsmap_old.filepath = Path()
     bidsmap_new          = copy.deepcopy(bidsmap_old if bidsmap_old.filepath.name else template)
+    bidsmap_new.delete_runs()
     bidsmap_new.filepath = bidsmapfile
     template.options     = bidsmap_new.options      # Always use the options of the new bidsmap
     template.plugins     = bidsmap_new.plugins      # Always use the plugins of the new bidsmap
@@ -89,7 +90,6 @@ def bidsmapper(sourcefolder: str, bidsfolder: str, bidsmap: str, template: str, 
         bidsmap_new.options['unzip'] = unzip
     else:
         unzip = bidsmap_new.options.get('unzip','')
-    bidsmap_new.delete_runs()
 
     # Store/retrieve the empty or user-defined sub-/ses-prefix. The new bidsmap is now ready to be populated
     subprefix, sesprefix = setprefix(bidsmap_new, subprefix, sesprefix, rawfolder, update = not no_update)

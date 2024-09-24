@@ -17,6 +17,7 @@
 
 $schema: schema.json
 
+
 Options:
 # --------------------------------------------------------------------------------
 # General BIDScoin and plugin options
@@ -25,8 +26,8 @@ Options:
     version: 4.3.3                  # BIDScoin version (should correspond with the version in pyproject.toml)
     subprefix: sub-                 # The subject prefix of the source data
     sesprefix: ses-                 # The session prefix of the source data
-    bidsignore: [mrs/, extra_data/, sub-*_ct.*]    # List of entries that are added to the .bidsignore file (for more info, see BIDS specifications), e.g. [extra_data/, pet/, myfile.txt, yourfile.csv]
-    unknowntypes: [mrs, extra_data] # A list of datatypes that are converted to BIDS-like datatype folders
+    bidsignore: [extra_data/, sub-*_ct.*]    # List of entries that are added to the .bidsignore file (for more info, see BIDS specifications), e.g. [extra_data/, pet/, myfile.txt, yourfile.csv]
+    unknowntypes: [extra_data]      # A list of datatypes that are converted to BIDS-like datatype folders
     ignoretypes: [exclude]          # A list of datatypes that are excluded / not converted to BIDS
     notderivative: []               # A list of suffixes that should not be considered as a derivative datatype
     unzip:                          # Wildcard pattern to select tarball/zip-files in the source folders that need to be unzipped (in a tempdir) to expose the data, e.g. '*.tar.gz'
@@ -34,6 +35,7 @@ Options:
     nibabel2bids:
       ext: .nii.gz
       meta: ['.json', '.tsv', '.tsv.gz', '.bval', '.bvec']
+
 
 Nibabel:
 # --------------------------------------------------------------------------------
@@ -69,7 +71,7 @@ Nibabel:
       RepetitionTime:
       InPlanePhaseEncodingDirectionDICOM:
       PhaseEncodingDirection:
-    bids: &anat_nibent_nonparametric    # See: schema/datatypes/anat.yaml
+    bids: &anat_nibent_nonparametric    # See: schema/rules/files/raw/anat.yaml
       task: <filename:sub-.*_task-(.*?)_.*\.nii.*>
       acq: <filename:sub-.*_acq-(.*?)_.*\.nii.*>
       ce: <filename:sub-.*_ce-(.*?)_.*\.nii.*>
@@ -139,7 +141,7 @@ Nibabel:
       <<: *fileprop_anat
       filename: sub-.*_T1map\.nii.*
     attributes: *attr
-    bids: &anat_nibent_parametric       # See: schema/datatypes/anat.yaml
+    bids: &anat_nibent_parametric       # See: schema/rules/files/raw/anat.yaml
       task: <filename:sub-.*_task-(.*?)_.*\.nii.*>
       acq: <filename:sub-.*_acq-(.*?)_.*\.nii.*>
       ce: <filename:sub-.*_ce-(.*?)_.*\.nii.*>
@@ -256,7 +258,7 @@ Nibabel:
       <<: *fileprop_anat
       filename: sub-.*_defacemask\.nii.*
     attributes: *attr
-    bids: &anat_nibent_defacemask       # See: schema/datatypes/anat.yaml
+    bids: &anat_nibent_defacemask       # See: schema/rules/files/raw/anat.yaml
       task: <filename:sub-.*_task-(.*?)_.*\.nii.*>
       acq: <filename:sub-.*_acq-(.*?)_.*\.nii.*>
       ce: <filename:sub-.*_ce-(.*?)_.*\.nii.*>
@@ -269,7 +271,7 @@ Nibabel:
       <<: *fileprop_anat
       filename: sub-.*_MESE\.nii.*
     attributes: *attr
-    bids: &anat_nibent_multiecho        # See: schema/datatypes/anat.yaml
+    bids: &anat_nibent_multiecho        # See: schema/rules/files/raw/anat.yaml
       task: <filename:sub-.*_task-(.*?)_.*\.nii.*>
       acq: <filename:sub-.*_acq-(.*?)_.*\.nii.*>
       ce: <filename:sub-.*_ce-(.*?)_.*\.nii.*>
@@ -290,7 +292,7 @@ Nibabel:
       <<: *fileprop_anat
       filename: sub-.*_VFA\.nii.*
     attributes: *attr
-    bids: &anat_nibent_multiflip        # See: schema/datatypes/anat.yaml
+    bids: &anat_nibent_multiflip        # See: schema/rules/files/raw/anat.yaml
       task: <filename:sub-.*_task-(.*?)_.*\.nii.*>
       acq: <filename:sub-.*_acq-(.*?)_.*\.nii.*>
       ce: <filename:sub-.*_ce-(.*?)_.*\.nii.*>
@@ -305,7 +307,7 @@ Nibabel:
       <<: *fileprop_anat
       filename: sub-.*_IRT1\.nii.*
     attributes: *attr
-    bids: &anat_nibent_multiinv         # See: schema/datatypes/anat.yaml
+    bids: &anat_nibent_multiinv         # See: schema/rules/files/raw/anat.yaml
       task: <filename:sub-.*_task-(.*?)_.*\.nii.*>
       acq: <filename:sub-.*_acq-(.*?)_.*\.nii.*>
       ce: <filename:sub-.*_ce-(.*?)_.*\.nii.*>
@@ -319,7 +321,7 @@ Nibabel:
       <<: *fileprop_anat
       filename: sub-.*_MP2RAGE\.nii.*
     attributes: *attr
-    bids: &anat_nibent_mp2rage           # See: schema/datatypes/anat.yaml
+    bids: &anat_nibent_mp2rage           # See: schema/rules/files/raw/anat.yaml
       task: <filename:sub-.*_task-(.*?)_.*\.nii.*>
       acq: <filename:sub-.*_acq-(.*?)_.*\.nii.*>
       ce: <filename:sub-.*_ce-(.*?)_.*\.nii.*>
@@ -335,7 +337,7 @@ Nibabel:
       <<: *fileprop_anat
       filename: sub-.*_MPM\.nii.*
     attributes: *attr
-    bids: &anat_nibent_vfamt            # See: schema/datatypes/anat.yaml
+    bids: &anat_nibent_vfamt            # See: schema/rules/files/raw/anat.yaml
       task: <filename:sub-.*_task-(.*?)_.*\.nii.*>
       acq: <filename:sub-.*_acq-(.*?)_.*\.nii.*>
       ce: <filename:sub-.*_ce-(.*?)_.*\.nii.*>
@@ -358,7 +360,7 @@ Nibabel:
       <<: *fileprop_anat
       filename: sub-.*_MTR\.nii.*
     attributes: *attr
-    bids: &anat_nibent_mtr              # See: schema/datatypes/anat.yaml
+    bids: &anat_nibent_mtr              # See: schema/rules/files/raw/anat.yaml
       task: <filename:sub-.*_task-(.*?)_.*\.nii.*>
       acq: <filename:sub-.*_acq-(.*?)_.*\.nii.*>
       ce: <filename:sub-.*_ce-(.*?)_.*\.nii.*>
@@ -376,7 +378,7 @@ Nibabel:
       filesize:
       nrfiles:
     attributes: *attr
-    bids: &func_nibent_func             # See: schema/datatypes/func.yaml
+    bids: &func_nibent_func             # See: schema/rules/files/raw/func.yaml
       task: <filename:sub-.*_task-(.*?)_.*\.nii.*>
       acq: <filename:sub-.*_acq-(.*?)_.*\.nii.*>
       ce: <filename:sub-.*_ce-(.*?)_.*\.nii.*>
@@ -409,9 +411,18 @@ Nibabel:
     meta: *func_meta
   - properties:
       <<: *fileprop_func
+      filename: sub-.*_noRF\.nii.*
+    attributes: *attr
+    bids:
+      <<: *func_nibent_func
+      mod:
+      suffix: noRF
+    meta: *func_meta
+  - properties:
+      <<: *fileprop_func
       filename: sub-.*_events\..*
     attributes: *attr
-    bids: &func_nibent_events           # See: schema/datatypes/func.yaml
+    bids: &func_nibent_events           # See: schema/rules/files/raw/func.yaml
       task: <filename:sub-.*_task-(.*?)_.*\.nii.*>
       acq: <filename:sub-.*_acq-(.*?)_.*\.nii.*>
       ce: <filename:sub-.*_ce-(.*?)_.*\.nii.*>
@@ -426,7 +437,7 @@ Nibabel:
       <<: *fileprop_func
       filename: sub-.*_physio\..*
     attributes: *attr
-    bids: &func_nibent_timeseries       # See: schema/datatypes/func.yaml
+    bids: &func_nibent_timeseries       # See: schema/rules/files/raw/func.yaml
       task: <filename:sub-.*_task-(.*?)_.*\.nii.*>
       acq: <filename:sub-.*_acq-(.*?)_.*\.nii.*>
       ce: <filename:sub-.*_ce-(.*?)_.*\.nii.*>
@@ -455,11 +466,13 @@ Nibabel:
       filesize:
       nrfiles:
     attributes: *attr
-    bids: &perf_nibent_group1           # See: schema/datatypes/perf.yaml
+    bids: &perf_nibent_group1           # See: schema/rules/files/raw/perf.yaml
       acq: <filename:sub-.*_acq-(.*?)_.*\.nii.*>
       rec: <filename:sub-.*_rec-(.*?)_.*\.nii.*>
       dir: <filename:sub-.*_dir-(.*?)_.*\.nii.*>
       run: <<>>
+      echo:
+      part: ['', mag, phase, real, imag, 0]
       suffix: asl
     meta: &perf_meta
       ArterialSpinLabelingType: "CASL / PCASL / PASL"
@@ -483,7 +496,7 @@ Nibabel:
       <<: *fileprop_perf
       filename: sub-.*_aslcontext\.nii.*
     attributes: *attr
-    bids: &perf_nibent_group2           # See: schema/datatypes/perf.yaml
+    bids: &perf_nibent_group2           # See: schema/rules/files/raw/perf.yaml
       acq: <filename:sub-.*_acq-(.*?)_.*\.nii.*>
       rec: <filename:sub-.*_rec-(.*?)_.*\.nii.*>
       dir: <filename:sub-.*_dir-(.*?)_.*\.nii.*>
@@ -494,7 +507,7 @@ Nibabel:
       <<: *fileprop_perf
       filename: sub-.*_asllabeling\.nii.*
     attributes: *attr
-    bids: &perf_nibent_group3           # See: schema/datatypes/perf.yaml
+    bids: &perf_nibent_group3           # See: schema/rules/files/raw/perf.yaml
       acq: <filename:sub-.*_acq-(.*?)_.*\.nii.*>
       rec: <filename:sub-.*_rec-(.*?)_.*\.nii.*>
       run: <<>>
@@ -504,7 +517,7 @@ Nibabel:
       <<: *fileprop_perf
       filename: sub-.*_physio\.nii.*
     attributes: *attr
-    bids: &perf_nibent_physio           # See: schema/datatypes/perf.yaml
+    bids: &perf_nibent_physio           # See: schema/rules/files/raw/perf.yaml
       task: <descrip>
       acq: <filename:sub-.*_acq-(.*?)_.*\.nii.*>
       rec: <filename:sub-.*_rec-(.*?)_.*\.nii.*>
@@ -512,6 +525,15 @@ Nibabel:
       dir: <filename:sub-.*_dir-(.*?)_.*\.nii.*>
       run: <<>>
       suffix: physio
+    meta: *perf_meta
+  - properties:
+      <<: *fileprop_perf
+      filename: sub-.*_noRF\.nii.*
+    attributes: *attr
+    bids:
+      <<: *perf_nibent_group1
+      mod:
+      suffix: noRF
     meta: *perf_meta
 
   dwi:        # ----------------------- All diffusion runs ---------------------
@@ -521,7 +543,7 @@ Nibabel:
       filesize:
       nrfiles:
     attributes: *attr
-    bids: &dwi_nibent_DWI               # See: schema/datatypes/dwi.yaml
+    bids: &dwi_nibent_DWI               # See: schema/rules/files/raw/dwi.yaml
       acq: <filename:sub-.*_acq-(.*?)_.*\.nii.*>
       rec: <filename:sub-.*_rec-(.*?)_.*\.nii.*>
       dir: <filename:sub-.*_dir-(.*?)_.*\.nii.*>
@@ -537,14 +559,14 @@ Nibabel:
       filename: sub-.*_sbref\.nii.*
     attributes: *attr
     bids:
-      <<: *dwi_nibent_DWI             # See: schema/datatypes/dwi.yaml
+      <<: *dwi_nibent_DWI             # See: schema/rules/files/raw/dwi.yaml
       suffix: sbref
     meta: *dwi_meta
   - properties:
       <<: *fileprop_dwi
       filename: sub-.*_physio\.nii.*
     attributes: *attr
-    bids: &dwi_nibent_physio            # See: schema/datatypes/dwi.yaml
+    bids: &dwi_nibent_physio            # See: schema/rules/files/raw/dwi.yaml
       acq: <filename:sub-.*_acq-(.*?)_.*\.nii.*>
       dir: <filename:sub-.*_dir-(.*?)_.*\.nii.*>
       run: <<>>
@@ -560,7 +582,7 @@ Nibabel:
       filesize:
       nrfiles:
     attributes: *attr
-    bids: &fmap_nibent_fieldmaps        # See: schema/datatypes/fmap.yaml
+    bids: &fmap_nibent_fieldmaps        # See: schema/rules/files/raw/fmap.yaml
       acq: <filename:sub-.*_acq-(.*?)_.*\.nii.*>
       run: <<>>
       chunk: <filename:sub-.*_chunk-(.*?)_.*\.nii.*>
@@ -620,12 +642,13 @@ Nibabel:
       <<: *fileprop_fmap
       filename: sub-.*_epi\.nii.*
     attributes: *attr
-    bids: &fmap_nibent_PEPolar          # See: schema/datatypes/fmap.yaml
+    bids: &fmap_nibent_PEPolar          # See: schema/rules/files/raw/fmap.yaml
       acq: <filename:sub-.*_acq-(.*?)_.*\.nii.*>
       ce: <filename:sub-.*_ce-(.*?)_.*\.nii.*>
       dir: <filename:sub-.*_dir-(.*?)_.*\.nii.*>
       run: <<>>
       chunk: <filename:sub-.*_chunk-(.*?)_.*\.nii.*>
+      part: ['', mag, phase, real, imag, 0]
       suffix: epi
     meta: *fmap_meta
   - properties:
@@ -640,7 +663,7 @@ Nibabel:
       <<: *fileprop_fmap
       filename: sub-.*_TB1DAM\.nii.*
     attributes: *attr
-    bids: &fmap_nibent_TB1DAM           # See: schema/datatypes/fmap.yaml
+    bids: &fmap_nibent_TB1DAM           # See: schema/rules/files/raw/fmap.yaml
       acq: <filename:sub-.*_acq-(.*?)_.*\.nii.*>
       ce: <filename:sub-.*_ce-(.*?)_.*\.nii.*>
       rec: <filename:sub-.*_rec-(.*?)_.*\.nii.*>
@@ -656,7 +679,7 @@ Nibabel:
       <<: *fileprop_fmap
       filename: sub-.*_TB1EPI\.nii.*
     attributes: *attr
-    bids: &fmap_nibent_TB1EPI           # See: schema/datatypes/fmap.yaml
+    bids: &fmap_nibent_TB1EPI           # See: schema/rules/files/raw/fmap.yaml
       acq: <filename:sub-.*_acq-(.*?)_.*\.nii.*>
       ce: <filename:sub-.*_ce-(.*?)_.*\.nii.*>
       rec: <filename:sub-.*_rec-(.*?)_.*\.nii.*>
@@ -672,7 +695,7 @@ Nibabel:
       <<: *fileprop_fmap
       filename: sub-.*_TB1AFI\.nii.*
     attributes: *attr
-    bids: &fmap_nibent_RFFieldMaps      # See: schema/datatypes/fmap.yaml
+    bids: &fmap_nibent_RFFieldMaps      # See: schema/rules/files/raw/fmap.yaml
       acq: <filename:sub-.*_acq-(.*?)_.*\.nii.*>
       ce: <filename:sub-.*_ce-(.*?)_.*\.nii.*>
       rec: <filename:sub-.*_rec-(.*?)_.*\.nii.*>
@@ -689,7 +712,7 @@ Nibabel:
       filename: sub-.*_TB1TFL\.nii.*
     attributes: *attr
     bids:
-      <<: *fmap_nibent_RFFieldMaps     # See: schema/datatypes/fmap.yaml & https://bids-specification.readthedocs.io/en/stable/99-appendices/11-qmri.html#tb1tfl-and-tb1rfm-specific-notes
+      <<: *fmap_nibent_RFFieldMaps     # See: schema/rules/files/raw/fmap.yaml & https://bids-specification.readthedocs.io/en/stable/99-appendices/11-qmri.html#tb1tfl-and-tb1rfm-specific-notes
       suffix: TB1TFL
     meta: *fmap_meta_B0Field
   - properties:
@@ -697,7 +720,7 @@ Nibabel:
       filename: sub-.*_TB1RFM\.nii.*
     attributes: *attr
     bids:
-      <<: *fmap_nibent_RFFieldMaps    # See: schema/datatypes/fmap.yaml
+      <<: *fmap_nibent_RFFieldMaps    # See: schema/rules/files/raw/fmap.yaml
       suffix: TB1RFM
     meta: *fmap_meta_B0Field
   - properties:
@@ -705,14 +728,14 @@ Nibabel:
       filename: sub-.*_RB1COR\.nii.*
     attributes: *attr
     bids:
-      <<: *fmap_nibent_RFFieldMaps    # See: schema/datatypes/fmap.yaml
+      <<: *fmap_nibent_RFFieldMaps    # See: schema/rules/files/raw/fmap.yaml
       suffix: RB1COR
     meta: *fmap_meta_B0Field
   - properties:
       <<: *fileprop_fmap
       filename: sub-.*_TB1SRGE\.nii.*
     attributes: *attr
-    bids: &fmap_nibent_TB1SRGE        # See: schema/datatypes/fmap.yaml
+    bids: &fmap_nibent_TB1SRGE        # See: schema/rules/files/raw/fmap.yaml
       acq: <filename:sub-.*_acq-(.*?)_.*\.nii.*>
       ce: <filename:sub-.*_ce-(.*?)_.*\.nii.*>
       rec: <filename:sub-.*_rec-(.*?)_.*\.nii.*>
@@ -728,7 +751,7 @@ Nibabel:
       <<: *fileprop_fmap
       filename: sub-.*_TB1map\.nii.*
     attributes: *attr
-    bids: &fmap_nibent_parametric     # See: schema/datatypes/fmap.yaml
+    bids: &fmap_nibent_parametric     # See: schema/rules/files/raw/fmap.yaml
       acq: <filename:sub-.*_acq-(.*?)_.*\.nii.*>
       ce: <filename:sub-.*_ce-(.*?)_.*\.nii.*>
       rec: <filename:sub-.*_rec-(.*?)_.*\.nii.*>

@@ -213,7 +213,7 @@ def skullstrip(bidsfolder: str, pattern: str, participant: list, masked: str, ou
                                 original_rel = original.relative_to(session).as_posix()
                                 stripped_rel = stripped.relative_to(session).as_posix()
                                 datatype     = stripped_rel.split('/')[0]
-                                if original_rel in scans_table.index and stripped_rel not in scans_table.index and datatype in bids.datatyperules:
+                                if original_rel in scans_table.index and stripped_rel not in scans_table.index and datatype in bids.filerules:
                                     LOGGER.info(f"Adding '{stripped_rel}' to '{scans_tsv}'")
                                     scans_table.loc[stripped_rel] = scans_table.loc[original_rel]
 

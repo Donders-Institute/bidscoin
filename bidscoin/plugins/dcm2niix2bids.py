@@ -396,7 +396,7 @@ def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> Union[N
                             newbidsname = bids.insert_bidskeyval(newbidsname, 'part', 'imag', ignore)
 
                     # Patch fieldmap images (NB: datatype=='fmap' is too broad, see the fmap.yaml file)
-                    elif suffix in bids.datatyperules['fmap']['fieldmaps']['suffixes']:                         # i.e. in ('magnitude','magnitude1','magnitude2','phase1','phase2','phasediff','fieldmap')
+                    elif suffix in bids.filerules.fmap.fieldmaps.suffixes:                                  # i.e. in ('magnitude','magnitude1','magnitude2','phase1','phase2','phasediff','fieldmap')
                         if len(dcm2niixfiles) not in (1, 2, 3, 4):                                              # Phase/echo data may be stored in the same data source/run folder
                             LOGGER.verbose(f"Unknown fieldmap {outfolder/bidsname} for '{postfix}'")
                         newbidsname = newbidsname.replace('_magnitude1a',    '_magnitude2')                     # First catch this potential weird/rare case

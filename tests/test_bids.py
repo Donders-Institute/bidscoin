@@ -240,9 +240,6 @@ class TestDataType:
     def test_runitems(self):
         pass
 
-    def test_delete_runs(self):
-        pass
-
     def test_isert_run(self):
         pass
 
@@ -268,7 +265,7 @@ class TestDataFormat:
     def test_add_datatype(self):
         pass
 
-    def test_delete_run(self):
+    def test_delete_runs(self):
         pass
 
 
@@ -302,6 +299,7 @@ class TestBidsMap:
     def test_check_templates(self, template: Path):
 
         # Load a valid template
+        print(f"Checking template '{template.name}' for validity")
         bidsmap = BidsMap(template, checks=(False, False, False))
         assert bidsmap.check_template() is True
 

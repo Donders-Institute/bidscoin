@@ -176,7 +176,7 @@ def echocombine(bidsfolder: str, pattern: str, participant: list, output: str, a
 
                         # Add the echo-combined image
                         bidsignore = (bidsdir/'.bidsignore').read_text().splitlines() if (bidsdir/'.bidsignore').is_file() else [unknowndatatype+'/']
-                        if not bids.check_ignore(output, bidsignore) and cefile.parent.name in bids.datatyperules:
+                        if not bids.check_ignore(output, bidsignore) and cefile.parent.name in bids.filerules:
                             LOGGER.info(f"Adding '{cefile_rel}' to '{scans_tsv}'")
                             scans_table.loc[cefile_rel] = scans_table.loc['dummyrow']
 
@@ -185,7 +185,7 @@ def echocombine(bidsfolder: str, pattern: str, participant: list, output: str, a
                             if echo in scans_table.index and not (session/echo).is_file():
                                 LOGGER.info(f"Removing '{echo}' from '{scans_tsv}'")
                                 scans_table.drop(echo, inplace=True)
-                            elif echo not in scans_table.index and (session/echo).is_file() and echo.split('/')[0] in bids.datatyperules:
+                            elif echo not in scans_table.index and (session/echo).is_file() and echo.split('/')[0] in bids.filerules:
                                 LOGGER.info(f"Adding '{echo}' to '{scans_tsv}'")
                                 scans_table.loc[echo] = scans_table.loc['dummyrow']       # NB: Assuming that the echo-rows are all identical
 

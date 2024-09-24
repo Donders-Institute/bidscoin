@@ -1,5 +1,6 @@
 import pytest
 import re
+import ruamel.yaml
 from bidscoin import bcoin, bidsmapper, bidsmap_template
 
 bcoin.setup_logging()
@@ -12,6 +13,7 @@ def test_bidsmapper(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir, subprefix, se
     resubprefix = '' if subprefix=='*' else re.escape(subprefix).replace(r'\-','-')
     resesprefix = '' if sesprefix=='*' else re.escape(sesprefix).replace(r'\-','-')
     bidsmap     = bidsmapper.bidsmapper(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir, bidsmap_template, [], subprefix, sesprefix, unzip='', store=store, automated=True, force=True)
+    assert isinstance(bidsmap.dataformats[0]._data, ruamel.yaml.CommentedMap)
     assert bidsmap.options['subprefix'] == subprefix
     assert bidsmap.options['sesprefix'] == sesprefix
     assert bidsmap.dataformat('DICOM').subject                           == f"<<filepath:/{raw_dicomdir.name}/{resubprefix}(.*?)/>>"

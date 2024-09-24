@@ -18,6 +18,7 @@
 
 $schema: schema.json
 
+
 Options:
 # --------------------------------------------------------------------------------
 # General BIDScoin and plugin options
@@ -26,8 +27,8 @@ Options:
     version: 4.3.3                  # BIDScoin version (should correspond with the version in pyproject.toml)
     subprefix: sub-                 # The subject prefix of the source data
     sesprefix: ses-                 # The session prefix of the source data
-    bidsignore: [mrs/, extra_data/, sub-*_ct.*]    # List of entries that are added to the .bidsignore file (for more info, see BIDS specifications), e.g. [extra_data/, pet/, myfile.txt, yourfile.csv]
-    unknowntypes: [mrs, extra_data] # A list of datatypes that are converted to BIDS-like datatype folders
+    bidsignore: [extra_data/, sub-*_ct.*]    # List of entries that are added to the .bidsignore file (for more info, see BIDS specifications), e.g. [extra_data/, pet/, myfile.txt, yourfile.csv]
+    unknowntypes: [extra_data]      # A list of datatypes that are converted to BIDS-like datatype folders
     ignoretypes: [exclude]          # A list of datatypes that are excluded / not converted to BIDS
     notderivative: []               # A list of suffixes that should not be considered as a derivative datatype
     unzip:                          # Wildcard pattern to select tarball/zip-files in the source folders that need to be unzipped (in a tempdir) to expose the data, e.g. '*.tar.gz'
@@ -71,7 +72,7 @@ DICOM:
       EffectiveEchoTime:
       RepetitionTime:
       InPlanePhaseEncodingDirection:
-    bids: &anat_dicoment_nonparametric  # See: schema/datatypes/anat.yaml
+    bids: &anat_dicoment_nonparametric  # See: schema/rules/files/raw/anat.yaml
       task:
       acq: <SeriesDescription>    # This will be expanded by the bidsmapper (so the user can edit it in the bidseditor)
       ce:
@@ -146,7 +147,7 @@ DICOM:
   - attributes:
       <<: *anat_dicomattr
       ProtocolName: (?i).*T1.?map.*
-    bids: &anat_dicoment_parametric     # See: schema/datatypes/anat.yaml
+    bids: &anat_dicoment_parametric     # See: schema/rules/files/raw/anat.yaml
       task:
       acq: <ProtocolName>
       ce:
@@ -247,7 +248,7 @@ DICOM:
       <<: *anat_dicoment_parametric
       suffix: M0map
   - attributes: *anat_dicomattr
-    bids: &anat_dicoment_defacemask     # See: schema/datatypes/anat.yaml
+    bids: &anat_dicoment_defacemask     # See: schema/rules/files/raw/anat.yaml
       task:
       acq: <SeriesDescription>
       ce:
@@ -259,7 +260,7 @@ DICOM:
   - attributes:
       <<: *anat_dicomattr
       ProtocolName: (?i).*ME.?SE.*
-    bids: &anat_dicoment_multiecho      # See: schema/datatypes/anat.yaml
+    bids: &anat_dicoment_multiecho      # See: schema/rules/files/raw/anat.yaml
       task:
       acq: <SeriesDescription>
       ce:
@@ -278,7 +279,7 @@ DICOM:
   - attributes:
       <<: *anat_dicomattr
       ProtocolName: (?i).*VFA.*
-    bids: &anat_dicoment_multiflip      # See: schema/datatypes/anat.yaml
+    bids: &anat_dicoment_multiflip      # See: schema/rules/files/raw/anat.yaml
       task:
       acq: <SeriesDescription>
       ce:
@@ -292,7 +293,7 @@ DICOM:
   - attributes:
       <<: *anat_dicomattr
       ProtocolName: (?i).*IR.?T1.*
-    bids: &anat_dicoment_multiinv       # See: schema/datatypes/anat.yaml
+    bids: &anat_dicoment_multiinv       # See: schema/rules/files/raw/anat.yaml
       task:
       acq: <SeriesDescription>
       ce:
@@ -307,7 +308,7 @@ DICOM:
       ProtocolName: (?i).*MP2RAGE.*
       SeriesDescription: (?i).*INV1.*
       MRAcquisitionType: 3D
-    bids: &anat_dicoment_mp2rage        # See: schema/datatypes/anat.yaml
+    bids: &anat_dicoment_mp2rage        # See: schema/rules/files/raw/anat.yaml
       task:
       acq: <ProtocolName>
       ce:
@@ -331,7 +332,7 @@ DICOM:
       <<: *anat_dicomattr
       ProtocolName: (?i).*MPM.*
       EffectiveEchoTime:
-    bids: &anat_dicoment_vfamt          # See: schema/datatypes/anat.yaml
+    bids: &anat_dicoment_vfamt          # See: schema/rules/files/raw/anat.yaml
       task:
       acq: <SeriesDescription>
       ce:
@@ -354,7 +355,7 @@ DICOM:
   - attributes:
       <<: *anat_dicomattr
       ProtocolName: (?i).*MTR.*
-    bids: &anat_dicoment_mtr            # See: schema/datatypes/anat.yaml
+    bids: &anat_dicoment_mtr            # See: schema/rules/files/raw/anat.yaml
       task:
       acq: <SeriesDescription>
       ce:
@@ -400,7 +401,7 @@ DICOM:
       EffectiveEchoTime:
       RepetitionTime:
       PhaseEncodingDirection:
-    bids: &func_dicoment_func           # See: schema/datatypes/func.yaml
+    bids: &func_dicoment_func           # See: schema/rules/files/raw/func.yaml
       task: <ProtocolName>              # More consistent between SBREF and PHYSIO files
       acq:
       ce:
@@ -430,11 +431,16 @@ DICOM:
       <<: *func_dicoment_func
       suffix: sbref
     meta: *func_meta
+  - attributes: *func_dicomattr
+    bids:
+      <<: *func_dicoment_func
+      mod:
+      suffix: noRF
   - attributes:                         # Then match the PHYSIO runs (the normal bold runs don't have PHYSIO in the seriesdescription)
       <<: *func_dicomattr
       ProtocolName: (?i).*(f.?MRI|task|BOLD|func|rest|RSN|CMRR.*_TR).*
       ImageType: .*'PHYSIO'.*
-    bids: &func_dicoment_timeseries     # See: schema/datatypes/func.yaml
+    bids: &func_dicoment_timeseries     # See: schema/rules/files/raw/func.yaml
       task: <ProtocolName>
       acq:
       ce:
@@ -469,7 +475,7 @@ DICOM:
       suffix: cbv
     meta: *func_meta
   - attributes: *func_dicomattr
-    bids: &func_dicoment_events         # See: schema/datatypes/func.yaml
+    bids: &func_dicoment_events         # See: schema/rules/files/raw/func.yaml
       task: <SeriesDescription>         # NB: <ProtocolName> is consistent between SBREF and PHYSIO files but causes name clashes
       acq:
       ce:
@@ -506,11 +512,13 @@ DICOM:
       EffectiveEchoTime:
       RepetitionTime:
       PhaseEncodingDirection:
-    bids: &perf_dicoment_group1         # See: schema/datatypes/perf.yaml
+    bids: &perf_dicoment_group1         # See: schema/rules/files/raw/perf.yaml
       acq: <ProtocolName>
       rec: <SeriesDescription>
       dir: <PhaseEncodingDirection>     # PhaseEncodingDirection is not an existing DICOM tag but parsed from other fields by BIDScoin
       run: <<>>
+      echo:
+      part: ['', mag, phase, real, imag, 0]
       suffix: asl
     meta: &perf_meta
       ArterialSpinLabelingType: "CASL / PCASL / PASL"
@@ -535,7 +543,12 @@ DICOM:
       suffix: m0scan
     meta: *perf_meta
   - attributes: *perf_dicomattr
-    bids: &perf_dicoment_group2         # See: schema/datatypes/perf.yaml
+    bids:
+      <<: *perf_dicoment_group1
+      mod:
+      suffix: noRF
+  - attributes: *perf_dicomattr
+    bids: &perf_dicoment_group2         # See: schema/rules/files/raw/perf.yaml
       acq: <ProtocolName>
       rec: <SeriesDescription>
       dir:
@@ -543,14 +556,14 @@ DICOM:
       suffix: aslcontext
     meta: *perf_meta
   - attributes: *perf_dicomattr
-    bids: &perf_dicoment_group3         # See: schema/datatypes/perf.yaml
+    bids: &perf_dicoment_group3         # See: schema/rules/files/raw/perf.yaml
       acq: <ProtocolName>
       rec: <SeriesDescription>
       run: <<>>
       suffix: asllabeling
     meta: *perf_meta
 #  - attributes: *perf_dicomattr
-#    bids: &perf_dicoment_physio         # See: schema/datatypes/perf.yaml
+#    bids: &perf_dicoment_physio         # See: schema/rules/files/raw/perf.yaml
 #      acq: <ProtocolName>
 #      rec:
 #      task: <SeriesDescription>
@@ -579,7 +592,7 @@ DICOM:
       EffectiveEchoTime:
       RepetitionTime:
       PhaseEncodingDirection:
-    bids: &dwi_dicoment_DWI             # See: schema/datatypes/dwi.yaml
+    bids: &dwi_dicoment_DWI             # See: schema/rules/files/raw/dwi.yaml
       acq: <ProtocolName>               # More consistent between SBREF and PHYSIO files
       rec:
       dir: <PhaseEncodingDirection>     # PhaseEncodingDirection is not an existing DICOM tag but parsed from other fields by BIDScoin
@@ -593,7 +606,7 @@ DICOM:
   - attributes:                         # First match the SBREF dwi runs (the normal dwi runs don't have SBREF in the seriesdescription)
       <<: *dwi_dicomattr
       SeriesDescription: (?i).*(DWI|diffusion|HARDI|DTI|dMRI|DW.?MRI).*SBREF.*
-    bids: &dwi_dicoment_sbref           # See: schema/datatypes/dwi.yaml
+    bids: &dwi_dicoment_sbref           # See: schema/rules/files/raw/dwi.yaml
       acq: <SeriesDescription>
       rec:
       dir: <PhaseEncodingDirection>     # PhaseEncodingDirection is not an existing DICOM tag but parsed from other fields by BIDScoin
@@ -606,7 +619,7 @@ DICOM:
       <<: *dwi_dicomattr
       ProtocolName: (?i).*(DWI|diffusion|HARDI|DTI|dMRI|DW.?MRI).*
       ImageType: .*'PHYSIO'.*
-    bids: &dwi_dicoment_physio          # See: schema/datatypes/dwi.yaml
+    bids: &dwi_dicoment_physio          # See: schema/rules/files/raw/dwi.yaml
       acq: <SeriesDescription>
       dir:
       run: <<>>
@@ -648,7 +661,7 @@ DICOM:
       EffectiveEchoTime:
       RepetitionTime:
       PhaseEncodingDirection:
-    bids: &fmap_dicoment_fieldmaps      # See: schema/datatypes/fmap.yaml
+    bids: &fmap_dicoment_fieldmaps      # See: schema/rules/files/raw/fmap.yaml
       acq: <SeriesDescription>
       run: <<>>
       chunk:
@@ -719,11 +732,12 @@ DICOM:
       <<: *fmap_dicomattr
       ProtocolName: (?i).*(inverted|pepolar|_inv).*
       ScanningSequence: EP
-    bids: &fmap_dicoment_PEPolar        # See: schema/datatypes/fmap.yaml
+    bids: &fmap_dicoment_PEPolar        # See: schema/rules/files/raw/fmap.yaml
       acq: <SeriesDescription>          # NB: <ProtocolName> is consistent between SBREF and PHYSIO files but causes name clashes
       ce:
       dir: <PhaseEncodingDirection>     # PhaseEncodingDirection is not an existing DICOM tag but parsed from other fields by BIDScoin
       run: <<>>
+      part: ['', mag, phase, real, imag, 0]
       chunk:
       suffix: epi
     meta: *fmap_meta
@@ -741,7 +755,7 @@ DICOM:
       suffix: m0scan
     meta: *fmap_meta
   - attributes: *fmap_dicomattr
-    bids: &fmap_dicoment_TB1DAM         # See: schema/datatypes/fmap.yaml
+    bids: &fmap_dicoment_TB1DAM         # See: schema/rules/files/raw/fmap.yaml
       acq: <SeriesDescription>
       ce:
       rec:
@@ -754,7 +768,7 @@ DICOM:
     meta: &fmap_meta_B0Field
       B0FieldIdentifier:
   - attributes: *fmap_dicomattr
-    bids: &fmap_dicoment_TB1EPI         # See: schema/datatypes/fmap.yaml
+    bids: &fmap_dicoment_TB1EPI         # See: schema/rules/files/raw/fmap.yaml
       acq: <SeriesDescription>
       ce:
       rec:
@@ -767,7 +781,7 @@ DICOM:
       suffix: TB1EPI
     meta: *fmap_meta_B0Field
   - attributes: *fmap_dicomattr
-    bids: &fmap_dicoment_RFFieldMaps    # See: schema/datatypes/fmap.yaml
+    bids: &fmap_dicoment_RFFieldMaps    # See: schema/rules/files/raw/fmap.yaml
       acq: <SeriesDescription>
       ce:
       rec:
@@ -820,7 +834,7 @@ DICOM:
       suffix: RB1COR
     meta: *fmap_meta_B0Field
   - attributes: *fmap_dicomattr
-    bids: &fmap_dicoment_TB1SRGE        # See: schema/datatypes/fmap.yaml
+    bids: &fmap_dicoment_TB1SRGE        # See: schema/rules/files/raw/fmap.yaml
       acq: <SeriesDescription>
       ce:
       rec:
@@ -836,7 +850,7 @@ DICOM:
       <<: *fmap_dicomattr
       ProtocolName: (?i).*B1.?map.*
       ImageType: .*FLIP ANGLE MAP.*
-    bids: &fmap_dicoment_parametric     # See: schema/datatypes/fmap.yaml
+    bids: &fmap_dicoment_parametric     # See: schema/rules/files/raw/fmap.yaml
       acq: <SeriesDescription>
       ce:
       rec:
@@ -867,7 +881,7 @@ DICOM:
       PixelSpacing:
       Rows:
       Columns:
-    bids: &pet_dicoment_pet             # See: schema/datatypes/pet.yaml
+    bids: &pet_dicoment_pet             # See: schema/rules/files/raw/pet.yaml
       task: <SeriesDescription>
       trc: <Radiopharmaceutical>
       rec: ['', acdyn, acstat, nacdyn, nacstat, 0]
@@ -904,7 +918,7 @@ DICOM:
       Modality: EEG
       ProtocolName:
       SeriesDescription:
-    bids:                               # See: schema/datatypes/eeg.yaml
+    bids:                               # See: schema/rules/files/raw/eeg.yaml
       acq: <ProtocolName>
       task: <SeriesDescription>
       run: <<>>
@@ -915,7 +929,7 @@ DICOM:
       Modality: EEG
       ProtocolName:
       SeriesDescription:
-    bids:                               # See: schema/datatypes/ieeg.yaml
+    bids:                               # See: schema/rules/files/raw/ieeg.yaml
       acq: <ProtocolName>
       task: <SeriesDescription>
       run: <<>>
@@ -1028,7 +1042,7 @@ PAR:
       max_echoes:
       repetition_time:
       prep_direction:
-    bids: &anat_parent_nonparametric    # See: schema/datatypes/anat.yaml
+    bids: &anat_parent_nonparametric    # See: schema/rules/files/raw/anat.yaml
       task:
       acq: <protocol_name>
       ce:
@@ -1093,7 +1107,7 @@ PAR:
   - attributes:
       <<: *anat_parattr
       protocol_name: (?i).*T1.?map.*
-    bids: &anat_parent_parametric       # See: schema/datatypes/anat.yaml
+    bids: &anat_parent_parametric       # See: schema/rules/files/raw/anat.yaml
       task:
       acq: <protocol_name>
       ce:
@@ -1193,7 +1207,7 @@ PAR:
       <<: *anat_parent_parametric
       suffix: M0map
   - attributes: *anat_parattr
-    bids: &anat_parent_defacemask       # See: schema/datatypes/anat.yaml
+    bids: &anat_parent_defacemask       # See: schema/rules/files/raw/anat.yaml
       task:
       acq: <protocol_name>
       ce:
@@ -1205,7 +1219,7 @@ PAR:
   - attributes:
       <<: *anat_parattr
       protocol_name: (?i).*ME.?SE.*
-    bids: &anat_parent_multiecho        # See: schema/datatypes/anat.yaml
+    bids: &anat_parent_multiecho        # See: schema/rules/files/raw/anat.yaml
       task:
       acq: <protocol_name>
       ce:
@@ -1224,7 +1238,7 @@ PAR:
   - attributes:
       <<: *anat_parattr
       protocol_name: (?i).*VFA.*
-    bids: &anat_parent_multiflip        # See: schema/datatypes/anat.yaml
+    bids: &anat_parent_multiflip        # See: schema/rules/files/raw/anat.yaml
       task:
       acq: <protocol_name>
       ce:
@@ -1238,7 +1252,7 @@ PAR:
   - attributes:
       <<: *anat_parattr
       protocol_name: (?i).*IR.?T1.*
-    bids: &anat_parent_multiinv         # See: schema/datatypes/anat.yaml
+    bids: &anat_parent_multiinv         # See: schema/rules/files/raw/anat.yaml
       task:
       acq: <protocol_name>
       ce:
@@ -1251,7 +1265,7 @@ PAR:
   - attributes:
       <<: *anat_parattr
       protocol_name: (?i).*3DTFE.*INV1.*
-    bids: &anat_parent_mp2rage          # See: schema/datatypes/anat.yaml
+    bids: &anat_parent_mp2rage          # See: schema/rules/files/raw/anat.yaml
       task:
       acq: <protocol_name>
       ce:
@@ -1272,7 +1286,7 @@ PAR:
   - attributes:
       <<: *anat_parattr
       protocol_name: (?i).*MPM.*
-    bids: &anat_parent_vfamt            # See: schema/datatypes/anat.yaml
+    bids: &anat_parent_vfamt            # See: schema/rules/files/raw/anat.yaml
       task:
       acq: <protocol_name>
       ce:
@@ -1293,7 +1307,7 @@ PAR:
   - attributes:
       <<: *anat_parattr
       protocol_name: (?i).*MTR.*
-    bids: &anat_parent_mtr              # See: schema/datatypes/anat.yaml
+    bids: &anat_parent_mtr              # See: schema/rules/files/raw/anat.yaml
       task:
       acq: <protocol_name>
       ce:
@@ -1319,7 +1333,7 @@ PAR:
       max_echoes:
       repetition_time:
       prep_direction:
-    bids: &func_parent_func             # See: schema/datatypes/func.yaml
+    bids: &func_parent_func             # See: schema/rules/files/raw/func.yaml
       task: <exam_name>
       acq: <protocol_name>
       ce:
@@ -1353,7 +1367,12 @@ PAR:
       suffix: cbv
     meta: *func_meta
   - attributes: *func_parattr
-    bids: &func_parent_events           # See: schema/datatypes/func.yaml
+    bids:
+      <<: *func_parent_func
+      mod:
+      suffix: noRF
+  - attributes: *func_parattr
+    bids: &func_parent_events           # See: schema/rules/files/raw/func.yaml
       task: <exam_name>
       acq: <protocol_name>
       ce:
@@ -1365,7 +1384,7 @@ PAR:
     meta:
       TaskName: <exam_name>
   - attributes: *func_parattr
-    bids: &func_parent_timeseries       # See: schema/datatypes/func.yaml
+    bids: &func_parent_timeseries       # See: schema/rules/files/raw/func.yaml
       task: <exam_name>
       acq: <protocol_name>
       ce:
@@ -1399,11 +1418,13 @@ PAR:
       max_echoes:
       repetition_time:
       prep_direction:
-    bids: &perf_parent_group1           # See: schema/datatypes/perf.yaml
+    bids: &perf_parent_group1           # See: schema/rules/files/raw/perf.yaml
       acq: <protocol_name>
       rec: <exam_name>
       dir:
       run: <<>>
+      echo:
+      part: ['', mag, phase, real, imag, 0]
       suffix: asl
     meta: *perf_meta
   - attributes:
@@ -1416,10 +1437,17 @@ PAR:
       protocol_name: (?i).*M0.?scan.*
     bids:
       <<: *perf_parent_group1
+      echo:
+      part: [ '', mag, phase, real, imag, 0 ]
       suffix: m0scan
     meta: *perf_meta
   - attributes: *perf_parattr
-    bids: &perf_parent_group2           # See: schema/datatypes/perf.yaml
+    bids:
+      <<: *perf_parent_group1
+      mod:
+      suffix: noRF
+  - attributes: *perf_parattr
+    bids: &perf_parent_group2           # See: schema/rules/files/raw/perf.yaml
       acq: <protocol_name>
       rec: <exam_name>
       dir:
@@ -1427,7 +1455,7 @@ PAR:
       suffix: aslcontext
     meta: *perf_meta
   - attributes: *perf_parattr
-    bids: &perf_parent_group3           # See: schema/datatypes/perf.yaml
+    bids: &perf_parent_group3           # See: schema/rules/files/raw/perf.yaml
       acq: <protocol_name>
       rec: <exam_name>
       run: <<>>
@@ -1449,7 +1477,7 @@ PAR:
       max_echoes:
       repetition_time:
       prep_direction:
-    bids: &dwi_parent_DWI               # See: schema/datatypes/dwi.yaml
+    bids: &dwi_parent_DWI               # See: schema/rules/files/raw/dwi.yaml
       acq: <protocol_name>
       rec:
       dir:
@@ -1461,7 +1489,7 @@ PAR:
   - attributes:                         # First match the SBREF dwi runs (the normal dwi runs don't have SBREF in the seriesdescription)
       <<: *dwi_parattr
       protocol_name: (?i).*(DWI|diffusion|HARDI|DTI|dMRI|DW.?MRI).*SBREF.*
-    bids: &dwi_parent_sbref             # See: schema/datatypes/dwi.yaml
+    bids: &dwi_parent_sbref             # See: schema/rules/files/raw/dwi.yaml
       acq: <protocol_name>
       rec:
       dir:
@@ -1490,7 +1518,7 @@ PAR:
       max_echoes:
       repetition_time:
       prep_direction:
-    bids: &fmap_parent_fieldmaps        # See: schema/datatypes/fmap.yaml
+    bids: &fmap_parent_fieldmaps        # See: schema/rules/files/raw/fmap.yaml
       acq: <protocol_name>
       run: <<>>
       chunk:
@@ -1527,11 +1555,12 @@ PAR:
       suffix: magnitude
     meta: *fmap_meta
   - attributes: *fmap_parattr
-    bids: &fmap_parent_PEPolar          # See: schema/datatypes/fmap.yaml
+    bids: &fmap_parent_PEPolar          # See: schema/rules/files/raw/fmap.yaml
       acq: <protocol_name>
       ce:
       dir:
       run: <<>>
+      part: ['', mag, phase, real, imag, 0]
       chunk:
       suffix: epi
     meta: *fmap_meta
@@ -1541,7 +1570,7 @@ PAR:
       suffix: m0scan
     meta: *fmap_meta
   - attributes: *fmap_parattr
-    bids: &fmap_parent_TB1DAM           # See: schema/datatypes/fmap.yaml
+    bids: &fmap_parent_TB1DAM           # See: schema/rules/files/raw/fmap.yaml
       acq: <protocol_name>
       ce:
       rec:
@@ -1553,7 +1582,7 @@ PAR:
       suffix: TB1DAM
     meta: *fmap_meta_B0Field
   - attributes: *fmap_parattr
-    bids: &fmap_parent_TB1EPI           # See: schema/datatypes/fmap.yaml
+    bids: &fmap_parent_TB1EPI           # See: schema/rules/files/raw/fmap.yaml
       acq: <protocol_name>
       ce:
       rec:
@@ -1566,7 +1595,7 @@ PAR:
       suffix: TB1EPI
     meta: *fmap_meta_B0Field
   - attributes: *fmap_parattr
-    bids: &fmap_parent_RFFieldMaps      # See: schema/datatypes/fmap.yaml
+    bids: &fmap_parent_RFFieldMaps      # See: schema/rules/files/raw/fmap.yaml
       acq: <protocol_name>
       ce:
       rec:
@@ -1580,21 +1609,21 @@ PAR:
     meta: *fmap_meta_B0Field
   - attributes: *fmap_parattr
     bids:
-      <<: *fmap_parent_RFFieldMaps      # See: schema/datatypes/fmap.yaml
+      <<: *fmap_parent_RFFieldMaps      # See: schema/rules/files/raw/fmap.yaml
       suffix: TB1TFL
     meta: *fmap_meta_B0Field
   - attributes: *fmap_parattr
     bids:
-      <<: *fmap_parent_RFFieldMaps      # See: schema/datatypes/fmap.yaml
+      <<: *fmap_parent_RFFieldMaps      # See: schema/rules/files/raw/fmap.yaml
       suffix: TB1RFM
     meta: *fmap_meta_B0Field
   - attributes: *fmap_parattr
     bids:
-      <<: *fmap_parent_RFFieldMaps      # See: schema/datatypes/fmap.yaml
+      <<: *fmap_parent_RFFieldMaps      # See: schema/rules/files/raw/fmap.yaml
       suffix: RB1COR
     meta: *fmap_meta_B0Field
   - attributes: *fmap_parattr
-    bids: &fmap_parent_TB1SRGE          # See: schema/datatypes/fmap.yaml
+    bids: &fmap_parent_TB1SRGE          # See: schema/rules/files/raw/fmap.yaml
       acq: <protocol_name>
       ce:
       rec:
@@ -1607,7 +1636,7 @@ PAR:
       suffix: TB1SRGE
     meta: *fmap_meta_B0Field
   - attributes: *fmap_parattr
-    bids: &fmap_parent_parametric       # See: schema/datatypes/fmap.yaml
+    bids: &fmap_parent_parametric       # See: schema/rules/files/raw/fmap.yaml
       acq: <protocol_name>
       ce:
       rec:
@@ -1682,7 +1711,7 @@ SPAR:
 
   mrs:        # ---------------------- All spectroscopy runs ------------------
   - properties: *fileprop               # This is an optional (stub) entry of properties matching (could be added to any run-item)
-    attributes: &mrs_sparattr           # The matching (regex) criteria for the phys2bids -info data go in here
+    attributes: &mrs_sparattr
       examination_name:
       scan_id:
       echo_time:
@@ -1692,15 +1721,28 @@ SPAR:
       ap_size:
       lr_size:
       cc_size:
-    bids: &mrs_sparent                  # See: https://docs.google.com/document/d/1pWCb02YNv5W-UZZja24fZrdXLm4X7knXMiZI7E2z7mY/
+    bids: &mrs_sparent                  # See: schema/rules/files/raw/mrs.yaml
       task:
       acq:
+      rec:
+      echo:
       inv:
       nuc:
-      vox:
-      type:
+      voi:
       run: <<>>                         # This will be updated during bidscoiner runtime (as it depends on the already existing files)
-      suffix: press
+      suffix: svs
+  - attributes: *mrs_sparattr
+    bids:
+      <<: *mrs_sparent
+      suffix: mrsi
+  - attributes: *mrs_sparattr
+    bids:
+      <<: *mrs_sparent
+      suffix: unloc
+  - attributes: *mrs_sparattr
+    bids:
+      <<: *mrs_sparent
+      suffix: mrsref
 
   extra_data: # ----------------------- All extra data -------------------------
   - attributes: *mrs_sparattr
@@ -1720,7 +1762,7 @@ Twix:
 
   mrs:        # ---------------------- All spectroscopy runs ------------------
   - properties: *fileprop               # This is an optional (stub) entry of properties matching (could be added to any run-item)
-    attributes: &mrs_twixattr           # The matching (regex) criteria for the phys2bids -info data go in here
+    attributes: &mrs_twixattr
       Modality:
       ProtocolName:
       SeriesDescription:
@@ -1736,21 +1778,28 @@ Twix:
       EchoTime:
       EffectiveEchoTime:
       RepetitionTime:
-    bids: &mrs_twixent                  # See: https://docs.google.com/document/d/1pWCb02YNv5W-UZZja24fZrdXLm4X7knXMiZI7E2z7mY/
+    bids: &mrs_twixent                  # See: schema/rules/files/raw/mrs.yaml
       task:
       acq:
+      rec:
+      echo:
       inv:
       nuc:
-      vox:
-      type:
+      voi:
       run: <<>>                         # This will be updated during bidscoiner runtime (as it depends on the already existing files)
-      suffix: mrs
-  - attributes:
-      <<: *mrs_twixattr
-      SequenceName: .*
+      suffix: svs
+  - attributes: *mrs_twixattr
     bids:
       <<: *mrs_twixent
-      suffix: press
+      suffix: mrsi
+  - attributes: *mrs_twixattr
+    bids:
+      <<: *mrs_twixent
+      suffix: unloc
+  - attributes: *mrs_twixattr
+    bids:
+      <<: *mrs_twixent
+      suffix: mrsref
 
   extra_data: # ----------------------- All extra data -------------------------
   - attributes: *mrs_twixattr
@@ -1795,78 +1844,36 @@ Pfile:
       rhi_mr_flip:                      # 90
       rhi_psdname:                      # PROBE-P
       rhi_cname:                        # 8HRBRAIN
-    bids: &mrs_p7fileent                # See: https://docs.google.com/document/d/1pWCb02YNv5W-UZZja24fZrdXLm4X7knXMiZI7E2z7mY/
+    bids: &mrs_p7ent                    # See: schema/rules/files/raw/mrs.yaml
       task:
       acq:
+      rec:
+      echo:
       inv:
       nuc:
-      vox:
-      type:
+      voi:
       run: <<>>                         # This will be updated during bidscoiner runtime (as it depends on the already existing files)
-      suffix: mrs
-  - attributes:
-      <<: *mrs_p7attr                   # The matching (regex) criteria for spec2nii2bids go in here
-      rhs_se_desc: .*PRESS.*
+      suffix: svs
+  - attributes: *mrs_p7attr
     bids:
-      <<: *mrs_p7fileent                # See: https://docs.google.com/document/d/1pWCb02YNv5W-UZZja24fZrdXLm4X7knXMiZI7E2z7mY/
-      suffix: press
+      <<: *mrs_p7ent
+      suffix: mrsi
+  - attributes: *mrs_p7attr
+    bids:
+      <<: *mrs_p7ent
+      suffix: unloc
+  - attributes: *mrs_p7attr
+    bids:
+      <<: *mrs_p7ent
+      suffix: mrsref
 
   extra_data: # ----------------------- All extra data -------------------------
   - attributes: *mrs_p7attr
-    bids: *mrs_p7fileent
+    bids: *mrs_p7ent
 
   exclude:    # ----------------------- Data that will be left out -------------
   - attributes: *mrs_p7attr
-    bids: *mrs_p7fileent
-
-
-#Physio:
-## --------------------------------------------------------------------------------
-## Physio key-value heuristics (phys2bids -info data) that are mapped to the BIDS labels)
-## --------------------------------------------------------------------------------
-#  subject: <<filepath:/sub-(.*?)/>>    # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
-#  session: <<filepath:/sub-.*?/ses-(.*?)/>>     # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
-#
-#  func:       # ----------------------- All functional runs --------------------
-#  - properties: *fileprop               # This is an optional (stub) entry of properties matching (could be added to any run-item)
-#    attributes: &attributes_physio      # The matching (regex) criteria for the phys2bids -info data go in here
-#      ch_num:
-#      filetype:
-#      freq:
-#      ch_name:
-#      units:
-#      trigger_idx:
-#    bids: &bids_physio
-#      task: <descrip>
-#      acq:
-#      ce:
-#      dir:
-#      rec:
-#      run: <<>>                         # This will be updated during bidscoiner runtime (as it depends on the already existing files)
-#      recording:
-#      suffix: physio
-#    meta:                               # This is an optional entry for meta-data dictionary that will be appended to the json sidecar files produced by dcm2niix
-#      TriggerChannel: <<trigger_idx>>
-#      ExpectedTimepoints: <<num_timepoints_found>>
-#      Pad: 9
-#      ChannelNames: <<ch_name>>
-#      Threshold: <<thr>>
-#      TimeOffset: <<time_offset>>
-#      StartTime: <<time_offset>>
-#
-#  extra_data: # ----------------------- All extra data -------------------------
-#  - attributes: *attributes_physio
-#    bids: *bids_physio
-#
-#  exclude:    # ----------------------- Data that will be left out -------------
-#  - attributes:
-#      ch_num:
-#      filetype:
-#      freq:
-#      ch_name:
-#      units:
-#      trigger_idx:
-#    bids: *bids_physio
+    bids: *mrs_p7ent
 
 
 Nibabel:
@@ -1899,7 +1906,7 @@ Nibabel:
       RepetitionTime:
       InPlanePhaseEncodingDirectionDICOM:
       PhaseEncodingDirection:
-    bids: &anat_nibent_nonparametric    # See: schema/datatypes/anat.yaml
+    bids: &anat_nibent_nonparametric    # See: schema/rules/files/raw/anat.yaml
       task:
       acq: <descrip>                    # This will be expanded by the bidsmapper (so the user can edit it)
       ce:
@@ -1974,7 +1981,7 @@ Nibabel:
       <<: *fileprop
       filename: (?i).*T1.?map.*
     attributes: *nibattr
-    bids: &anat_nibent_parametric       # See: schema/datatypes/anat.yaml
+    bids: &anat_nibent_parametric       # See: schema/rules/files/raw/anat.yaml
       task:
       acq: <descrip>
       ce:
@@ -2089,7 +2096,7 @@ Nibabel:
       suffix: M0map
   - properties: *fileprop
     attributes: *nibattr
-    bids: &anat_nibent_defacemask       # See: schema/datatypes/anat.yaml
+    bids: &anat_nibent_defacemask       # See: schema/rules/files/raw/anat.yaml
       task:
       acq: <descrip>
       ce:
@@ -2102,7 +2109,7 @@ Nibabel:
       <<: *fileprop
       filename: (?i).*ME.?SE.*
     attributes: *nibattr
-    bids: &anat_nibent_multiecho        # See: schema/datatypes/anat.yaml
+    bids: &anat_nibent_multiecho        # See: schema/rules/files/raw/anat.yaml
       task:
       acq: <descrip>
       ce:
@@ -2123,7 +2130,7 @@ Nibabel:
       <<: *fileprop
       filename: (?i).*VFA.*
     attributes: *nibattr
-    bids: &anat_nibent_multiflip        # See: schema/datatypes/anat.yaml
+    bids: &anat_nibent_multiflip        # See: schema/rules/files/raw/anat.yaml
       task:
       acq: <descrip>
       ce:
@@ -2138,7 +2145,7 @@ Nibabel:
       <<: *fileprop
       filename: (?i).*IR.?T1.*
     attributes: *nibattr
-    bids: &anat_nibent_multiinv         # See: schema/datatypes/anat.yaml
+    bids: &anat_nibent_multiinv         # See: schema/rules/files/raw/anat.yaml
       task:
       acq: <descrip>
       ce:
@@ -2152,7 +2159,7 @@ Nibabel:
       <<: *fileprop
       filename: (?i).*(MP2RAGE|INV1).*
     attributes: *nibattr
-    bids: &anat_nibent_mp2rage           # See: schema/datatypes/anat.yaml
+    bids: &anat_nibent_mp2rage           # See: schema/rules/files/raw/anat.yaml
       task:
       acq: <descrip>
       ce:
@@ -2175,7 +2182,7 @@ Nibabel:
       <<: *fileprop
       filename: (?i).*MPM.*
     attributes: *nibattr
-    bids: &anat_nibent_vfamt            # See: schema/datatypes/anat.yaml
+    bids: &anat_nibent_vfamt            # See: schema/rules/files/raw/anat.yaml
       task:
       acq: <descrip>
       ce:
@@ -2198,7 +2205,7 @@ Nibabel:
       <<: *fileprop
       filename: (?i).*MTR.*
     attributes: *nibattr
-    bids: &anat_nibent_mtr              # See: schema/datatypes/anat.yaml
+    bids: &anat_nibent_mtr              # See: schema/rules/files/raw/anat.yaml
       task:
       acq: <SeriesDescription>
       ce:
@@ -2212,7 +2219,7 @@ Nibabel:
   func:       # ----------------------- All functional runs --------------------
   - properties: *fileprop
     attributes: *nibattr
-    bids: &func_nibent_func             # See: schema/datatypes/func.yaml
+    bids: &func_nibent_func             # See: schema/rules/files/raw/func.yaml
       task:
       acq: <descrip>
       ce:
@@ -2248,7 +2255,13 @@ Nibabel:
     meta: *func_meta
   - properties: *fileprop
     attributes: *nibattr
-    bids: &func_nibent_events           # See: schema/datatypes/func.yaml
+    bids:
+      <<: *func_nibent_func
+      mod:
+      suffix: noRF
+  - properties: *fileprop
+    attributes: *nibattr
+    bids: &func_nibent_events           # See: schema/rules/files/raw/func.yaml
       task: <descrip>
       acq:
       ce:
@@ -2261,7 +2274,7 @@ Nibabel:
       TaskName:
   - properties: *fileprop
     attributes: *nibattr
-    bids: &func_nibent_timeseries       # See: schema/datatypes/func.yaml
+    bids: &func_nibent_timeseries       # See: schema/rules/files/raw/func.yaml
       task: <descrip>
       acq:
       ce:
@@ -2284,11 +2297,13 @@ Nibabel:
   perf:       # ----------------------- All perfusion runs ---------------------
   - properties: *fileprop
     attributes: *nibattr
-    bids: &perf_nibent_group1           # See: schema/datatypes/perf.yaml
+    bids: &perf_nibent_group1           # See: schema/rules/files/raw/perf.yaml
       acq: <descrip>
       rec:
       dir:
       run: <<>>
+      echo:
+      part: [ '', mag, phase, real, imag, 0 ]
       suffix: asl
     meta: *perf_meta
   - properties:
@@ -2303,11 +2318,19 @@ Nibabel:
     attributes: *nibattr
     bids:
       <<: *perf_nibent_group1
+      echo:
+      part: [ '', mag, phase, real, imag, 0 ]
       suffix: m0scan
     meta: *perf_meta
   - properties: *fileprop
     attributes: *nibattr
-    bids: &perf_nibent_group2           # See: schema/datatypes/perf.yaml
+    bids:
+      <<: *perf_nibent_group1
+      mod:
+      suffix: noRF
+  - properties: *fileprop
+    attributes: *nibattr
+    bids: &perf_nibent_group2           # See: schema/rules/files/raw/perf.yaml
       acq: <descrip>
       rec:
       dir:
@@ -2316,7 +2339,7 @@ Nibabel:
     meta: *perf_meta
   - properties: *fileprop
     attributes: *nibattr
-    bids: &perf_nibent_group3           # See: schema/datatypes/perf.yaml
+    bids: &perf_nibent_group3           # See: schema/rules/files/raw/perf.yaml
       acq: <descrip>
       rec:
       run: <<>>
@@ -2324,7 +2347,7 @@ Nibabel:
     meta: *perf_meta
 #  - properties: *fileprop
 #    attributes: *nibattr
-#    bids: &perf_nibent_physio           # See: schema/datatypes/perf.yaml
+#    bids: &perf_nibent_physio           # See: schema/rules/files/raw/perf.yaml
 #      task: <descrip>
 #      acq:
 #      rec:
@@ -2337,7 +2360,7 @@ Nibabel:
   dwi:        # ----------------------- All diffusion runs ---------------------
   - properties: *fileprop
     attributes: *nibattr
-    bids: &dwi_nibent_DWI               # See: schema/datatypes/dwi.yaml
+    bids: &dwi_nibent_DWI               # See: schema/rules/files/raw/dwi.yaml
       acq: <descrip>
       rec:
       dir:
@@ -2350,7 +2373,7 @@ Nibabel:
       <<: *fileprop
       filename: (?i).*(DWI|diffusion|HARDI|DTI|dMRI|DW.?MRI).*SBREF.*
     attributes: *nibattr
-    bids: &dwi_nibent_sbref             # See: schema/datatypes/dwi.yaml
+    bids: &dwi_nibent_sbref             # See: schema/rules/files/raw/dwi.yaml
       acq: <descrip>
       rec:
       dir:
@@ -2367,7 +2390,7 @@ Nibabel:
     meta: *dwi_meta
   - properties: *fileprop
     attributes: *nibattr
-    bids: &dwi_nibent_physio            # See: schema/datatypes/dwi.yaml
+    bids: &dwi_nibent_physio            # See: schema/rules/files/raw/dwi.yaml
       acq: <descrip>
       dir:
       run: <<>>
@@ -2381,7 +2404,7 @@ Nibabel:
       <<: *fileprop
       filename: (?i).*magnitude1.*
     attributes: *nibattr
-    bids: &fmap_nibent_fieldmaps        # See: schema/datatypes/fmap.yaml
+    bids: &fmap_nibent_fieldmaps        # See: schema/rules/files/raw/fmap.yaml
       acq: <descrip>
       run: <<>>
       chunk:
@@ -2437,11 +2460,12 @@ Nibabel:
       <<: *fileprop
       filename: (?i).*(inverted|pepolar|_inv).*
     attributes: *nibattr
-    bids: &fmap_nibent_PEPolar          # See: schema/datatypes/fmap.yaml
+    bids: &fmap_nibent_PEPolar          # See: schema/rules/files/raw/fmap.yaml
       acq: <descrip>
       ce:
       dir:
       run: <<>>
+      part: [ '', mag, phase, real, imag, 0 ]
       chunk:
       suffix: epi
     meta: *fmap_meta
@@ -2457,7 +2481,7 @@ Nibabel:
       <<: *fileprop
       filename: (?i).*TB1DAM.*
     attributes: *nibattr
-    bids: &fmap_nibent_TB1DAM           # See: schema/datatypes/fmap.yaml
+    bids: &fmap_nibent_TB1DAM           # See: schema/rules/files/raw/fmap.yaml
       acq: <descrip>
       ce:
       rec:
@@ -2472,7 +2496,7 @@ Nibabel:
       <<: *fileprop
       filename: (?i).*TB1EPI.*
     attributes: *nibattr
-    bids: &fmap_nibent_TB1EPI           # See: schema/datatypes/fmap.yaml
+    bids: &fmap_nibent_TB1EPI           # See: schema/rules/files/raw/fmap.yaml
       acq: <descrip>
       ce:
       rec:
@@ -2488,7 +2512,7 @@ Nibabel:
       <<: *fileprop
       filename: (?i).*TB1AFI.*
     attributes: *nibattr
-    bids: &fmap_nibent_RFFieldMaps      # See: schema/datatypes/fmap.yaml
+    bids: &fmap_nibent_RFFieldMaps      # See: schema/rules/files/raw/fmap.yaml
       acq: <descrip>
       ce:
       rec:
@@ -2505,7 +2529,7 @@ Nibabel:
       filename: (?i).*TB1TFL.*
     attributes: *nibattr
     bids:
-      <<: *fmap_nibent_RFFieldMaps     # See: schema/datatypes/fmap.yaml & https://bids-specification.readthedocs.io/en/stable/99-appendices/11-qmri.html#tb1tfl-and-tb1rfm-specific-notes
+      <<: *fmap_nibent_RFFieldMaps     # See: schema/rules/files/raw/fmap.yaml & https://bids-specification.readthedocs.io/en/stable/99-appendices/11-qmri.html#tb1tfl-and-tb1rfm-specific-notes
       acq: famp
       suffix: TB1TFL
     meta: *fmap_meta_B0Field
@@ -2514,7 +2538,7 @@ Nibabel:
       filename: (?i).*TB1RFM.*
     attributes: *nibattr
     bids:
-      <<: *fmap_nibent_RFFieldMaps    # See: schema/datatypes/fmap.yaml
+      <<: *fmap_nibent_RFFieldMaps    # See: schema/rules/files/raw/fmap.yaml
       acq: anat
       suffix: TB1RFM
     meta: *fmap_meta_B0Field
@@ -2523,14 +2547,14 @@ Nibabel:
       filename: (?i).*RB1COR.*
     attributes: *nibattr
     bids:
-      <<: *fmap_nibent_RFFieldMaps    # See: schema/datatypes/fmap.yaml
+      <<: *fmap_nibent_RFFieldMaps    # See: schema/rules/files/raw/fmap.yaml
       suffix: RB1COR
     meta: *fmap_meta_B0Field
   - properties:
       <<: *fileprop
       filename: (?i).*TB1SRGE.*
     attributes: *nibattr
-    bids: &fmap_nibent_TB1SRGE        # See: schema/datatypes/fmap.yaml
+    bids: &fmap_nibent_TB1SRGE        # See: schema/rules/files/raw/fmap.yaml
       acq: <descrip>
       ce:
       rec:
@@ -2546,7 +2570,7 @@ Nibabel:
       <<: *fileprop
       filename: (?i)(.*TB1.?|FLIP.?ANGLE)map.*
     attributes: *nibattr
-    bids: &fmap_nibent_parametric     # See: schema/datatypes/fmap.yaml
+    bids: &fmap_nibent_parametric     # See: schema/rules/files/raw/fmap.yaml
       acq: <descrip>
       ce:
       rec:

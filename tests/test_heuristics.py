@@ -1,6 +1,7 @@
 import jsonschema
 import json
 from bidscoin import bcoin, bidscoinroot
+from bidscoin.bids import BidsMap
 from ruamel.yaml import YAML
 yaml = YAML()
 yaml.representer.ignore_aliases = lambda *data: True                         # Expand aliases (https://stackoverflow.com/questions/58091449/disabling-alias-for-yaml-file-in-python)
@@ -8,7 +9,7 @@ yaml.representer.ignore_aliases = lambda *data: True                         # E
 bcoin.setup_logging()
 
 
-def test_validate_bidsmaps():
+def test_jsonschema_validate_bidsmaps():
 
     # Use the schema to validate the bidsmap
     with (bidscoinroot/'heuristics'/'schema.json').open('r') as stream:
@@ -17,3 +18,11 @@ def test_validate_bidsmaps():
         with template.open('r') as stream:
             bidsmap = yaml.load(stream)
         jsonschema.validate(bidsmap, schema)
+
+
+def test_bidsmap_validate():
+
+    for template in (bidscoinroot/'heuristics').glob('*.yaml'):
+        bidsmap = BidsMap(template, checks=(True, True, False))
+
+        assert bidsmap.check_template() is True

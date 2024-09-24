@@ -16,6 +16,7 @@ import pandas as pd
 import ast
 import datetime
 import jsonschema
+import bidsschematools.schema as bst
 import dateutil.parser
 from fnmatch import fnmatch
 from functools import lru_cache
@@ -44,29 +45,16 @@ Meta       = NewType('Meta',       Dict[str, Any])
 LOGGER = logging.getLogger(__name__)
 
 # Read the BIDS schema data
-with (schemafolder/'objects'/'datatypes.yaml').open('r') as _stream:
-    bidsdatatypesdef = yaml.load(_stream)
-    "The valid BIDS datatypes, along with their full names and descriptions"
-datatyperules = {}
-"The entities that can/should be present for each BIDS data type"
-for _datatypefile in (schemafolder/'rules'/'files'/'raw').glob('*.yaml'):
-    with _datatypefile.open('r') as _stream:
-        datatyperules[_datatypefile.stem] = yaml.load(_stream)
-with (schemafolder/'objects'/'suffixes.yaml').open('r') as _stream:
-    suffixes = yaml.load(_stream)
-    "The descriptions of the valid BIDS file suffixes"
-with (schemafolder/'objects'/'entities.yaml').open('r') as _stream:
-    entities = yaml.load(_stream)
-    "The descriptions of the entities present in BIDS filenames"
-with (schemafolder/'objects'/'extensions.yaml').open('r') as _stream:
-    extensions = [val['value'] for key,val in yaml.load(_stream).items() if val['value'] not in ('.json','.tsv','.bval','.bvec') and '/' not in val['value']]
-    "The possible extensions of BIDS data files"
-with (schemafolder/'rules'/'entities.yaml').open('r') as _stream:
-    entitiesorder = yaml.load(_stream)
-    "The order in which the entities should appear within filenames"
-with (schemafolder/'objects'/'metadata.yaml').open('r') as _stream:
-    metafields = yaml.load(_stream)
-    "The descriptions of the valid BIDS metadata fields"
+bidsschema  = bst.load_schema(schemafolder)
+"""The BIDS reference schema"""
+filerules   = bidsschema.rules.files.raw
+"""The entities that can/should be present for each BIDS data type"""
+entityrules = bidsschema.rules.entities
+"""The order in which the entities should appear within filenames"""
+entities    = bidsschema.objects.entities
+"""The descriptions of the entities present in BIDS filenames"""
+extensions  = [ext.value for _,ext in bidsschema.objects.extensions.items() if ext.value not in ('.json', '.tsv', '.bval', '.bvec') and '/' not in ext.value]
+"""The possible extensions of BIDS data files"""
 
 
 class DataSource:
@@ -476,28 +464,28 @@ class RunItem:
         if 'suffix' not in self.bids:
             if checks[1]: LOGGER.warning(f'Invalid bidsmap: The {datatype} "suffix" key is missing ({datatype} -> {self.provenance})')
             return run_keysok, False, run_valsok                # The suffix is not BIDS-valid, we cannot check the keys and values
-        if datatype not in datatyperules:
+        if datatype not in filerules:
             return run_keysok, run_suffixok, run_valsok         # We cannot check anything
 
         # Use the suffix to find the right typegroup
         suffix = self.bids.get('suffix')
         if self.datasource.path.is_file():
             suffix = self.datasource.dynamicvalue(suffix, True, True)
-        for typegroup in datatyperules[datatype]:
+        for typegroup in filerules[datatype]:
 
             if '<' not in suffix or '>' not in suffix:
                 run_suffixok = False                            # We can now check the suffix
 
-            if suffix in datatyperules[datatype][typegroup]['suffixes']:
+            if suffix in filerules[datatype][typegroup].suffixes:
 
                 run_keysok   = True                             # We can now check the key
                 run_suffixok = True                             # The suffix is valid
                 run_valsok   = True                             # We can now check the value
 
                 # Check if all expected entity-keys are present in the run and if they are properly filled
-                for entity in datatyperules[datatype][typegroup]['entities']:
-                    entitykey    = entities[entity]['name']
-                    entityformat = entities[entity]['format']   # E.g. 'label' or 'index' (the entity type always seems to be 'string')
+                for entity in filerules[datatype][typegroup].entities:
+                    entitykey    = entities[entity].name
+                    entityformat = entities[entity].format      # E.g. 'label' or 'index' (the entity type always seems to be 'string')
                     bidsvalue    = self.bids.get(entitykey)
                     dynamicvalue = True if isinstance(bidsvalue, str) and ('<' in bidsvalue and '>' in bidsvalue) else False
                     if entitykey in ('sub', 'ses'): continue
@@ -509,7 +497,7 @@ class RunItem:
                     if bidsvalue and not dynamicvalue and bidsvalue!=sanitize(bidsvalue):
                         if checks[2]: LOGGER.warning(f'Invalid {entitykey} value: "{bidsvalue}" ({datatype}/*_{self.bids["suffix"]} -> {self.provenance})')
                         run_valsok = False
-                    elif not bidsvalue and datatyperules[datatype][typegroup]['entities'][entity]=='required':
+                    elif not bidsvalue and filerules[datatype][typegroup].entities[entity]== 'required':
                         if checks[2]: LOGGER.warning(f'Required "{entitykey}" value is missing ({datatype}/*_{self.bids["suffix"]} -> {self.provenance})')
                         run_valsok = False
                     if bidsvalue and not dynamicvalue and entityformat=='index' and not str(bidsvalue).isdecimal():
@@ -517,7 +505,7 @@ class RunItem:
                         run_valsok = False
 
                 # Check if all the bids-keys are present in the schema file
-                entitykeys = [entities[entity]['name'] for entity in datatyperules[datatype][typegroup]['entities']]
+                entitykeys = [entities[entity].name for entity in filerules[datatype][typegroup].entities]
                 for bidskey in self.bids:
                     if bidskey not in entitykeys + ['suffix']:
                         if checks[0]: LOGGER.warning(f'Invalid bidsmap: The "{bidskey}" key is not allowed according to the BIDS standard ({datatype}/*_{self.bids["suffix"]} -> {self.provenance})')
@@ -527,7 +515,7 @@ class RunItem:
                 break
 
         # Hack: There are physio, stim and events entities in the 'task'-rules, which can be added to any datatype. They can have a `.tsv` or a `.tsv.gz` file extension
-        if suffix in datatyperules['task']['events']['suffixes'] + datatyperules['task']['timeseries']['suffixes']:
+        if suffix in filerules.task.events.suffixes + filerules.task.timeseries.suffixes:
             bidsname = self.bidsname(validkeys=False, runtime=self.datasource.path.is_file())
             for ext in ('.tsv', '.tsv.gz'):  # NB: `ext` used to be '.json', which is more generic (but see https://github.com/bids-standard/bids-validator/issues/2113)
                 if run_suffixok := bids_validator.BIDSValidator().is_bids(f"/sub-unknown/{datatype}/{bidsname}{ext}"): break    # NB: Using the BIDSValidator sounds nice but doesn't give any control over the BIDS-version
@@ -588,7 +576,7 @@ class RunItem:
 
         # Compose the bidsname
         bidsname    = f"sub-{subid}{'_ses-'+sesid if sesid else ''}"                # Start with the subject/session identifier
-        entitiekeys = [entities[entity]['name'] for entity in entitiesorder]        # Use the valid keys from the BIDS schema
+        entitiekeys = [entities[entity].name for entity in entityrules]        # Use the valid keys from the BIDS schema
         if not validkeys:                                                           # Use the (ordered valid + invalid) keys from the run item
             entitiekeys = [key for key in entitiekeys if key in self.bids] + \
                           [key for key in self.bids if key not in entitiekeys and key!='suffix']
@@ -979,10 +967,10 @@ class BidsMap:
                     suffix = runitem.bids.get('suffix')
                     if runitem.datasource.has_plugin():
                         suffix = runitem.datasource.dynamicvalue(suffix, True, True)
-                    for typegroup in datatyperules.get(datatype.datatype, {}):                   # E.g. typegroup = 'nonparametric'
-                        if suffix in datatyperules[datatype.datatype][typegroup]['suffixes']:    # run_found = True
-                            for entity in datatyperules[datatype.datatype][typegroup]['entities']:
-                                entitykey = entities[entity]['name']
+                    for typegroup in filerules.get(datatype.datatype, {}):                  # E.g. typegroup = 'nonparametric'
+                        if suffix in filerules[datatype.datatype][typegroup].suffixes:      # run_found = True
+                            for entity in filerules[datatype.datatype][typegroup].entities:
+                                entitykey = entities[entity].name
                                 if entitykey not in runitem.bids and entitykey not in ('sub', 'ses'):
                                     LOGGER.info(f"Adding missing {dataformat}>{datatype}>{suffix} bidsmap entity key: {entitykey}")
                                     runitem.bids[entitykey] = ''
@@ -1174,7 +1162,7 @@ class BidsMap:
         LOGGER.verbose('Checking the template bidsmap datatypes:')
         for dataformat in self.dataformats:
             for datatype in dataformat.datatypes:
-                if not (datatype in bidsdatatypesdef or datatype in ignoretypes or check_ignore(datatype, bidsignore)):
+                if not (datatype.datatype in bidsschema.objects.datatypes or datatype in ignoretypes or check_ignore(datatype, bidsignore)):
                     LOGGER.warning(f"Invalid {dataformat} datatype: '{datatype}' (you may want to add it to the 'bidsignore' list)")
                     valid = False
                 if datatype in ignoretypes: continue
@@ -1186,12 +1174,12 @@ class BidsMap:
                             re.compile(str(val))
                         except re.error:
                             LOGGER.warning(f"Invalid regex pattern in the {key} value '{val}' in: {runitem}\nThis may cause run-matching errors unless '{val}' is a literal attribute value")
-                for typegroup in datatyperules.get(datatype.datatype, {}):
-                    for suffix in datatyperules[datatype.datatype][typegroup]['suffixes']:
+                for typegroup in filerules.get(datatype.datatype, {}):
+                    for suffix in filerules[datatype.datatype][typegroup].suffixes:
                         if not (suffix in datatypesuffixes or suffix in str(bidsignore) or
-                                '[DEPRECATED]'             in suffixes[suffix]['description'] or
-                                '**Change:** Removed from' in suffixes[suffix]['description'] or
-                                '**Change:** Replaced by'  in suffixes[suffix]['description']):
+                                '[DEPRECATED]'             in bidsschema.objects.suffixes[suffix].description or
+                                '**Change:** Removed from' in bidsschema.objects.suffixes[suffix].description or
+                                '**Change:** Replaced by'  in bidsschema.objects.suffixes[suffix].description):
                             LOGGER.warning(f"Missing '{suffix}' run-item in: bidsmap[{dataformat}][{datatype}] (NB: this may be fine / a deprecated item)")
                             valid = False
 
@@ -1278,7 +1266,7 @@ class BidsMap:
         properties and attributes are matched, except when runtime is True, then the empty attributes are also matched.
         The datatypes are searched for in this order:
 
-        ignoredatatypes (e.g. 'exclude') -> normal bidsdatatypes (e.g. 'anat') -> unknowndatatypes (e.g. 'extra_data')
+        ignoredatatypes (e.g. 'exclude') -> normal datatypes (e.g. 'anat') -> unknowndatatypes (e.g. 'extra_data')
 
         :param datasource:  The data source from which the attributes are read
         :param runtime:     Dynamic <<values>> are expanded if True
@@ -1288,15 +1276,15 @@ class BidsMap:
 
         unknowndatatypes = self.options.get('unknowntypes') or ['unknown_data']
         ignoredatatypes  = self.options.get('ignoretypes') or []
-        bidsdatatypes    = [dtype.datatype for dtype in self.dataformat(datasource.dataformat).datatypes if dtype not in unknowndatatypes + ignoredatatypes]
+        normaldatatypes  = [dtype.datatype for dtype in self.dataformat(datasource.dataformat).datatypes if dtype not in unknowndatatypes + ignoredatatypes]
         datasource       = copy.deepcopy(datasource)
         rundata          = {'provenance': str(datasource.path), 'properties': {}, 'attributes': {}, 'bids': {}, 'meta': {}}
         """The a run-item data structure. NB: Keep in sync with the RunItem() data attributes"""
 
         # Loop through all datatypes and runs; all info goes cleanly into runitem (to avoid formatting problem of the CommentedMap)
-        if 'fmap' in bidsdatatypes:
-            bidsdatatypes.insert(0, bidsdatatypes.pop(bidsdatatypes.index('fmap')))  # Put fmap at the front (to catch inverted polarity scans first
-        for datatype in ignoredatatypes + bidsdatatypes + unknowndatatypes:                 # The ordered datatypes in which a matching run is searched for
+        if 'fmap' in normaldatatypes:
+            normaldatatypes.insert(0, normaldatatypes.pop(normaldatatypes.index('fmap')))       # Put fmap at the front (to catch inverted polarity scans first
+        for datatype in ignoredatatypes + normaldatatypes + unknowndatatypes:                       # The ordered datatypes in which a matching run is searched for
             if datatype not in self.dataformat(datasource.dataformat).datatypes: continue
             for runitem in self.dataformat(datasource.dataformat).datatype(datatype).runitems:
 
@@ -2190,10 +2178,10 @@ def get_derivatives(datatype: Union[str, DataType], exceptions: Iterable=()) -> 
 
     datatype = str(datatype)
     if datatype == 'anat':
-        return [suffix for suffix in datatyperules[datatype]['parametric']['suffixes']
+        return [suffix for suffix in filerules[datatype].parametric.suffixes
                 if suffix not in tuple(exceptions) + ('UNIT1',)]        # The qMRI data (maps)
     elif datatype == 'fmap':
-        return [suffix for typegroup in datatyperules[datatype] for suffix in datatyperules[datatype][typegroup]['suffixes']
+        return [suffix for typegroup in filerules[datatype] for suffix in filerules[datatype][typegroup].suffixes
                 if suffix not in exceptions and typegroup not in ('fieldmaps','pepolar')]    # The non-standard fmaps (file collections)
     else:
         return []
