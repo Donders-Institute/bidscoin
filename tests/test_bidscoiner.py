@@ -1,6 +1,7 @@
 import os
 import json
 from bidscoin import bcoin, bidsmapper, bidscoiner, bidsmap_template, __version__
+from bidscoin.bids import BidsMap
 from duecredit.io import load_due, DUECREDIT_FILE
 
 bcoin.setup_logging()
@@ -14,8 +15,11 @@ def test_bidscoiner(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir):
         except Exception:
             pass
     bidscoiner.bidscoiner(raw_dicomdir, bids_dicomdir)
-    logs     = (bidsmap_dicomdir.parent/'bidscoiner.errors').read_text()
-    sidecars = sorted((bids_dicomdir/'sub-Peter'/'ses-03Brain'/'extra_data').glob('*TestExtAtrributes*.json'))
+    logs    = (bidsmap_dicomdir.parent/'bidscoiner.errors').read_text()
+    sidecar = sorted((bids_dicomdir/'sub-Peter'/'ses-03Brain').rglob('*TestExtAtrributes*.json'))[0]
+    bidsmap = BidsMap(bidsmap_dicomdir)
+    assert bidsmap.options['unknowntypes'][-1]           == 'extra_data'
+    assert sidecar.relative_to(bids_dicomdir).as_posix() == 'sub-Peter/ses-03Brain/extra_data/sub-Peter_ses-03Brain_acq-TSCRFFASTPILOTi00001_mod-TestExtAtrributes_GR.json'
     try:
         (bidsmap_dicomdir.parent/'bidscoiner.errors').unlink(missing_ok=True)
     except Exception:
@@ -27,7 +31,7 @@ def test_bidscoiner(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir):
     assert (bids_dicomdir/'sub-Peter'/'ses-01').is_dir()
     assert (bids_dicomdir/'sub-Peter'/'ses-04BrainMRA').is_dir()
     assert len(list(bids_dicomdir.rglob('*.nii*'))) > 3             # Exact number (10) is a bit arbitrary (depends on what dcm2niix can convert)
-    with sidecars[0].open('r') as json_fid:
+    with sidecar.open('r') as json_fid:
         metadict = json.load(json_fid)
     assert metadict.get('ProtocolName')      == 'T/S/C RF FAST PILOT'
     assert metadict.get('SeriesDescription') == 'TestExtAtrributes'
@@ -45,5 +49,6 @@ def test_bidscoiner(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir):
 
 
 # def test_addmetadata(bids_dicomdir, bidsmap_dicomdir):
-#     bidsmap, _ = bids.load_bidsmap(bidsmap_dicomdir)
+#     """WIP"""
+#     bidsmap = BidsMap(bidsmap_dicomdir)
 #     bidscoiner.addmetadata(bids_dicomdir/'sub-something'/'ses-else', '*', '*')

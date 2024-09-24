@@ -149,7 +149,7 @@ def sortsessions(sourcefolder: Path, subprefix: Union[str,None]='', sesprefix: s
     :param recursive:    Boolean to search for DICOM files recursively in a session folder
     :param force:        Sort the DICOM data even the DICOM fields of the folder/name scheme are not in the data
     :param dryrun:       Boolean to just display the action
-    :return:             List of sorted sessions
+    :return:             A set of sessions
     """
 
     # Input checking

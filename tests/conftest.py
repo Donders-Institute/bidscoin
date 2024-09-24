@@ -21,6 +21,7 @@ def raw_dicomdir(tmp_path_factory):
     dicomsort.sortsessions(raw/'DICOMDIR', None)                        # The bidsmapper/coiner are NOT picking up the multi-subject DICOMDIR data properly :-(
     dicomfile = sorted((raw/'Doe^Peter'/'03-Brain'/'002-TSC RF FAST PILOT/').iterdir())[0]   # Make sure this is the first file
     with dicomfile.with_suffix('.json').open('w') as sidecar:
+        print(f"Saving extended metadata file: {dicomfile.with_suffix('.json')}")           # = raw_dicomdir0/Doe^Peter/03-Brain/002-TSC RF FAST PILOT/4950.json
         json.dump({'SeriesDescription': 'TestExtAtrributes',  'Comment': 'TestExtComment'}, sidecar)
     return raw
 

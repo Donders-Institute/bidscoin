@@ -936,10 +936,10 @@ class BidsMap:
         bidsignorefile = folder.parents[1]/'.bidsignore'
         if bidsignorefile.is_file():
             self.options['bidsignore'] = list(set(list(self.options['bidsignore']) + bidsignorefile.read_text().splitlines()))
-        self.options['bidsignore']     = list(set(self.options.get('bidsignore')    or []))
-        self.options['unknowntypes']   = list(set(self.options.get('unknowntypes')  or []))
-        self.options['ignoretypes']    = list(set(self.options.get('ignoretypes')   or []))
-        self.options['notderivative']  = list(set(self.options.get('notderivative') or []))
+        self.options['bidsignore']     = sorted(set(self.options.get('bidsignore'))) or []
+        self.options['unknowntypes']   = self.options.get('unknowntypes')  or []
+        self.options['ignoretypes']    = self.options.get('ignoretypes')   or []
+        self.options['notderivative']  = self.options.get('notderivative') or []
 
         # Make sure we get a proper plugin options and dataformat sections (use plugin default bidsmappings when a template bidsmap is loaded)
         if plugins:
@@ -1536,7 +1536,7 @@ def unpack(sesfolder: Path, wildcard: str='', workfolder: Path='', _subprefix: U
     :param wildcard:    A glob search pattern to select the tarball/zipped files (leave empty to skip unzipping)
     :param workfolder:  A root folder for temporary data
     :param _subprefix:  A pytest helper variable that is passed to dicomsort.sortsessions(args, subprefix=_subprefix)
-    :return:            Either ([unpacked and sorted session folders], True), or ([sourcefolder], False)
+    :return:            Either ({a set of unpacked session folders}, True), or ({sourcefolder}, False)
     """
 
     # Search for zipped/tarball files
@@ -2560,7 +2560,7 @@ def updatemetadata(datasource: DataSource, targetmeta: Path, usermeta: Meta, ext
 
     # Add the source metadata to the metadict or copy it over
     if sourcemeta.name:
-        for ext in set(extensions):
+        for ext in extensions:
             for sourcefile in sourcemeta.parent.glob(sourcemeta.with_suffix('').with_suffix(ext).name):
                 LOGGER.verbose(f"Copying source data from: '{sourcefile}''")
 
