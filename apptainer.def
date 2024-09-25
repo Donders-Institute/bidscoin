@@ -1,5 +1,5 @@
 Bootstrap: docker
-From: python:3.10-slim
+From: python:3-slim
 Stage: builder
 
 %post
@@ -33,22 +33,16 @@ Stage: builder
     mkdir /opt/fsl && tar -xzf fsl.tar.gz -C /opt/fsl
     /opt/fsl/bin/conda-unpack
 
-    # Clone bidscoin and switch to the qt5 branch
-    git clone https://github.com/Donders-Institute/bidscoin.git /opt/bidscoin
-    cd /opt/bidscoin
-    git checkout v4.3.3+qt5
-    rm -rf docs tests .git
-
 
 Bootstrap: docker
-From: python:3.10-slim
+From: python:3-slim
 Stage: final
 
 %help
     This BIDScoin Apptainer image includes:
 
     * Debian stable,
-    * The latest stable release of BIDScoin (v4.3.3+qt5)
+    * The latest stable release of BIDScoin (v4.4.0)
     * The latest versions of dcm2niix, pydeface, spec2nii and some FSL tools
 
     The general form to run BIDScoin commands is:
@@ -64,7 +58,6 @@ Stage: final
         3) The current image does not include the Freesurfer/synthstrip software (needed for `skullstrip`)
 
 %files from builder
-    /opt/bidscoin /opt/bidscoin
     /usr/local/bin/dcm2niix /usr/local/bin/dcm2niix
     /opt/fsl /opt/fsl
 
@@ -77,13 +70,14 @@ Stage: final
     # Install curl (sometimes needed by dcm2niix) and pigz (to speed up dcm2niix)
     apt update && apt -y --no-install-recommends install pigz curl
 
-    # Install the latest stable BIDScoin release from the local qt5 branch (install the normal Qt6 branch from PyPi when using recent base images such as Ubuntu)
-    # NOTE: PyQt5 is installed as Debian package to solve dependencies issues occurring when installed with pip
-    apt -y --no-install-recommends install python3-pyqt5 && apt clean     # Add build-essential for newer python:3-slim base images (pip needs gcc)
-    pip install /opt/bidscoin[spec2nii2bids,deface]
+    # Install the latest stable BIDScoin release
+    # NOTE: PyQt is installed as Debian package to solve dependencies issues occurring when installed with pip
+    apt -y --no-install-recommends install python3-pyqt6 build-essential libgl1 libxcb-cursor-dev && apt clean     # Add build-essential for newer python:3-slim base images (pip needs gcc)
+    pip install bidscoin[spec2nii2bids,deface]
 
     # Uncomment the line below if you get errors like: ImportError: libQt5Core.so.5: cannot open shared object file: No such file or directory
     # strip --remove-section=.note.ABI-tag /usr/lib/x86_64-linux-gnu/libQt5Core.so.5
+    # strip --remove-section=.note.ABI-tag libQt6Core.so.6
 
     # Finally, create the necessary links and cache to the most recent shared libraries (= best practise)
     ldconfig

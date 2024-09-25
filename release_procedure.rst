@@ -9,8 +9,7 @@ This document describes how to prepare a new BIDScoin release from within the DC
 3. Inspect the git history and update the CHANGELOG (including the links)
 4. Update the version string everywhere (i.e. search without word matching), COPYRIGHT and cli help texts
 5. Add a git version tag
-6. Backport to PyQt5 in a v4.#.#+qt5 branch
-7. Build & test the containers in a Linux VM::
+6. Build & test the containers in a Linux VM::
 
     VERSION="4.4.0"
     rm -rf ~/.bidscoin/$VERSION
@@ -21,12 +20,10 @@ This document describes how to prepare a new BIDScoin release from within the DC
     apptainer exec --cleanenv --env DISPLAY=:0 bidscoin.sif pngappend
     apptainer cache clean
 
-8. Run tox@DCCN::
+7. Run tox@DCCN::
 
     VERSION="4.4.0"
     cd ~/python/bidscoin
-    git pull
-    git checkout v${VERSION}+qt5
     git pull
     module load bidscoin/dev
     source activate tox
@@ -36,16 +33,13 @@ This document describes how to prepare a new BIDScoin release from within the DC
     source activate /opt/bidscoin
     ~/python/bidscoin/bidscoin/bcoin.py -t
 
-9. Push the qt5-branch
-
 DCCN deployment
 ---------------
 
-1. Copy the dev folder, checkout the Qt5 branch, update the bidsmaps and module::
+1. Copy the dev folder, update the bidsmaps and module::
 
     cp -r /opt/bidscoin/dev /opt/bidscoin/$VERSION
     cd /opt/bidscoin/$VERSION
-    git checkout v${VERSION}+qt5 -f
     for TEMPLATE in bidscoin/heuristics/*.yaml; do
         sed -i 's/command: dcm2niix/command: module add dcm2niix; dcm2niix/' $TEMPLATE
     done

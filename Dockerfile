@@ -1,4 +1,4 @@
-FROM python:3.10-slim AS builder
+FROM python:3-slim AS builder
 
 # Install the latest dcm2niix from sources
 # Or install the latest dcm2niix release from the base repository (= typically outdated)
@@ -26,19 +26,12 @@ RUN mkdir -p /opt/miniconda3; \
     conda install -c conda-forge conda-pack; \
     conda pack -n fsl; \
     mkdir /opt/fsl && tar -xzf fsl.tar.gz -C /opt/fsl; \
-    /opt/fsl/bin/conda-unpack; \
-    \
-# Clone bidscoin and switch to the qt5 branch \
-    git clone https://github.com/Donders-Institute/bidscoin.git /opt/bidscoin; \
-    cd /opt/bidscoin; \
-    git checkout v4.3.3+qt5; \
-    rm -rf docs tests .git
+    /opt/fsl/bin/conda-unpack
 
 
-FROM python:3.10-slim
+FROM python:3-slim
 
 # Install the dcm2niix build. NB: Obsolete with the new `pip install bidscoin[dcm2niix2bids]` extras option
-COPY --from=builder /opt/bidscoin /opt/bidscoin
 COPY --from=builder /usr/local/bin/dcm2niix /usr/local/bin/dcm2niix
 COPY --from=builder /opt/fsl /opt/fsl
 
@@ -46,7 +39,7 @@ ENV FSLDIR=/opt/fsl FSLOUTPUTTYPE=NIFTI_GZ \
     PATH=$PATH:/opt/fsl/bin \
     PIP_NO_CACHE_DIR=off
 
-# First install pyqt5 as Debian package to solve dependencies issues occurring when installed with pip
-# Then install the latest stable BIDScoin release from the local qt5 branch (install the normal Qt6 branch from PyPi when using recent base images such as Ubuntu)
-RUN apt update && apt -y --no-install-recommends install pigz curl python3-pyqt5 && apt clean; \
-    pip install /opt/bidscoin[spec2nii2bids,deface]
+# First install pyqt as Debian package to solve dependencies issues occurring when installed with pip
+# Then install the latest stable BIDScoin release (add build-essential for newer python:3-slim base images (pip needs gcc))
+RUN apt update && apt -y --no-install-recommends install pigz curl python3-pyqt6 build-essential libgl1 libxcb-cursor-dev && apt clean; \
+    pip install bidscoin[spec2nii2bids,deface]
