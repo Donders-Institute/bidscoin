@@ -903,8 +903,8 @@ class BidsMap:
         if any(checks):
             LOGGER.info(f"Reading: {yamlfile}")
         with yamlfile.open('r') as stream:
-            bidsmap = yaml.load(stream)
-        self._data  = bidsmap
+            bidsmap_data = yaml.load(stream)
+        self._data = bidsmap_data
         """The raw YAML data"""
 
         # Issue a warning if the version in the bidsmap YAML-file is not the same as the bidscoin version
@@ -940,9 +940,9 @@ class BidsMap:
                 self.plugins[plugin] = module.OPTIONS if 'OPTIONS' in dir(module) else {}
             if 'BIDSMAP' in dir(module) and yamlfile.parent == templatefolder:
                 for dataformat, datasection in module.BIDSMAP.items():
-                    if dataformat not in bidsmap:
+                    if dataformat not in bidsmap_data:
                         LOGGER.info(f"Adding default bidsmappings from the {plugin} plugin")
-                        bidsmap[dataformat] = datasection
+                        bidsmap_data[dataformat] = datasection
 
         # Add missing provenance info, run dictionaries and bids entities
         for dataformat in self.dataformats:
@@ -1166,9 +1166,9 @@ class BidsMap:
                     LOGGER.warning(f"Invalid {dataformat} datatype: '{datatype}' (you may want to add it to the 'bidsignore' list)")
                     valid = False
                 if datatype in ignoretypes: continue
-                datatypesuffixes = []
+                datatypesuffixes = set()
                 for runitem in datatype.runitems:
-                    datatypesuffixes.append(runitem.bids['suffix'])
+                    datatypesuffixes.add(runitem.bids['suffix'])
                     for key, val in runitem.attributes.items():
                         try:
                             re.compile(str(val))
@@ -1180,7 +1180,7 @@ class BidsMap:
                                 '[DEPRECATED]'             in bidsschema.objects.suffixes[suffix].description or
                                 '**Change:** Removed from' in bidsschema.objects.suffixes[suffix].description or
                                 '**Change:** Replaced by'  in bidsschema.objects.suffixes[suffix].description):
-                            LOGGER.warning(f"Missing '{suffix}' run-item in: bidsmap[{dataformat}][{datatype}] (NB: this may be fine / a deprecated item)")
+                            LOGGER.warning(f"Missing '{suffix}' run-item in: bidsmap[{dataformat}][{datatype}] (NB: this may perhaps be fine / a deprecated item)")
                             valid = False
 
         # Validate against the json schema

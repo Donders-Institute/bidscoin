@@ -132,7 +132,7 @@ Where ``<bidscoin_tool>`` is a BIDScoin tool (e.g., ``bidsmapper``, ``bidscoiner
    $ xhost -
    $ apptainer exec bidscoin.sif bidscoiner data/raw data/bids
 
-The `xhost +` command allows Apptainer to open a graphical display on your computer and normally needs to be run once before launching a GUI application, i.e. is needed for running the bidseditor.
+The ``xhost +`` command allows Apptainer to open a graphical display on your computer and normally needs to be run once before launching any GUI application (so this is needed for the bidseditor).
 
 If your data does not reside in your home folder, then you need to add a ``--bind <host_dir>:<container_dir>`` Apptainer argument which maps a folder from the host system to a folder inside the Apptainer container. So if your data is in ``/myproject/raw``, you run:
 

@@ -9,7 +9,7 @@ from importlib.util import find_spec
 from pathlib import Path
 from nibabel.testing import data_path
 from pydicom.data import get_testdata_file
-from bidscoin import bcoin, bids, bidsmap_template
+from bidscoin import bcoin, bids, bidsmap_template, bidscoinroot
 from bidscoin.bids import BidsMap, RunItem, DataSource, Plugin, Meta
 
 bcoin.setup_logging()
@@ -295,24 +295,26 @@ class TestBidsMap:
         assert len(bidsmap.dataformats) == 0
         assert bidsmap.filepath.name    == ''
 
-    @pytest.mark.parametrize('template', bcoin.list_plugins()[1])   # Pass the default template bidsmaps
-    def test_check_templates(self, template: Path):
+    def test_check_templates(self):
 
-        # Load a valid template
-        print(f"Checking template '{template.name}' for validity")
-        bidsmap = BidsMap(template, checks=(False, False, False))
-        assert bidsmap.check_template() is True
+        # Test the default template bidsmaps
+        for template in (bidscoinroot/'heuristics').glob('*.yaml'):
 
-        # Add and remove an invalid data type
-        bidsmap.dataformats[0].add_datatype('foo')
-        assert bidsmap.check_template() is False
-        bidsmap.dataformats[0].remove_datatype('foo')
-        assert bidsmap.check_template() is True
+            # Load a valid template
+            print(f"Checking: {template}")
+            bidsmap = BidsMap(template, checks=(False, False, False))
+            assert bidsmap.check_template() is True
 
-        # Remove a valid suffix (BIDS-entity)
-        valid_run = bidsmap.dataformats[0].datatype('anat').runitems[-2].provenance     # NB: [-2] -> The first item(s) can be non-unique, the last item can be a non-BIDS entity, i.e. CT
-        bidsmap.dataformats[0].datatype('anat').delete_run(valid_run)
-        assert bidsmap.check_template() is False
+            # Add and remove an invalid data type
+            bidsmap.dataformats[0].add_datatype('foo')
+            assert bidsmap.check_template() is False
+            bidsmap.dataformats[0].remove_datatype('foo')
+            assert bidsmap.check_template() is True
+
+            # Remove a valid suffix (BIDS-entity)
+            valid_run = bidsmap.dataformats[0].datatype('anat').runitems[-2].provenance     # NB: [-2] -> The first item(s) can be non-unique, the last item can be a non-BIDS entity, i.e. CT
+            bidsmap.dataformats[0].datatype('anat').delete_run(valid_run)
+            assert bidsmap.check_template() is False
 
     def test_dataformat(self):
         pass
