@@ -518,7 +518,7 @@ Nibabel:
       filename: sub-.*_physio\.nii.*
     attributes: *attr
     bids: &perf_nibent_physio           # See: schema/rules/files/raw/perf.yaml
-      task: <descrip>
+      task: <filename:sub-.*_task-(.*?)_.*\.nii.*>
       acq: <filename:sub-.*_acq-(.*?)_.*\.nii.*>
       rec: <filename:sub-.*_rec-(.*?)_.*\.nii.*>
       recording: <filename:sub-.*_recording-(.*?)_.*\.nii.*>
@@ -767,6 +767,46 @@ Nibabel:
       <<: *fmap_nibent_parametric
       suffix: RB1map
     meta: *fmap_meta_B0Field
+
+  mrs:        # ---------------------- All spectroscopy runs ------------------
+  - properties: &fileprop_mrs           # The first item with empty attributes will not match anything but is used by default when changing datatype in the bidseditor GUI -> suffix = magnitude
+      filepath: .*/fmap/
+      filename: sub-.*_svs\.nii.*
+      filesize:
+      nrfiles:
+    attributes: *attr
+    bids: &mrs_nibent                   # See: schema/rules/files/raw/mrs.yaml
+      task: <filename:sub-.*_task-(.*?)_.*\.nii.*>
+      acq: <filename:sub-.*_acq-(.*?)_.*\.nii.*>
+      rec: <filename:sub-.*_rec-(.*?)_.*\.nii.*>
+      echo: <filename:sub-.*_echo-(.*?)_.*\.nii.*>
+      inv: <filename:sub-.*_inv-(.*?)_.*\.nii.*>
+      nuc: <filename:sub-.*_nuc-(.*?)_.*\.nii.*>
+      voi: <filename:sub-.*_voi-(.*?)_.*\.nii.*>
+      run: <<>>                         # This will be updated during bidscoiner runtime (as it depends on the already existing files)
+      suffix: svs
+  - properties:
+      <<: *fileprop_mrs
+      filename: sub-.*_mrsi\.nii.*
+    attributes: *attr
+    bids:
+      <<: *mrs_nibent
+      suffix: mrsi
+  - properties:
+      <<: *fileprop_mrs
+      filename: sub-.*_unloc\.nii.*
+    attributes: *attr
+    bids:
+      <<: *mrs_nibent
+      suffix: unloc
+  - properties:
+      <<: *fileprop_mrs
+      filename: sub-.*_mrsref\.nii.*
+    attributes: *attr
+    bids:
+      <<: *mrs_nibent
+      suffix: mrsref
+
 
   extra_data: # ----------------------- All extra data -------------------------
   - properties:
