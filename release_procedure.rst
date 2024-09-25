@@ -12,7 +12,7 @@ This document describes how to prepare a new BIDScoin release from within the DC
 6. Backport to PyQt5 in a v4.#.#+qt5 branch
 7. Build & test the containers in a Linux VM::
 
-    VERSION="4.3.3"
+    VERSION="4.4.0"
     rm -rf ~/.bidscoin/$VERSION
     cd ~/PycharmProjects/bidscoin
     sudo apptainer build bidscoin.sif apptainer.def
@@ -23,7 +23,7 @@ This document describes how to prepare a new BIDScoin release from within the DC
 
 8. Run tox@DCCN::
 
-    VERSION="4.3.3"
+    VERSION="4.4.0"
     cd ~/python/bidscoin
     git pull
     git checkout v${VERSION}+qt5
@@ -68,7 +68,7 @@ Dockerhub
 
 1. In the VM, build, test and push a Docker image::
 
-    VERSION="4.3.3"
+    VERSION="4.4.0"
     sudo docker build -t marcelzwiers/bidscoin:$VERSION .
     sudo docker run --rm marcelzwiers/bidscoin:$VERSION bidscoin -v
     sudo docker run --rm marcelzwiers/bidscoin:$VERSION pngappend

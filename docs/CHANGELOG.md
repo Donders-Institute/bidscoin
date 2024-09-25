@@ -4,6 +4,14 @@
 
 ## [dev]
 
+## [4.4.0] - 2024
+
+### Added
+- Support for BIDS v1.10.0 (including MRS)
+
+### Changed
+- BIDScoin's main API, which now includes new classes to separate the logic from the data and make the code cleaner, better organized and maintainable
+
 ## [4.3.3] - 2024-07-12
 
 ### Added
