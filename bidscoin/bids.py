@@ -1063,7 +1063,6 @@ class BidsMap:
 
         # Validate the bidsmap entries
         self.check((False, True, True))
-        self.validate(0)
 
         filename = filename or self.filepath
         filename.parent.mkdir(parents=True, exist_ok=True)
