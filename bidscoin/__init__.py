@@ -70,12 +70,12 @@ pluginfolder.mkdir(parents=True, exist_ok=True)
 templatefolder = configdir/'templates'
 templatefolder.mkdir(parents=True, exist_ok=True)
 if not configfile.is_file():
-    print(f"Creating BIDScoin configuration:\n-> {configdir}")
+    print(f"Creating BIDScoin user configuration:\n-> {configfile}")
     configfile.write_text(f"[bidscoin]\n"
                           f"bidsmap_template = '{templatefolder}/bidsmap_dccn.yaml'     # The default template bidsmap (change to use a different default)\n"
                           f"trackusage       = 'yes'     # Upload anonymous usage data if 'yes' (maximally 1 upload every {tracking['sleep']} hour) (see `bidscoin --tracking show`)\n")
 for plugin in (bidscoinroot/'plugins').glob('*.py'):
-    if not (pluginfolder/plugin.name).is_file():
+    if not (pluginfolder/plugin.name).is_file() and not plugin.name.startswith('_'):
         print(f"-> {pluginfolder/plugin.name}")
         shutil.copyfile(plugin, pluginfolder/plugin.name)
 for template in list((bidscoinroot/'heuristics').glob('*.yaml')) + [bidscoinroot/'heuristics'/'schema.json']:
