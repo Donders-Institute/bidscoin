@@ -7,8 +7,8 @@ The basic workflow is to run these two tools:
   $ bidsmapper sourcefolder bidsfolder     # This produces a study bidsmap and launches a GUI
   $ bidscoiner sourcefolder bidsfolder     # This converts your data to BIDS according to the study bidsmap
 
-Default settings and template bidsmaps are stored in the `.bidscoin` configuration folder in your home
-directory (you can modify the configuration files to your needs with any plain text editor)
+Default settings, plugins and template bidsmaps are stored in the `.bidscoin` configuration folder in your
+home directory (you can modify the configuration files to your needs with any plain text editor)
 
 Set the environment variable `BIDSCOIN_DEBUG=TRUE` to run BIDScoin in a more verbose logging mode and
 `BIDSCOIN_CONFIGDIR=/writable/path/to/configdir` for using a different configuration (root) directory.

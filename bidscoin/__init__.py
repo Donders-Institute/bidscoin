@@ -58,21 +58,26 @@ tracking     = {'url': 'https://telemetry.dccn.nl/bidscoin', 'sleep': 1}        
 tutorialurl  = 'https://surfdrive.surf.nl/files/index.php/s/HTxdUbykBZm2cYM/download'
 bidscoinroot = Path(__file__).parent
 schemafolder = bidscoinroot/'schema'
-pluginfolder = bidscoinroot/'plugins'
 
 # Get the BIDSCOIN_DEBUG environment variable to set the log-messages and logging level, etc
 DEBUG = os.getenv('BIDSCOIN_DEBUG','').upper() in ('1', 'TRUE', 'Y', 'YES')
 
 # Create a BIDScoin user configuration directory if needed and load the BIDScoin user settings
-configfile = Path(os.getenv('BIDSCOIN_CONFIGDIR') or
-                  (Path.home() if os.access(Path.home(),os.W_OK) else Path(tempfile.gettempdir()))/'.bidscoin')/__version__/'config.toml'
-templatefolder = configfile.parent/'templates'
+configdir      = Path(os.getenv('BIDSCOIN_CONFIGDIR') or (Path.home() if os.access(Path.home(),os.W_OK) else Path(tempfile.gettempdir()))/'.bidscoin')/__version__
+configfile     = configdir/'config.toml'
+pluginfolder   = configdir/'plugins'
+pluginfolder.mkdir(parents=True, exist_ok=True)
+templatefolder = configdir/'templates'
 templatefolder.mkdir(parents=True, exist_ok=True)
 if not configfile.is_file():
-    print(f"Creating BIDScoin configuration:\n-> {configfile}")
+    print(f"Creating BIDScoin configuration:\n-> {configdir}")
     configfile.write_text(f"[bidscoin]\n"
                           f"bidsmap_template = '{templatefolder}/bidsmap_dccn.yaml'     # The default template bidsmap (change to use a different default)\n"
                           f"trackusage       = 'yes'     # Upload anonymous usage data if 'yes' (maximally 1 upload every {tracking['sleep']} hour) (see `bidscoin --tracking show`)\n")
+for plugin in (bidscoinroot/'plugins').glob('*.py'):
+    if not (pluginfolder/plugin.name).is_file():
+        print(f"-> {pluginfolder/plugin.name}")
+        shutil.copyfile(plugin, pluginfolder/plugin.name)
 for template in list((bidscoinroot/'heuristics').glob('*.yaml')) + [bidscoinroot/'heuristics'/'schema.json']:
     if not (templatefolder/template.name).is_file():
         print(f"-> {templatefolder/template.name}")
@@ -156,7 +161,7 @@ def trackusage(event: str, dryrun: bool=False) -> dict:
 
     # Check if we are not asleep
     try:
-        trackfile = configfile.parent/'usage'/f"bidscoin_{data['userid']}"
+        trackfile = configdir/'usage'/f"bidscoin_{data['userid']}"
         trackfile.parent.mkdir(parents=True, exist_ok=True)
         with shelve.open(str(trackfile), 'c', writeback=True) as tracked:
             now    = datetime.datetime.now()

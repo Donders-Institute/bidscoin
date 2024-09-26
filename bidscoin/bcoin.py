@@ -6,6 +6,7 @@ A BIDScoin library and application with utilities to perform generic management 
 """
 
 import os
+import types
 import coloredlogs
 import inspect
 import logging
@@ -392,7 +393,7 @@ def uninstall_plugins(filenames: List[str]=(), wipe: bool=True) -> None:
 
 
 @lru_cache()
-def import_plugin(plugin: Union[Path,str], functions: tuple=()) -> module_from_spec:
+def import_plugin(plugin: Union[Path,str], functions: tuple=()) -> Union[types.ModuleType, None]:
     """
     Imports the plugin if it contains any of the specified functions
 
@@ -416,7 +417,7 @@ def import_plugin(plugin: Union[Path,str], functions: tuple=()) -> module_from_s
     # Load the plugin-module
     LOGGER.bcdebug(f"Importing plugin: '{plugin}'")
     try:
-        spec   = spec_from_file_location('bidscoin.plugin.' + plugin.stem, plugin)
+        spec   = spec_from_file_location(f"bidscoin.{pluginfolder.name}." + plugin.stem, plugin)
         module = module_from_spec(spec)
         spec.loader.exec_module(module)
 

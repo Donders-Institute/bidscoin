@@ -12,6 +12,7 @@
 ### Changed
 - BIDScoin's main API, which now includes new classes to separate the logic from the data and make the code cleaner, better organized and maintainable
 - Dropped support for Qt5
+- Plugins are now installed in the BIDScoin configuration directory
 
 ## [4.3.3] - 2024-07-12
 
