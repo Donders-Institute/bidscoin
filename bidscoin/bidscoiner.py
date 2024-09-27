@@ -157,7 +157,7 @@ def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: 
                 # Create the job arguments and add it to the batch
                 bidsfolder_tmp = bidsfolder/'HPC_work'/f"bids_{subid}"      # NB: f"bids_{subid}" is used later, don't change
                 bidsfolder_tmp.mkdir(parents=True, exist_ok=True)
-                jt.args        = [rawfolder, bidsfolder_tmp, '-p', subject.name, '-b', bidsmapfile] + (['-f'] if force else [])
+                jt.args        = [rawfolder, bidsfolder_tmp, '-p', subject.name, '-b', bidsmap.filepath] + (['-f'] if force else [])
                 jt.jobName     = f"bidscoiner_{subject.name}"
                 jt.outputPath  = f"{os.getenv('HOSTNAME')}:{bidsfolder_tmp}/{jt.jobName}.out"
                 jobids.append(pbatch.runJob(jt))
