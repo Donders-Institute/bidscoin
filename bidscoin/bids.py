@@ -1338,7 +1338,7 @@ class BidsMap:
 
                 # Stop searching the bidsmap if we have a match
                 if match:
-                    LOGGER.bcdebug(f"Found bidsmap match: {runitem} -> {runitem}")
+                    LOGGER.bcdebug(f"Found bidsmap match: {runitem}")
                     runitem = RunItem('', datatype, copy.deepcopy(rundata), datasource, self.options, self.plugins)
 
                     # SeriesDescriptions (and ProtocolName?) may get a suffix like '_SBRef' from the vendor, try to strip it off
@@ -1748,6 +1748,10 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
     """
 
     global _DICOMDICT_CACHE, _DICOMFILE_CACHE
+
+    # Skip the RunItem properties
+    if tagname in ():
+        return ''
 
     if not dicomfile.is_file():
         LOGGER.warning(f"{dicomfile} not found")

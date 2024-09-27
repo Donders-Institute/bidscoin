@@ -509,12 +509,14 @@ def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> Union[N
 
             # Check if the target output aligns with dcm2niix's "BidsGuess" datatype and filename entities
             typeguess, targetguess = metadata.get('BidsGuess') or ['', '']    # BidsGuess: [datatype, filename]
+            LOGGER.bcdebug(f"BidsGuess: [{typeguess}, {targetguess}]")
             if typeguess and run.datatype != typeguess:
                 LOGGER.warning(f"The datatype of {run} does not match with the datatype suggested by dcm2niix: {typeguess}")
             elif targetguess and run.bids['suffix'] != bids.get_bidsvalue(targetguess, 'suffix'):
                 LOGGER.warning(f"The suffix of {run} does not match with the suffix suggested by dcm2niix: {targetguess}")
             for entity in ('part', 'inv', 'echo', 'dir'):
-                if targetguess and run.bids.get(entity) and run.bids[entity] != bids.get_bidsvalue(targetguess, entity):
+                targetvalue = bids.get_bidsvalue(target, entity)
+                if targetvalue and targetguess and targetvalue != bids.get_bidsvalue(targetguess, entity):
                     LOGGER.warning(f"The '{entity}' value in {run} does not match with the '{entity}' value suggested by dcm2niix: {targetguess}")
 
     # Write the scans_table to disk
