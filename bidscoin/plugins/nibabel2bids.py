@@ -129,7 +129,7 @@ def bidsmapper_plugin(session: Path, bidsmap_new: BidsMap, bidsmap_old: BidsMap,
     for sourcefile in [file for file in session.rglob('*') if has_support(file)]:
 
         # See if we can find a matching run in the old bidsmap
-        datasource = bids.DataSource(sourcefile, plugins, datasource.dataformat)
+        datasource = bids.DataSource(sourcefile, plugins, has_support(sourcefile))
         run, match = bidsmap_old.get_matching_run(datasource)
 
         # If not, see if we can find a matching run in the template
@@ -185,7 +185,7 @@ def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> None:
     # Collect the different Nibabel source files for all files in the session
     for source in sourcefiles:
 
-        datasource = bids.DataSource(source, {'nibabel2bids': options})
+        datasource = bids.DataSource(source, {'nibabel2bids': options}, has_support(source))
         run, runid = bidsmap.get_matching_run(datasource, runtime=True)
 
         # Check if we should ignore this run

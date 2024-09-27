@@ -1274,6 +1274,9 @@ class BidsMap:
                             If there is a match, the provenance of the bidsmap entry is returned, otherwise it will be ''
         """
 
+        if not datasource.dataformat and not datasource.has_plugin():
+            LOGGER.bcdebug(f"No dataformat/plugin support found when getting a matching run for: {datasource}")
+
         unknowndatatypes = self.options.get('unknowntypes') or ['unknown_data']
         ignoredatatypes  = self.options.get('ignoretypes') or []
         normaldatatypes  = [dtype.datatype for dtype in self.dataformat(datasource.dataformat).datatypes if dtype not in unknowndatatypes + ignoredatatypes]
@@ -1365,6 +1368,9 @@ class BidsMap:
         :return:            A populated run-item that is deepcopied from bidsmap[dataformat][bidsdatatype] with the matching suffix_idx,
                             otherwise an empty dict
         """
+
+        if not datasource.dataformat and not datasource.has_plugin():
+            LOGGER.bcdebug(f"No dataformat/plugin support found when getting a run for: {datasource}")
 
         datatype = str(datatype)
 

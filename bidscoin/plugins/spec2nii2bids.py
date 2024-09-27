@@ -123,7 +123,7 @@ def bidsmapper_plugin(session: Path, bidsmap_new: BidsMap, bidsmap_old: BidsMap,
     # Update the bidsmap with the info from the source files
     for sourcefile in [file for file in session.rglob('*') if has_support(file)]:
 
-        datasource = bids.DataSource(sourcefile, plugins)
+        datasource = bids.DataSource(sourcefile, plugins, has_support(sourcefile))
 
         # Input checks
         if datasource.dataformat not in template.dataformats + bidsmap_old.dataformats:
@@ -192,7 +192,7 @@ def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> Union[N
     for source in sourcefiles:
 
         # Get a data source, a matching run from the bidsmap
-        datasource = bids.DataSource(source, {'spec2nii2bids': options})
+        datasource = bids.DataSource(source, {'spec2nii2bids': options}, has_support(source))
         run, runid = bidsmap.get_matching_run(datasource, runtime=True)
 
         # Check if we should ignore this run
