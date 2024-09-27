@@ -293,7 +293,7 @@ class TestBidsMap:
         # Test loading with a dummy argument
         bidsmap = BidsMap(Path('dummy'))
         assert len(bidsmap.dataformats) == 0
-        assert bidsmap.filepath.name    == ''
+        assert bidsmap.filepath.name    == 'dummy.yaml'
 
     def test_check_templates(self):
 

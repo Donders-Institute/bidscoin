@@ -85,7 +85,7 @@ class MainWindow(QMainWindow):
             self.setWindowIcon(QtGui.QIcon(str(BIDSCOIN_ICON)))
             self.set_menu_statusbar()
 
-        if not input_bidsmap.filepath.is_file():
+        if not input_bidsmap.dataformats and not input_bidsmap.filepath.is_file():
             filename, _ = QFileDialog.getOpenFileName(self, 'Open a bidsmap file', str(bidsfolder), 'YAML Files (*.yaml *.yml);;All Files (*)')
             if filename:
                 input_bidsmap = BidsMap(Path(filename))
