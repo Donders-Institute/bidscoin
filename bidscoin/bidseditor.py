@@ -85,7 +85,7 @@ class MainWindow(QMainWindow):
             self.setWindowIcon(QtGui.QIcon(str(BIDSCOIN_ICON)))
             self.set_menu_statusbar()
 
-        if not input_bidsmap.filepath.name:
+        if not input_bidsmap.filepath.is_file():
             filename, _ = QFileDialog.getOpenFileName(self, 'Open a bidsmap file', str(bidsfolder), 'YAML Files (*.yaml *.yml);;All Files (*)')
             if filename:
                 input_bidsmap = BidsMap(Path(filename))
@@ -868,7 +868,7 @@ class MainWindow(QMainWindow):
         """Check and save the bidsmap to file"""
 
         for dataformat in self.dataformats:
-            if 'fmap' in self.output_bidsmap.dataformat(dataformat):
+            if 'fmap' in self.output_bidsmap.dataformat(dataformat).datatypes:
                 for runitem in self.output_bidsmap.dataformat(dataformat).datatype('fmap').runitems:
                     if not (runitem.meta.get('B0FieldSource') or runitem.meta.get('B0FieldIdentifier') or runitem.meta.get('IntendedFor')):
                         LOGGER.warning(f"B0FieldIdentifier/IntendedFor fieldmap value is empty for {dataformat} run-item: {runitem}")

@@ -73,17 +73,18 @@ def bidsmapper(sourcefolder: str, bidsfolder: str, bidsmap: str, template: str, 
 
     # Get the heuristics for filling the new bidsmap (NB: plugins are stored in the bidsmaps)
     bidsmap_old = BidsMap(bidsmapfile,  bidscoinfolder, plugins)
+    bidsmapfile = bidsmap_old.filepath
     template    = BidsMap(templatefile, plugins=plugins, checks=(True, True, False))
     template.check_template()
 
     # Create the new bidsmap as a copy / bidsmap skeleton with only data types without run-items (i.e. empty lists)
-    if force and bidsmap_old.filepath.name:
+    if force and bidsmap_old.filepath.is_file():
         LOGGER.info(f"Deleting previous bidsmap: {bidsmap_old.filepath}")
         bidsmap_old.filepath.unlink()
         bidsmap_old.filepath = Path()
-    bidsmap_new          = copy.deepcopy(bidsmap_old if bidsmap_old.filepath.name else template)
+    bidsmap_new          = copy.deepcopy(bidsmap_old if bidsmap_old.filepath.is_file() else template)
     bidsmap_new.delete_runs()
-    bidsmap_new.filepath = bidsmapfile.resolve()
+    bidsmap_new.filepath = bidsmapfile
     template.options     = bidsmap_new.options      # Always use the options of the new bidsmap
     template.plugins     = bidsmap_new.plugins      # Always use the plugins of the new bidsmap
     if unzip:
@@ -95,7 +96,7 @@ def bidsmapper(sourcefolder: str, bidsfolder: str, bidsmap: str, template: str, 
     subprefix, sesprefix = setprefix(bidsmap_new, subprefix, sesprefix, rawfolder, update = not no_update)
 
     # Start with an empty skeleton if we don't have an old bidsmap (due to loading failure or deletion by force)
-    if not bidsmap_old.filepath.name:
+    if not bidsmap_old.filepath.is_file():
         bidsmap_old = copy.deepcopy(bidsmap_new)
 
     # Import the data scanning plugins
@@ -156,7 +157,7 @@ def bidsmapper(sourcefolder: str, bidsfolder: str, bidsmap: str, template: str, 
         mainwin = bidseditor.MainWindow(bidsfolder, bidsmap_new, template)
         mainwin.show()
 
-        if not bidsmap_new.filepath.name or not uptodate:
+        if not bidsmap_new.filepath.is_file() or not uptodate:
             messagebox = QMessageBox(mainwin)
             messagebox.setText(f"The bidsmapper has finished scanning {rawfolder}\n\n"
                                f"Please carefully check all the different BIDS output names "

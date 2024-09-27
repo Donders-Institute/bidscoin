@@ -876,7 +876,7 @@ class BidsMap:
         has precedence over folder and bidsmap.yaml has precedence over the bidsmap_template.
 
         :param yamlfile:    The full pathname or basename of the bidsmap yaml-file
-        :param folder:      Used when yamlfile=basename and not in the pwd: yamlfile is then assumed to be in the (bidscoin)folder. A bidsignore file in folder will be added to the bidsmap bidsignore items
+        :param folder:      Used when yamlfile=basename and not in the pwd: yamlfile is then assumed to be in the (bids/code/bidscoin)folder. A bidsignore file in folder will be added to the bidsmap bidsignore items
         :param plugins:     List of plugins to be used (with default options, overrules the plugin list in the study/template bidsmaps). Leave empty to use all plugins in the bidsmap
         :param checks:      Booleans to check if all (bidskeys, bids-suffixes, bids-values) in the run are present according to the BIDS schema specifications
         """
@@ -893,8 +893,7 @@ class BidsMap:
             yamlfile = yamlfile.with_suffix('.yaml')                # Add a standard file-extension if needed
         if len(yamlfile.parents) == 1 and not yamlfile.is_file():
             yamlfile = folder/yamlfile                              # Get the full path to the bidsmap yaml-file
-        yamlfile = yamlfile.resolve()
-        self.filepath = yamlfile if yamlfile.is_file() else Path()
+        self.filepath = yamlfile = yamlfile.resolve()
         """The full path to the bidsmap yaml-file"""
         if not yamlfile.is_file():
             if yamlfile.name: LOGGER.info(f"No bidsmap file found: {yamlfile}")

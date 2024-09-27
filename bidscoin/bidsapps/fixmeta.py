@@ -54,7 +54,7 @@ def fixmeta(bidsfolder: str, pattern: str, metadata: dict, participant: list, bi
 
     # Load the bidsmap data (-> plugins)
     bidsmap = bids.BidsMap(Path(bidsmap or 'bidsmap.yaml'), bidsdir/'code'/'bidscoin', checks=(False, False, False))
-    if not bidsmap.filepath:
+    if not bidsmap.filepath.is_file():
         bidsmap = bids.BidsMap(bidsmap_template, checks=(False, False, False))
     plugins  = bidsmap.plugins
     provdata = bids.bidsprov(bidsdir)

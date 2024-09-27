@@ -84,7 +84,7 @@ def bidsparticipants(sourcefolder: str, bidsfolder: str, keys: list, bidsmap: st
 
     # Get the bidsmap sub-/ses-prefix from the bidsmap YAML-file
     bidsmap = BidsMap(Path(bidsmap), bidsfolder/'code'/'bidscoin', checks=(False, False, False))
-    if not bidsmap.filepath.name:
+    if not bidsmap.filepath.is_file():
         LOGGER.info('Make sure to run "bidsmapper" first, exiting now')
         return
     subprefix = bidsmap.options['subprefix']
