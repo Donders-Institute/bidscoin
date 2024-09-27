@@ -2,17 +2,24 @@
 Release procedure
 =================
 
-This document describes how to prepare a new BIDScoin release from within the DCCN + from a Linux VM
+This document describes how to prepare a new BIDScoin release from within the DCCN + from a local Linux VM
 
-1. Delete the ``.bidscoin`` config folder
-2. Manually run the tox, bidscoin, bidsmapper, bidscoiner, bids-validator and other integration tests
-3. Inspect the git history and update the CHANGELOG (including the links)
-4. Update the version string everywhere (i.e. search without word matching), COPYRIGHT and cli help texts
-5. Add a git version tag
-6. Build & test the containers in a Linux VM::
+1. Delete the ``.bidscoin`` config folder and manually run the tox, bidscoin, bidsmapper, bidscoiner, bids-validator and other integration tests::
 
-    VERSION="4.4.0"
-    rm -rf ~/.bidscoin/$VERSION
+    cd ~/python/bidscoin
+    git pull
+    module load bidscoin/dev
+    source activate tox
+    rm -rf ~/.bidscoin
+    tox
+    conda deactivate
+    source activate /opt/bidscoin
+    ~/python/bidscoin/bidscoin/bcoin.py -t
+    # Perform integration tests from the commandline and PyCharm
+
+2. Build & test the containers in the Linux VM::
+
+    rm -rf ~/.bidscoin
     cd ~/PycharmProjects/bidscoin
     sudo apptainer build bidscoin.sif apptainer.def
     xhost +
@@ -20,24 +27,17 @@ This document describes how to prepare a new BIDScoin release from within the DC
     apptainer exec --cleanenv --env DISPLAY=:0 bidscoin.sif pngappend
     apptainer cache clean
 
-7. Run tox@DCCN::
-
-    VERSION="4.4.0"
-    cd ~/python/bidscoin
-    git pull
-    module load bidscoin/dev
-    source activate tox
-    rm -rf ~/.bidscoin/$VERSION
-    tox
-    conda deactivate
-    source activate /opt/bidscoin
-    ~/python/bidscoin/bidscoin/bcoin.py -t
+3. Inspect the git history and update the CHANGELOG (including the links)
+4. Update the cli help texts and RTD files
+5. Update the version string everywhere (i.e. search without word matching) and COPYRIGHT
+6. Add and push a git version tag if everything is OK
 
 DCCN deployment
 ---------------
 
 1. Copy the dev folder, update the bidsmaps and module::
 
+    VERSION="4.4.0"
     cp -r /opt/bidscoin/dev /opt/bidscoin/$VERSION
     cd /opt/bidscoin/$VERSION
     for TEMPLATE in bidscoin/heuristics/*.yaml; do

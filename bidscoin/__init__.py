@@ -62,7 +62,7 @@ schemafolder = bidscoinroot/'schema'
 # Get the BIDSCOIN_DEBUG environment variable to set the log-messages and logging level, etc
 DEBUG = os.getenv('BIDSCOIN_DEBUG','').upper() in ('1', 'TRUE', 'Y', 'YES')
 
-# Create a BIDScoin user configuration directory if needed and load the BIDScoin user settings
+# Create a BIDScoin user configuration directory if needed
 configdir      = Path(os.getenv('BIDSCOIN_CONFIGDIR') or (Path.home() if os.access(Path.home(),os.W_OK) else Path(tempfile.gettempdir()))/'.bidscoin')/__version__
 configfile     = configdir/'config.toml'
 pluginfolder   = configdir/'plugins'
@@ -74,6 +74,8 @@ if not configfile.is_file():
     configfile.write_text(f"[bidscoin]\n"
                           f"bidsmap_template = '{templatefolder}/bidsmap_dccn.yaml'     # The default template bidsmap (change to use a different default)\n"
                           f"trackusage       = 'yes'     # Upload anonymous usage data if 'yes' (maximally 1 upload every {tracking['sleep']} hour) (see `bidscoin --tracking show`)\n")
+if not (configdir/'README').is_file():
+    (configdir/'README').write_text(f"You can add or adapt all files in this directory to suit your needs. The pre-installed files will automatically be re-created from source when deleted / missing")
 for plugin in (bidscoinroot/'plugins').glob('*.py'):
     if not (pluginfolder/plugin.name).is_file() and not plugin.name.startswith('_'):
         print(f"-> {pluginfolder/plugin.name}")
@@ -82,6 +84,8 @@ for template in list((bidscoinroot/'heuristics').glob('*.yaml')) + [bidscoinroot
     if not (templatefolder/template.name).is_file():
         print(f"-> {templatefolder/template.name}")
         shutil.copyfile(template, templatefolder/template.name)
+
+# Load the BIDScoin user settings
 with configfile.open('+rb') as fid:
     config = tomllib.load(fid)
 bidsmap_template = Path(config['bidscoin']['bidsmap_template'])

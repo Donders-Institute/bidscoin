@@ -223,7 +223,7 @@ class DataSource:
                 if attributekey in extattr:
                     attributeval = str(extattr[attributekey]) if extattr[attributekey] is not None else ''
 
-                else:
+                elif self.dataformat or self.has_plugin():
                     for plugin, options in self.plugins.items():
                         module = bcoin.import_plugin(plugin, ('get_attribute',))
                         if module:
@@ -456,20 +456,22 @@ class RunItem:
         run_suffixok = None
         run_valsok   = None
         datatype     = self.datatype
+        bids         = self.bids
+        provenance   = self.provenance
 
         # Check if we have provenance info
-        if all(checks) and not self.provenance:
-            LOGGER.info(f"No provenance info found for {datatype}/*_{self.bids['suffix']}")
+        if all(checks) and not provenance:
+            LOGGER.info(f"No provenance info found for {datatype}/*_{bids['suffix']}")
 
         # Check if we have a suffix and datatype rules
-        if 'suffix' not in self.bids:
-            if checks[1]: LOGGER.warning(f'Invalid bidsmap: The {datatype} "suffix" key is missing ({datatype} -> {self.provenance})')
+        if 'suffix' not in bids:
+            if checks[1]: LOGGER.warning(f'Invalid bidsmap: The {datatype} "suffix" key is missing ({datatype} -> {provenance})')
             return run_keysok, False, run_valsok                # The suffix is not BIDS-valid, we cannot check the keys and values
         if datatype not in filerules:
             return run_keysok, run_suffixok, run_valsok         # We cannot check anything
 
         # Use the suffix to find the right typegroup
-        suffix = self.bids.get('suffix')
+        suffix = bids.get('suffix')
         if self.datasource.path.is_file():
             suffix = self.datasource.dynamicvalue(suffix, True, True)
         for typegroup in filerules[datatype]:
@@ -487,29 +489,29 @@ class RunItem:
                 for entity in filerules[datatype][typegroup].entities:
                     entitykey    = entities[entity].name
                     entityformat = entities[entity].format      # E.g. 'label' or 'index' (the entity type always seems to be 'string')
-                    bidsvalue    = self.bids.get(entitykey)
+                    bidsvalue    = bids.get(entitykey)
                     dynamicvalue = True if isinstance(bidsvalue, str) and ('<' in bidsvalue and '>' in bidsvalue) else False
                     if entitykey in ('sub', 'ses'): continue
                     if isinstance(bidsvalue, list):
                         bidsvalue = bidsvalue[bidsvalue[-1]]    # Get the selected item
-                    if entitykey not in self.bids:
-                        if checks[0]: LOGGER.warning(f'Invalid bidsmap: The "{entitykey}" key is missing ({datatype}/*_{self.bids["suffix"]} -> {self.provenance})')
+                    if entitykey not in bids:
+                        if checks[0]: LOGGER.warning(f'Invalid bidsmap: The "{entitykey}" key is missing ({datatype}/*_{bids["suffix"]} -> {provenance})')
                         run_keysok = False
                     if bidsvalue and not dynamicvalue and bidsvalue!=sanitize(bidsvalue):
-                        if checks[2]: LOGGER.warning(f'Invalid {entitykey} value: "{bidsvalue}" ({datatype}/*_{self.bids["suffix"]} -> {self.provenance})')
+                        if checks[2]: LOGGER.warning(f'Invalid {entitykey} value: "{bidsvalue}" ({datatype}/*_{bids["suffix"]} -> {provenance})')
                         run_valsok = False
                     elif not bidsvalue and filerules[datatype][typegroup].entities[entity]== 'required':
-                        if checks[2]: LOGGER.warning(f'Required "{entitykey}" value is missing ({datatype}/*_{self.bids["suffix"]} -> {self.provenance})')
+                        if checks[2]: LOGGER.warning(f'Required "{entitykey}" value is missing ({datatype}/*_{bids["suffix"]} -> {provenance})')
                         run_valsok = False
                     if bidsvalue and not dynamicvalue and entityformat=='index' and not str(bidsvalue).isdecimal():
-                        if checks[2]: LOGGER.warning(f'Invalid {entitykey}-index: "{bidsvalue}" is not a number ({datatype}/*_{self.bids["suffix"]} -> {self.provenance})')
+                        if checks[2]: LOGGER.warning(f'Invalid {entitykey}-index: "{bidsvalue}" is not a number ({datatype}/*_{bids["suffix"]} -> {provenance})')
                         run_valsok = False
 
                 # Check if all the bids-keys are present in the schema file
                 entitykeys = [entities[entity].name for entity in filerules[datatype][typegroup].entities]
-                for bidskey in self.bids:
+                for bidskey in bids:
                     if bidskey not in entitykeys + ['suffix']:
-                        if checks[0]: LOGGER.warning(f'Invalid bidsmap: The "{bidskey}" key is not allowed according to the BIDS standard ({datatype}/*_{self.bids["suffix"]} -> {self.provenance})')
+                        if checks[0]: LOGGER.warning(f'Invalid bidsmap: The "{bidskey}" key is not allowed according to the BIDS standard ({datatype}/*_{bids["suffix"]} -> {provenance})')
                         run_keysok = False
                         if run_valsok: run_valsok = None
 
@@ -524,14 +526,14 @@ class RunItem:
             LOGGER.bcdebug(f"bidsname={run_suffixok}: /sub-unknown/{datatype}/{bidsname}.*")
 
         if checks[0] and run_keysok in (None, False):
-            LOGGER.bcdebug(f'Invalid "{run_keysok}" key-checks in run-item: "{self.bids["suffix"]}" ({datatype} -> {self.provenance})\nRun["bids"]:\t{self.bids}')
+            LOGGER.bcdebug(f'Invalid "{run_keysok}" key-checks in run-item: "{bids["suffix"]}" ({datatype} -> {provenance})\nRun["bids"]:\t{bids}')
 
         if checks[1] and run_suffixok is False:
-            LOGGER.warning(f'Invalid run-item with suffix: "{self.bids["suffix"]}" ({datatype} -> {self.provenance})')
-            LOGGER.bcdebug(f"Run['bids']:\t{self.bids}")
+            LOGGER.warning(f'Invalid run-item with suffix: "{bids["suffix"]}" ({datatype} -> {provenance})')
+            LOGGER.bcdebug(f"Run['bids']:\t{bids}")
 
         if checks[2] and run_valsok in (None, False):
-            LOGGER.bcdebug(f'Invalid "{run_valsok}" val-checks in run-item: "{self.bids["suffix"]}" ({datatype} -> {self.provenance})\nRun["bids"]:\t{self.bids}')
+            LOGGER.bcdebug(f'Invalid "{run_valsok}" val-checks in run-item: "{bids["suffix"]}" ({datatype} -> {provenance})\nRun["bids"]:\t{bids}')
 
         return run_keysok, run_suffixok, run_valsok
 
@@ -908,26 +910,27 @@ class BidsMap:
         """The raw YAML data"""
 
         # Issue a warning if the version in the bidsmap YAML-file is not the same as the bidscoin version
-        bidsmapversion = self.options.get('version', 'Unknown')
+        options        = self.options
+        bidsmapversion = options.get('version', 'Unknown')
         if bidsmapversion.rsplit('.', 1)[0] != __version__.rsplit('.', 1)[0] and any(checks):
             LOGGER.warning(f'BIDScoiner version conflict: {yamlfile} was created with version {bidsmapversion}, but this is version {__version__}')
         elif bidsmapversion != __version__ and any(checks):
             LOGGER.info(f'BIDScoiner version difference: {yamlfile} was created with version {bidsmapversion}, but this is version {__version__}. This is normally OK but check the https://bidscoin.readthedocs.io/en/latest/CHANGELOG.html')
 
         # Make sure subprefix and sesprefix are strings
-        subprefix = self.options['subprefix'] = self.options['subprefix'] or ''
-        sesprefix = self.options['sesprefix'] = self.options['sesprefix'] or ''
+        subprefix = options['subprefix'] = options['subprefix'] or ''
+        sesprefix = options['sesprefix'] = options['sesprefix'] or ''
 
         # Append the existing .bidsignore data from the bidsfolder and make sure bidsignore, unknowntypes, ignoretypes and notderivative are lists
-        if isinstance(self.options.get('bidsignore'), str):
-            self.options['bidsignore'] = self.options['bidsignore'].split(';')
+        if isinstance(options.get('bidsignore'), str):
+            options['bidsignore'] = options['bidsignore'].split(';')
         bidsignorefile = folder.parents[1]/'.bidsignore'
         if bidsignorefile.is_file():
-            self.options['bidsignore'] = list(set(list(self.options['bidsignore']) + bidsignorefile.read_text().splitlines()))
-        self.options['bidsignore']     = sorted(set(self.options.get('bidsignore'))) or []
-        self.options['unknowntypes']   = self.options.get('unknowntypes')  or []
-        self.options['ignoretypes']    = self.options.get('ignoretypes')   or []
-        self.options['notderivative']  = self.options.get('notderivative') or []
+            options['bidsignore'] = list(set(list(options['bidsignore']) + bidsignorefile.read_text().splitlines()))
+        options['bidsignore']     = sorted(set(options.get('bidsignore'))) or []
+        options['unknowntypes']   = options.get('unknowntypes')  or []
+        options['ignoretypes']    = options.get('ignoretypes')   or []
+        options['notderivative']  = options.get('notderivative') or []
 
         # Make sure we get a proper plugin options and dataformat sections (use plugin default bidsmappings when a template bidsmap is loaded)
         if plugins:
@@ -1780,7 +1783,7 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
                 else:
                     dicomdata = _DICOMDICT_CACHE
 
-                if re.fullmatch(r'\(?0x[\dA-Z]*,?(0x)?[\dA-Z]*\)?', tagname):              # Try Pydicom's hexadecimal tag number first (must be a 2-tuple or int)
+                if re.fullmatch(r'\(?0x[\dA-F]*,?(0x)?[\dA-F]*\)?', tagname):              # Try Pydicom's hexadecimal tag number first (must be a 2-tuple or int)
                     value = eval(f"dicomdata[{tagname}].value")                                 # NB: This may generate e.g. UserWarning: Invalid value 'filepath' used with the 'in' operator: must be an element tag as a 2-tuple or int, or an element keyword
                 else:
                     value = dicomdata.get(tagname,'') if tagname in dicomdata else ''       # Then try and see if it is an attribute name. NB: Do not use dicomdata.get(tagname, '') to avoid using its class attributes (e.g. 'filename')
