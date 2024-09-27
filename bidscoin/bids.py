@@ -2204,7 +2204,7 @@ def get_bidsvalue(bidsfile: Union[str, Path], bidskey: str, newvalue: str='') ->
     """
 
     # Check input
-    if not bidskey and newvalue:
+    if not bidsfile or (not bidskey and newvalue):
         return bidsfile                         # No fallback
 
     bidspath = Path(bidsfile).parent
