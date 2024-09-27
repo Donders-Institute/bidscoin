@@ -507,6 +507,15 @@ def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> Union[N
                     acq_time = 'n/a'
                 scans_table.loc[target.relative_to(bidsses).as_posix(), 'acq_time'] = acq_time
 
+            # Check if the target output aligns with dcm2niix's "BidsGuess" datatype and filename entities
+            typeguess, targetguess = metadata.get('BidsGuess') or ['', '']    # BidsGuess: [datatype, filename]
+            if typeguess and run.datatype != typeguess:
+                LOGGER.warning(f"The datatype of {run} does not match with the datatype suggested by dcm2niix: {typeguess}")
+            elif targetguess and run.bids.get('suffix') != bids.get_bidsvalue(targetguess, 'suffix'):
+                LOGGER.warning(f"The suffix of {run} does not match with the suffix suggested by dcm2niix: {targetguess}")
+            if targetguess and run.bids.get('dir') and run.bids.get('dir') != bids.get_bidsvalue(targetguess, 'dir'):
+                LOGGER.warning(f"The (phase-encoding) 'dir' value in {run} does not match with the 'dir' value suggested by dcm2niix: {targetguess}")
+
     # Write the scans_table to disk
     LOGGER.verbose(f"Writing acquisition time data to: {scans_tsv}")
     scans_table.sort_values(by=['acq_time','filename'], inplace=True)
