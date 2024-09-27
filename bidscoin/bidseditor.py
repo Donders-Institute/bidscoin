@@ -868,9 +868,10 @@ class MainWindow(QMainWindow):
         """Check and save the bidsmap to file"""
 
         for dataformat in self.dataformats:
-            for runitem in self.output_bidsmap.dataformat(dataformat).datatype('fmap').runitems:
-                if not (runitem.meta.get('B0FieldSource') or runitem.meta.get('B0FieldIdentifier') or runitem.meta.get('IntendedFor')):
-                    LOGGER.warning(f"B0FieldIdentifier/IntendedFor fieldmap value is empty for {dataformat} run-item: {runitem}")
+            if 'fmap' in self.output_bidsmap.dataformat(dataformat):
+                for runitem in self.output_bidsmap.dataformat(dataformat).datatype('fmap').runitems:
+                    if not (runitem.meta.get('B0FieldSource') or runitem.meta.get('B0FieldIdentifier') or runitem.meta.get('IntendedFor')):
+                        LOGGER.warning(f"B0FieldIdentifier/IntendedFor fieldmap value is empty for {dataformat} run-item: {runitem}")
 
         filename,_ = QFileDialog.getSaveFileName(self, 'Save File',  str(self.bidsfolder/'code'/'bidscoin'/'bidsmap.yaml'), 'YAML Files (*.yaml *.yml);;All Files (*)')
         if filename:
