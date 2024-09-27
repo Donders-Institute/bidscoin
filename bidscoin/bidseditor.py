@@ -11,7 +11,7 @@ import csv
 import nibabel as nib
 from bids_validator import BIDSValidator
 from typing import Union, List, Dict
-from pydicom import dcmread, datadict
+from pydicom import dcmread, datadict, config
 from pathlib import Path
 from functools import partial
 from PyQt6 import QtCore, QtGui, QtWidgets
@@ -24,6 +24,7 @@ if find_spec('bidscoin') is None:
     sys.path.append(str(Path(__file__).parents[1]))
 from bidscoin import bcoin, bids, bidsversion, check_version, trackusage, bidsmap_template, __version__
 from bidscoin.bids import BidsMap, RunItem, DataType
+config.INVALID_KEY_BEHAVIOR = 'IGNORE'
 
 ROW_HEIGHT       = 22
 BIDSCOIN_LOGO    = Path(__file__).parent/'bidscoin_logo.png'
