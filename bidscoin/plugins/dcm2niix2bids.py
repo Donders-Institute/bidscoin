@@ -511,13 +511,14 @@ def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> Union[N
             typeguess, targetguess = metadata.get('BidsGuess') or ['', '']    # BidsGuess: [datatype, filename]
             LOGGER.bcdebug(f"BidsGuess: [{typeguess}, {targetguess}]")
             if typeguess and run.datatype != typeguess:
-                LOGGER.warning(f"The datatype of {run} does not match with the datatype suggested by dcm2niix: {typeguess}")
+                LOGGER.warning(f"The datatype of {target.relative_to(bidsfolder)} does not match with the datatype suggested by dcm2niix: {typeguess}")
             elif targetguess and run.bids['suffix'] != bids.get_bidsvalue(targetguess, 'suffix'):
-                LOGGER.warning(f"The suffix of {run} does not match with the suffix suggested by dcm2niix: {targetguess}")
+                LOGGER.warning(f"The suffix of {target.relative_to(bidsfolder)} does not match with the suffix suggested by dcm2niix: {targetguess}")
             for entity in ('part', 'inv', 'echo', 'dir'):
                 targetvalue = bids.get_bidsvalue(target, entity)
-                if targetvalue and targetguess and targetvalue != bids.get_bidsvalue(targetguess, entity):
-                    LOGGER.warning(f"The '{entity}' value in {run} does not match with the '{entity}' value suggested by dcm2niix: {targetguess}")
+                guessvalue  = bids.get_bidsvalue(targetguess, entity)
+                if targetvalue and targetvalue != guessvalue:
+                    LOGGER.warning(f"The '{entity}_{targetvalue}' value in {target.relative_to(bidsfolder)} does not match with the '{entity}_{guessvalue}' value suggested by dcm2niix: {targetguess}")
 
     # Write the scans_table to disk
     LOGGER.verbose(f"Writing acquisition time data to: {scans_tsv}")
