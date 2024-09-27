@@ -268,7 +268,7 @@ def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: 
                     bidssession  = bidsfolder/subid/sesid       # TODO: Support DICOMDIR with multiple subjects (as in PYDICOMDIR)
                     if not force and bidssession.is_dir():
                         datatypes = set()
-                        for datatype in [dtype for dtype in lsdirs(bidssession) if next(dtype.iterdir())]:  # See what non-empty datatypes we already have in the bids session-folder
+                        for datatype in [dtype for dtype in lsdirs(bidssession) if next(dtype.iterdir(), None)]:  # See what non-empty datatypes we already have in the bids session-folder
                             for dataformat in bidsmap.dataformats:
                                 if datatype.name in dataformat.datatypes:                                   # See if we are going to add data for this datatype
                                     datatypes.add(datatype.name)
