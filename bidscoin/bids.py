@@ -27,7 +27,7 @@ from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     import sys
     sys.path.append(str(Path(__file__).parents[1]))
-from bidscoin import bcoin, schemafolder, templatefolder, lsdirs, __version__
+from bidscoin import bcoin, schemafolder, templatefolder, lsdirs, __version__, DEBUG
 from bidscoin.utilities import dicomsort
 from ruamel.yaml import YAML
 yaml = YAML()
@@ -1755,7 +1755,7 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
     global _DICOMDICT_CACHE, _DICOMFILE_CACHE
 
     # Skip the RunItem properties
-    if tagname in ():
+    if tagname in RunItem().properties:
         return ''
 
     if not dicomfile.is_file():
@@ -1768,7 +1768,7 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
 
     else:
         with warnings.catch_warnings():
-            warnings.simplefilter('ignore', UserWarning)
+            if not DEBUG: warnings.simplefilter('ignore', UserWarning)
             from nibabel.nicom import csareader
             try:
                 if dicomfile != _DICOMFILE_CACHE:
