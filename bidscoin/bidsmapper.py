@@ -83,7 +83,7 @@ def bidsmapper(sourcefolder: str, bidsfolder: str, bidsmap: str, template: str, 
         bidsmap_old.filepath = Path()
     bidsmap_new          = copy.deepcopy(bidsmap_old if bidsmap_old.filepath.name else template)
     bidsmap_new.delete_runs()
-    bidsmap_new.filepath = bidsmapfile
+    bidsmap_new.filepath = bidsmapfile.resolve()
     template.options     = bidsmap_new.options      # Always use the options of the new bidsmap
     template.plugins     = bidsmap_new.plugins      # Always use the plugins of the new bidsmap
     if unzip:
