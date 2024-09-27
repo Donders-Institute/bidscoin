@@ -22,7 +22,7 @@ from fnmatch import fnmatch
 from functools import lru_cache
 from pathlib import Path
 from typing import List, Set, Tuple, Union, Dict, Any, Iterable, NewType
-from pydicom import dcmread, fileset
+from pydicom import dcmread, fileset, config
 from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     import sys
@@ -32,6 +32,7 @@ from bidscoin.utilities import dicomsort
 from ruamel.yaml import YAML
 yaml = YAML()
 yaml.representer.ignore_aliases = lambda *data: True                            # Expand aliases (https://stackoverflow.com/questions/58091449/disabling-alias-for-yaml-file-in-python)
+config.INVALID_KEY_BEHAVIOR = 'IGNORE'
 
 # Define custom data types (replace with proper classes or TypeAlias of Python >= 3.10)
 Plugin     = NewType('Plugin',     Dict[str, Any])
