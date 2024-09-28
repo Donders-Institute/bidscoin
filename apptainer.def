@@ -33,6 +33,11 @@ Stage: builder
     mkdir /opt/fsl && tar -xzf fsl.tar.gz -C /opt/fsl
     /opt/fsl/bin/conda-unpack
 
+    # Clone bidscoin
+    git clone https://github.com/Donders-Institute/bidscoin.git /opt/bidscoin
+    cd /opt/bidscoin
+    rm -rf docs tests .git
+
 
 Bootstrap: docker
 From: python:3-slim
@@ -42,7 +47,7 @@ Stage: final
     This BIDScoin Apptainer image includes:
 
     * Debian stable,
-    * The latest stable release of BIDScoin (v4.4.0)
+    * BIDScoin (see https://bidscoin.readthedocs.io)
     * The latest versions of dcm2niix, pydeface, spec2nii and some FSL tools
 
     The general form to run BIDScoin commands is:
@@ -58,6 +63,7 @@ Stage: final
         3) The current image does not include the Freesurfer/synthstrip software (needed for `skullstrip`)
 
 %files from builder
+    # /opt/bidscoin /opt/bidscoin     # Only needed for pip install from github
     /usr/local/bin/dcm2niix /usr/local/bin/dcm2niix
     /opt/fsl /opt/fsl
 
@@ -70,9 +76,13 @@ Stage: final
     # Install curl (sometimes needed by dcm2niix) and pigz (to speed up dcm2niix)
     apt update && apt -y --no-install-recommends install pigz curl
 
-    # Install the latest stable BIDScoin release
+    # Pre-install essential packages
     # NOTE: PyQt is installed as Debian package to solve dependencies issues occurring when installed with pip
     apt -y --no-install-recommends install python3-pyqt6 build-essential libgl1 libxcb-cursor-dev && apt clean     # Add build-essential for newer python:3-slim base images (pip needs gcc)
+
+    # Install BIDScoin
+    # pip install /opt/bidscoin[spec2nii2bids,deface]
+    # pip install bidscoin[spec2nii2bids,deface]==VERSION
     pip install bidscoin[spec2nii2bids,deface]
 
     # Uncomment the line below if you get errors like: ImportError: libQt5Core.so.5: cannot open shared object file: No such file or directory
