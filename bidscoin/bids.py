@@ -71,17 +71,17 @@ class DataSource:
         :param options:     A (bidsmap) dictionary with 'subprefix' and 'sesprefix' fields
         """
 
-        self.path        = Path(sourcefile or '')
+        self.path       = Path(sourcefile or '')
         """The full path of a representative file for this data source"""
-        self.dataformat  = dataformat
+        self.dataformat = dataformat
         """The dataformat name of the plugin that interacts with the data source, e.g. DICOM or PAR"""
-        self.plugins     = plugins or {}
+        self.plugins    = plugins or {}
         """The plugins that are used to interact with the source data type"""
-        self.subprefix   = options['subprefix'] if options else ''
+        self.subprefix  = options['subprefix'] if options else ''
         """The subprefix used in the sourcefolder"""
-        self.sesprefix   = options['sesprefix'] if options else ''
+        self.sesprefix  = options['sesprefix'] if options else ''
         """The sesprefix used in the sourcefolder"""
-        self._cache      = {}
+        self._cache     = {}
 
     def __eq__(self, other):
         """Equality test for all DataSource attributes"""
@@ -364,7 +364,7 @@ class RunItem:
         data = data or {}
         for key, val in {'provenance': '', 'properties': {}, 'attributes': {}, 'bids': {'suffix':''}, 'meta': {}}.items():
             if key not in data: data[key] = val
-        super().__setattr__('_data', data)
+        super().__setattr__('_data', data)      # Use super() to initialize _data directly (without recurrence)
 
         # Set the regular attributes
         self.datasource = DataSource(data['provenance'], plugins, dataformat, options)
@@ -396,15 +396,15 @@ class RunItem:
     def __getattr__(self, name: str):
 
         _name    = f"_{name}"
-        _getattr = super().__getattribute__
+        _getattr = super().__getattribute__     # Using super() avoids infinite recurrence / deepcopy issues
 
         return _getattr('_data')[name] if name in _getattr('_data') else _getattr(_name)
 
     def __setattr__(self, name, value):
 
         _name    = f"_{name}"
-        _getattr = super().__getattribute__
-        _setattr = super().__setattr__
+        _getattr = super().__getattribute__     # Using super() avoids infinite recurrence / deepcopy issues
+        _setattr = super().__setattr__          # Using super() avoids infinite recurrence / deepcopy issues
 
         if name in _getattr('_data'):
             _getattr('_data')[name] = value
@@ -416,10 +416,8 @@ class RunItem:
             self.datasource.path = Path(value)
 
         # Also update the identical twin attributes of the datasource (this should never happen)
-        if name == 'dataformat':
-            self.datasource.dataformat = value or ''
-        if name == 'plugins':
-            self.datasource.plugins = value or {}
+        if name in ('dataformat', 'plugins', 'options'):
+            setattr(self.datasource, name, value)
 
     def __str__(self):
 
@@ -682,13 +680,13 @@ class DataType:
 
         self.dataformat = dataformat
         """The name of the dataformat"""
-        self.datatype = datatype
+        self.datatype   = datatype
         """The name of the datatype"""
-        self.options = options
+        self.options    = options
         """The dictionary with the BIDScoin options"""
-        self.plugins = plugins
+        self.plugins    = plugins
         """The plugin dictionaries with their options"""
-        self._data   = data
+        self._data      = data
         """The YAML datatype dictionary, i.e. a list of runitems"""
 
     def __str__(self):
@@ -777,11 +775,11 @@ class DataFormat:
 
         self.dataformat = dataformat
         """The name of the dataformat"""
-        self.options = options
+        self.options    = options
         """The dictionary with the BIDScoin options"""
-        self.plugins = plugins
+        self.plugins    = plugins
         """The plugin dictionaries with their options"""
-        self._data   = data
+        self._data      = data
         """The YAML dataformat dictionary, i.e. subject and session items + a set of datatypes"""
 
     def __str__(self):
