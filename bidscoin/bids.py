@@ -67,7 +67,7 @@ class DataSource:
 
         :param sourcefile:  The full filepath of the data source
         :param plugins:     The plugin dictionaries with their options
-        :param dataformat:  The dataformat name in the bidsmap, e.g. DICOM or PAR
+        :param dataformat:  The name of the dataformat (= section in the bidsmap, e.g. DICOM or PAR)
         :param options:     A (bidsmap) dictionary with 'subprefix' and 'sesprefix' fields
         """
 
@@ -117,11 +117,11 @@ class DataSource:
 
         return '' if self.sesprefix=='*' else re.escape(self.sesprefix).replace(r'\-','-')
 
-    def has_plugin(self) -> bool:
-        """Test whether the datasource has a plugin that supports the sourcefile. If so, then update self.dataformat accordingly"""
+    def has_support(self) -> str:
+        """Find and return the dataformat supported by the plugins. If a dataformat is found, then update self.dataformat accordingly"""
 
         if not self.path.is_file() or self.path.is_dir():
-            return False
+            return ''
 
         for plugin, options in self.plugins.items():
             module = bcoin.import_plugin(plugin, ('has_support',))
@@ -135,9 +135,9 @@ class DataSource:
                     if self.dataformat and self.dataformat != supported:
                         LOGGER.bcdebug(f"Inconsistent dataformat found, updating: {self.dataformat} -> {supported}")
                     self.dataformat: str = supported
-                    return True
+                    return supported
 
-        return False
+        return ''
 
     def properties(self, tagname: str, runitem=None) -> Union[str, int]:
         """
@@ -223,7 +223,7 @@ class DataSource:
                 if attributekey in extattr:
                     attributeval = str(extattr[attributekey]) if extattr[attributekey] is not None else ''
 
-                elif self.dataformat or self.has_plugin():
+                elif self.dataformat or self.has_support():
                     for plugin, options in self.plugins.items():
                         module = bcoin.import_plugin(plugin, ('get_attribute',))
                         if module:
@@ -348,41 +348,38 @@ class RunItem:
     dictionaries and the bids and meta output dictionaries (bidsmap > dataformat > datatype > run-item)
     """
 
-    def __init__(self, dataformat: str='', datatype: str='', data: dict=None, datasource: DataSource=None, options: Options=None, plugins: Plugins=None):
+    def __init__(self, dataformat: str='', datatype: str='', data: dict=None, options: Options=None, plugins: Plugins=None):
         """
         Create a run-item with the proper structure, provenance info and a data source. NB: Updates to the attributes traverse to the
         datasource, but not vice versa
 
-        :param dataformat: The name of the dataformat
-        :param datatype:   The name of the datatype
+        :param dataformat: The name of the dataformat (= section in the bidsmap)
+        :param datatype:   The name of the datatype (= section in a dataformat)
         :param data:       The YAML run-item dictionary with the following keys: provenance, properties, attributes, bids, meta
-        :param datasource: A data source that is deepcopied and added to the object, otherwise a datasource is created from data['provenance']
         :param options:    The dictionary with the BIDScoin options
         :param plugins:    The plugin dictionaries with their options
         """
 
         # Create a YAML data dictionary with all required attribute keys
-        data = {} if data is None else data
+        data = data or {}
         for key, val in {'provenance': '', 'properties': {}, 'attributes': {}, 'bids': {'suffix':''}, 'meta': {}}.items():
             if key not in data: data[key] = val
         super().__setattr__('_data', data)
 
         # Set the regular attributes
-        self.datasource = datasource = copy.deepcopy(datasource) if datasource else DataSource(data['provenance'] if data else '', plugins, dataformat, options)
-        """The DataSource object that is deepcopied or created from the run-item provenance"""
-        datasource.subprefix = options['subprefix'] if options else datasource.subprefix
-        datasource.sesprefix = options['sesprefix'] if options else datasource.sesprefix
-        self.dataformat = dataformat or datasource.dataformat
+        self.datasource = DataSource(data['provenance'], plugins, dataformat, options)
+        """A DataSource object created from the run-item provenance"""
+        self.dataformat = dataformat
         """The name of the dataformat"""
         self.datatype   = datatype
         """The name of the datatype"""
         self.options    = options
         """The dictionary with the BIDScoin options"""
-        self.plugins    = plugins or datasource.plugins
+        self.plugins    = plugins
         """The plugin dictionaries with their options"""
 
         # Set the data attributes. TODO: create data classes instead?
-        self.provenance = data['provenance'] or str(datasource.path if datasource.path.name else '')
+        self.provenance = data['provenance']
         """The file path of the data source"""
         self.properties = Properties(data['properties'])
         """The file system properties from the data source that can be matched against other data sources"""
@@ -414,7 +411,11 @@ class RunItem:
         else:
             _setattr(_name, value)
 
-        # Also update the twin attributes of the datasource (should never happen anyway)
+        # Keep the datasource in sync with the provenance (just in case someone changes this)
+        if name == 'provenance':
+            self.datasource.path = Path(value)
+
+        # Also update the identical twin attributes of the datasource (this should never happen)
         if name == 'dataformat':
             self.datasource.dataformat = value or ''
         if name == 'plugins':
@@ -672,8 +673,8 @@ class DataType:
         """
         Reads from a YAML datatype dictionary
 
-        :param dataformat: The name of the dataformat
-        :param datatype:   The name of the datatype
+        :param dataformat: The name of the dataformat (= section in the bidsmap)
+        :param datatype:   The name of the datatype (= section in a dataformat)
         :param data:       The YAML datatype dictionary, i.e. a list of runitems
         :param options:    The dictionary with the BIDScoin options
         :param plugins:    The plugin dictionaries with their options
@@ -714,7 +715,7 @@ class DataType:
     def runitems(self) -> List[RunItem]:
         """Returns a list of the RunItem objects for this datatype"""
 
-        return [RunItem(self.dataformat, self.datatype, rundata, None, self.options, self.plugins) for rundata in self._data]
+        return [RunItem(self.dataformat, self.datatype, rundata, self.options, self.plugins) for rundata in self._data]
 
     def delete_run(self, provenance: str):
         """
@@ -765,7 +766,7 @@ class DataFormat:
         """
         Reads from a YAML dataformat dictionary
 
-        :param dataformat: The name of the dataformat
+        :param dataformat: The name of the dataformat (= section in the bidsmap)
         :param data:       The YAML dataformat dictionary, i.e. subject and session items + a set of datatypes
         :param options:    The dictionary with the BIDScoin options
         :param plugins:    The plugin dictionaries with their options
@@ -968,7 +969,7 @@ class BidsMap:
 
                     # Add missing bids entities
                     suffix = runitem.bids.get('suffix')
-                    if runitem.datasource.has_plugin():
+                    if runitem.datasource.has_support():
                         suffix = runitem.datasource.dynamicvalue(suffix, True, True)
                     for typegroup in filerules.get(datatype.datatype, {}):                  # E.g. typegroup = 'nonparametric'
                         if suffix in filerules[datatype.datatype][typegroup].suffixes:      # run_found = True
@@ -1205,7 +1206,7 @@ class BidsMap:
         """
         Make a provenance list of all the runs in the bidsmap[dataformat]
 
-        :param dataformat:  The information source in the bidsmap that is used, e.g. 'DICOM'
+        :param dataformat:  The dataformat section in the bidsmap that is listed, e.g. 'DICOM'
         :return:            List of all provenances
         """
 
@@ -1262,7 +1263,7 @@ class BidsMap:
 
         return False
 
-    def get_matching_run(self, datasource: DataSource, runtime=False) -> Tuple[RunItem, str]:
+    def get_matching_run(self, sourcefile: Union[str, Path], dataformat, runtime=False) -> Tuple[RunItem, str]:
         """
         Find the first run in the bidsmap with properties and attributes that match with the data source. Only non-empty
         properties and attributes are matched, except when runtime is True, then the empty attributes are also matched.
@@ -1270,34 +1271,32 @@ class BidsMap:
 
         ignoredatatypes (e.g. 'exclude') -> normal datatypes (e.g. 'anat') -> unknowndatatypes (e.g. 'extra_data')
 
-        :param datasource:  The data source from which the attributes are read
+        :param sourcefile:  The full filepath of the data source for which to get a run-item
+        :param dataformat:  The dataformat section in the bidsmap in which a matching run is searched for, e.g. 'DICOM'
         :param runtime:     Dynamic <<values>> are expanded if True
         :return:            (run, provenance) A vanilla run that has all its attributes populated with the source file attributes.
                             If there is a match, the provenance of the bidsmap entry is returned, otherwise it will be ''
         """
 
-        if not datasource.dataformat and not datasource.has_plugin():
-            LOGGER.bcdebug(f"No dataformat/plugin support found when getting a matching run for: {datasource}")
-
+        datasource       = DataSource(sourcefile, self.plugins, dataformat, options=self.options)
         unknowndatatypes = self.options.get('unknowntypes') or ['unknown_data']
         ignoredatatypes  = self.options.get('ignoretypes') or []
-        normaldatatypes  = [dtype.datatype for dtype in self.dataformat(datasource.dataformat).datatypes if dtype not in unknowndatatypes + ignoredatatypes]
-        datasource       = copy.deepcopy(datasource)
-        rundata          = {'provenance': str(datasource.path), 'properties': {}, 'attributes': {}, 'bids': {}, 'meta': {}}
+        normaldatatypes  = [dtype.datatype for dtype in self.dataformat(dataformat).datatypes if dtype not in unknowndatatypes + ignoredatatypes]
+        rundata          = {'provenance': str(sourcefile), 'properties': {}, 'attributes': {}, 'bids': {}, 'meta': {}}
         """The a run-item data structure. NB: Keep in sync with the RunItem() data attributes"""
 
         # Loop through all datatypes and runs; all info goes cleanly into runitem (to avoid formatting problem of the CommentedMap)
         if 'fmap' in normaldatatypes:
             normaldatatypes.insert(0, normaldatatypes.pop(normaldatatypes.index('fmap')))       # Put fmap at the front (to catch inverted polarity scans first
         for datatype in ignoredatatypes + normaldatatypes + unknowndatatypes:                       # The ordered datatypes in which a matching run is searched for
-            if datatype not in self.dataformat(datasource.dataformat).datatypes: continue
-            for runitem in self.dataformat(datasource.dataformat).datatype(datatype).runitems:
+            if datatype not in self.dataformat(dataformat).datatypes: continue
+            for runitem in self.dataformat(dataformat).datatype(datatype).runitems:
 
                 # Begin with match = True unless all properties and attributes are empty
                 match = any([getattr(runitem, attr)[key] not in (None,'') for attr in ('properties','attributes') for key in getattr(runitem, attr)])
 
                 # Initialize a clean run-item data structure
-                rundata = {'provenance': str(datasource.path), 'properties': {}, 'attributes': {}, 'bids': {}, 'meta': {}}
+                rundata = {'provenance': str(sourcefile), 'properties': {}, 'attributes': {}, 'bids': {}, 'meta': {}}
 
                 # Test if the data source matches all the non-empty run-item properties, but do NOT populate them
                 for propkey, propvalue in runitem.properties.items():
@@ -1344,7 +1343,7 @@ class BidsMap:
                 # Stop searching the bidsmap if we have a match
                 if match:
                     LOGGER.bcdebug(f"Found bidsmap match: {runitem}")
-                    runitem = RunItem('', datatype, copy.deepcopy(rundata), datasource, self.options, self.plugins)
+                    runitem = RunItem(dataformat, datatype, copy.deepcopy(rundata), self.options, self.plugins)
 
                     # SeriesDescriptions (and ProtocolName?) may get a suffix like '_SBRef' from the vendor, try to strip it off
                     runitem.strip_suffix()
@@ -1352,11 +1351,11 @@ class BidsMap:
                     return runitem, runitem.provenance
 
         # We don't have a match (all tests failed, so datatype should be the *last* one, e.g. unknowndatatype)
-        LOGGER.bcdebug(f"Found no bidsmap match for: {datasource.path}")
+        LOGGER.bcdebug(f"Found no bidsmap match for: {sourcefile}")
         if datatype not in unknowndatatypes:
-            LOGGER.warning(f"Datatype was expected to be in {unknowndatatypes}, instead it is '{datatype}' -> {datasource.path}")
+            LOGGER.warning(f"Datatype was expected to be in {unknowndatatypes}, instead it is '{datatype}' -> {sourcefile}")
 
-        runitem = RunItem('', datatype, copy.deepcopy(rundata), datasource, self.options, self.plugins)
+        runitem = RunItem(dataformat, datatype, copy.deepcopy(rundata), self.options, self.plugins)
         runitem.strip_suffix()
         return runitem, ''
 
@@ -1371,7 +1370,7 @@ class BidsMap:
                             otherwise an empty dict
         """
 
-        if not datasource.dataformat and not datasource.has_plugin():
+        if not datasource.dataformat and not datasource.has_support():
             LOGGER.bcdebug(f"No dataformat/plugin support found when getting a run for: {datasource}")
 
         datatype = str(datatype)
@@ -1704,7 +1703,7 @@ def get_datasource(sourcedir: Path, plugins: Plugins, recurse: int=8) -> DataSou
                 datasource = get_datasource(sourcepath, plugins, recurse-1)
             elif sourcepath.is_file():
                 datasource = DataSource(sourcepath, plugins)
-            if datasource.has_plugin():
+            if datasource.has_support():
                 return datasource
 
     return datasource
@@ -2559,30 +2558,29 @@ def updatemetadata(datasource: DataSource, targetmeta: Path, usermeta: Meta, ext
             metapool = json.load(json_fid)
 
     # Add the source metadata to the metadict or copy it over
-    if sourcemeta.name:
-        for ext in extensions:
-            for sourcefile in sourcemeta.parent.glob(sourcemeta.with_suffix('').with_suffix(ext).name):
-                LOGGER.verbose(f"Copying source data from: '{sourcefile}''")
+    for ext in extensions:
+        for sourcefile in sourcemeta.parent.glob(sourcemeta.with_suffix('').with_suffix(ext).name):
+            LOGGER.verbose(f"Copying source data from: '{sourcefile}''")
 
-                # Put the metadata in metadict
-                if ext == '.json':
-                    with sourcefile.open('r') as json_fid:
-                        metadata = json.load(json_fid)
-                    if not isinstance(metadata, dict):
-                        LOGGER.error(f"Skipping unexpectedly formatted meta-data in: {sourcefile}")
-                        continue
-                    for metakey, metaval in metadata.items():
-                        if metapool.get(metakey) and metapool.get(metakey) != metaval:
-                            LOGGER.info(f"Overruling {metakey} sourcefile values in {targetmeta}: {metapool[metakey]} -> {metaval}")
-                        else:
-                            LOGGER.bcdebug(f"Adding '{metakey}: {metaval}' to: {targetmeta}")
-                        metapool[metakey] = metaval or None
+            # Put the metadata in metadict
+            if ext == '.json':
+                with sourcefile.open('r') as json_fid:
+                    metadata = json.load(json_fid)
+                if not isinstance(metadata, dict):
+                    LOGGER.error(f"Skipping unexpectedly formatted meta-data in: {sourcefile}")
+                    continue
+                for metakey, metaval in metadata.items():
+                    if metapool.get(metakey) and metapool.get(metakey) != metaval:
+                        LOGGER.info(f"Overruling {metakey} sourcefile values in {targetmeta}: {metapool[metakey]} -> {metaval}")
+                    else:
+                        LOGGER.bcdebug(f"Adding '{metakey}: {metaval}' to: {targetmeta}")
+                    metapool[metakey] = metaval or None
 
-                # Or just copy over the metadata file
-                else:
-                    targetfile = targetmeta.parent/sourcefile.name
-                    if not targetfile.is_file():
-                        shutil.copyfile(sourcefile, targetfile)
+            # Or just copy over the metadata file
+            else:
+                targetfile = targetmeta.parent/sourcefile.name
+                if not targetfile.is_file():
+                    shutil.copyfile(sourcefile, targetfile)
 
     # Add all the metadata to the metadict. NB: the dynamic `IntendedFor` value is handled separately later
     for metakey, metaval in usermeta.items():
@@ -2696,7 +2694,7 @@ def addparticipant(participants_tsv: Path, subid: str='', sesid: str='', data: d
     return table, meta
 
 
-def bidsprov(bidsfolder: Path, source: Path=Path(), runid: str='', datatype: Union[str, DataType]='unknown', targets: Iterable[Path]=()) -> pd.DataFrame:
+def bidsprov(bidsfolder: Path, source: Path=Path(), runitem: RunItem=None, targets: Iterable[Path]=()) -> pd.DataFrame:
     """
     Save data transformation information in the bids/code/bidscoin folder (in the future this may be done in accordance with BEP028)
 
@@ -2704,8 +2702,7 @@ def bidsprov(bidsfolder: Path, source: Path=Path(), runid: str='', datatype: Uni
 
     :param bidsfolder   The bids root folder or one of its subdirectories (e.g. a session folder)
     :param source:      The source file or folder that is being converted
-    :param runid:       The bidsmap runid (provenance) that was used to map the source data, e.g. as returned from get_matching_run()
-    :param datatype:    The BIDS datatype/name of the subfolder where the targets are saved (e.g. extra_data)
+    :param runitem:     The runitem that was used to map the source data, e.g. as returned from get_matching_run()
     :param targets:     The set of output files
     :return:            The dataframe with the provenance data (index_col='source', columns=['runid', 'datatype', 'targets'])
     """
@@ -2728,7 +2725,7 @@ def bidsprov(bidsfolder: Path, source: Path=Path(), runid: str='', datatype: Uni
     # Write the provenance data
     if source.name:
         LOGGER.bcdebug(f"Writing provenance data to: {provfile}")
-        provdata.loc[str(source)] = [runid, str(datatype), ', '.join([f"{target.parts[1]+':' if target.parts[0]=='derivatives' else ''}{target.name}" for target in targets])]
+        provdata.loc[str(source)] = [runitem.provenance, runitem.datatype or 'n/a', ', '.join([f"{target.parts[1]+':' if target.parts[0]=='derivatives' else ''}{target.name}" for target in targets])]
         provdata.sort_index().to_csv(provfile, sep='\t')
 
     return provdata

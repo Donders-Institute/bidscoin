@@ -11,7 +11,7 @@ from typing import Union
 from bids_validator import BIDSValidator
 from pathlib import Path
 from bidscoin import bcoin, bids, due, Doi
-from bidscoin.bids import BidsMap, DataFormat, Plugin, Plugins
+from bidscoin.bids import BidsMap, DataFormat, Plugin
 
 LOGGER = logging.getLogger(__name__)
 
@@ -117,40 +117,34 @@ def bidsmapper_plugin(session: Path, bidsmap_new: BidsMap, bidsmap_old: BidsMap,
     :return:
     """
 
-    # Get the plugin settings
-    plugins = Plugins({'spec2nii2bids': bidsmap_new.plugins['spec2nii2bids']})
-
     # Update the bidsmap with the info from the source files
-    for sourcefile in [file for file in session.rglob('*') if has_support(file)]:
+    for sourcefile in session.rglob('*'):
 
-        datasource = bids.DataSource(sourcefile, plugins, has_support(sourcefile))
-
-        # Input checks
-        if datasource.dataformat not in template.dataformats + bidsmap_old.dataformats:
-            LOGGER.error(f"No {datasource} information found in the bidsmap and template for: {sourcefile}")
-            return
+        # Check if the sourcefile is of a supported dataformat
+        if not (dataformat := has_support(sourcefile)):
+            continue
 
         # See if we can find a matching run in the old bidsmap
-        run, match = bidsmap_old.get_matching_run(datasource)
+        run, match = bidsmap_old.get_matching_run(sourcefile, dataformat)
 
         # If not, see if we can find a matching run in the template
         if not match:
-            run, _ = template.get_matching_run(datasource)
+            run, _ = template.get_matching_run(sourcefile, dataformat)
 
         # See if we have collected the run somewhere in our new bidsmap
         if not bidsmap_new.exist_run(run):
 
             # Communicate with the user if the run was not present in bidsmap_old or in template, i.e. that we found a new sample
             if not match:
-                LOGGER.info(f"Discovered sample: {datasource}")
+                LOGGER.info(f"Discovered sample: {run.datasource}")
             else:
-                LOGGER.bcdebug(f"Known sample: {datasource}")
+                LOGGER.bcdebug(f"Known sample: {run.datasource}")
 
             # Copy the filled-in run over to the new bidsmap
             bidsmap_new.insert_run(run)
 
         else:
-            LOGGER.bcdebug(f"Existing/duplicate sample: {datasource}")
+            LOGGER.bcdebug(f"Existing/duplicate sample: {run.datasource}")
 
 
 @due.dcite(Doi('10.1002/mrm.29418'), description='Multi-format in vivo MR spectroscopy conversion to NIFTI', tags=['reference-implementation'])
@@ -167,18 +161,11 @@ def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> Union[N
     :return:            A dictionary with personal data for the participants.tsv file (such as sex or age)
     """
 
-    # Get the subject identifiers from the bidsses folder
-    subid = bidsses.name if bidsses.name.startswith('sub-') else bidsses.parent.name
-    sesid = bidsses.name if bidsses.name.startswith('ses-') else ''
-
-    # Get started and see what dataformat we have
-    options     = bidsmap.plugins['spec2nii2bids']
-    datasource  = bids.get_datasource(session, {'spec2nii2bids': options})
-    dataformat  = datasource.dataformat
-    sourcefiles = [file for file in session.rglob('*') if has_support(file)]
-    if not sourcefiles:
-        LOGGER.info(f"--> No {__name__} sourcedata found in: {session}")
-        return
+    # Get started
+    subid   = bidsses.name if bidsses.name.startswith('sub-') else bidsses.parent.name
+    sesid   = bidsses.name if bidsses.name.startswith('ses-') else ''
+    options = bidsmap.plugins['spec2nii2bids']
+    runid   = ''
 
     # Read or create a scans_table and tsv-file
     scans_tsv = bidsses/f"{subid}{'_'+sesid if sesid else ''}_scans.tsv"
@@ -189,25 +176,28 @@ def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> Union[N
         scans_table.index.name = 'filename'
 
     # Loop over all MRS source data files and convert them to BIDS
-    for source in sourcefiles:
+    for sourcefile in session.rglob('*'):
 
-        # Get a data source, a matching run from the bidsmap
-        datasource = bids.DataSource(source, {'spec2nii2bids': options}, has_support(source))
-        run, runid = bidsmap.get_matching_run(datasource, runtime=True)
+        # Check if the sourcefile is of a supported dataformat
+        if not (dataformat := has_support(sourcefile)):
+            continue
+
+        # Get a matching run from the bidsmap
+        run, runid = bidsmap.get_matching_run(sourcefile, dataformat, runtime=True)
 
         # Check if we should ignore this run
         if run.datatype in bidsmap.options['ignoretypes']:
-            LOGGER.info(f"--> Leaving out: {source}")
-            bids.bidsprov(bidsses, source, runid, run.datatype)              # Write out empty provenance data
+            LOGGER.info(f"--> Leaving out: {run.datasource}")
+            bids.bidsprov(bidsses, sourcefile, run)             # Write out empty provenance data
             continue
 
         # Check that we know this run
         if not runid:
-            LOGGER.error(f"Skipping unknown '{run.datatype}' run: {source}\n-> Re-run the bidsmapper and delete the MRS output data in {bidsses} to solve this warning")
-            bids.bidsprov(bidsses, source)                  # Write out empty provenance data
+            LOGGER.error(f"Skipping unknown run: {run.datasource}\n-> Re-run the bidsmapper and delete the MRS output data in {bidsses} to solve this warning")
+            bids.bidsprov(bidsses, sourcefile)                  # Write out empty provenance data
             continue
 
-        LOGGER.info(f"--> Coining: {source}")
+        LOGGER.info(f"--> Coining: {run.datasource}")
 
         # Create the BIDS session/datatype output folder
         outfolder = bidsses/run.datatype
@@ -237,7 +227,7 @@ def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> Union[N
         args = options.get('args', OPTIONS['args']) or ''
         if dataformat == 'SPAR':
             dformat = 'philips'
-            arg     = f'"{source.with_suffix(".SDAT")}"'
+            arg     = f'"{sourcefile.with_suffix(".SDAT")}"'
         elif dataformat == 'Twix':
             dformat = 'twix'
             arg     = '-e image'
@@ -247,8 +237,8 @@ def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> Union[N
             LOGGER.error(f"Unsupported dataformat: {dataformat}")
             return
         command = options.get('command', 'spec2nii')
-        errcode = bcoin.run_command(f'{command} {dformat} -j -f "{bidsname}" -o "{outfolder}" {args} {arg} "{source}"')
-        bids.bidsprov(bidsses, source, runid, run.datatype, [target] if target.is_file() else [])
+        errcode = bcoin.run_command(f'{command} {dformat} -j -f "{bidsname}" -o "{outfolder}" {args} {arg} "{sourcefile}"')
+        bids.bidsprov(bidsses, sourcefile, run, [target] if target.is_file() else [])
         if not target.is_file():
             if not errcode:
                 LOGGER.error(f"Output file not found: {target}")
@@ -256,20 +246,21 @@ def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> Union[N
 
         # Load/copy over and adapt the newly produced json sidecar-file
         sidecar  = target.with_suffix('').with_suffix('.json')
-        metadata = bids.updatemetadata(datasource, sidecar, run.meta, options.get('meta',[]))
+        metadata = bids.updatemetadata(run.datasource, sidecar, run.meta, options.get('meta',[]))
         if metadata:
             with sidecar.open('w') as json_fid:
                 json.dump(metadata, json_fid, indent=4)
 
         # Parse the acquisition time from the source header or else from the json file (NB: assuming the source file represents the first acquisition)
+        attributes = run.datasource.attributes
         if not bidsignore:
             acq_time = ''
             if dataformat == 'SPAR':
-                acq_time = datasource.attributes('scan_date')
+                acq_time = attributes('scan_date')
             elif dataformat == 'Twix':
-                acq_time = f"{datasource.attributes('AcquisitionDate')}T{datasource.attributes('AcquisitionTime')}"
+                acq_time = f"{attributes('AcquisitionDate')}T{attributes('AcquisitionTime')}"
             elif dataformat == 'Pfile':
-                acq_time = f"{datasource.attributes('rhr_rh_scan_date')}T{datasource.attributes('rhr_rh_scan_time')}"
+                acq_time = f"{attributes('rhr_rh_scan_date')}T{attributes('rhr_rh_scan_time')}"
             if not acq_time or acq_time == 'T':
                 acq_time = f"1925-01-01T{metadata.get('AcquisitionTime','')}"
             try:
@@ -278,30 +269,34 @@ def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> Union[N
                     acq_time = acq_time.replace(year=1925, month=1, day=1)      # Privacy protection (see BIDS specification)
                 acq_time = acq_time.isoformat()
             except Exception as jsonerror:
-                LOGGER.warning(f"Could not parse the acquisition time from: {source}\n{jsonerror}")
+                LOGGER.warning(f"Could not parse the acquisition time from: {sourcefile}\n{jsonerror}")
                 acq_time = 'n/a'
             scans_table.loc[target.relative_to(bidsses).as_posix(), 'acq_time'] = acq_time
+
+    if not runid:
+        LOGGER.info(f"--> No {__name__} sourcedata found in: {session}")
+        return
 
     # Write the scans_table to disk
     LOGGER.verbose(f"Writing acquisition time data to: {scans_tsv}")
     scans_table.sort_values(by=['acq_time', 'filename'], inplace=True)
     scans_table.replace('','n/a').to_csv(scans_tsv, sep='\t', encoding='utf-8', na_rep='n/a')
 
-    # Collect personal data for the participants.tsv file
+    # Collect personal data for the participants.tsv file (assumes the dataformat and personal attributes remain the same in the session)
     personals = {}
     age       = ''
     if dataformat == 'Twix':
-        personals['sex']    = datasource.attributes('PatientSex')
-        personals['size']   = datasource.attributes('PatientSize')
-        personals['weight'] = datasource.attributes('PatientWeight')
-        age = datasource.attributes('PatientAge')                   # A string of characters with one of the following formats: nnnD, nnnW, nnnM, nnnY
+        personals['sex']    = attributes('PatientSex')
+        personals['size']   = attributes('PatientSize')
+        personals['weight'] = attributes('PatientWeight')
+        age = attributes('PatientAge')                   # A string of characters with one of the following formats: nnnD, nnnW, nnnM, nnnY
     elif dataformat == 'Pfile':
-        sex = datasource.attributes('rhe_patsex')
+        sex = attributes('rhe_patsex')
         if   sex == '0': personals['sex'] = 'O'
         elif sex == '1': personals['sex'] = 'M'
         elif sex == '2': personals['sex'] = 'F'
         try:
-            age = dateutil.parser.parse(datasource.attributes('rhr_rh_scan_date')) - dateutil.parser.parse(datasource.attributes('rhe_dateofbirth'))
+            age = dateutil.parser.parse(attributes('rhr_rh_scan_date')) - dateutil.parser.parse(attributes('rhe_dateofbirth'))
             age = str(age.days) + 'D'
         except dateutil.parser.ParserError as exc:
             pass
@@ -315,6 +310,6 @@ def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> Union[N
                 age = int(float(age))
             personals['age'] = str(age)
     except Exception as exc:
-        LOGGER.warning(f"Could not parse age from: {datasource}\n{exc}")
+        LOGGER.warning(f"Could not parse age from: {run.datasource}\n{exc}")
 
     return personals

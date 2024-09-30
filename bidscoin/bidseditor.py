@@ -236,7 +236,7 @@ class MainWindow(QMainWindow):
                     datasource = bids.DataSource(dataformat=dataformat)
                     for filename in filenames:
                         datasource = bids.DataSource(filename, self.output_bidsmap.plugins, dataformat, self.output_bidsmap.options)
-                        if datasource.has_plugin():
+                        if datasource.has_support():
                             runitem = self.template_bidsmap.get_run(datatype, 0, datasource)
                             runitem.properties['filepath'] = datasource.properties('filepath')      # Make the added run a strict match (i.e. an exception)
                             runitem.properties['filename'] = datasource.properties('filename')      # Make the added run a strict match (i.e. an exception)
@@ -248,7 +248,7 @@ class MainWindow(QMainWindow):
                                 self.ordered_file_index[dataformat] = {datasource.path: 0}
                             else:
                                 self.ordered_file_index[dataformat][datasource.path] = max(self.ordered_file_index[dataformat][fname] for fname in self.ordered_file_index[dataformat]) + 1
-                    if datasource.has_plugin():
+                    if datasource.has_support():
                         self.update_subses_samples(dataformat)
 
         elif action == delete:

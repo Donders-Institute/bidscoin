@@ -56,7 +56,7 @@ class TestDataSource:
         return DataSource(ext_dcm_file, {'dcm2niix2bids': Plugin({})}, 'DICOM')
 
     def test_is_datasource(self, datasource):
-        assert datasource.has_plugin()
+        assert datasource.has_support()
         assert datasource.dataformat == 'DICOM'
 
     def test_properties(self, datasource):
@@ -138,12 +138,10 @@ class TestRunItem:
 
     def test_get_bidsname(self, raw_dicomdir):
 
-        dicomfile = raw_dicomdir/'Doe^Archibald'/'01-XR C Spine Comp Min 4 Views'/'001-Cervical LAT'/'6154'
-
         # Get a run-item from a bidsmap
-        datasource = DataSource(dicomfile, {'dcm2niix2bids': Plugin({})}, 'DICOM')
-        runitem    = RunItem('DICOM', '', {'bids': {'acq':'py#dicom', 'foo@':'bar#123', 'run':'<<SeriesNumber>>', 'suffix':'T0w'}}, datasource)
-        
+        runitem            = RunItem('DICOM', '', {'bids': {'acq':'py#dicom', 'foo@':'bar#123', 'run':'<<SeriesNumber>>', 'suffix':'T0w'}}, plugins={'dcm2niix2bids': {}})
+        runitem.provenance = str(raw_dicomdir/'Doe^Archibald'/'01-XR C Spine Comp Min 4 Views'/'001-Cervical LAT'/'6154')
+
         bidsname = runitem.bidsname('sub-001', 'ses-01', validkeys=False, cleanup=False)  # Test default: runtime=False
         assert bidsname == 'sub-001_ses-01_acq-py#dicom_run-<<SeriesNumber>>_foo@-bar#123_T0w'
 
@@ -512,7 +510,7 @@ def test_get_dicomfile(dcm_file, dicomdir):
 
 def test_get_datasource(dicomdir):
     datasource = bids.get_datasource(dicomdir.parent, {'dcm2niix2bids': {}})
-    assert datasource.has_plugin()
+    assert datasource.has_support()
     assert datasource.dataformat == 'DICOM'
 
 

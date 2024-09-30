@@ -11,7 +11,7 @@ from bids_validator import BIDSValidator
 from typing import Union
 from pathlib import Path
 from bidscoin import bids
-from bidscoin.bids import BidsMap, DataFormat, Plugin, Plugins
+from bidscoin.bids import BidsMap, DataFormat, Plugin
 
 try:
     from nibabel.testing import data_path
@@ -116,40 +116,34 @@ def bidsmapper_plugin(session: Path, bidsmap_new: BidsMap, bidsmap_old: BidsMap,
     :return:
     """
 
-    # Get started
-    plugins    = Plugins({'nibabel2bids': bidsmap_new.plugins['nibabel2bids']})
-    datasource = bids.get_datasource(session, plugins, recurse=2)
-    if not datasource.dataformat:
-        return
-    if datasource.dataformat not in template.dataformats + bidsmap_old.dataformats:
-        LOGGER.error(f"No {datasource} source information found in the bidsmap and template")
-        return
-
     # Collect the different DICOM/PAR source files for all runs in the session
-    for sourcefile in [file for file in session.rglob('*') if has_support(file)]:
+    for sourcefile in session.rglob('*'):
+
+        # Check if the sourcefile is of a supported dataformat
+        if not (dataformat := has_support(sourcefile)):
+            continue
 
         # See if we can find a matching run in the old bidsmap
-        datasource = bids.DataSource(sourcefile, plugins, has_support(sourcefile))
-        run, match = bidsmap_old.get_matching_run(datasource)
+        run, match = bidsmap_old.get_matching_run(sourcefile, dataformat)
 
         # If not, see if we can find a matching run in the template
         if not match:
-            run, _ = template.get_matching_run(datasource)
+            run, _ = template.get_matching_run(sourcefile, dataformat)
 
         # See if we have collected the run somewhere in our new bidsmap
         if not bidsmap_new.exist_run(run):
 
             # Communicate with the user if the run was not present in bidsmap_old or in template, i.e. that we found a new sample
             if not match:
-                LOGGER.info(f"Discovered data sample: {datasource}")
+                LOGGER.info(f"Discovered sample: {run.datasource}")
             else:
-                LOGGER.bcdebug(f"Known data sample: {datasource}")
+                LOGGER.bcdebug(f"Known sample: {run.datasource}")
 
             # Copy the filled-in run over to the new bidsmap
             bidsmap_new.insert_run(run)
 
         else:
-            LOGGER.bcdebug(f"Existing/duplicate sample: {datasource}")
+            LOGGER.bcdebug(f"Existing/duplicate sample: {run.datasource}")
 
 
 def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> None:
@@ -164,15 +158,10 @@ def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> None:
     """
 
     # Get the subject identifiers from the bidsses folder
-    subid = bidsses.name if bidsses.name.startswith('sub-') else bidsses.parent.name
-    sesid = bidsses.name if bidsses.name.startswith('ses-') else ''
-
-    # Get started
-    options     = bidsmap.plugins['nibabel2bids']
-    sourcefiles = [file for file in session.rglob('*') if has_support(file)]
-    if not sourcefiles:
-        LOGGER.info(f"--> No {__name__} sourcedata found in: {session}")
-        return
+    subid   = bidsses.name if bidsses.name.startswith('sub-') else bidsses.parent.name
+    sesid   = bidsses.name if bidsses.name.startswith('ses-') else ''
+    options = bidsmap.plugins['nibabel2bids']
+    runid   = ''
 
     # Read or create a scans_table and tsv-file
     scans_tsv = bidsses/f"{subid}{'_'+sesid if sesid else ''}_scans.tsv"
@@ -183,24 +172,28 @@ def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> None:
         scans_table.index.name = 'filename'
 
     # Collect the different Nibabel source files for all files in the session
-    for source in sourcefiles:
+    for sourcefile in session.rglob('*'):
 
-        datasource = bids.DataSource(source, {'nibabel2bids': options}, has_support(source))
-        run, runid = bidsmap.get_matching_run(datasource, runtime=True)
+        # Check if the sourcefile is of a supported dataformat
+        if not (dataformat := has_support(sourcefile)):
+            continue
+
+        # Get a matching run from the bidsmap
+        run, runid = bidsmap.get_matching_run(sourcefile, dataformat, runtime=True)
 
         # Check if we should ignore this run
         if run.datatype in bidsmap.options['ignoretypes']:
-            LOGGER.info(f"--> Leaving out: {datasource}")
-            bids.bidsprov(bidsses, source, runid, run.datatype)     # Write out empty provenance data
+            LOGGER.info(f"--> Leaving out: {run.datasource}")
+            bids.bidsprov(bidsses, sourcefile, run)                     # Write out empty provenance data
             continue
 
         # Check if we already know this run
         if not runid:
-            LOGGER.error(f"Skipping unknown '{run.datatype}' run: {source}\n-> Re-run the bidsmapper and delete {bidsses} to solve this warning")
-            bids.bidsprov(bidsses, source)                          # Write out empty provenance data
+            LOGGER.error(f"Skipping unknown run: {run.datasource}\n-> Re-run the bidsmapper and delete {bidsses} to solve this warning")
+            bids.bidsprov(bidsses, sourcefile)                          # Write out empty provenance data
             continue
 
-        LOGGER.info(f"--> Coining: {datasource}")
+        LOGGER.info(f"--> Coining: {run.datasource}")
 
         # Create the BIDS session/datatype output folder
         outfolder = bidsses/run.datatype
@@ -225,8 +218,8 @@ def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> None:
             target.unlink()
 
         # Save the sourcefile as a BIDS NIfTI file and write out provenance data
-        nib.save(nib.load(source), target)
-        bids.bidsprov(bidsses, source, runid, run.datatype, [target] if target.is_file() else [])
+        nib.save(nib.load(sourcefile), target)
+        bids.bidsprov(bidsses, sourcefile, run, [target] if target.is_file() else [])
 
         # Check the output
         if not target.is_file():
@@ -235,7 +228,7 @@ def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> None:
 
         # Load/copy over the source meta-data
         sidecar  = target.with_suffix('').with_suffix('.json')
-        metadata = bids.updatemetadata(datasource, sidecar, run.meta, options.get('meta', []))
+        metadata = bids.updatemetadata(run.datasource, sidecar, run.meta, options.get('meta', []))
         if metadata:
             with sidecar.open('w') as json_fid:
                 json.dump(metadata, json_fid, indent=4)
@@ -244,6 +237,10 @@ def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> None:
         if 'derivatives' not in bidsses.parts:
             acq_time = dateutil.parser.parse(f"1925-01-01T{metadata.get('AcquisitionTime', '')}")
             scans_table.loc[target.relative_to(bidsses).as_posix(), 'acq_time'] = acq_time.isoformat()
+
+    if not runid:
+        LOGGER.info(f"--> No {__name__} sourcedata found in: {session}")
+        return
 
     # Write the scans_table to disk
     LOGGER.verbose(f"Writing data to: {scans_tsv}")

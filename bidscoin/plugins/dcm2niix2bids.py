@@ -132,7 +132,7 @@ def bidsmapper_plugin(session: Path, bidsmap_new: BidsMap, bidsmap_old: BidsMap,
         for sourcedir in lsdirs(session, '**/*'):
             for n in range(1):      # Option: Use range(2) to scan two files and catch e.g. magnitude1/2 fieldmap files that are stored in one Series folder (but bidscoiner sees only the first file anyhow and it makes bidsmapper 2x slower :-()
                 sourcefile = bids.get_dicomfile(sourcedir, n)
-                if sourcefile.name and has_support(sourcefile):
+                if sourcefile.name:
                     sourcefiles.append(sourcefile)
     elif dataformat == 'PAR':
         sourcefiles = bids.get_parfiles(session)
@@ -150,13 +150,12 @@ def bidsmapper_plugin(session: Path, bidsmap_new: BidsMap, bidsmap_old: BidsMap,
                     break
 
         # See if we can find a matching run in the old bidsmap
-        datasource = bids.DataSource(sourcefile, plugins, dataformat, bidsmap_new.options)
-        run, match = bidsmap_old.get_matching_run(datasource)
+        run, match = bidsmap_old.get_matching_run(sourcefile, dataformat)
 
         # If not, see if we can find a matching run in the template
         if not match:
             LOGGER.bcdebug('No match found in the study bidsmap, now trying the template bidsmap')
-            run, _ = template.get_matching_run(datasource)
+            run, _ = template.get_matching_run(sourcefile, dataformat)
 
         # See if we have collected the run somewhere in our new bidsmap
         if not bidsmap_new.exist_run(run):
@@ -164,7 +163,7 @@ def bidsmapper_plugin(session: Path, bidsmap_new: BidsMap, bidsmap_old: BidsMap,
             # Communicate with the user if the run was not present in bidsmap_old or in template, i.e. that we found a new sample
             if not match:
 
-                LOGGER.info(f"Discovered sample: {datasource}")
+                LOGGER.info(f"Discovered sample: {run.datasource}")
 
                 # Try to automagically set the {part: phase/imag/real} (should work for Siemens data)
                 if not run.datatype == '' and 'part' in run.bids and not run.bids['part'][-1] and run.attributes.get('ImageType'):    # part[-1]==0 -> part is not specified
@@ -181,13 +180,13 @@ def bidsmapper_plugin(session: Path, bidsmap_new: BidsMap, bidsmap_old: BidsMap,
                         LOGGER.verbose(f"Updated {run} entity: 'part' -> '{run.bids['part'][run.bids['part'][-1]]}' ({imagetype})")
 
             else:
-                LOGGER.bcdebug(f"Known sample: {datasource}")
+                LOGGER.bcdebug(f"Known sample: {run.datasource}")
 
             # Copy the filled-in run over to the new bidsmap
             bidsmap_new.insert_run(run)
 
         else:
-            LOGGER.bcdebug(f"Existing/duplicate sample: {datasource}")
+            LOGGER.bcdebug(f"Existing/duplicate sample: {run.datasource}")
 
 
 @due.dcite(Doi('10.1016/j.jneumeth.2016.03.001'), description='dcm2niix: DICOM to NIfTI converter', tags=['reference-implementation'])
@@ -238,38 +237,36 @@ def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> Union[N
         scans_table = pd.DataFrame(columns=['acq_time'], dtype='str')
         scans_table.index.name = 'filename'
 
-    # Process all the source files or run subfolders
-    sourcefile = Path()
+    # Process all the source files / folders
     for source in sources:
 
         # Get a sourcefile
         if dataformat == 'DICOM':
             sourcefile = bids.get_dicomfile(source)
-        elif dataformat == 'PAR':
+        else:
             sourcefile = source
         if not sourcefile.name or not has_support(sourcefile):
             continue
 
         # Get a matching run from the bidsmap
-        datasource = bids.DataSource(sourcefile, {'dcm2niix2bids': options}, dataformat, bidsmap.options)
-        run, runid = bidsmap.get_matching_run(datasource, runtime=True)
+        run, runid = bidsmap.get_matching_run(sourcefile, dataformat, runtime=True)
 
         # Check if we should ignore this run
         if run.datatype in bidsmap.options['ignoretypes']:
-            LOGGER.info(f"--> Leaving out: {source}")
-            bids.bidsprov(bidsses, source, runid, run.datatype)              # Write out empty provenance data
+            LOGGER.info(f"--> Leaving out: {run.datasource}")
+            bids.bidsprov(bidsses, source, run)                         # Write out empty provenance data
             continue
 
         # Check if we already know this run
         if not runid:
-            LOGGER.error(f"--> Skipping unknown '{run.datatype}' run: {sourcefile}\n-> Re-run the bidsmapper and delete {bidsses} to solve this warning")
+            LOGGER.error(f"--> Skipping unknown run: {run.datasource}\n-> Re-run the bidsmapper and delete {bidsses} to solve this warning")
             bids.bidsprov(bidsses, source)                              # Write out empty provenance data
             continue
 
-        LOGGER.info(f"--> Coining: {source}")
+        LOGGER.info(f"--> Coining: {run.datasource}")
 
         # Create the BIDS session/datatype output folder
-        suffix = datasource.dynamicvalue(run.bids['suffix'], True, True)
+        suffix = run.datasource.dynamicvalue(run.bids['suffix'], True, True)
         if suffix in bids.get_derivatives(run.datatype, exceptions):
             outfolder = bidsfolder/'derivatives'/manufacturer.replace(' ','')/subid/sesid/run.datatype
         else:
@@ -411,21 +408,21 @@ def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> Union[N
                         newbidsname = newbidsname.replace('_phasediff_e1',   '_phasediff')                      # Case 1
                         newbidsname = newbidsname.replace('_phasediff_e2',   '_phasediff')                      # Case 1
                         newbidsname = newbidsname.replace('_phasediff_ph',   '_phasediff')                      # Case 1
-                        newbidsname = newbidsname.replace('_magnitude1_ph',  '_phase1')                         # Case 2: One or two magnitude and phase images in one folder/datasource
-                        newbidsname = newbidsname.replace('_magnitude2_ph',  '_phase2')                         # Case 2: Two magnitude + two phase images in one folder/datasource
+                        newbidsname = newbidsname.replace('_magnitude1_ph',  '_phase1')                         # Case 2: One or two magnitude and phase images in one folder
+                        newbidsname = newbidsname.replace('_magnitude2_ph',  '_phase2')                         # Case 2: Two magnitude + two phase images in one folder
                         newbidsname = newbidsname.replace('_phase1_e1',      '_phase1')                         # Case 2
                         newbidsname = newbidsname.replace('_phase1_e2',      '_phase2')                         # Case 2: This can happen when the e2 image is stored in the same directory as the e1 image, but with the e2 listed first
                         newbidsname = newbidsname.replace('_phase2_e1',      '_phase1')                         # Case 2: This can happen when the e2 image is stored in the same directory as the e1 image, but with the e2 listed first
                         newbidsname = newbidsname.replace('_phase2_e2',      '_phase2')                         # Case 2
-                        newbidsname = newbidsname.replace('_phase1_ph',      '_phase1')                         # Case 2: One or two magnitude and phase images in one folder/datasource
-                        newbidsname = newbidsname.replace('_phase2_ph',      '_phase2')                         # Case 2: Two magnitude + two phase images in one folder/datasource
+                        newbidsname = newbidsname.replace('_phase1_ph',      '_phase1')                         # Case 2: One or two magnitude and phase images in one folder
+                        newbidsname = newbidsname.replace('_phase2_ph',      '_phase2')                         # Case 2: Two magnitude + two phase images in one folder
                         newbidsname = newbidsname.replace('_magnitude_e1',   '_magnitude')                      # Case 3 = One magnitude + one fieldmap image
                         if len(dcm2niixfiles) == 2:
-                            newbidsname = newbidsname.replace('_fieldmap_e1', '_magnitude')                     # Case 3: One magnitude + one fieldmap image in one folder/datasource
+                            newbidsname = newbidsname.replace('_fieldmap_e1', '_magnitude')                     # Case 3: One magnitude + one fieldmap image in one folder
                             newbidsname = newbidsname.replace('_magnitude_fieldmaphz', '_fieldmap')
                             newbidsname = newbidsname.replace('_fieldmap_fieldmaphz',  '_fieldmap')
                         newbidsname = newbidsname.replace('_fieldmap_e1',    '_fieldmap')                       # Case 3
-                        newbidsname = newbidsname.replace('_magnitude_ph',   '_fieldmap')                       # Case 3: One magnitude + one fieldmap image in one folder/datasource
+                        newbidsname = newbidsname.replace('_magnitude_ph',   '_fieldmap')                       # Case 3: One magnitude + one fieldmap image in one folder
                         newbidsname = newbidsname.replace('_fieldmap_ph',    '_fieldmap')                       # Case 3
 
                     # Append the dcm2niix info to the fallback-label, may need to be improved/elaborated for future BIDS standards, supporting multi-coil data
@@ -454,7 +451,7 @@ def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> Union[N
                     oldfile.replace(newbidsfile.with_suffix('').with_suffix(''.join(oldfile.suffixes)))
 
         # Write out provenance data
-        bids.bidsprov(bidsses, source, runid, run.datatype, targets)
+        bids.bidsprov(bidsses, source, run, targets)
 
         # Loop over all non-derivative targets (i.e. the produced output files) and edit the json sidecar data
         for target in sorted(targets):
@@ -467,7 +464,7 @@ def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> Union[N
             jsonfile = target.with_suffix('').with_suffix('.json')
             if not jsonfile.is_file():
                 LOGGER.warning(f"Unexpected conversion result, could not find: {jsonfile}")
-            metadata = bids.updatemetadata(datasource, jsonfile, run.meta, options.get('meta',[]))
+            metadata = bids.updatemetadata(run.datasource, jsonfile, run.meta, options.get('meta',[]))
 
             # Remove the bval/bvec files of sbref- and inv-images (produced by dcm2niix but not allowed by the BIDS specifications)
             if ((run.datatype == 'dwi'  and suffix == 'sbref') or
@@ -492,9 +489,9 @@ def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> Union[N
             if not ignore:
                 acq_time = ''
                 if dataformat == 'DICOM':
-                    acq_time = f"{datasource.attributes('AcquisitionDate')}T{datasource.attributes('AcquisitionTime')}"
+                    acq_time = f"{run.datasource.attributes('AcquisitionDate')}T{run.datasource.attributes('AcquisitionTime')}"
                 elif dataformat == 'PAR':
-                    acq_time = datasource.attributes('exam_date')
+                    acq_time = run.datasource.attributes('exam_date')
                 if not acq_time or acq_time == 'T':
                     acq_time = f"1925-01-01T{metadata.get('AcquisitionTime','')}"
                 try:
@@ -509,7 +506,7 @@ def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> Union[N
 
             # Check if the target output aligns with dcm2niix's "BidsGuess" datatype and filename entities
             if not ignore:
-                typeguess, targetguess = metadata.get('BidsGuess') or ['', '']    # BidsGuess: [datatype, filename]
+                typeguess, targetguess = metadata.get('BidsGuess') or ['', '']      # BidsGuess: [datatype, filename]
                 LOGGER.bcdebug(f"BidsGuess: [{typeguess}, {targetguess}]")
                 if typeguess and run.datatype != typeguess:
                     LOGGER.info(f"The datatype of {target.relative_to(bidsses)} does not match with the datatype guessed by dcm2niix: {typeguess}")
@@ -527,7 +524,7 @@ def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> Union[N
     scans_table.replace('','n/a').to_csv(scans_tsv, sep='\t', encoding='utf-8', na_rep='n/a')
 
     # Collect personal data for the participants.tsv file
-    if dataformat == 'DICOM':                               # PAR does not contain personal info
+    if dataformat == 'DICOM':                               # PAR does not contain personal info?
         age = datasource.attributes('PatientAge')           # A string of characters with one of the following formats: nnnD, nnnW, nnnM, nnnY
         try:
             if   age.endswith('D'): age = float(age.rstrip('D')) / 365.2524
