@@ -233,7 +233,7 @@ class MainWindow(QMainWindow):
             if filenames:
                 datatype, ok = QInputDialog.getItem(self, 'Select the data type of the run-item(s)', 'datatype', datatypes, editable=False)
                 if datatype and ok:
-                    datasource = bids.DataSource(dataformat=dataformat)
+                    runitem = None
                     for filename in filenames:
                         datasource = bids.DataSource(filename, self.output_bidsmap.plugins, dataformat, self.output_bidsmap.options)
                         if datasource.has_support():
@@ -248,7 +248,7 @@ class MainWindow(QMainWindow):
                                 self.ordered_file_index[dataformat] = {datasource.path: 0}
                             else:
                                 self.ordered_file_index[dataformat][datasource.path] = max(self.ordered_file_index[dataformat][fname] for fname in self.ordered_file_index[dataformat]) + 1
-                    if datasource.has_support():
+                    if runitem:
                         self.update_subses_samples(dataformat)
 
         elif action == delete:
