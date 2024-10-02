@@ -163,6 +163,7 @@ copymetadata
 csf
 dataflow
 dataformat
+dataformats
 dataset
 datasets
 datasource
@@ -275,6 +276,8 @@ rebranded
 refactoring
 regex
 runindex
+runitem
+RunItem
 runtime
 sbatch
 screenshot

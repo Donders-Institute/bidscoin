@@ -24,9 +24,11 @@ import datetime
 import shutil
 import warnings
 import tempfile
+import subprocess
 from pathlib import Path
 from importlib import metadata
 from typing import Tuple, Union, List
+from logging import getLogger
 from .due import due, Doi
 try:
     import tomllib
@@ -39,6 +41,8 @@ try:
 except Exception:
     with open(Path(__file__).parents[1]/'pyproject.toml', 'rb') as fid:
         __version__ = tomllib.load(fid)['project']['version']
+
+LOGGER = getLogger(__name__)
 
 # Add license metadata
 __license__    = 'GNU General Public License v3.0 or later (GPLv3+)'
@@ -140,6 +144,25 @@ def lsdirs(folder: Path, wildcard: str='*') -> List[Path]:
     is_hidden = lambda path: any([part.startswith('.') for part in path.parts])
 
     return sorted([item for item in sorted(folder.glob(wildcard)) if item.is_dir() and not is_hidden(item.relative_to(folder))])
+
+
+def run_command(command: str, success: tuple=(0,None)) -> int:
+    """
+    Runs a command in a shell using subprocess.run(command, ..)
+
+    :param command: The command that is executed
+    :param success: The return codes for successful operation (e,g, for dcm2niix it is (0,3))
+    :return:        The return code (e.g. 0 if the command was successfully executed (no errors), > 0 otherwise)
+    """
+
+    LOGGER.verbose(f"Command:\n{command}")
+    process = subprocess.run(command, shell=True, capture_output=True, text=True)
+    if process.stderr or process.returncode not in success:
+        LOGGER.error(f"Failed to run:\n{command}\nErrorcode {process.returncode}:\n{process.stdout}\n{process.stderr}")
+    else:
+        LOGGER.verbose(f"Output:\n{process.stdout}")
+
+    return process.returncode
 
 
 def trackusage(event: str, dryrun: bool=False) -> dict:

@@ -680,7 +680,7 @@ def test_updatemetadata(dcm_file, tmp_path):
                      'B0FieldIdentifier': ['Identifier<<session>>', 'Identifier']})
 
     # Test if the user metadata takes precedence
-    metadata = bids.updatemetadata(extdatasource, sidecar, usermeta, ['.json'])
+    metadata = bids.poolmetadata(extdatasource, sidecar, usermeta, ['.json'])
     assert metadata['PatientName']       == 'UserTest'
     assert metadata['DynamicName']       == 'CompressedSamples^MR1'
     assert metadata['B0FieldSource']     == 'Source<<ses01:[-2:2]>>'
@@ -688,10 +688,10 @@ def test_updatemetadata(dcm_file, tmp_path):
     assert not (outfolder/sourcefile.with_suffix('.jsn').name).is_file()
 
     # Test if the source metadata takes precedence
-    metadata = bids.updatemetadata(extdatasource, sidecar, Meta({}), ['.jsn', '.json'], sourcefile)
+    metadata = bids.poolmetadata(extdatasource, sidecar, Meta({}), ['.jsn', '.json'], sourcefile)
     assert metadata['PatientName'] == 'SourceTest'
     assert (outfolder/sourcefile.with_suffix('.jsn').name).is_file()
 
     # Test if the sidecar metadata takes precedence
-    metadata = bids.updatemetadata(extdatasource, sidecar, Meta({}), [])
+    metadata = bids.poolmetadata(extdatasource, sidecar, Meta({}), [])
     assert metadata['PatientName'] == 'SidecarTest'

@@ -30,193 +30,216 @@ The nibabel2bids plugin wraps around the versatile `nibabel <https://nipy.org/ni
 The plugin programming interface
 --------------------------------
 
-This paragraph describes the requirements and structure of plugins in order to allow advanced users and developers to write their own plugin and extent or customize BIDScoin to their needs.
+This paragraph describes the requirements and structure of plugins in order to allow users and developers to write their own plugin and extent or customize BIDScoin to their needs.
 
-The main task of a plugin is to perform the actual conversion of the source data into a format that is part of the BIDS standard. BIDScoin offers the library module named 'bids' to interact with bidsmaps and to provide the intended output names and meta data. Moreover, the bids library contains a class named ``DataSource()`` that is (strongly) recommended to be used for reading the source data attributes and properties. In this way, the extended source data attributes and dynamic values (including regular expressions) are handled transparently, ensuring consistent results throughout BIDScoin.
+The main task of a plugin is to perform the actual conversion of the source data into a format that is part of the BIDS standard. BIDScoin offers the Python library module named ``bids`` to interact with bidsmaps and to provide the intended output names and meta data. Notably, the bids library contains a class named ``BidsMap()`` that provides various methods and other useful classes for building and interacting with bidsmap data. Bidsmap objects provide consecutive access to ``DataFormat()``, ``Datatype()``, ``RunItem()`` and ``DataSource()`` objects, each of which comes with methods to interact with the corresponding sections of the bidsmap data. The RunItem objects can be used to obtain the mapping to the BIDS output names, and the DataSource object can read the source data attributes and properties. The DataSource object transparently handles dynamic values (including regular expressions) as well as the extended source data attributes.
 
-However, if you have a long list of extended attributes it can be cumbersome to put them all in the metadata table (even though you can right-click to import data there). This is where the copymetadata() function comes in. This is meant to be used by the plugins during bidscoiner runtime, and just transfers all extra source metadata to the BIDS folder (for each plugin, the user can control this if needed in the bidseditor by setting the allowed file extensions of the extra source metadata files). A scenario where copymetadata is very useful is e.g. when you have a non-BIDS NIfTI dataset that was created using dcm2niix and now you want to convert that to BIDS (in that case you just want to copy over all the metadata in the json files). The nibabel2bids plugin can do exactly that. NB: copymetadata is still a rudimentary function
+In short, the purpose of the plugin is to interact with the data, by providing these methods:
 
-If a field is present in the metadata table and also in the metadata transferred by copymetadata, then the metadata table should take precedence (this should be implemented as such in the plugin), so that the user gets what he sees in the bidseditor (WYSIWYG).
+- **test()**: A test function for the plugin + its bidsmap options. Can be called by the user from the bidseditor and the bidscoin utility
+- **has_support()**: If given a source data file that the plugin supports, then report back the name of its data format, i.e. the name of the section in the bidsmap
+- **get_attribute()**: If given a source data file that the plugin supports, then report back its attribute value (e.g. from the header)
+- **bidsmapper_plugin()**: From a given session folder, identify the different runs (source datatypes) and, if they haven't been discovered yet, add them to the study bidsmap
+- **bidscoiner_plugin()**: From a given session folder, identify the different runs (source datatypes) and convert them to BIDS output files using the mapping data specified in the runitem
 
-As can be seen in the API code snippet below (but also see the default plugins for reference implementation), a BIDScoin plugin is a Python module with the following programming interface (functions):
+The above API is illustrated in more detail in the placeholder Python code below. For real world examples you best first take a look at the nibabel2bids plugin, which exemplifies a clean and fairly minimal implementation of the required functionality. A similar, but somewhat more elaborated implementation (supporting multiple dataformats) can be found in the spec2nii2bids plugin. Finally, the dcm2niix2bids plugin is the more complicated example, due to the logic needed to deal with special output files and various irregularities.
 
 .. code-block:: python3
 
-   """
-   This module contains placeholder code demonstrating the bidscoin plugin API, both for the bidsmapper and for
-   the bidscoiner. The functions in this module are called if the basename of this module (when located in the
-   plugins-folder; otherwise the full path must be provided) is listed in the bidsmap. The following plugin functions
-   are expected to be present:
+    import logging
+    from pathlib import Path
+    from bidscoin.due import due, Doi
+    from bidscoin.bids import BidsMap
 
-   - test:                 A test function for the plugin + its bidsmap options. Can be called by the user from the bidseditor and the bidscoin utility
-   - has_support:        A function to assess whether a source file is supported by the plugin. The return value should correspond to a data format section in the bidsmap
-   - get_attribute:        A function to read an attribute value from a source file
-   - bidsmapper_plugin:    A function to discover BIDS-mappings in a source data session
-   - bidscoiner_plugin:    A function to convert a single source data session to bids according to the specified BIDS-mappings
+    LOGGER = logging.getLogger(__name__)
 
-   To avoid code duplications and minimize plugin development time, various support functions are available in
-   BIDScoin's library modules named 'bidscoin' and, most notably, 'bids'
-   """
+    # The default options that are set when installing the plugin. This is optional and acts as a fallback
+    # in case the plugin options are not specified in the (template) bidsmap
+    OPTIONS = {'command': 'demo',    # Plugin option
+               'args': 'foo bar'}    # Another plugin option
 
-   import logging
-   from pathlib import Path
+    # The default bids-mappings that are added when installing the plugin. This is optional and only acts
+    # as a fallback in case the dataformat section is not present in the bidsmap. So far, this feature is
+    # not used by any of the plugins
+    BIDSMAP = {'DemoFormat':{
+        'subject': '<<filepath:/sub-(.*?)/>>',          # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used, e.g. <PatientID>
+        'session': '<<filepath:/sub-.*?/ses-(.*?)/>>',  # This filesystem property extracts the session label from the source directory. NB: Any property or attribute can be used, e.g. <StudyID>
 
-   LOGGER = logging.getLogger(__name__)
+        'func': [                   # ----------------------- All functional runs --------------------
+            {'provenance': '',      # The fullpath name of the source file from which the attributes and properties are read. Serves also as a look-up key to find a run in the bidsmap
+             'properties':          # The matching (regex) criteria go in here
+                {'filepath': '',    # File folder, e.g. ".*Parkinson.*" or ".*(phantom|bottle).*"
+                 'filename': '',    # File name, e.g. ".*fmap.*" or ".*(fmap|field.?map|B0.?map).*"
+                 'filesize': '',    # File size, e.g. "2[4-6]\d MB" for matching files between 240-269 MB
+                 'nrfiles': ''},    # Number of files in the folder that match the above criteria, e.g. "5/d/d" for matching a number between 500-599
+             'attributes':          # The matching (regex) criteria go in here
+                {'ch_num': '.*',
+                 'filetype': '.*',
+                 'freq': '.*',
+                 'ch_name': '.*',
+                 'units': '.*',
+                 'trigger_idx': '.*'},
+             'bids':
+                {'task': '',
+                 'acq': '',
+                 'ce': '',
+                 'dir': '',
+                 'rec': '',
+                 'run': '<<>>',     # This will be updated during bidscoiner runtime (as it depends on the already existing files)
+                 'recording': '',
+                 'suffix': 'physio'},
+             'meta':                # This is an optional entry for meta-data dictionary that are appended to the json sidecar files
+                {'TriggerChannel': '<<trigger_idx>>',
+                 'TimeOffset': '<<time_offset>>'}}],
 
-   # The default options that are set when installing the plugin
-   OPTIONS = {'command': 'demo',   # Plugin option
-              'args': 'foo bar'}   # Another plugin option
-
-   # The default bids-mappings that are added when installing the plugin
-   BIDSMAP = {'DemoFormat':{
-       'subject': '<<filepath:/sub-(.*?)/>>',          # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used, e.g. <PatientID>
-       'session': '<<filepath:/sub-.*?/ses-(.*?)/>>',  # This filesystem property extracts the session label from the source directory. NB: Any property or attribute can be used, e.g. <StudyID>
-
-       'func': [                   # ----------------------- All functional runs --------------------
-           {'provenance': '',      # The fullpath name of the source file from which the attributes and properties are read. Serves also as a look-up key to find a run in the bidsmap
-            'properties':          # The matching (regex) criteria go in here
-               {'filepath': '',    # File folder, e.g. ".*Parkinson.*" or ".*(phantom|bottle).*"
-                'filename': '',    # File name, e.g. ".*fmap.*" or ".*(fmap|field.?map|B0.?map).*"
-                'filesize': '',    # File size, e.g. "2[4-6]\d MB" for matching files between 240-269 MB
-                'nrfiles': ''},    # Number of files in the folder that match the above criteria, e.g. "5/d/d" for matching a number between 500-599
-            'attributes':          # The matching (regex) criteria go in here
-               {'ch_num': '.*',
-                'filetype': '.*',
-                'freq': '.*',
-                'ch_name': '.*',
-                'units': '.*',
-                'trigger_idx': '.*'},
-            'bids':
-               {'task': '',
-                'acq': '',
-                'ce': '',
-                'dir': '',
-                'rec': '',
-                'run': '<<>>',    # This will be updated during bidscoiner runtime (as it depends on the already existing files)
-                'recording': '',
-                'suffix': 'physio'},
-            'meta':                # This is an optional entry for meta-data dictionary that are appended to the json sidecar files
-               {'TriggerChannel': '<<trigger_idx>>',
-                'ExpectedTimepoints': '<<num_timepoints_found>>',
-                'ChannelNames': '<<ch_name>>',
-                'Threshold': '<<thr>>',
-                'TimeOffset': '<<time_offset>>'}}],
-
-       [...]
-
-       'exclude': [  # ----------------------- Data that will be left out -------------
-           {'provenance': '',
-            'properties':
-               {'filepath': '',
-                'filename': '',
-                'filesize': '',
-                'nrfiles': ''},
-            'attributes':
-               {'ch_num': '.*',
-                'filetype': '.*',
-                'freq': '.*',
-                'ch_name': '.*',
-                'units': '.*',
-                'trigger_idx': '.*'},
-            'bids':
-               {'task': '',
-                'acq': '',
-                'ce': '',
-                'dir': '',
-                'rec': '',
-                'run': '<<>>',
-                'recording': '',
-                'suffix': 'physio'},
-            'meta':
-               {'TriggerChannel': '<<trigger_idx>>',
-                'ExpectedTimepoints': '<<num_timepoints_found>>',
-                'ChannelNames': '<<ch_name>>',
-                'Threshold': '<<thr>>',
-                'TimeOffset': '<<time_offset>>'}}]}}
+        'exclude': [  # ----------------------- Data that will be left out -------------
+            {'attributes':
+                {'ch_num': '.*',
+                 'filetype': '.*',
+                 'freq': '.*',
+                 'ch_name': '.*',
+                 'units': '.*',
+                 'trigger_idx': '.*'},
+             'bids':
+                {'task': '',
+                 'acq': '',
+                 'ce': '',
+                 'dir': '',
+                 'rec': '',
+                 'run': '<<>>',
+                 'recording': '',
+                 'suffix': 'physio'}
 
 
-   def test(options: dict=OPTIONS) -> bool:
-       """
-       Performs a runtime/integration test of the working of the plugin + its bidsmap options
+    def test(options: dict=OPTIONS) -> int:
+        """
+        Performs a runtime/integration test of the working of this plugin + given options
 
-       :param options: A dictionary with the plugin options, e.g. taken from the bidsmap['Options']['plugins']['README']
-       :return:        The errorcode (e.g 0 if the tool generated the expected result, > 0 if there was a tool error)
-       """
+        :param options: A dictionary with the plugin options, e.g. taken from `bidsmap.plugins[__name__]`
+        :return:        The errorcode (e.g 0 if the tool generated the expected result, > 0 if there was
+                        a tool error)
+        """
 
-       LOGGER.info(f'This is a demo-plugin test routine, validating its working with options: {options}')
+        LOGGER.info(f'This is a demo-plugin test routine, validating its working with options: {options}')
 
-       return 0
+        return 0
 
 
-   def has_support(file: Path) -> str:
-       """
-       This plugin function assesses whether a sourcefile is of a supported dataformat
+    def has_support(file: Path) -> str:
+        """
+        This plugin function assesses whether a sourcefile is of a supported dataformat
 
-       :param file:    The sourcefile that is assessed
-       :return:        The valid/supported dataformat of the sourcefile
-       """
+        :param file:        The sourcefile that is assessed
+        :param dataformat:  The requested dataformat (optional requirement)
+        :return:            The name of the supported dataformat of the sourcefile. This name should
+                            correspond to the name of a dataformat in the bidsmap
+        """
 
-       if file.is_file():
+        if file.is_file():
 
-           LOGGER.verbose(f'This is a demo-plugin has_support routine, assessing whether "{file}" has a valid dataformat')
-           return 'dataformat' if file == 'supportedformat' else ''
+            LOGGER.verbose(f'This has_support routine assesses whether "{file}" is of a known dataformat')
+            return 'dataformat_name' if file == 'of_a_supported_format' else ''
 
         return ''
 
 
-   def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: dict) -> str:
-       """
-       This plugin function reads attributes from the supported sourcefile
+    def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: dict) -> str:
+        """
+        This plugin function reads attributes from the supported sourcefile
 
-       :param dataformat:  The bidsmap-dataformat of the sourcefile, e.g. DICOM of PAR
-       :param sourcefile:  The sourcefile from which the attribute value should be read
-       :param attribute:   The attribute key for which the value should be read
-       :param options:     A dictionary with the plugin options, e.g. taken from the bidsmap['Options']
-       :return:            The attribute value
-       """
+        :param dataformat:  The dataformat of the sourcefile, e.g. DICOM of PAR
+        :param sourcefile:  The sourcefile from which key-value data needs to be read
+        :param attribute:   The attribute key for which the value needs to be retrieved
+        :param options:     A dictionary with the plugin options, e.g. taken from the bidsmap.plugins[__name__]
+        :return:            The retrieved attribute value
+        """
 
-       if dataformat in ('DICOM','PAR'):
-           LOGGER.verbose(f'This is a demo-plugin get_attribute routine, reading the {dataformat} "{attribute}" attribute value from "{sourcefile}"')
+        if dataformat in ('DICOM','PAR'):
+            LOGGER.verbose(f'This is a demo-plugin get_attribute routine, reading the {dataformat} "{attribute}" attribute value from "{sourcefile}"')
+            return read(sourcefile, attribute)
 
-       return ''
-
-
-   def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, template: dict, store: dict) -> None:
-       """
-       All the logic to map the Philips PAR/REC fields onto bids labels go into this plugin function. The function is
-       expected to update / append new runs to the bidsmap_new data structure. The bidsmap options for this plugin can
-       be found in:
-
-       bidsmap_new/old['Options']['plugins']['README']
-
-       See also the dcm2niix2bids plugin for reference implementation
-
-       :param session:     The full-path name of the subject/session raw data source folder
-       :param bidsmap_new: The new study bidsmap that we are building
-       :param bidsmap_old: The previous study bidsmap that has precedence over the template bidsmap
-       :param template:    The template bidsmap with the default heuristics
-       :param store:       The paths of the source- and target-folder
-       :return:
-       """
-
-       LOGGER.verbose(f'This is a bidsmapper demo-plugin working on: {session}')
+        return ''
 
 
-   def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> Union[None, dict]:
-       """
-       The plugin to convert the runs in the source folder and save them in the bids folder. Each saved datafile should be
-       accompanied by a json sidecar file. The bidsmap options for this plugin can be found in:
+    def bidsmapper_plugin(session: Path, bidsmap_new: BidsMap, bidsmap_old: BidsMap, template: BidsMap) -> None:
+        """
+        The goal of this plugin function is to identify all the different runs in the session and update the
+        bidsmap if a new run is discovered
 
-       bidsmap_new/old['Options']['plugins']['README']
+        :param session:     The full-path name of the subject/session raw data source folder
+        :param bidsmap_new: The new study bidsmap that we are building
+        :param bidsmap_old: The previous study bidsmap that has precedence over the template bidsmap
+        :param template:    The template bidsmap with the default heuristics
+        """
 
-       See also the dcm2niix2bids plugin for reference implementation
+        # See for every data source in the session if we already discovered it or not
+        for sourcefile in session.rglob('*'):
 
-       :param session:     The full-path name of the subject/session source folder
-       :param bidsmap:     The full mapping heuristics from the bidsmap YAML-file
-       :param bidsses:     The full-path name of the BIDS output 'ses-' folder
-       :return:            A dictionary with personal data for the participants.tsv file (such as sex or age)
-       """
+            # Check if the sourcefile is of a supported dataformat
+            if not (dataformat := has_support(sourcefile)):
+                continue
 
-       LOGGER.bcdebug(f'This is a bidscoiner demo-plugin working on: {session} -> {bidsfolder}')
+            # See if we can find a matching run in the old bidsmap
+            run, oldmatch = bidsmap_old.get_matching_run(sourcefile, dataformat)
 
-*The README plugin placeholder code*
+            # If not, see if we can find a matching run in the template
+            if not oldmatch:
+                run, _ = template.get_matching_run(sourcefile, dataformat)
+
+            # See if we have already put the run somewhere in our new bidsmap
+            if not bidsmap_new.exist_run(run):
+
+                # Communicate with the user if the run was not present in bidsmap_old or in template, i.e. that we found a new sample
+                if not oldmatch:
+                    LOGGER.info(f"Discovered sample: {run.datasource}")
+
+                # Do some stuff with the run if needed
+                pass
+
+                # Copy the filled-in run over to the new bidsmap
+                bidsmap_new.insert_run(run)
+
+
+    @due.dcite(Doi('put.your/doi.here'), description='This is an optional duecredit decorator for citing your paper(s)', tags=['implementation'])
+    def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> Union[None, dict]:
+        """
+        The plugin to convert the runs in the source folder and save them in the bids folder. Each saved datafile should be
+        accompanied by a json sidecar file. The bidsmap options for this plugin can be found in:
+
+        bidsmap.plugins[__name__]
+
+        See also the dcm2niix2bids plugin for reference implementation
+
+        :param session:     The full-path name of the subject/session raw data source folder
+        :param bidsmap:     The full mapping heuristics from the bidsmap YAML-file
+        :param bidsses:     The full-path name of the BIDS output `sub-/ses-` folder
+        :return:            A dictionary with personal data for the participants.tsv file (such as sex or age)
+        """
+
+        # Go over the different source files in the session
+        for sourcefile in session.rglob('*'):
+
+            # Check if the sourcefile is of a supported dataformat
+            if not (dataformat := has_support(sourcefile)):
+                continue
+
+            # Get a matching run from the bidsmap
+            run, runid = bidsmap.get_matching_run(sourcefile, dataformat, runtime=True)
+
+            # Compose the BIDS filename using the matched run
+            bidsname = run.bidsname(subid, sesid, validkeys=True, runtime=True)
+
+            # Save the sourcefile as a BIDS NIfTI file
+            targetfile = (outfolder/bidsname).with_suffix('.nii')
+            convert(sourcefile, targetfile)
+
+            # Write out provenance logging data (= useful but not strictly necessary)
+            bids.bidsprov(bidsses, sourcefile, run, targetfile)
+
+            # Pool all sources of meta-data and save it as a json sidecar file
+            sidecar = targetfile.with_suffix('.json')
+            ext_meta = bidsmap.plugins[__name__]['meta']
+            metadata = bids.poolmetadata(run.datasource, sidecar, run.meta, ext_meta)
+            save(sidecar, metadata)
+
+*Plugin placeholder code, illustrating the structure of a plugin with minimal functionality*

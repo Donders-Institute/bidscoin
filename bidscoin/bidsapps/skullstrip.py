@@ -20,7 +20,7 @@ from pathlib import Path
 from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     sys.path.append(str(Path(__file__).parents[2]))
-from bidscoin import bcoin, bids, lsdirs, trackusage, DEBUG
+from bidscoin import bcoin, bids, lsdirs, trackusage, run_command, DEBUG
 from bidscoin.due import due, Doi
 
 
@@ -141,7 +141,7 @@ def skullstrip(bidsfolder: str, pattern: str, participant: list, masked: str, ou
                             jt.outputPath = f"{os.getenv('HOSTNAME')}:{Path.cwd() if DEBUG else tempfile.gettempdir()}/{jt.jobName}.out"
                             jobids.append(pbatch.runJob(jt))
                             LOGGER.info(f"Your skullstrip job has been submitted with ID: {jobids[-1]}")
-                        elif bcoin.run_command(f"mri_synthstrip -i {srcimg} -o {outputimg} -m {maskimg} {args}"):
+                        elif run_command(f"mri_synthstrip -i {srcimg} -o {outputimg} -m {maskimg} {args}"):
                             continue
 
                         # Add a json sidecar-file with the "SkullStripped" field

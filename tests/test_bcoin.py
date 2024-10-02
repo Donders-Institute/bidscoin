@@ -23,7 +23,7 @@ def test_bidsversion():
 
 
 def test_runcommand():
-    assert bcoin.run_command('bidscoin') == 0
+    assert bidscoin.run_command('bidscoin') == 0
 
 
 def test_list_executables():
@@ -32,7 +32,7 @@ def test_list_executables():
     assert 'dicomsort' in executables
     assert 'deface' in executables
     for executable in executables:
-        assert bcoin.run_command(f"{executable} -h") == 0
+        assert bidscoin.run_command(f"{executable} -h") == 0
         if not sys.platform.startswith('win'):
             manpage = (Path(sys.executable).parents[1]/'share'/'man'/'man1'/f"{executable}.1").read_text()
             assert executable in manpage.splitlines()       # Tests if manpage NAME == argparse prog for each console script

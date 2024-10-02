@@ -24,3 +24,8 @@ def test_plugin(plugin, options):
 
     # Then run the plugin's own 'test' routine (if implemented)
     assert module.test(options.get(plugin.stem, {})) == 0
+
+    # Test that we don't import invalid plugins
+    module = bcoin.import_plugin(plugin, ('foo_plugin', 'bar_plugin'))
+    if module is not None:
+        raise ImportError(f"Unintended plugin import: '{plugin}'")

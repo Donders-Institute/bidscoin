@@ -4,15 +4,15 @@
 
 ## [dev]
 
-## [4.4.0] - 2024
+## [4.4.0] - 2024-10-02
 
 ### Added
-- Support for BIDS v1.10.0 (including MRS)
+- Support for BIDS v1.10.0 (including MRS data)
 
 ### Changed
-- BIDScoin's main API, which now includes new classes to separate the logic from the data and make the code cleaner, better organized and maintainable
+- BIDScoin's main API, which now includes new classes to separate the logic from the bidsmap data and make the code cleaner, better organized and easier to maintain
 - Dropped support for Qt5
-- Plugins are now installed in the BIDScoin configuration directory
+- Plugins are now installed in BIDScoin's user configuration directory
 
 ## [4.3.3] - 2024-07-12
 
@@ -463,7 +463,8 @@ A first stable release of BIDScoin :-)
 ### To do
 - Add support for non-imaging data
 
-[dev]: https://github.com/Donders-Institute/bidscoin/compare/4.3.3...HEAD
+[dev]: https://github.com/Donders-Institute/bidscoin/compare/4.4.0...HEAD
+[4.3.4]: https://github.com/Donders-Institute/bidscoin/compare/4.3.3...4.4.0
 [4.3.3]: https://github.com/Donders-Institute/bidscoin/compare/4.3.2...4.3.3
 [4.3.2]: https://github.com/Donders-Institute/bidscoin/compare/4.3.1...4.3.2
 [4.3.1]: https://github.com/Donders-Institute/bidscoin/compare/4.3.0...4.3.1

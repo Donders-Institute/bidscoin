@@ -10,7 +10,7 @@ import dateutil.parser
 from typing import Union
 from bids_validator import BIDSValidator
 from pathlib import Path
-from bidscoin import bcoin, bids, due, Doi
+from bidscoin import run_command, bids, due, Doi
 from bidscoin.bids import BidsMap, DataFormat, Plugin
 
 LOGGER = logging.getLogger(__name__)
@@ -25,7 +25,7 @@ OPTIONS = Plugin({'command': 'spec2nii',    # Command to run spec2nii, e.g. "mod
 
 def test(options: Plugin=OPTIONS) -> int:
     """
-    This plugin shell tests the working of the spec2nii2bids plugin + its bidsmap options
+    This plugin shell tests the working of the spec2nii2bids plugin + given options
 
     :param options: A dictionary with the plugin options, e.g. taken from the bidsmap.plugins['spec2nii2bids']
     :return:        The errorcode (e.g 0 if the tool generated the expected result, > 0 if there was a tool error)
@@ -43,7 +43,7 @@ def test(options: Plugin=OPTIONS) -> int:
         LOGGER.warning(f"The expected 'args' key is not defined in the spec2nii2bids options")
 
     # Test the spec2nii installation
-    return bcoin.run_command(f"{options.get('command',OPTIONS['command'])} -v")
+    return run_command(f"{options.get('command',OPTIONS['command'])} -v")
 
 
 def has_support(file: Path, dataformat: Union[DataFormat, str]='') -> str:
@@ -76,7 +76,7 @@ def get_attribute(dataformat: Union[DataFormat, str], sourcefile: Path, attribut
     :param dataformat:  The dataformat of the sourcefile, e.g. DICOM of PAR
     :param sourcefile:  The sourcefile from which key-value data needs to be read
     :param attribute:   The attribute key for which the value needs to be retrieved
-    :param options:     The bidsmap['Options']['spec2nii2bids'] dictionary with the plugin options
+    :param options:     The bidsmap.plugins['spec2nii2bids'] dictionary with the plugin options
     :return:            The retrieved attribute value
     """
 
@@ -104,20 +104,16 @@ def get_attribute(dataformat: Union[DataFormat, str], sourcefile: Path, attribut
 
 def bidsmapper_plugin(session: Path, bidsmap_new: BidsMap, bidsmap_old: BidsMap, template: BidsMap) -> None:
     """
-    All the heuristics spec2nii2bids attributes and properties onto bids labels and meta-data go into this plugin function.
-    The function is expected to update/append new runs to the bidsmap_new data structure. The bidsmap options for this plugin
-    are stored in:
-
-    bidsmap_new['Options']['plugins']['spec2nii2bids']
+    The goal of this plugin function is to identify all the different runs in the session and update the
+    bidsmap if a new run is discovered
 
     :param session:     The full-path name of the subject/session raw data source folder
     :param bidsmap_new: The new study bidsmap that we are building
     :param bidsmap_old: The previous study bidsmap that has precedence over the template bidsmap
     :param template:    The template bidsmap with the default heuristics
-    :return:
     """
 
-    # Update the bidsmap with the info from the source files
+    # See for every source file in the session if we already discovered it or not
     for sourcefile in session.rglob('*'):
 
         # Check if the sourcefile is of a supported dataformat
@@ -125,17 +121,17 @@ def bidsmapper_plugin(session: Path, bidsmap_new: BidsMap, bidsmap_old: BidsMap,
             continue
 
         # See if we can find a matching run in the old bidsmap
-        run, match = bidsmap_old.get_matching_run(sourcefile, dataformat)
+        run, oldmatch = bidsmap_old.get_matching_run(sourcefile, dataformat)
 
         # If not, see if we can find a matching run in the template
-        if not match:
+        if not oldmatch:
             run, _ = template.get_matching_run(sourcefile, dataformat)
 
-        # See if we have collected the run somewhere in our new bidsmap
+        # See if we have already put the run somewhere in our new bidsmap
         if not bidsmap_new.exist_run(run):
 
             # Communicate with the user if the run was not present in bidsmap_old or in template, i.e. that we found a new sample
-            if not match:
+            if not oldmatch:
                 LOGGER.info(f"Discovered sample: {run.datasource}")
             else:
                 LOGGER.bcdebug(f"Known sample: {run.datasource}")
@@ -153,7 +149,7 @@ def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> Union[N
     This wrapper function around spec2nii converts the MRS data in the session folder and saves it in the bidsfolder.
     Each saved datafile should be accompanied by a json sidecar file. The bidsmap options for this plugin can be found in:
 
-    bidsmap_new['Options']['plugins']['spec2nii2bids']
+    bidsmap.plugins['spec2nii2bids']
 
     :param session:     The full-path name of the subject/session raw data source folder
     :param bidsmap:     The full mapping heuristics from the bidsmap YAML-file
@@ -188,13 +184,13 @@ def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> Union[N
         # Check if we should ignore this run
         if run.datatype in bidsmap.options['ignoretypes']:
             LOGGER.info(f"--> Leaving out: {run.datasource}")
-            bids.bidsprov(bidsses, sourcefile, run)             # Write out empty provenance data
+            bids.bidsprov(bidsses, sourcefile, run)             # Write out empty provenance logging data
             continue
 
         # Check that we know this run
         if not runid:
             LOGGER.error(f"Skipping unknown run: {run.datasource}\n-> Re-run the bidsmapper and delete the MRS output data in {bidsses} to solve this warning")
-            bids.bidsprov(bidsses, sourcefile)                  # Write out empty provenance data
+            bids.bidsprov(bidsses, sourcefile)                  # Write out empty provenance logging data
             continue
 
         LOGGER.info(f"--> Coining: {run.datasource}")
@@ -237,7 +233,7 @@ def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> Union[N
             LOGGER.error(f"Unsupported dataformat: {dataformat}")
             return
         command = options.get('command', 'spec2nii')
-        errcode = bcoin.run_command(f'{command} {dformat} -j -f "{bidsname}" -o "{outfolder}" {args} {arg} "{sourcefile}"')
+        errcode = run_command(f'{command} {dformat} -j -f "{bidsname}" -o "{outfolder}" {args} {arg} "{sourcefile}"')
         bids.bidsprov(bidsses, sourcefile, run, [target] if target.is_file() else [])
         if not target.is_file():
             if not errcode:
@@ -246,7 +242,7 @@ def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> Union[N
 
         # Load/copy over and adapt the newly produced json sidecar-file
         sidecar  = target.with_suffix('').with_suffix('.json')
-        metadata = bids.updatemetadata(run.datasource, sidecar, run.meta, options.get('meta',[]))
+        metadata = bids.poolmetadata(run.datasource, sidecar, run.meta, options.get('meta',[]))
         if metadata:
             with sidecar.open('w') as json_fid:
                 json.dump(metadata, json_fid, indent=4)

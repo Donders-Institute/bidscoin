@@ -87,7 +87,7 @@ def fixmeta(bidsfolder: str, pattern: str, metadata: dict, participant: list, bi
 
                     # Load/copy over the source meta-data
                     jsonfile = target.with_suffix('').with_suffix('.json')
-                    jsondata = bids.updatemetadata(datasource, jsonfile, bids.Meta({}), ['.json'])
+                    jsondata = bids.poolmetadata(datasource, jsonfile, bids.Meta({}), ['.json'])
                     for key, value in metadata.items():
                         if isinstance(value, list):
                             for n in range(0, len(value), 2):

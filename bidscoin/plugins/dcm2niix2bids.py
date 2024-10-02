@@ -13,7 +13,7 @@ import ast
 from bids_validator import BIDSValidator
 from typing import Union, List
 from pathlib import Path
-from bidscoin import bcoin, bids, lsdirs, due, Doi
+from bidscoin import bcoin, bids, run_command, lsdirs, due, Doi
 from bidscoin.utilities import physio
 from bidscoin.bids import BidsMap, DataFormat, Plugin, Plugins
 try:
@@ -56,7 +56,7 @@ def test(options: Plugin=OPTIONS) -> int:
         LOGGER.warning(f"The expected 'args' key is not defined in the dcm2niix2bids options")
 
     # Test the dcm2niix installation
-    errorcode = bcoin.run_command(f"{options.get('command', OPTIONS['command'])} -v", (0,3))
+    errorcode = run_command(f"{options.get('command', OPTIONS['command'])} -v", (0,3))
 
     # Test reading an attribute from a PAR-file
     parfile = Path(data_path)/'phantom_EPI_asc_CLEAR_2_1.PAR'
@@ -98,8 +98,8 @@ def get_attribute(dataformat: Union[DataFormat, str], sourcefile: Path, attribut
     :param dataformat:  The bidsmap-dataformat of the sourcefile, e.g. DICOM of PAR
     :param sourcefile:  The sourcefile from which the attribute value should be read
     :param attribute:   The attribute key for which the value should be read
-    :param options:     A dictionary with the plugin options, e.g. taken from the bidsmap.plugins
-    :return:            The attribute value
+    :param options:     A dictionary with the plugin options, e.g. taken from the bidsmap.plugins['dcm2niix2bids']
+    :return:            The retrieved attribute value
     """
     if dataformat == 'DICOM':
         return bids.get_dicomfield(attribute, sourcefile)
@@ -110,13 +110,13 @@ def get_attribute(dataformat: Union[DataFormat, str], sourcefile: Path, attribut
 
 def bidsmapper_plugin(session: Path, bidsmap_new: BidsMap, bidsmap_old: BidsMap, template: BidsMap) -> None:
     """
-    All the logic to map the DICOM/PAR source fields onto bids labels go into this function
+    The goal of this plugin function is to identify all the different runs in the session and update the
+    bidsmap if a new run is discovered
 
     :param session:     The full-path name of the subject/session raw data source folder
     :param bidsmap_new: The new study bidsmap that we are building
     :param bidsmap_old: The previous study bidsmap that has precedence over the template bidsmap
     :param template:    The template bidsmap with the default heuristics
-    :return:
     """
 
     # Get started
@@ -139,7 +139,7 @@ def bidsmapper_plugin(session: Path, bidsmap_new: BidsMap, bidsmap_old: BidsMap,
     else:
         LOGGER.error(f"Unsupported dataformat '{dataformat}'")
 
-    # Update the bidsmap with the info from the source files
+    # See for every data source in the session if we already discovered it or not
     for sourcefile in sourcefiles:
 
         # Check if the source files all have approximately the same size (difference < 50kB)
@@ -150,18 +150,18 @@ def bidsmapper_plugin(session: Path, bidsmap_new: BidsMap, bidsmap_old: BidsMap,
                     break
 
         # See if we can find a matching run in the old bidsmap
-        run, match = bidsmap_old.get_matching_run(sourcefile, dataformat)
+        run, oldmatch = bidsmap_old.get_matching_run(sourcefile, dataformat)
 
         # If not, see if we can find a matching run in the template
-        if not match:
+        if not oldmatch:
             LOGGER.bcdebug('No match found in the study bidsmap, now trying the template bidsmap')
             run, _ = template.get_matching_run(sourcefile, dataformat)
 
-        # See if we have collected the run somewhere in our new bidsmap
+        # See if we have already put the run somewhere in our new bidsmap
         if not bidsmap_new.exist_run(run):
 
             # Communicate with the user if the run was not present in bidsmap_old or in template, i.e. that we found a new sample
-            if not match:
+            if not oldmatch:
 
                 LOGGER.info(f"Discovered sample: {run.datasource}")
 
@@ -192,8 +192,10 @@ def bidsmapper_plugin(session: Path, bidsmap_new: BidsMap, bidsmap_old: BidsMap,
 @due.dcite(Doi('10.1016/j.jneumeth.2016.03.001'), description='dcm2niix: DICOM to NIfTI converter', tags=['reference-implementation'])
 def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> Union[None, dict]:
     """
-    The bidscoiner plugin to convert the session DICOM and PAR/REC source-files into BIDS-valid NIfTI-files in the
-    corresponding bids session-folder and extract personals (e.g. Age, Sex) from the source header
+    The bidscoiner plugin to convert the session DICOM and PAR/REC source-files into BIDS-valid NIfTI-files in the corresponding
+    bids session-folder and extract personals (e.g. Age, Sex) from the source header. The bidsmap options for this plugin can be found in:
+
+    bidsmap.plugins['spec2nii2bids']
 
     :param session:     The full-path name of the subject/session source folder
     :param bidsmap:     The full mapping heuristics from the bidsmap YAML-file
@@ -254,13 +256,13 @@ def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> Union[N
         # Check if we should ignore this run
         if run.datatype in bidsmap.options['ignoretypes']:
             LOGGER.info(f"--> Leaving out: {run.datasource}")
-            bids.bidsprov(bidsses, source, run)                         # Write out empty provenance data
+            bids.bidsprov(bidsses, source, run)                         # Write out empty provenance logging data
             continue
 
         # Check if we already know this run
         if not runid:
             LOGGER.error(f"--> Skipping unknown run: {run.datasource}\n-> Re-run the bidsmapper and delete {bidsses} to solve this warning")
-            bids.bidsprov(bidsses, source)                              # Write out empty provenance data
+            bids.bidsprov(bidsses, source)                              # Write out empty provenance logging data
             continue
 
         LOGGER.info(f"--> Coining: {run.datasource}")
@@ -321,7 +323,7 @@ def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> Union[N
                 filename  = bidsname,
                 outfolder = outfolder,
                 source    = source)
-            if bcoin.run_command(command) and not next(outfolder.glob(f"{bidsname}*"), None):
+            if run_command(command) and not next(outfolder.glob(f"{bidsname}*"), None):
                 continue
 
             # Collect the bidsname
@@ -464,7 +466,7 @@ def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> Union[N
             jsonfile = target.with_suffix('').with_suffix('.json')
             if not jsonfile.is_file():
                 LOGGER.warning(f"Unexpected conversion result, could not find: {jsonfile}")
-            metadata = bids.updatemetadata(run.datasource, jsonfile, run.meta, options.get('meta',[]))
+            metadata = bids.poolmetadata(run.datasource, jsonfile, run.meta, options.get('meta',[]))
 
             # Remove the bval/bvec files of sbref- and inv-images (produced by dcm2niix but not allowed by the BIDS specifications)
             if ((run.datatype == 'dwi'  and suffix == 'sbref') or

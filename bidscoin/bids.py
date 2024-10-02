@@ -2530,7 +2530,7 @@ def addmetadata(bidsses: Path):
                     json.dump(jsondata, sidecar, indent=4)
 
 
-def updatemetadata(datasource: DataSource, targetmeta: Path, usermeta: Meta, extensions: Iterable, sourcemeta: Path=Path()) -> Meta:
+def poolmetadata(datasource: DataSource, targetmeta: Path, usermeta: Meta, extensions: Iterable, sourcemeta: Path=Path()) -> Meta:
     """
     Load the metadata from the target (json sidecar), then add metadata from the source (json sidecar) and finally add
     the user metadata (meta table). Source metadata other than json sidecars are copied over to the target folder. Special
