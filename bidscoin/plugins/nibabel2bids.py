@@ -184,7 +184,7 @@ def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> None:
         # Check if we should ignore this run
         if run.datatype in bidsmap.options['ignoretypes']:
             LOGGER.info(f"--> Leaving out: {run.datasource}")
-            bids.bidsprov(bidsses, sourcefile, run)                     # Write out empty provenance loggin data
+            bids.bidsprov(bidsses, sourcefile, run)                     # Write out empty provenance logging data
             continue
 
         # Check if we already know this run

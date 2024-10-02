@@ -42,10 +42,6 @@ DCCN deployment
 
     VERSION="4.4.0"
     cp -r /opt/bidscoin/dev /opt/bidscoin/$VERSION
-    cd /opt/bidscoin/$VERSION
-    for TEMPLATE in bidscoin/heuristics/*.yaml; do
-        sed -i 's/command: dcm2niix/command: module add dcm2niix; dcm2niix/' $TEMPLATE
-    done
     cd /opt/_modules/bidscoin
     ln -s .common $VERSION
     vi .version
