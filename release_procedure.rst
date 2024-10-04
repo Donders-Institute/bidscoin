@@ -85,6 +85,7 @@ Dockerhub
 1. In the VM, build, test and push a Docker image::
 
     VERSION="4.4.0"
+    cd ~/PycharmProjects/bidscoin
     sudo docker build -t marcelzwiers/bidscoin:$VERSION .
     sudo docker run --rm marcelzwiers/bidscoin:$VERSION bidscoin -v
     sudo docker run --rm marcelzwiers/bidscoin:$VERSION pngappend
