@@ -210,7 +210,6 @@ def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> Union[N
 
     # Get started and see what dataformat we have
     options          = Plugin(bidsmap.plugins['dcm2niix2bids'])
-    exceptions: list = bidsmap.options.get('notderivative', [])
     bidsignore: list = bidsmap.options['bidsignore']
     fallback         = 'fallback' if options.get('fallback','y').lower() in ('y', 'yes', 'true') else ''
     datasource       = bids.get_datasource(session, Plugins({'dcm2niix2bids': options}))
@@ -268,11 +267,8 @@ def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> Union[N
         LOGGER.info(f"--> Coining: {run.datasource}")
 
         # Create the BIDS session/datatype output folder
-        suffix = run.datasource.dynamicvalue(run.bids['suffix'], True, True)
-        if suffix in bids.get_derivatives(run.datatype, exceptions):
-            outfolder = bidsfolder/'derivatives'/manufacturer.replace(' ','')/subid/sesid/run.datatype
-        else:
-            outfolder = bidsses/run.datatype
+        suffix    = run.datasource.dynamicvalue(run.bids['suffix'], True, True)
+        outfolder = bidsses/run.datatype
         outfolder.mkdir(parents=True, exist_ok=True)
 
         # Compose the BIDS filename using the matched run
@@ -455,12 +451,8 @@ def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> Union[N
         # Write out provenance data
         bids.bidsprov(bidsses, source, run, targets)
 
-        # Loop over all non-derivative targets (i.e. the produced output files) and edit the json sidecar data
+        # Loop over all targets (i.e. the produced output files) and edit the json sidecar data
         for target in sorted(targets):
-
-            # Editing derivative data is out of our scope
-            if target.relative_to(bidsfolder).parts[0] == 'derivatives':
-                continue
 
             # Load/copy over the source meta-data
             jsonfile = target.with_suffix('').with_suffix('.json')

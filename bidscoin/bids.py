@@ -920,7 +920,7 @@ class BidsMap:
         subprefix = options['subprefix'] = options['subprefix'] or ''
         sesprefix = options['sesprefix'] = options['sesprefix'] or ''
 
-        # Append the existing .bidsignore data from the bidsfolder and make sure bidsignore, unknowntypes, ignoretypes and notderivative are lists
+        # Append the existing .bidsignore data from the bidsfolder and make sure bidsignore, unknowntypes and ignoretypes are lists
         if isinstance(options.get('bidsignore'), str):
             options['bidsignore'] = options['bidsignore'].split(';')
         bidsignorefile = folder.parents[1]/'.bidsignore'
@@ -929,7 +929,6 @@ class BidsMap:
         options['bidsignore']     = sorted(set(options.get('bidsignore'))) or []
         options['unknowntypes']   = options.get('unknowntypes')  or []
         options['ignoretypes']    = options.get('ignoretypes')   or []
-        options['notderivative']  = options.get('notderivative') or []
 
         # Make sure we get a proper plugin options and dataformat sections (use plugin default bidsmappings when a template bidsmap is loaded)
         if plugins:
@@ -2178,22 +2177,6 @@ def match_runvalue(attribute, pattern) -> bool:
         match = None
 
     return match is not None
-
-
-def get_derivatives(datatype: Union[str, DataType], exceptions: Iterable=()) -> list:
-    """
-    Retrieves a list of suffixes that are stored in the derivatives folder (e.g. the qMRI maps). TODO: Replace with a more systematic/documented method
-    """
-
-    datatype = str(datatype)
-    if datatype == 'anat':
-        return [suffix for suffix in filerules[datatype].parametric.suffixes
-                if suffix not in tuple(exceptions) + ('UNIT1',)]        # The qMRI data (maps)
-    elif datatype == 'fmap':
-        return [suffix for typegroup in filerules[datatype] for suffix in filerules[datatype][typegroup].suffixes
-                if suffix not in exceptions and typegroup not in ('fieldmaps','pepolar')]    # The non-standard fmaps (file collections)
-    else:
-        return []
 
 
 def get_bidsvalue(bidsfile: Union[str, Path], bidskey: str, newvalue: str='') -> Union[Path, str]:

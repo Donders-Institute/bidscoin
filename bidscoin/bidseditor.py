@@ -544,11 +544,7 @@ class MainWindow(QMainWindow):
                 subid, sesid = runitem.datasource.subid_sesid(subid, sesid or '')
                 bidsname     = runitem.bidsname(subid, sesid, not bids.check_ignore(datatype,self.bidsignore) and dtype not in self.ignoredatatypes)
                 ignore       = bids.check_ignore(datatype, self.bidsignore) or bids.check_ignore(bidsname+'.json', self.bidsignore, 'file')
-                exceptions   = self.output_bidsmap.options['notderivative']
-                if runitem.datasource.dynamicvalue(runitem.bids['suffix'], True, True) in bids.get_derivatives(dtype, exceptions):
-                    session  = self.bidsfolder/'derivatives'/'[manufacturer]'/subid/sesid
-                else:
-                    session  = self.bidsfolder/subid/sesid
+                session      = self.bidsfolder/subid/sesid
                 row_index    = self.ordered_file_index[dataformat][provenance]
 
                 samples_table.setItem(idx, 0, MyWidgetItem(f"{row_index+1:03d}", iseditable=False))
@@ -1917,14 +1913,10 @@ def get_suffixhelp(suffix: str, datatype: Union[str, DataType]) -> str:
     if not suffix:
         return "Please provide a suffix"
 
-    isderivative = ''
-    if suffix in bids.get_derivatives(datatype):
-        isderivative = '\nNB: This is a BIDS derivatives datatype'
-
     # Return the description for the suffix or a default text
     suffixes = bids.bidsschema.objects.suffixes
     if suffix in suffixes:
-        return f"{suffixes[suffix].display_name}\n{suffixes[suffix].description}{isderivative}"
+        return f"{suffixes[suffix].display_name}\n{suffixes[suffix].description}"
 
     return f"{suffix}\nAn unknown/private suffix"
 

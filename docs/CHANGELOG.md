@@ -4,6 +4,9 @@
 
 ## [dev]
 
+### Changed
+- Drop saving data in the derivatives folder (i.e. this was not required by BIDS after all)
+ 
 ## [4.4.0] - 2024-10-02
 
 ### Added
