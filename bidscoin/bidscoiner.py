@@ -282,10 +282,10 @@ def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: 
                     bidssession.mkdir(parents=True, exist_ok=True)
 
                     # Run the bidscoiner plugins
-                    for module in plugins:
-                        LOGGER.verbose(f"Executing plugin: {Path(module.__file__).stem}")
-                        trackusage(Path(module.__file__).stem)
-                        personals = module.bidscoiner_plugin(sesfolder, bidsmap, bidssession)
+                    for plugin in plugins:
+                        LOGGER.verbose(f"Executing plugin: {Path(plugin.__file__).stem}")
+                        trackusage(Path(plugin.__file__).stem)
+                        personals = plugin.bidscoiner_plugin(sesfolder, bidsmap, bidssession)
 
                         # Add a subject row to the participants table (if there is any data)
                         if next(bidssession.rglob('*.json'), None):

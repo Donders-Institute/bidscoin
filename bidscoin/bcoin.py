@@ -410,7 +410,7 @@ def import_plugin(plugin: Union[Path,str], functions: tuple=()) -> Union[types.M
                 functionsfound.append(function)
 
         if functions and not functionsfound:
-            LOGGER.info(f"Plugin '{plugin}' does not contain {functions} functions")
+            LOGGER.bcdebug(f"Plugin '{plugin}' does not contain {functions} functions")
         else:
             return module
 

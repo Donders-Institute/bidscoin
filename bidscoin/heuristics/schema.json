@@ -102,8 +102,46 @@
                   "description": "The meta-data that will be appended to the json sidecar files produced by the plugin",
                   "type": "object"
                },
-               "datasource": {
-                  "description": "The data source that will be appended when loading the bidsmap"
+               "events": {
+                  "description": "The settings for the events parser",
+                  "type": "object",
+                  "properties": {
+                     "columns": {
+                        "description": "The mappings of the included output columns",
+                        "type": "array",
+                        "items": {
+                           "description": "The mapping from the input column to the output column",
+                           "type": "object",
+                           "maxProperties": 1
+                        }
+                     },
+                     "rows": {
+                        "description": "The groups of rows (conditions) that are included in the output table",
+                        "type": "array",
+                        "items": {
+                           "description": "A group of rows with an (optional) mapping to the output table",
+                           "type": "object",
+                           "required": ["include"],
+                           "properties": {
+                              "include": { "type": "object", "maxProperties": 1 },
+                              "cast": { "type": ["object", "null"], "maxProperties": 1 }
+                           },
+                           "additionalProperties": false
+                        }
+                     },
+                     "time": {
+                        "description": "The mapping from the input time columns to the output time columns",
+                        "type": "object",
+                        "required": ["cols", "unit", "start"],
+                        "properties": {
+                           "cols": { "type": "array" },
+                           "unit": { "type": "number" },
+                           "start": { "type": "object" }
+                        },
+                        "additionalProperties": false
+                     }
+                  },
+                  "additionalProperties": false
                }
             },
             "additionalProperties": false

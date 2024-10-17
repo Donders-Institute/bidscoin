@@ -11,7 +11,7 @@ from typing import Union
 from bids_validator import BIDSValidator
 from pathlib import Path
 from bidscoin import run_command, bids, due, Doi
-from bidscoin.bids import BidsMap, DataFormat, Plugin
+from bidscoin.bids import BidsMap, DataFormat, Plugin, is_hidden
 
 LOGGER = logging.getLogger(__name__)
 
@@ -117,7 +117,7 @@ def bidsmapper_plugin(session: Path, bidsmap_new: BidsMap, bidsmap_old: BidsMap,
     for sourcefile in session.rglob('*'):
 
         # Check if the sourcefile is of a supported dataformat
-        if not (dataformat := has_support(sourcefile)):
+        if is_hidden(sourcefile.relative_to(session)) or not (dataformat := has_support(sourcefile)):
             continue
 
         # See if we can find a matching run in the old bidsmap
@@ -175,7 +175,7 @@ def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> Union[N
     for sourcefile in session.rglob('*'):
 
         # Check if the sourcefile is of a supported dataformat
-        if not (dataformat := has_support(sourcefile)):
+        if is_hidden(sourcefile.relative_to(session)) or not (dataformat := has_support(sourcefile)):
             continue
 
         # Get a matching run from the bidsmap
