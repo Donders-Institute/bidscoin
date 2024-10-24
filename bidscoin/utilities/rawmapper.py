@@ -56,9 +56,9 @@ def rawmapper(sourcefolder, outfolder: str='', sessions: tuple=(), rename: bool=
 
     # Map the sessions in the sourcefolder
     if not sessions:
-        sessions = list(rawfolder.glob(f"{subprefix}*/{sesprefix_}*"))
+        sessions = [*rawfolder.glob(f"{subprefix}*/{sesprefix_}*")]
         if not sessions or not sesprefix:
-            sessions = list(rawfolder.glob(f"{subprefix}*"))        # Try without session-subfolders
+            sessions = [*rawfolder.glob(f"{subprefix}*")]        # Try without session-subfolders
     else:
         sessions = [sessionitem for session in sessions for sessionitem in rawfolder.glob(session)]
     sessions = [session for session in sessions if session.is_dir()]

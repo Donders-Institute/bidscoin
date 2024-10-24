@@ -84,7 +84,7 @@ for plugin in (bidscoinroot/'plugins').glob('*.py'):
     if not (pluginfolder/plugin.name).is_file() and not plugin.name.startswith('_'):
         print(f"-> {pluginfolder/plugin.name}")
         shutil.copyfile(plugin, pluginfolder/plugin.name)
-for template in list((bidscoinroot/'heuristics').glob('*.yaml')) + [bidscoinroot/'heuristics'/'schema.json']:
+for template in [*(bidscoinroot/'heuristics').glob('*.yaml')] + [bidscoinroot/'heuristics'/'schema.json']:
     if not (templatefolder/template.name).is_file():
         print(f"-> {templatefolder/template.name}")
         shutil.copyfile(template, templatefolder/template.name)
@@ -131,6 +131,16 @@ def bidsversion() -> str:
     return (schemafolder/'BIDS_VERSION').read_text().strip()
 
 
+def is_hidden(path: Path):
+    """Checks if the filename or one of its parent folders is hidden"""
+
+    hidden = any(part.startswith('.') for part in path.parts)
+    if hidden:
+        LOGGER.verbose(f"Ignoring hidden file/folder: {path}")
+
+    return hidden
+
+
 def lsdirs(folder: Path, wildcard: str='*') -> List[Path]:
     """
     Gets all sorted directories in a folder, ignores files. Foldernames starting with a dot are considered hidden and will be skipped
@@ -139,9 +149,6 @@ def lsdirs(folder: Path, wildcard: str='*') -> List[Path]:
     :param wildcard:    Simple (glob.glob) shell-style wildcards. Use '**/wildcard for recursive search'
     :return:            A list with all directories in the folder
     """
-
-    # Checks if a path is or contains a hidden rootfolder
-    is_hidden = lambda path: any([part.startswith('.') for part in path.parts])
 
     return sorted([item for item in sorted(folder.glob(wildcard)) if item.is_dir() and not is_hidden(item.relative_to(folder))])
 

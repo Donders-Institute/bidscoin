@@ -49,7 +49,7 @@ The above API is illustrated in more detail in the placeholder Python code below
     import logging
     from pathlib import Path
     from bidscoin.due import due, Doi
-    from bidscoin.bids import BidsMap
+    from bidscoin.bids import BidsMap, is_hidden
 
     LOGGER = logging.getLogger(__name__)
 
@@ -176,7 +176,7 @@ The above API is illustrated in more detail in the placeholder Python code below
         for sourcefile in session.rglob('*'):
 
             # Check if the sourcefile is of a supported dataformat
-            if not (dataformat := has_support(sourcefile)):
+            if is_hidden(sourcefile.relative_to(session)) or not (dataformat := has_support(sourcefile)):
                 continue
 
             # See if we can find a matching run in the old bidsmap
@@ -220,7 +220,7 @@ The above API is illustrated in more detail in the placeholder Python code below
         for sourcefile in session.rglob('*'):
 
             # Check if the sourcefile is of a supported dataformat
-            if not (dataformat := has_support(sourcefile)):
+            if is_hidden(sourcefile.relative_to(session)) or not (dataformat := has_support(sourcefile)):
                 continue
 
             # Get a matching run from the bidsmap

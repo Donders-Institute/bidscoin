@@ -23,11 +23,12 @@ from functools import lru_cache
 from pathlib import Path
 from typing import List, Set, Tuple, Union, Dict, Any, Iterable, NewType
 from pydicom import dcmread, fileset, config
+from abc import ABC, abstractmethod
 from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     import sys
     sys.path.append(str(Path(__file__).parents[1]))
-from bidscoin import bcoin, schemafolder, templatefolder, lsdirs, __version__, DEBUG
+from bidscoin import bcoin, schemafolder, templatefolder, lsdirs, is_hidden, __version__, DEBUG
 from bidscoin.utilities import dicomsort
 from ruamel.yaml import YAML
 yaml = YAML()
@@ -56,6 +57,156 @@ entities    = bidsschema.objects.entities
 """The descriptions of the entities present in BIDS filenames"""
 extensions  = [ext.value for _,ext in bidsschema.objects.extensions.items() if ext.value not in ('.json', '.tsv', '.bval', '.bvec') and '/' not in ext.value]
 """The possible extensions of BIDS data files"""
+
+
+class EventsParser(ABC):
+    """Parser for stimulus presentation logfiles"""
+
+    def __init__(self, sourcefile: Path, eventsdata: dict):
+        """
+        Reads the events table from the events logfile
+
+        :param sourcefile:  The full filepath of the raw logfile
+        :param eventsdata:  The run['events'] data (from a bidsmap)
+        """
+
+        self.sourcefile = sourcefile
+        self._data      = eventsdata
+        # TODO: Check if edits in self.start/timecols propagate back to the bidsmap data
+
+    def __repr__(self):
+
+        return (f"{self.__class__}\n"
+                f"Path:\t\t{self.sourcefile}\n"
+                f"Time.cols:\t{self.time.get('cols')}\n"
+                f"Time.unit:\t{self.time.get('unit')}\n"
+                f"Time.start:\t{self.time.get('start')}\n"
+                f"Columns:\t{self.columns}\n"
+                f"Rows:\t{self.rows}")
+
+    def __str__(self):
+
+        return f"{self.sourcefile}"
+
+    @property
+    @abstractmethod
+    def logtable(self) -> pd.DataFrame:
+        """Returns the source logging data"""
+
+    @property
+    def eventstable(self) -> pd.DataFrame:
+        """Returns the target events.tsv data"""
+
+        # Check the parser's data structure
+        if not self.isvalid:
+            return pd.DataFrame()
+
+        # Take the columns of interest from the logtable and rename them
+        df = copy.deepcopy(self.logtable)
+
+        # Convert the timing values to seconds (with maximally 4 digits after the decimal point)
+        df[self.time['cols']] = (df[self.time['cols']].apply(pd.to_numeric, errors='coerce') / self.time['unit']).round(4)
+
+        # Take the columns of interest and from now on use the BIDS column names
+        df         = df.loc[:, [name for item in self.columns for name in item.values()]]
+        df.columns = [name for item in self.columns for name in item.keys()]
+
+        # Set the clock at zero at the start of the experiment
+        if self.time.get('start'):
+            start = pd.Series([True] * len(df))
+            for column, value in self.time['start'].items():
+                start &= self.logtable[column].astype(str) == str(value)
+            if start.any():
+                df['onset'] = df['onset'] - df['onset'][start].iloc[0]  # Take the time of the first occurrence as zero
+
+        # Loop over the row groups to filter/edit the rows
+        rows = pd.Series([len(self.rows) == 0] * len(df)).astype(bool)  # Series with True values if no row expressions were specified
+        for group in self.rows:
+
+            for column, regex in group['include'].items():
+
+                # Get the rows that match the expression
+                rowgroup = self.logtable[column].astype(str).str.fullmatch(str(regex))
+
+                # Add the matching rows to the grand rows group
+                rows |= rowgroup
+
+                # Write the value(s) of the matching rows
+                for newcolumn, newvalue in (group.get('cast') or {}).items():
+                    df.loc[rowgroup, newcolumn] = newvalue
+
+        return df.loc[rows].sort_values(by='onset')
+
+    @property
+    def columns(self) -> List[dict]:
+        """List with mappings for the column names of the eventstable"""
+        return self._data.get('columns') or []
+
+    @columns.setter
+    def columns(self, value: List[dict]):
+        self._data['columns'] = value
+
+    @property
+    def rows(self) -> List[dict]:
+        """List with fullmatch regular expression dictionaries that yield row sets in the eventstable"""
+        return self._data.get('rows') or []
+
+    @rows.setter
+    def rows(self, value: List[dict]):
+        self._data['rows'] = value
+
+    @property
+    def time(self) -> dict:
+        """A dictionary with 'start', 'cols' and 'unit' values"""
+        return self._data.get('time') or {}
+
+    @time.setter
+    def time(self, value: dict):
+        self._data['time'] = value
+
+    @property
+    def isvalid(self) -> bool:
+        """Check the EventsParser data structure"""
+
+        def is_float(s):
+            try:
+                float(s)
+                return True
+            except (ValueError, TypeError):
+                return False
+
+        if not (valid := len(self.columns) >= 2):
+            LOGGER.warning(f"Events table must have at least two columns, got {len(self.columns)} instead")
+            return False
+
+        if (key := [*self.columns[0].keys()][0]) != 'onset':
+            LOGGER.warning(f"First events column must be named 'onset', got '{key}' instead")
+            valid = False
+
+        if (key := [*self.columns[1].keys()][0]) != 'duration':
+            LOGGER.warning(f"Second events column must be named 'duration', got '{key}' instead")
+            valid = False
+
+        if len(self.time.get('cols',[])) < 2:
+            LOGGER.warning(f"Events table must have at least two timecol items, got {len(self.time.get('cols',[]))} instead")
+            return False
+
+        elif not is_float(self.time.get('unit')):
+            LOGGER.warning(f"Time conversion factor must be a float, got '{self.time.get('unit')}' instead")
+            valid = False
+
+        for name in set([name for item in self.columns for name in item.values()] + [name for item in self.rows for name in item['include'].keys()] +
+                        [*self.time.get('start',{}).keys()] + self.time.get('cols',[])):
+            if name not in self.logtable:
+                LOGGER.warning(f"Column '{name}' not found in the event table of {self.sourcefile}")
+                valid = False
+
+        return valid
+
+    def write(self, targetfile: Path):
+        """Write the eventstable to a BIDS events.tsv file"""
+
+        self.eventstable.to_csv(targetfile, sep='\t', index=False)
 
 
 class DataSource:
@@ -185,7 +336,7 @@ class DataSource:
                                              (match_runvalue(file.stat().st_size, runitem.properties['filesize']) or not runitem.properties['filesize']))
                     return len([file for file in self.path.parent.iterdir() if match(file)])
                 else:
-                    return len(list(self.path.parent.iterdir()))
+                    return len([*self.path.parent.iterdir()])
 
         except re.error as patternerror:
             LOGGER.error(f"Cannot compile regular expression property pattern '{tagname}': {patternerror}")
@@ -350,19 +501,19 @@ class RunItem:
 
     def __init__(self, dataformat: str='', datatype: str='', data: dict=None, options: Options=None, plugins: Plugins=None):
         """
-        Create a run-item with the proper structure, provenance info and a data source. NB: Updates to the attributes traverse to the
+        Create a run-item with the proper structure, provenance info and a data source. NB: Updates to the attributes propagate to the
         datasource, but not vice versa
 
         :param dataformat: The name of the dataformat (= section in the bidsmap)
         :param datatype:   The name of the datatype (= section in a dataformat)
-        :param data:       The YAML run-item dictionary with the following keys: provenance, properties, attributes, bids, meta
+        :param data:       The YAML run-item dictionary with the following keys: provenance, properties, attributes, bids, meta, events
         :param options:    The dictionary with the BIDScoin options
         :param plugins:    The plugin dictionaries with their options
         """
 
         # Create a YAML data dictionary with all required attribute keys
         data = data or {}
-        for key, val in {'provenance': '', 'properties': {}, 'attributes': {}, 'bids': {'suffix':''}, 'meta': {}}.items():
+        for key, val in {'provenance': '', 'properties': {}, 'attributes': {}, 'bids': {'suffix':''}, 'meta': {}, 'events': {}}.items():
             if key not in data: data[key] = val
         super().__setattr__('_data', data)      # Use super() to initialize _data directly (without recurrence)
 
@@ -392,6 +543,8 @@ class RunItem:
         """The BIDS output dictionary (used for construting the BIDS filename)"""
         self.meta       = Meta(data['meta'])
         """The meta output dictionary (will be appended to the json sidecar file)"""
+        self.events     = data['events']
+        """The options to parse the stimulus presentation logfile (if any) to BIDS compliant events"""
 
     def __getattr__(self, name: str):
 
@@ -433,7 +586,8 @@ class RunItem:
                 f"Properties:\t{self.properties}\n"
                 f"Attributes:\t{self.attributes}\n"
                 f"Bids:\t\t{self.bids}\n"
-                f"Meta:\t\t{self.meta}")
+                f"Meta:\t\t{self.meta}\n"
+                f"Events:\t\t{self.events}")
 
     def __eq__(self, other):
         """A deep test for the RunItem attributes and YAML data"""
@@ -628,8 +782,8 @@ class RunItem:
         # Make an inventory of the runs
         runless_name  = insert_bidskeyval(bidsname, 'run', '', False)
         run1_name     = insert_bidskeyval(bidsname, 'run', '1', False)
-        runless_files = list(outfolder.glob(f"{runless_name}.*"))
-        run1_files    = list(outfolder.glob(f"{run1_name}.*"))
+        runless_files = [*outfolder.glob(f"{runless_name}.*")]
+        run1_files    = [*outfolder.glob(f"{run1_name}.*")]
 
         # Start incrementing from run-1 if we have already renamed runless to run-1
         if run1_files and runval == '<<>>':
@@ -662,6 +816,13 @@ class RunItem:
                     scans_table.rename(index={runless_scan: run1_scan}, inplace=True)
 
         return bidsname + bidsext
+
+    def eventsparser(self) -> EventsParser:
+        """Returns a plugin EventsParser instance to parse the stimulus presentation logfile (if any)"""
+
+        plugins = [bcoin.import_plugin(plugin, (f"{self.dataformat}Events",)) for plugin in self.plugins]
+        if plugins and plugins[0]:
+            return getattr(plugins[0], f"{self.dataformat}Events")(self.provenance, self.events)
 
 
 class DataType:
@@ -925,7 +1086,7 @@ class BidsMap:
             options['bidsignore'] = options['bidsignore'].split(';')
         bidsignorefile = folder.parents[1]/'.bidsignore'
         if bidsignorefile.is_file():
-            options['bidsignore'] = list(set(list(options['bidsignore']) + bidsignorefile.read_text().splitlines()))
+            options['bidsignore'] = [*set([*options['bidsignore']] + bidsignorefile.read_text().splitlines())]
         options['bidsignore']     = sorted(set(options.get('bidsignore'))) or []
         options['unknowntypes']   = options.get('unknowntypes')  or []
         options['ignoretypes']    = options.get('ignoretypes')   or []
@@ -1279,13 +1440,13 @@ class BidsMap:
         unknowndatatypes = self.options.get('unknowntypes') or ['unknown_data']
         ignoredatatypes  = self.options.get('ignoretypes') or []
         normaldatatypes  = [dtype.datatype for dtype in self.dataformat(dataformat).datatypes if dtype not in unknowndatatypes + ignoredatatypes]
-        rundata          = {'provenance': str(sourcefile), 'properties': {}, 'attributes': {}, 'bids': {}, 'meta': {}}
+        rundata          = {'provenance': str(sourcefile), 'properties': {}, 'attributes': {}, 'bids': {}, 'meta': {}, 'events': {}}
         """The a run-item data structure. NB: Keep in sync with the RunItem() data attributes"""
 
         # Loop through all datatypes and runs; all info goes cleanly into runitem (to avoid formatting problem of the CommentedMap)
         if 'fmap' in normaldatatypes:
-            normaldatatypes.insert(0, normaldatatypes.pop(normaldatatypes.index('fmap')))       # Put fmap at the front (to catch inverted polarity scans first
-        for datatype in ignoredatatypes + normaldatatypes + unknowndatatypes:                       # The ordered datatypes in which a matching run is searched for
+            normaldatatypes.insert(0, normaldatatypes.pop(normaldatatypes.index('fmap')))   # Put fmap at the front (to catch inverted polarity scans first
+        for datatype in ignoredatatypes + normaldatatypes + unknowndatatypes:                      # The ordered datatypes in which a matching run is searched for
             if datatype not in self.dataformat(dataformat).datatypes: continue
             for runitem in self.dataformat(dataformat).datatype(datatype).runitems:
 
@@ -1293,7 +1454,7 @@ class BidsMap:
                 match = any([getattr(runitem, attr)[key] not in (None,'') for attr in ('properties','attributes') for key in getattr(runitem, attr)])
 
                 # Initialize a clean run-item data structure
-                rundata = {'provenance': str(sourcefile), 'properties': {}, 'attributes': {}, 'bids': {}, 'meta': {}}
+                rundata = {'provenance': str(sourcefile), 'properties': {}, 'attributes': {}, 'bids': {}, 'meta': {}, 'events': {}}
 
                 # Test if the data source matches all the non-empty run-item properties, but do NOT populate them
                 for propkey, propvalue in runitem.properties.items():
@@ -1336,6 +1497,12 @@ class BidsMap:
                         rundata['meta'][metakey] = metavalue
                     else:
                         rundata['meta'][metakey] = datasource.dynamicvalue(metavalue, cleanup=False, runtime=runtime)
+
+                # Copy the events-data
+                for eventskey, eventsvalue in runitem.events.items():
+
+                    # Replace the dynamic bids values, except the dynamic run-index (e.g. <<>>)
+                    rundata['events'][eventskey] = copy.deepcopy(eventsvalue)
 
                 # Stop searching the bidsmap if we have a match
                 if match:
@@ -1532,7 +1699,7 @@ def unpack(sesfolder: Path, wildcard: str='', workfolder: Path='', _subprefix: U
     """
 
     # Search for zipped/tarball files
-    tarzipfiles = list(sesfolder.glob(wildcard)) if wildcard else []
+    tarzipfiles = [*sesfolder.glob(wildcard)] if wildcard else []
 
     # See if we have a flat unsorted (DICOM) data organization, i.e. no directories, but DICOM-files
     flatDICOM = not lsdirs(sesfolder) and get_dicomfile(sesfolder).is_file()
@@ -1640,8 +1807,7 @@ def get_dicomfile(folder: Path, index: int=0) -> Path:
     :return:        The filename of the first dicom-file in the folder.
     """
 
-    if folder.name.startswith('.'):
-        LOGGER.verbose(f"Ignoring hidden folder: {folder}")
+    if is_hidden(Path(folder.name)):
         return Path()
 
     if (folder/'DICOMDIR').is_file():
@@ -1652,10 +1818,7 @@ def get_dicomfile(folder: Path, index: int=0) -> Path:
 
     idx = 0
     for file in files:
-        if file.name.startswith('.'):
-            LOGGER.verbose(f"Ignoring hidden file: {file}")
-            continue
-        if is_dicomfile(file):
+        if not is_hidden(file.relative_to(folder)) and is_dicomfile(file):
             if idx == index:
                 return file
             else:
@@ -1672,16 +1835,12 @@ def get_parfiles(folder: Path) -> List[Path]:
     :return:        The filenames of the PAR-files in the folder.
     """
 
-    if folder.name.startswith('.'):
-        LOGGER.verbose(f"Ignoring hidden folder: {folder}")
+    if is_hidden(Path(folder.name)):
         return []
 
     parfiles: List[Path] = []
     for file in sorted(folder.iterdir()):
-        if file.name.startswith('.'):
-            LOGGER.verbose(f"Ignoring hidden file: {file}")
-            continue
-        if is_parfile(file):
+        if not is_hidden(file.relative_to(folder)) and is_parfile(file):
             parfiles.append(file)
 
     return parfiles
@@ -1693,8 +1852,7 @@ def get_datasource(sourcedir: Path, plugins: Plugins, recurse: int=8) -> DataSou
     datasource = DataSource()
     if sourcedir.is_dir():
         for sourcepath in sorted(sourcedir.iterdir()):
-            if sourcepath.name.startswith('.'):
-                LOGGER.verbose(f"Ignoring hidden data-source: {sourcepath}")
+            if is_hidden(sourcepath.relative_to(sourcedir)):
                 continue
             if sourcepath.is_dir() and recurse:
                 datasource = get_datasource(sourcepath, plugins, recurse-1)

@@ -31,7 +31,10 @@ from bidscoin import templatefolder, pluginfolder, bidsmap_template, tutorialurl
 yaml = YAML()
 yaml.representer.ignore_aliases = lambda *data: True                         # Expand aliases (https://stackoverflow.com/questions/58091449/disabling-alias-for-yaml-file-in-python)
 
-LOGGER = logging.getLogger(__name__)
+# Define custom logging levels
+BCDEBUG, BCDEBUG_LEVEL = 'BCDEBUG', 11      # NB: using the standard debug mode will generate may debug messages from imports
+VERBOSE, VERBOSE_LEVEL = 'VERBOSE', 15
+SUCCESS, SUCCESS_LEVEL = 'SUCCESS', 25
 
 
 class TqdmUpTo(tqdm):
@@ -48,6 +51,119 @@ class TqdmUpTo(tqdm):
         if tsize is not None:
             self.total = tsize
         self.update(b * bsize - self.n)  # will also set self.n = b * bsize
+
+
+class CustomLogger(logging.Logger):
+    """Extend the Logger class to add custom methods for the new levels"""
+
+    def bcdebug(self, message, *args, **kwargs):
+        """Custom BIDSCOIN DEBUG messages"""
+        if self.isEnabledFor(BCDEBUG_LEVEL):
+            self._log(BCDEBUG_LEVEL, message, args, **kwargs)
+
+    def verbose(self, message, *args, **kwargs):
+        """Custom BIDSCOIN VERBOSE messages"""
+        if self.isEnabledFor(VERBOSE_LEVEL):
+            self._log(VERBOSE_LEVEL, message, args, **kwargs)
+
+    def success(self, message, *args, **kwargs):
+        """Custom BIDSCOIN SUCCESS messages"""
+        if self.isEnabledFor(SUCCESS_LEVEL):
+            self._log(SUCCESS_LEVEL, message, args, **kwargs)
+
+
+# Get a logger from the custom logger class
+logging.setLoggerClass(CustomLogger)
+LOGGER = logging.getLogger(__name__)
+
+
+def setup_logging(logfile: Path=Path()):
+    """
+    Set up the logging framework:
+    1) Add custom logging levels: 'bcdebug', 'verbose', and 'success'.
+    2) Add a console stream handler for generating terminal output.
+    3) Optionally add file handlers for normal log and warning/error log if logfile is provided.
+
+    :param logfile: Path to the logfile. If none, logging is console-only
+    """
+
+    # Set the default formats
+    if DEBUG:
+        fmt  = '%(asctime)s - %(name)s - %(levelname)s | %(message)s'
+        cfmt = '%(levelname)s - %(name)s | %(message)s'
+    else:
+        fmt  = '%(asctime)s - %(levelname)s | %(message)s'
+        cfmt = '%(levelname)s | %(message)s'
+    datefmt  = '%Y-%m-%d %H:%M:%S'
+
+    # Add custom log levels to logging
+    logging.addLevelName(BCDEBUG_LEVEL, BCDEBUG)
+    logging.addLevelName(VERBOSE_LEVEL, VERBOSE)
+    logging.addLevelName(SUCCESS_LEVEL, SUCCESS)
+
+    # Get the root logger and set the appropriate level
+    logger = logging.getLogger()
+    logger.setLevel(BCDEBUG_LEVEL if DEBUG else VERBOSE_LEVEL)
+
+    # Add the console streamhandler and bring some color to those boring logs! :-)
+    coloredlogs.install(level=BCDEBUG if DEBUG else VERBOSE if not logfile.name else 'INFO', fmt=cfmt, datefmt=datefmt)   # NB: Using tqdm sets the streamhandler level to 0, see: https://github.com/tqdm/tqdm/pull/1235
+    coloredlogs.DEFAULT_LEVEL_STYLES['verbose']['color'] = 245  # = Gray
+
+    if logfile.name:
+
+        # Add the log filehandler
+        logfile.parent.mkdir(parents=True, exist_ok=True)      # Create the log dir if it does not exist
+        formatter  = logging.Formatter(fmt=fmt, datefmt=datefmt)
+        loghandler = logging.FileHandler(logfile)
+        loghandler.setLevel(BCDEBUG)
+        loghandler.setFormatter(formatter)
+        loghandler.set_name('loghandler')
+        logger.addHandler(loghandler)
+
+        # Add the error/warnings filehandler
+        errorhandler = logging.FileHandler(logfile.with_suffix('.errors'), mode='w')
+        errorhandler.setLevel('WARNING')
+        errorhandler.setFormatter(formatter)
+        errorhandler.set_name('errorhandler')
+        logger.addHandler(errorhandler)
+
+    if DEBUG:
+        LOGGER.info('\t<<<<<<<<<< Running BIDScoin in DEBUG mode >>>>>>>>>>')
+        settracking('show')
+
+
+def reporterrors() -> str:
+    """
+    Summarized the warning and errors from the logfile
+
+    :return:    The errorlog
+    """
+
+    # Find the filehandlers and report the errors and warnings
+    errors = ''
+    for handler in logging.getLogger().handlers:
+        if handler.name == 'errorhandler':
+
+            errorfile = Path(handler.baseFilename)
+            if errorfile.is_file():
+                if errorfile.stat().st_size:
+                    errors = errorfile.read_text()
+                    LOGGER.info(f"The following BIDScoin errors and warnings were reported:\n\n{40 * '>'}\n{errors}{40 * '<'}\n")
+                    trackusage(f"{errorfile.stem}_{'error' if 'ERROR' in errors else 'warning'}")
+
+                else:
+                    LOGGER.success(f'No BIDScoin errors or warnings were reported')
+                    LOGGER.info('')
+
+        elif handler.name == 'loghandler':
+            logfile = Path(handler.baseFilename)
+
+    # Final message
+    if 'logfile' in locals():
+        LOGGER.info(f"For the complete log see: {logfile}\n"
+                    f"NB: That folder may contain privacy sensitive information, e.g. pathnames in logfiles and provenance data samples")
+
+    return errors
 
 
 def drmaa_nativespec(specs: str, session) -> str:
@@ -108,115 +224,6 @@ def synchronize(pbatch, jobids: list, wait: int=15):
         # Give NAS systems some time to fully synchronize
         for t in tqdm(range(wait*100), desc='synchronizing', leave=False, bar_format='{l_bar}{bar}| [{elapsed}]'):
             time.sleep(.01)
-
-
-def setup_logging(logfile: Path=Path()):
-    """
-    Set up the logging framework:
-    1) Add a 'bcdebug', 'verbose' and a 'success' logging level
-    2) Add a console streamhandler
-    3) If logfile then add a normal log and a warning/error filehandler
-
-    :param logfile:     Name of the logfile
-    :return:
-     """
-
-    # Set the default formats
-    if DEBUG:
-        fmt  = '%(asctime)s - %(name)s - %(levelname)s | %(message)s'
-        cfmt = '%(levelname)s - %(name)s | %(message)s'
-    else:
-        fmt  = '%(asctime)s - %(levelname)s | %(message)s'
-        cfmt = '%(levelname)s | %(message)s'
-    datefmt  = '%Y-%m-%d %H:%M:%S'
-
-    # Add a BIDScoin debug logging level = 11 (NB: using the standard debug mode will generate may debug messages from imports)
-    logging.BCDEBUG = 11
-    logging.addLevelName(logging.BCDEBUG, 'BCDEBUG')
-    logging.__all__ += ['BCDEBUG'] if 'BCDEBUG' not in logging.__all__ else []
-    def bcdebug(self, message, *args, **kws):
-        if self.isEnabledFor(logging.BCDEBUG): self._log(logging.BCDEBUG, message, args, **kws)
-    logging.Logger.bcdebug = bcdebug
-
-    # Add a verbose logging level = 15
-    logging.VERBOSE = 15
-    logging.addLevelName(logging.VERBOSE, 'VERBOSE')
-    logging.__all__ += ['VERBOSE'] if 'VERBOSE' not in logging.__all__ else []
-    def verbose(self, message, *args, **kws):
-        if self.isEnabledFor(logging.VERBOSE): self._log(logging.VERBOSE, message, args, **kws)
-    logging.Logger.verbose = verbose
-
-    # Add a success logging level = 25
-    logging.SUCCESS = 25
-    logging.addLevelName(logging.SUCCESS, 'SUCCESS')
-    logging.__all__ += ['SUCCESS'] if 'SUCCESS' not in logging.__all__ else []
-    def success(self, message, *args, **kws):
-        if self.isEnabledFor(logging.SUCCESS): self._log(logging.SUCCESS, message, args, **kws)
-    logging.Logger.success = success
-
-    # Set the root logging level
-    logger = logging.getLogger()
-    logger.setLevel('BCDEBUG' if DEBUG else 'VERBOSE')
-
-    # Add the console streamhandler and bring some color to those boring logs! :-)
-    coloredlogs.install(level='BCDEBUG' if DEBUG else 'VERBOSE' if not logfile.name else 'INFO', fmt=cfmt, datefmt=datefmt)   # NB: Using tqdm sets the streamhandler level to 0, see: https://github.com/tqdm/tqdm/pull/1235
-    coloredlogs.DEFAULT_LEVEL_STYLES['verbose']['color'] = 245  # = Gray
-
-    if logfile.name:
-
-        # Add the log filehandler
-        logfile.parent.mkdir(parents=True, exist_ok=True)      # Create the log dir if it does not exist
-        formatter  = logging.Formatter(fmt=fmt, datefmt=datefmt)
-        loghandler = logging.FileHandler(logfile)
-        loghandler.setLevel('BCDEBUG')
-        loghandler.setFormatter(formatter)
-        loghandler.set_name('loghandler')
-        logger.addHandler(loghandler)
-
-        # Add the error/warnings filehandler
-        errorhandler = logging.FileHandler(logfile.with_suffix('.errors'), mode='w')
-        errorhandler.setLevel('WARNING')
-        errorhandler.setFormatter(formatter)
-        errorhandler.set_name('errorhandler')
-        logger.addHandler(errorhandler)
-
-    if DEBUG:
-        LOGGER.info('\t<<<<<<<<<< Running BIDScoin in DEBUG mode >>>>>>>>>>')
-        settracking('show')
-
-
-def reporterrors() -> str:
-    """
-    Summarized the warning and errors from the logfile
-
-    :return:    The errorlog
-    """
-
-    # Find the filehandlers and report the errors and warnings
-    errors = ''
-    for handler in logging.getLogger().handlers:
-        if handler.name == 'errorhandler':
-
-            errorfile = Path(handler.baseFilename)
-            if errorfile.is_file():
-                if errorfile.stat().st_size:
-                    errors = errorfile.read_text()
-                    LOGGER.info(f"The following BIDScoin errors and warnings were reported:\n\n{40 * '>'}\n{errors}{40 * '<'}\n")
-                    trackusage(f"{errorfile.stem}_{'error' if 'ERROR' in errors else 'warning'}")
-
-                else:
-                    LOGGER.success(f'No BIDScoin errors or warnings were reported')
-                    LOGGER.info('')
-
-        elif handler.name == 'loghandler':
-            logfile = Path(handler.baseFilename)
-
-    # Final message
-    if 'logfile' in locals():
-        LOGGER.info(f"For the complete log see: {logfile}\n"
-                    f"NB: That folder may contain privacy sensitive information, e.g. pathnames in logfiles and provenance data samples")
-
-    return errors
 
 
 def list_executables(show: bool=False) -> list:
@@ -410,7 +417,7 @@ def import_plugin(plugin: Union[Path,str], functions: tuple=()) -> Union[types.M
                 functionsfound.append(function)
 
         if functions and not functionsfound:
-            LOGGER.info(f"Plugin '{plugin}' does not contain {functions} functions")
+            LOGGER.bcdebug(f"Plugin '{plugin}' does not contain {functions} functions")
         else:
             return module
 
