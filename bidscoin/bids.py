@@ -2695,6 +2695,7 @@ def bidsprov(bidsfolder: Path, source: Path=Path(), runitem: RunItem=None, targe
         LOGGER.error(f"Could not resolve the BIDS root folder from {bidsfolder}")
     provfile = bidsfolder/'code'/'bidscoin'/'bidscoiner.tsv'
     targets  = [target.relative_to(bidsfolder) for target in sorted(targets)]
+    runitem  = runitem or RunItem()
 
     # Read the provenance data and add the new data to it
     if provfile.is_file():
