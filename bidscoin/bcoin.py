@@ -113,9 +113,8 @@ def synchronize(pbatch, jobids: list, wait: int=15):
 def setup_logging(logfile: Path=Path()):
     """
     Set up the logging framework:
-    1) Add custom logging levels: 'bcdebug', 'verbose', and 'success'.
-    2) Add a console stream handler for generating terminal output.
-    3) Optionally add file handlers for normal log and warning/error log if logfile is provided.
+    - Add a console stream handler for generating terminal output.
+    - Optionally add file handlers for normal log and warning/error log if logfile is provided.
 
     :param logfile: Path to the logfile. If none, logging is console-only
     """
@@ -167,9 +166,9 @@ def reporterrors() -> str:
     :return:    The errorlog
     """
 
-    # Find the filehandlers and report the errors and warnings
+    # Find the root filehandlers and report the errors and warnings
     errors = ''
-    for handler in LOGGER.handlers:
+    for handler in logging.getLogger().handlers:
         if handler.name == 'errorhandler':
 
             errorfile = Path(handler.baseFilename)
