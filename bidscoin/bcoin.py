@@ -113,13 +113,12 @@ def synchronize(pbatch, jobids: list, wait: int=15):
 def setup_logging(logfile: Path=Path()):
     """
     Set up the logging framework:
-    1) Add a 'bcdebug', 'verbose' and a 'success' logging level
-    2) Add a console streamhandler
-    3) If logfile then add a normal log and a warning/error filehandler
+    1) Add custom logging levels: 'bcdebug', 'verbose', and 'success'.
+    2) Add a console stream handler for generating terminal output.
+    3) Optionally add file handlers for normal log and warning/error log if logfile is provided.
 
-    :param logfile:     Name of the logfile
-    :return:
-     """
+    :param logfile: Path to the logfile. If none, logging is console-only
+    """
 
     # Set the default formats
     if DEBUG:
@@ -130,31 +129,7 @@ def setup_logging(logfile: Path=Path()):
         cfmt = '%(levelname)s | %(message)s'
     datefmt  = '%Y-%m-%d %H:%M:%S'
 
-    # Add a BIDScoin debug logging level = 11 (NB: using the standard debug mode will generate may debug messages from imports)
-    logging.BCDEBUG = 11
-    logging.addLevelName(logging.BCDEBUG, 'BCDEBUG')
-    logging.__all__ += ['BCDEBUG'] if 'BCDEBUG' not in logging.__all__ else []
-    def bcdebug(self, message, *args, **kws):
-        if self.isEnabledFor(logging.BCDEBUG): self._log(logging.BCDEBUG, message, args, **kws)
-    logging.Logger.bcdebug = bcdebug
-
-    # Add a verbose logging level = 15
-    logging.VERBOSE = 15
-    logging.addLevelName(logging.VERBOSE, 'VERBOSE')
-    logging.__all__ += ['VERBOSE'] if 'VERBOSE' not in logging.__all__ else []
-    def verbose(self, message, *args, **kws):
-        if self.isEnabledFor(logging.VERBOSE): self._log(logging.VERBOSE, message, args, **kws)
-    logging.Logger.verbose = verbose
-
-    # Add a success logging level = 25
-    logging.SUCCESS = 25
-    logging.addLevelName(logging.SUCCESS, 'SUCCESS')
-    logging.__all__ += ['SUCCESS'] if 'SUCCESS' not in logging.__all__ else []
-    def success(self, message, *args, **kws):
-        if self.isEnabledFor(logging.SUCCESS): self._log(logging.SUCCESS, message, args, **kws)
-    logging.Logger.success = success
-
-    # Set the root logging level
+    # Get the root logger and set the appropriate level
     logger = logging.getLogger()
     logger.setLevel('BCDEBUG' if DEBUG else 'VERBOSE')
 
@@ -194,7 +169,7 @@ def reporterrors() -> str:
 
     # Find the filehandlers and report the errors and warnings
     errors = ''
-    for handler in logging.getLogger().handlers:
+    for handler in LOGGER.handlers:
         if handler.name == 'errorhandler':
 
             errorfile = Path(handler.baseFilename)

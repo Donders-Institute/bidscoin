@@ -28,7 +28,7 @@ import subprocess
 from pathlib import Path
 from importlib import metadata
 from typing import Tuple, Union, List
-from logging import getLogger
+import logging
 from .due import due, Doi
 try:
     import tomllib
@@ -41,8 +41,6 @@ try:
 except Exception:
     with open(Path(__file__).parents[1]/'pyproject.toml', 'rb') as fid:
         __version__ = tomllib.load(fid)['project']['version']
-
-LOGGER = getLogger(__name__)
 
 # Add license metadata
 __license__    = 'GNU General Public License v3.0 or later (GPLv3+)'
@@ -99,6 +97,40 @@ if not bidsmap_template.is_file():
 # Register the BIDScoin citation
 due.cite(Doi('10.3389/fninf.2021.770608'), description='A versatile toolkit to convert source data to the Brain Imaging Data Structure (BIDS)',
          path='bidscoin', version=__version__, cite_module=True, tags=['reference-implementation'])
+
+
+class CustomLogger(logging.Logger):
+    """Extend the Logger class to add custom methods for the new levels"""
+
+    # Define custom logging levels
+    BCDEBUG, BCDEBUG_LEVEL = 'BCDEBUG', 11      # NB: using the standard debug mode will generate may debug messages from imports
+    VERBOSE, VERBOSE_LEVEL = 'VERBOSE', 15
+    SUCCESS, SUCCESS_LEVEL = 'SUCCESS', 25
+
+    # Add custom log levels to logging
+    logging.addLevelName(BCDEBUG_LEVEL, BCDEBUG)
+    logging.addLevelName(VERBOSE_LEVEL, VERBOSE)
+    logging.addLevelName(SUCCESS_LEVEL, SUCCESS)
+
+    def bcdebug(self, message, *args, **kwargs):
+        """Custom BIDSCOIN DEBUG messages"""
+        if self.isEnabledFor(self.BCDEBUG_LEVEL):
+            self._log(self.BCDEBUG_LEVEL, message, args, **kwargs)
+
+    def verbose(self, message, *args, **kwargs):
+        """Custom BIDSCOIN VERBOSE messages"""
+        if self.isEnabledFor(self.VERBOSE_LEVEL):
+            self._log(self.VERBOSE_LEVEL, message, args, **kwargs)
+
+    def success(self, message, *args, **kwargs):
+        """Custom BIDSCOIN SUCCESS messages"""
+        if self.isEnabledFor(self.SUCCESS_LEVEL):
+            self._log(self.SUCCESS_LEVEL, message, args, **kwargs)
+
+
+# Get a logger from the custom logger class
+logging.setLoggerClass(CustomLogger)
+LOGGER = logging.getLogger(__name__)
 
 
 def check_version() -> Tuple[str, Union[bool, None], str]:
