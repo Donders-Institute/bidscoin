@@ -4,6 +4,11 @@
 
 ## [dev]
 
+## [4.5.0] - TBD
+
+### Added
+- A events2bids plugin for converting Presentation logfiles to events tsv-files
+
 ### Changed
 - Drop saving data in the derivatives folder (i.e. this was not required by BIDS after all)
  
