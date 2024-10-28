@@ -262,21 +262,11 @@ def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: 
                     if not datasource.dataformat:
                         LOGGER.info(f">>> No datasources found in '{sesfolder}'")
                         continue
+                    LOGGER.info(f">>> Coining datasources in: {sesfolder}")
                     subid        = bidsmap.dataformat(datasource.dataformat).subject
                     sesid        = bidsmap.dataformat(datasource.dataformat).session
                     subid, sesid = datasource.subid_sesid(subid, sesid or '')
                     bidssession  = bidsfolder/subid/sesid       # TODO: Support DICOMDIR with multiple subjects (as in PYDICOMDIR)
-                    if not force and bidssession.is_dir():
-                        datatypes = set()
-                        for datatype in [dtype for dtype in lsdirs(bidssession) if next(dtype.iterdir(), None)]:  # See what non-empty datatypes we already have in the bids session-folder
-                            for dataformat in bidsmap.dataformats:
-                                if datatype.name in dataformat.datatypes:                                   # See if we are going to add data for this datatype
-                                    datatypes.add(datatype.name)
-                        if datatypes:
-                            LOGGER.info(f">>> Skipping processed session: {bidssession} already has {datatypes} data (you can carefully use the -f option to overrule)")
-                            continue
-
-                    LOGGER.info(f">>> Coining datasources in: {sesfolder}")
                     if bidssession.is_dir():
                         LOGGER.warning(f"Existing BIDS output-directory found, which may result in duplicate data (with increased run-index). Make sure {bidssession} was cleaned-up from old data before (re)running the bidscoiner")
                     bidssession.mkdir(parents=True, exist_ok=True)
