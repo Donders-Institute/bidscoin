@@ -229,7 +229,7 @@ def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> None:
 class PresentationEvents(EventsParser):
     """Parser for Presentation (Neurobs) logfiles"""
 
-    def __init__(self, sourcefile: Path, data):
+    def __init__(self, sourcefile: Path, _data):
         """
         Reads the event table from the Presentation logfile
 
@@ -237,7 +237,7 @@ class PresentationEvents(EventsParser):
         :param data:        The run['events'] data (from a bidsmap)
         """
 
-        super().__init__(sourcefile, data)
+        super().__init__(sourcefile, _data)
 
         # Read the event table from the Presentation logfile
         self.sourcetable = df = pd.read_csv(self.sourcefile, sep='\t', skiprows=3, skip_blank_lines=True)
