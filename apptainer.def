@@ -1,5 +1,5 @@
 Bootstrap: docker
-From: python:3-slim
+From: python:3.12-slim
 Stage: builder
 
 %post
@@ -40,7 +40,7 @@ Stage: builder
 
 
 Bootstrap: docker
-From: python:3-slim
+From: python:3.12-slim
 Stage: final
 
 %help
