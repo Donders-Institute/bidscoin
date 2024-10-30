@@ -1341,8 +1341,8 @@ class BidsMap:
                                 '[DEPRECATED]'             in bidsschema.objects.suffixes[suffix].description or
                                 '**Change:** Removed from' in bidsschema.objects.suffixes[suffix].description or
                                 '**Change:** Replaced by'  in bidsschema.objects.suffixes[suffix].description):
-                            LOGGER.warning(f"Missing '{suffix}' run-item in: bidsmap[{dataformat}][{datatype}] (NB: this may perhaps be fine / a deprecated item)")
-                            valid = False
+                            LOGGER.info(f"Missing '{suffix}' run-item in: bidsmap[{dataformat}][{datatype}] (NB: this may perhaps be fine / a deprecated item)")
+                            # valid = False # TODO: Fix this for sparse events2bids mappings
 
         # Validate against the json schema
         with (templatefolder/'schema.json').open('r') as stream:

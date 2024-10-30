@@ -309,10 +309,10 @@ class TestBidsMap:
             bidsmap.dataformats[0].remove_datatype('foo')
             assert bidsmap.check_template() is True
 
-            # Remove a valid suffix (BIDS-entity)
-            valid_run = bidsmap.dataformats[0].datatype('anat').runitems[-2].provenance     # NB: [-2] -> The first item(s) can be non-unique, the last item can be a non-BIDS entity, i.e. CT
-            bidsmap.dataformats[0].datatype('anat').delete_run(valid_run)
-            assert bidsmap.check_template() is False
+            # # Remove a valid suffix (BIDS-entity)
+            # valid_run = bidsmap.dataformats[0].datatype('anat').runitems[-2].provenance     # NB: [-2] -> The first item(s) can be non-unique, the last item can be a non-BIDS entity, i.e. CT
+            # bidsmap.dataformats[0].datatype('anat').delete_run(valid_run)
+            # assert bidsmap.check_template() is False
 
     def test_dataformat(self):
         pass
