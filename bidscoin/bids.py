@@ -2802,7 +2802,7 @@ def addparticipant(participants_tsv: Path, subid: str='', sesid: str='', data: d
         if data_added:
             LOGGER.verbose(f"Writing {subid} subject data to: {participants_tsv}")
             if not dryrun:
-                table.replace('', 'n/a').to_csv(participants_tsv, sep='\t', encoding='utf-8', na_rep='n/a')
+                table.mask(table == '').to_csv(participants_tsv, sep='\t', encoding='utf-8', na_rep='n/a')
 
             # Create/write to the json participants table sidecar file
             key_added = False
