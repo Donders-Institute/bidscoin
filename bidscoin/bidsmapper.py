@@ -56,8 +56,6 @@ def bidsmapper(sourcefolder: str, bidsfolder: str, bidsmap: str, template: str, 
         LOGGER.bcdebug(f"Regular expression metacharacters found in {sesprefix}, this may cause errors later on...")
     if not rawfolder.is_dir():
         raise SystemExit(f"\n[ERROR] Exiting the program because your sourcefolder argument '{sourcefolder}' was not found")
-    if not templatefile.is_file():
-        raise SystemExit(f"\n[ERROR] Exiting the program because your template bidsmap '{templatefile}' was not found")
 
     # Start logging
     if force:
@@ -75,6 +73,8 @@ def bidsmapper(sourcefolder: str, bidsfolder: str, bidsmap: str, template: str, 
     bidsmap_old = BidsMap(bidsmapfile,  bidscoinfolder, plugins)
     bidsmapfile = bidsmap_old.filepath
     template    = BidsMap(templatefile, plugins=plugins, checks=(True, True, False))
+    if not template.filepath.is_file():
+        raise SystemExit(f"\n[ERROR] Exiting the program because your template bidsmap '{templatefile}' was not found")
     template.check_template()
 
     # Create the new bidsmap as a copy / bidsmap skeleton with only data types without run-items (i.e. empty lists)

@@ -471,7 +471,7 @@ Nibabel:
       dir: <filename:sub-.*_dir-(.*?)_.*\.nii.*>
       run: <<>>
       echo:
-      part: ['', mag, phase, real, imag, 0]
+      part: <filename:sub-.*_part-(.*?)_.*\.nii.*>
       suffix: asl
     meta: &perf_meta
       ArterialSpinLabelingType: "CASL / PCASL / PASL"
@@ -647,7 +647,7 @@ Nibabel:
       dir: <filename:sub-.*_dir-(.*?)_.*\.nii.*>
       run: <<>>
       chunk: <filename:sub-.*_chunk-(.*?)_.*\.nii.*>
-      part: ['', mag, phase, real, imag, 0]
+      part: <filename:sub-.*_part-(.*?)_.*\.nii.*>
       suffix: epi
     meta: *fmap_meta
   - properties:

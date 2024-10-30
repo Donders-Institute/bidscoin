@@ -1808,7 +1808,7 @@ class EditWindow(QDialog):
         bidsvalid = validrun
         datatype  = self.target_run.datatype
         if not (bids.check_ignore(datatype,self.bidsignore) or bids.check_ignore(bidsname.name,self.bidsignore,'file') or datatype in self.ignoredatatypes):
-            for ext in bids.extensions:     # NB: `ext` used to be '.json', which is more generic (but see https://github.com/bids-standard/bids-validator/issues/2113)
+            for ext in bids.extensions + ['.tsv' if self.target_run.bids['suffix']=='events' else '.dum']:     # NB: `ext` used to be '.json', which is more generic (but see https://github.com/bids-standard/bids-validator/issues/2113)
                 if bidsvalid := BIDSValidator().is_bids((Path('/')/self.subid/self.sesid/bidsname).with_suffix(ext).as_posix()): break
 
         # If the bidsname is not valid, ask the user if that's OK

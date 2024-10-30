@@ -1136,11 +1136,8 @@ class BidsMap:
                                 if entitykey not in runitem.bids and entitykey not in ('sub', 'ses'):
                                     LOGGER.info(f"Adding missing {dataformat}>{datatype}>{suffix} bidsmap entity key: {entitykey}")
                                     runitem.bids[entitykey] = ''
-                                if entitykey == 'part' and not isinstance(runitem.bids['part'], list):
-                                    if runitem.bids['part'] in ('', 'mag', 'phase', 'real', 'imag', None):
-                                        runitem.bids['part'] = ['', 'mag', 'phase', 'real', 'imag', ('', 'mag', 'phase', 'real', 'imag').index(runitem.bids['part'] or '')]
-                                    else:
-                                        runitem.bids['part'] = ['', 'mag', 'phase', 'real', 'imag', runitem.bids['part'], 5]
+                                if entitykey == 'part' and not isinstance(runitem.bids['part'], list) and runitem.bids['part'] in ('', 'mag', 'phase', 'real', 'imag', None):
+                                    runitem.bids['part'] = ['', 'mag', 'phase', 'real', 'imag', ('', 'mag', 'phase', 'real', 'imag').index(runitem.bids['part'] or '')]
 
         # Validate the bidsmap entries
         self.check(checks)
@@ -1258,7 +1255,7 @@ class BidsMap:
                     ignore   = check_ignore(datatype, bidsignore) or check_ignore(bidsname+'.json', bidsignore, 'file')
                     ignore_1 = datatype in ignoretypes or ignore
                     ignore_2 = datatype in ignoretypes
-                    for ext in extensions:      # NB: `ext` used to be '.json', which is more generic (but see https://github.com/bids-standard/bids-validator/issues/2113)
+                    for ext in extensions + ['.tsv' if runitem.bids['suffix']=='events' else '.dum']:      # NB: `ext` used to be '.json', which is more generic (but see https://github.com/bids-standard/bids-validator/issues/2113)
                         if bidstest := bids_validator.BIDSValidator().is_bids(f"/sub-{sanitize(dataformat)}/{datatype}/{bidsname}{ext}"): break
                     if level==3 or (abs(level)==2 and not ignore_2) or (-2<level<2 and not ignore_1):
                         valid = valid and bidstest
