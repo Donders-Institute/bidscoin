@@ -40,6 +40,6 @@ ENV FSLDIR=/opt/fsl FSLOUTPUTTYPE=NIFTI_GZ \
     PIP_NO_CACHE_DIR=off
 
 # First install pyqt as Debian package to solve dependencies issues occurring when installed with pip
-# Then install the latest stable BIDScoin release (add build-essential for newer python:3-slim base images (pip needs gcc))
-RUN apt update && apt -y --no-install-recommends install pigz curl python3-pyqt6 build-essential libgl1 libxcb-cursor0 dbus && apt clean; \
+# Then install the latest stable BIDScoin release (add build-essential for newer python:3-slim base images (pip needs gcc and wayland support is not yet provided for))
+RUN apt update && apt -y --no-install-recommends install pigz curl python3-pyqt6 build-essential libgl1 libxcb-cursor0 dbus qt6-wayland && apt clean; \
     pip install bidscoin[spec2nii2bids,deface]

@@ -78,7 +78,7 @@ Stage: final
 
     # Pre-install essential packages
     # NOTE: PyQt is installed as Debian package to solve dependencies issues occurring when installed with pip
-    apt -y --no-install-recommends install python3-pyqt6 build-essential libgl1 libxcb-cursor0 dbus && apt clean     # Add build-essential for newer python:3-slim base images (pip needs gcc)
+    apt -y --no-install-recommends install python3-pyqt6 build-essential libgl1 libxcb-cursor0 dbus qt6-wayland && apt clean     # Add build-essential for newer python:3-slim base images (pip needs gcc and wayland support is not yet provided for)
 
     # Install BIDScoin
     # pip install /opt/bidscoin[spec2nii2bids,deface]
