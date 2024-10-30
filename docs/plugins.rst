@@ -24,6 +24,11 @@ Nibabel2bids: a generic plugin for imaging data
 
 The nibabel2bids plugin wraps around the versatile `nibabel <https://nipy.org/nibabel>`__ tool to convert a wide variety of data formats into NIfTI-files. Currently, the default template bidsmap is tailored to NIfTI source data only (but this can readily be extended), and BIDS sidecar files are not automatically produced by nibabel (but see the note further below). Please cite: `DOI: 10.5281/zenodo.591597 <https://doi.org/10.5281/zenodo.591597>`__
 
+Events2bids: a plugin for NeuroBS Presentation log data
+-------------------------------------------------------
+
+The events2bids plugin parses `NeuroBS <https://www.neurobs.com/>`__ stimulus Presentation log files to BIDS task events files.
+
 .. note::
    Out of the box, BIDScoin plugins typically produce sidecar files that contain metadata from the source headers. However, when such meta-data is missing (e.g. as for nibabel2bids), or when it needs to be appended or overruled, then users can add sidecar files to the source data (as explained `here <./bidsmap.html>`__) or add that meta-data using the bidseditor (the latter takes precedence).
 
@@ -42,6 +47,8 @@ In short, the purpose of the plugin is to interact with the data, by providing t
 - **bidsmapper_plugin()**: From a given session folder, identify the different runs (source datatypes) and, if they haven't been discovered yet, add them to the study bidsmap
 - **bidscoiner_plugin()**: From a given session folder, identify the different runs (source datatypes) and convert them to BIDS output files using the mapping data specified in the runitem
 
+Optionally, a ``EventsParser()`` class can be defined to convert stimulus presentation log data to task events files. This class inherits from the equally named class in the ``bids`` library, and should add code to make an initial parsing of the source data to a Pandas dataframe (table).
+
 The above API is illustrated in more detail in the placeholder Python code below. For real world examples you best first take a look at the nibabel2bids plugin, which exemplifies a clean and fairly minimal implementation of the required functionality. A similar, but somewhat more elaborated implementation (supporting multiple dataformats) can be found in the spec2nii2bids plugin. Finally, the dcm2niix2bids plugin is the more complicated example, due to the logic needed to deal with special output files and various irregularities.
 
 .. code-block:: python3
@@ -49,7 +56,7 @@ The above API is illustrated in more detail in the placeholder Python code below
     import logging
     from pathlib import Path
     from bidscoin.due import due, Doi
-    from bidscoin.bids import BidsMap, is_hidden
+    from bidscoin.bids import BidsMap, EventsParser, is_hidden
 
     LOGGER = logging.getLogger(__name__)
 
@@ -241,5 +248,28 @@ The above API is illustrated in more detail in the placeholder Python code below
             ext_meta = bidsmap.plugins[__name__]['meta']
             metadata = bids.poolmetadata(run.datasource, sidecar, run.meta, ext_meta)
             save(sidecar, metadata)
+
+
+    class PresentationEvents(EventsParser):
+        """Parser for stimulus presentation logfiles"""
+
+        def __init__(self, sourcefile: Path, _data):
+            """
+            Reads the event table from a logfile
+
+            :param sourcefile:  The full filepath of the logfile
+            :param data:        The run['events'] data (from a bidsmap)
+            """
+
+            super().__init__(sourcefile, _data)
+
+            # Parse an initial table from the Presentation logfile
+            self.sourcetable = pd.read_csv(self.sourcefile, sep='\t', skiprows=3, skip_blank_lines=True)
+
+        @property
+        def logtable(self) -> pd.DataFrame:
+            """Returns the source logging data"""
+
+            return self.sourcetable
 
 *Plugin placeholder code, illustrating the structure of a plugin with minimal functionality*

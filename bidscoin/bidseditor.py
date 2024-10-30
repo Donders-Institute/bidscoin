@@ -1093,15 +1093,18 @@ class EditWindow(QDialog):
         events_time.cellChanged.connect(self.events_time2run)
         events_time.setToolTip(f"Columns: The number of time units per second + the column names that contain timing information (e.g. [10000, 'Time', 'Duration'])\n"
                                f"Start: The event that marks the beginning of the experiment, i.e. where the clock should be (re)set to 0 (e.g. 'Code=10' if '10' is used to log the pulses)")
-        events_rows_label = QLabel('Conditions')
+        events_rows_label = QLabel('Rows')
         self.events_rows = events_rows = self.setup_table(events_data.get('rows',[]), 'events_rows')
         events_rows.cellChanged.connect(self.events_rows2run)
         events_rows.setToolTip(f"The groups of rows that are included in the output table")
         events_rows.horizontalHeader().setVisible(True)
+        events_rows.setStyleSheet('QTableView::item {border-right: 1px solid #d6d9dc;}')
         events_columns_label = QLabel('Columns')
         self.events_columns = events_columns = self.setup_table(events_data.get('columns',[]), 'events_columns')
         events_columns.cellChanged.connect(self.events_columns2run)
         events_columns.setToolTip(f"The mappings of the included output columns. To add a new column, enter its mapping in the empty bottom row")
+        events_columns.horizontalHeader().setVisible(True)
+        events_columns.setStyleSheet('QTableView::item {border-right: 1px solid #d6d9dc;}')
         log_table_label = QLabel('Log data')
         log_table = self.setup_table(events_data.get('log_table',[]), 'log_table', minsize=False)
         log_table.setShowGrid(True)
@@ -1156,10 +1159,10 @@ class EditWindow(QDialog):
         layout2_.setAlignment(arrow_, QtCore.Qt.AlignmentFlag.AlignHCenter)
         layout2_.addWidget(events_columns_label)
         layout2_.addWidget(events_columns)
-        layout2_.addWidget(events_time_label)
-        layout2_.addWidget(events_time)
         layout2_.addWidget(events_rows_label)
         layout2_.addWidget(events_rows)
+        layout2_.addWidget(events_time_label)
+        layout2_.addWidget(events_time)
         layout2_.addStretch()
         self.events_editbox = events_editbox = QGroupBox(' ')
         events_editbox.setSizePolicy(sizepolicy)
@@ -1243,8 +1246,8 @@ class EditWindow(QDialog):
 
         # Some ugly hacks to adjust individual tables
         tablename = table.objectName()
-        header    = tablename in ('log_table', 'events_table', 'events_rows')
-        extrarow  = [[{'value': '', 'editable': True}, {'value': '', 'editable': True}]] if tablename in ('events_columns','meta') else []
+        header    = tablename in ('log_table', 'events_table', 'events_rows', 'events_columns')
+        extrarow  = [[{'value': '', 'editable': True}, {'value': '', 'editable': True}]] if tablename in ('events_rows','events_columns','meta') else []
         ncols     = len(data[0]) if data else 2         # Always at least two columns (i.e. key, value)
 
         # Populate the blocked/hidden table
@@ -1412,20 +1415,15 @@ class EditWindow(QDialog):
                                    [{'value': 'start',     'editable': False}, {'value': runitem.events['time']['start'], 'editable': True}]]
 
         # Set up the data for the events conditions / row groups
-        header   = [{'value': '',        'editable': False}]
-        row_incl = [{'value': 'include', 'editable': False}]
-        row_cast = [{'value': 'cast',    'editable': False}]
-        for n, condition in enumerate(runitem.events.get('rows', [])):
-            header   += [{'value': f"{n + 1}",                             'editable': False}]
-            row_incl += [{'value': f"{dict(condition['include'])}",        'editable': True}]
-            row_cast += [{'value': f"{dict(condition.get('cast') or {})}", 'editable': True}]
-        header += [{'value': 'new', 'editable': False}]        # = Extra column
-        events_data['rows'] = [header, row_incl, row_cast]
+        events_data['rows'] = [[{'value': 'condition', 'editable': False}, {'value': 'cast output', 'editable': False}]]
+        for condition in runitem.events.get('rows') or []:
+            events_data['rows'].append([{'value': f"{dict(condition['include'])}", 'editable': True}, {'value': f"{dict(condition.get('cast') or {})}", 'editable': True}])
 
         # Set up the data for the events columns
-        events_data['columns'] = []
+        events_data['columns'] = [[{'value': 'input', 'editable': False}, {'value': 'output', 'editable': False}]]
         for mapping in runitem.events.get('columns') or []:
-            events_data['columns'].append([{'value': mapping, 'editable': True}])
+            for key, value in mapping.items():
+                events_data['columns'].append([{'value': value, 'editable': True}, {'value': key, 'editable': True}])
 
         # Set up the data for the events table
         parser = runitem.eventsparser()
@@ -1619,19 +1617,23 @@ class EditWindow(QDialog):
 
         # row: [[include, {column_in: regex}],
         #       [cast,    {column_out: newvalue}]]
-        mapping = self.events_rows.item(rowindex, colindex).text().strip()
+        mapping = self.events_rows.item(rowindex, colindex).text().strip() if self.events_rows.item(rowindex, colindex) else ''
+        nrows   = self.events_rows.rowCount()
 
-        LOGGER.verbose(f"User sets events['rows'][{colindex+1}] to {mapping}' for {self.target_run}")
+        LOGGER.verbose(f"User sets events['rows'][{rowindex}] to {mapping}' for {self.target_run}")
         if mapping:
-            ncols = self.events_rows.columnCount()
-            if colindex == ncols - 1:
-                self.target_run.events['rows'].append({'include' if rowindex==0 else 'cast': ast.literal_eval(mapping)})
+            try:
+                mapping = ast.literal_eval(mapping)  # Convert stringified dict back to dict
+            except (ValueError, SyntaxError):
+                mapping = {}
+            if rowindex == nrows - 1:
+                self.target_run.events['rows'].append({'include' if colindex==0 else 'cast': mapping})
             else:
-                self.target_run.events['rows'][colindex-1]['include' if rowindex==0 else 'cast'] = ast.literal_eval(mapping)
-        elif colindex <= len(self.target_run.events['rows']):           # Remove the row
-            del self.target_run.events['rows'][colindex-1]
+                self.target_run.events['rows'][rowindex]['include' if colindex==0 else 'cast'] = mapping
+        elif colindex == 0 and rowindex < nrows - 1:                # Remove the row
+            del self.target_run.events['rows'][rowindex]
         else:
-            LOGGER.bcdebug(f"Cannot remove events['rows'][{colindex-1}] for {self.target_run}")
+            LOGGER.bcdebug(f"Cannot remove events['rows'][{rowindex}] for {self.target_run}")
 
         # Refresh the events tables, i.e. delete empty rows or add a new row if a key is defined on the last row
         _,_,_,_,events_data = self.run2data()
@@ -1644,16 +1646,17 @@ class EditWindow(QDialog):
         # events_data['columns'] = [[{'source1': target1}],
         #                           [{'source2': target2}],
         #                           [..]]
-        mapping = self.events_columns.item(rowindex, colindex).text().strip()
-        LOGGER.verbose(f"User sets the column name to: '{mapping}' for {self.target_run}")
-        if mapping:     # Evaluate and store the data
-            nrows = self.events_columns.rowCount()
+        input  = self.events_columns.item(rowindex, 0).text().strip() if self.events_columns.item(rowindex, 0) else ''
+        output = self.events_columns.item(rowindex, 1).text().strip() if self.events_columns.item(rowindex, 1) else ''
+        nrows  = self.events_columns.rowCount()
+        LOGGER.verbose(f"User sets the column {colindex} to: '{input}: {output}' for {self.target_run}")
+        if input and output:                            # Evaluate and store the data
             if rowindex == nrows - 1:
-                self.target_run.events['columns'].append(ast.literal_eval(mapping))
+                self.target_run.events['columns'].append({output: input})
                 self.events_columns.insertRow(nrows)
             else:
-                self.target_run.events['columns'][rowindex] = ast.literal_eval(mapping)
-        else:           # Remove the column
+                self.target_run.events['columns'][rowindex] = {output: input}
+        elif rowindex < nrows - 1:                      # Remove the row
             del self.target_run.events['columns'][rowindex]
             self.events_columns.blockSignals(True)      # Not sure if this is needed?
             self.events_columns.removeRow(rowindex)
@@ -1716,6 +1719,7 @@ class EditWindow(QDialog):
             if val and key in self.target_run.bids and not self.target_run.bids[key]:
                 self.target_run.bids[key] = val
         self.target_run.meta       = template_run.meta.copy()
+        self.target_run.events     = copy.deepcopy(template_run.events)
 
         # Reset the edit window with the new target_run
         self.reset(refresh=True)
@@ -1791,10 +1795,11 @@ class EditWindow(QDialog):
         self.fill_table(self.attributes_table, attributes_data)
         self.fill_table(self.bids_table, bids_data)
         self.fill_table(self.meta_table, meta_data)
-        self.fill_table(self.events_time, events_data['time'])
-        self.fill_table(self.events_rows, events_data['rows'])
-        self.fill_table(self.events_columns, events_data['columns'])
-        self.fill_table(self.events_table, events_data['table'])
+        if events_data:
+            self.fill_table(self.events_time, events_data['time'])
+            self.fill_table(self.events_rows, events_data['rows'])
+            self.fill_table(self.events_columns, events_data['columns'])
+            self.fill_table(self.events_table, events_data['table'])
 
         # Refresh the BIDS output name
         self.refresh_bidsname()

@@ -820,9 +820,9 @@ class RunItem:
     def eventsparser(self) -> EventsParser:
         """Returns a plugin EventsParser instance to parse the stimulus presentation logfile (if any)"""
 
-        plugins = [bcoin.import_plugin(plugin, (f"{self.dataformat}Events",)) for plugin in self.plugins]
-        if plugins and plugins[0]:
-            return getattr(plugins[0], f"{self.dataformat}Events")(self.provenance, self.events)
+        for name in self.plugins:
+            if plugin := bcoin.import_plugin(name, (f"{self.dataformat}Events",)):
+                return getattr(plugin, f"{self.dataformat}Events")(self.provenance, self.events)
 
 
 class DataType:

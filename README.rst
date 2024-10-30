@@ -35,7 +35,7 @@ Features
 * [x] Multi-echo data\*
 * [x] Multi-coil data\*
 * [x] Plug-ins
-* [ ] Stimulus/behavioural logfiles
+* [x] Stimulus/behavioural logfiles
 
   ``*  = Only DICOM source data``
 

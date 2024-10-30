@@ -9,7 +9,6 @@ from pathlib import Path
 from bidscoin import bids
 from bidscoin.bids import BidsMap, DataFormat, EventsParser, is_hidden, Plugin
 # from convert_eprime.utils import remove_unicode
-# from convert_eprime.tests.utils import get_test_data_path
 
 LOGGER = logging.getLogger(__name__)
 

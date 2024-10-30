@@ -98,8 +98,7 @@ def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: 
         return
 
     # Load the data conversion plugins
-    plugins = [bcoin.import_plugin(plugin, ('bidscoiner_plugin',)) for plugin,options in bidsmap.plugins.items()]
-    plugins = [plugin for plugin in plugins if plugin]          # Filter the empty items from the list
+    plugins = [plugin for name in bidsmap.plugins if (plugin := bcoin.import_plugin(name, ('bidscoiner_plugin',)))]
     if not plugins:
         LOGGER.warning(f"The plugins listed in your bidsmap['Options'] did not have a usable `bidscoiner_plugin` function, nothing to do")
         LOGGER.info('-------------- FINISHED! ------------')

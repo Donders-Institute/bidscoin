@@ -38,6 +38,8 @@ Options:
       anon: y                       # Set this anonymization flag to 'y' to round off age and discard acquisition date from the meta data
       meta: [.json, .tsv, .tsv.gz]  # The file extensions of the equally named metadata sourcefiles that are copied over to the BIDS sidecar files
       fallback: y                   # Appends unhandled dcm2niix suffixes to the `acq` label if 'y' (recommended, else the suffix data is discarded)
+    events2bids:
+      meta: [.json, .tsv, .tsv.gz]
 
 
 DICOM:
@@ -1009,10 +1011,10 @@ Presentation:
   subject: <<filepath:/sub-(.*?)/>>   # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
   session: <<filepath:/sub-.*?/ses-(.*?)/>>   # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
 
-  beh:       # ----------------------- All behavioural runs -------------------
+  beh:        # ----------------------- All behavioural runs -------------------
   - attributes: &presentationent_attr
       Scenario:
-    bids: &presentationent_func         # See: schema/rules/files/raw/func.yaml
+    bids: &presentationent_beh          # See: schema/rules/files/raw/task.yaml
       task: <Scenario>
       acq:
       run: <<>>
@@ -1040,34 +1042,34 @@ Presentation:
         start:
           Code: 10                      # Code with which the first (or any) pulse is logged
 
-  eeg:       # ----------------------- All EEG runs ---------------------------
+  eeg:        # ----------------------- All EEG runs ---------------------------
   - attributes: *presentationent_attr
-    bids: *presentationent_func
+    bids: *presentationent_beh
     meta: *presentation_func_meta
     events: *presentation_events
 
   ieeg:       # ----------------------- All iEEG runs --------------------------
   - attributes: *presentationent_attr
-    bids: *presentationent_func
+    bids: *presentationent_beh
     meta: *presentation_func_meta
     events: *presentation_events
 
-  meg:       # ----------------------- All MEG runs ---------------------------
+  meg:        # ----------------------- All MEG runs ---------------------------
   - attributes: *presentationent_attr
-    bids: *presentationent_func
+    bids: *presentationent_beh
     meta: *presentation_func_meta
     events: *presentation_events
 
-  nirs:       # ----------------------- All nirs runs --------------------------
+  nirs:       # ----------------------- All NIRS runs --------------------------
   - attributes: *presentationent_attr
-    bids: *presentationent_func
+    bids: *presentationent_beh
     meta: *presentation_func_meta
     events: *presentation_events
 
   func:       # ----------------------- All functional runs --------------------
   - attributes: *presentationent_attr
     bids:
-      <<: *presentationent_func
+      <<: *presentationent_beh
       ce:
       dir:
       rec:
@@ -1079,7 +1081,7 @@ Presentation:
       <<: *presentationent_attr
       Scenario: .*
     bids:
-      <<: *presentationent_func
+      <<: *presentationent_beh
       ce:
       dir:
       rec:
@@ -1088,13 +1090,13 @@ Presentation:
 
   extra_data: # ----------------------- All extra data -------------------------
   - attributes: *presentationent_attr
-    bids: *presentationent_func
+    bids: *presentationent_beh
     meta: *presentation_func_meta
     events: *presentation_events
 
   exclude:    # ----------------------- Data that will be left out -------------
   - attributes: *presentationent_attr
-    bids: *presentationent_func
+    bids: *presentationent_beh
     meta: *presentation_func_meta
     events: *presentation_events
 
