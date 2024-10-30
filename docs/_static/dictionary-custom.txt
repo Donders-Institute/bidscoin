@@ -41,6 +41,7 @@ Donders
 ECAT
 EPI
 EchoTime
+Events2bids
 FSL
 Fieldmaps
 FreeSurfer
@@ -182,6 +183,7 @@ dm2niix
 dockerized
 duecredit
 echocombine
+events2bids
 executables
 fMRI
 fMRISBREF

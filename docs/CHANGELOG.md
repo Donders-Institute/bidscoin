@@ -4,10 +4,10 @@
 
 ## [dev]
 
-## [4.5.0] - TBD
+## [4.5.0] - To be determined
 
 ### Added
-- A events2bids plugin for converting Presentation logfiles to events tsv-files
+- An events2bids plugin for converting Presentation logfiles to events tsv-files
 
 ### Changed
 - Drop saving data in the derivatives folder (i.e. this was not required by BIDS after all)
