@@ -1574,43 +1574,26 @@ class EditWindow(QDialog):
         timeunit = self.target_run.events['time']['unit'] or 1
         start    = self.target_run.events['time']['start'] or {'': ''}
 
-        if key == 'columns':
-            try:
+        try:
+            if key == 'columns':
                 value = ast.literal_eval(value)         # Convert stringified list back to list
                 LOGGER.verbose(f"User sets events['timecols'] from '{timecols}' to '{value}' for {self.target_run}")
                 self.target_run.events['time']['cols'] = value
-            except (ValueError, SyntaxError):
-                QMessageBox.warning(self, 'Input error', f"Please enter a valid '{value}' list")
-                self.events_time.blockSignals(True)
-                self.events_time.item(rowindex, colindex).setText(timecols)  # Reset the value to the original timecols
-                self.events_time.blockSignals(False)
-
-        elif key == 'units/sec':
-            try:
+            elif key == 'units/sec':
                 value = int(value)
                 LOGGER.verbose(f"User sets events['units/sec'] from '{timeunit}' to '{value}' for {self.target_run}")
                 self.target_run.events['time']['unit'] = value
-            except (ValueError, TypeError):
-                QMessageBox.warning(self, 'Input error', f"Please enter a valid '{value}' integer")
-                self.events_time.blockSignals(True)
-                self.events_time.item(rowindex, colindex).setText(timeunit)  # Reset the value to the original timecols
-                self.events_time.blockSignals(False)
-
-        elif key == 'start':
-            try:
+            elif key == 'start':
                 value = ast.literal_eval(value)         # Convert stringified list back to list
                 LOGGER.verbose(f"User sets events['{key}'] from '{start}' to '{value}' for {self.target_run}")
                 self.target_run.events['time']['start'] = value
-            except (ValueError, SyntaxError):
-                QMessageBox.warning(self, 'Input error', f"Please enter a valid '{value}' dictionary")
-                self.events_time.blockSignals(True)
-                self.events_time.item(rowindex, 1).setText(start)  # Reset the value to the original start
-                self.events_time.blockSignals(False)
+        except (ValueError, SyntaxError):
+            QMessageBox.warning(self, 'Input error', f"Please enter a valid '{value}' value")
 
         # Refresh the events tables, i.e. delete empty rows or add a new row if a key is defined on the last row
         _,_,_,_,events_data = self.run2data()
-        for name in ('table',):     # events_data:
-            self.fill_table(self.events_table, events_data[name])
+        self.fill_table(self.events_time, events_data['time'])
+        self.fill_table(self.events_table, events_data['table'])
 
     def events_rows2run(self, rowindex: int, colindex: int):
         """Events value has been changed. Read the data from the event 'rows' table"""
@@ -1620,16 +1603,16 @@ class EditWindow(QDialog):
         mapping = self.events_rows.item(rowindex, colindex).text().strip() if self.events_rows.item(rowindex, colindex) else ''
         nrows   = self.events_rows.rowCount()
 
-        LOGGER.verbose(f"User sets events['rows'][{rowindex}] to {mapping}' for {self.target_run}")
         if mapping:
             try:
                 mapping = ast.literal_eval(mapping)  # Convert stringified dict back to dict
+                LOGGER.verbose(f"User sets events['rows'][{rowindex}] to {mapping}' for {self.target_run}")
+                if rowindex == nrows - 1:
+                    self.target_run.events['rows'].append({'include' if colindex==0 else 'cast': mapping})
+                else:
+                    self.target_run.events['rows'][rowindex]['include' if colindex==0 else 'cast'] = mapping
             except (ValueError, SyntaxError):
-                mapping = {}
-            if rowindex == nrows - 1:
-                self.target_run.events['rows'].append({'include' if colindex==0 else 'cast': mapping})
-            else:
-                self.target_run.events['rows'][rowindex]['include' if colindex==0 else 'cast'] = mapping
+                QMessageBox.warning(self, 'Input error', f"Please enter a valid '{mapping}' dictionary")
         elif colindex == 0 and rowindex < nrows - 1:                # Remove the row
             del self.target_run.events['rows'][rowindex]
         else:
@@ -1649,21 +1632,26 @@ class EditWindow(QDialog):
         input  = self.events_columns.item(rowindex, 0).text().strip() if self.events_columns.item(rowindex, 0) else ''
         output = self.events_columns.item(rowindex, 1).text().strip() if self.events_columns.item(rowindex, 1) else ''
         nrows  = self.events_columns.rowCount()
-        LOGGER.verbose(f"User sets the column {colindex} to: '{input}: {output}' for {self.target_run}")
-        if input and output:                            # Evaluate and store the data
-            if rowindex == nrows - 1:
-                self.target_run.events['columns'].append({output: input})
-                self.events_columns.insertRow(nrows)
-            else:
-                self.target_run.events['columns'][rowindex] = {output: input}
-        elif rowindex < nrows - 1:                      # Remove the row
-            del self.target_run.events['columns'][rowindex]
-            self.events_columns.blockSignals(True)      # Not sure if this is needed?
-            self.events_columns.removeRow(rowindex)
-            self.events_columns.blockSignals(False)
+
+        if input and not output:
+            output = input
+
+        if not input or input in self.target_run.eventsparser().logtable:
+            LOGGER.verbose(f"User sets the column {colindex} to: '{input}: {output}' for {self.target_run}")
+            if output:                              # Evaluate and store the data
+                if rowindex == nrows - 1:
+                    self.target_run.events['columns'].append({output: input})
+                    self.events_columns.insertRow(nrows)
+                else:
+                    self.target_run.events['columns'][rowindex] = {output: input}
+            elif rowindex < nrows - 1:              # Remove the row
+                del self.target_run.events['columns'][rowindex]
+        else:
+            QMessageBox.warning(self, 'Input error', f"The '{input}' input column does not exist, please enter a valid name")
 
         # Refresh the events tables, i.e. delete empty rows or add a new row if a key is defined on the last row
         _,_,_,_,events_data = self.run2data()
+        self.fill_table(self.events_columns, events_data['columns'])
         self.fill_table(self.events_table, events_data['table'])
 
     def edit_events(self):
