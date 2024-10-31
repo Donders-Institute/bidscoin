@@ -39,7 +39,8 @@ Options:
       meta: [.json, .tsv, .tsv.gz]  # The file extensions of the equally named metadata sourcefiles that are copied over to the BIDS sidecar files
       fallback: y                   # Appends unhandled dcm2niix suffixes to the `acq` label if 'y' (recommended, else the suffix data is discarded)
     events2bids:
-      meta: [.json, .tsv, .tsv.gz]
+      table: event                  # The table that is used to generate the output table (https://www.neurobs.com/pres_docs/html/03_presentation/07_data_reporting/01_logfiles/index.html)
+      meta: [.json, .tsv]
 
 
 DICOM:

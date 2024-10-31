@@ -1281,7 +1281,7 @@ class EditWindow(QDialog):
 
             elif header:
                 if i == 0:              # The first/header row of the data has the column names
-                    table.setHorizontalHeaderLabels(item.get('value') for item in row)
+                    table.setHorizontalHeaderLabels(str(item.get('value')) for item in row)
                     continue
                 i -= 1                  # Account for the header row
 
@@ -1310,7 +1310,7 @@ class EditWindow(QDialog):
                         myitem.setToolTip(get_entityhelp(key))
                     elif tablename == 'meta' and j == 0:
                         myitem.setToolTip(get_metahelp(key))
-                    elif tablename == 'events_columns' and i == 1:
+                    elif tablename == 'events_columns' and j == 1:
                         myitem.setToolTip(get_eventshelp(itemvalue))
                     table.setItem(i, j, myitem)
 
@@ -1423,18 +1423,18 @@ class EditWindow(QDialog):
         events_data['columns'] = [[{'value': 'input', 'editable': False}, {'value': 'output', 'editable': False}]]
         for mapping in runitem.events.get('columns') or []:
             for key, value in mapping.items():
-                events_data['columns'].append([{'value': value, 'editable': True}, {'value': key, 'editable': True}])
+                events_data['columns'].append([{'value': value, 'editable': True}, {'value': key, 'editable': key not in ('onset','duration')}])
 
         # Set up the data for the events table
         parser = runitem.eventsparser()
         if parser:
             df = parser.logtable
-            events_data['log_table'] = [[{'value': name, 'editable': False} for name in df.columns]]
+            events_data['log_table'] = [[{'value': name, 'editable': False} for name in df.columns]] if len(df) else []
             for i in range(len(df)):
                 events_data['log_table'].append([{'value': value, 'editable': False} for value in df.iloc[i]])
 
             df = parser.eventstable
-            events_data['table'] = [[{'value': name, 'editable': False} for name in df.columns]]
+            events_data['table'] = [[{'value': name, 'editable': False} for name in df.columns]] if len(df) else []
             for i in range(len(df)):
                 events_data['table'].append([{'value': value, 'editable': False} for value in df.iloc[i]])
         else:

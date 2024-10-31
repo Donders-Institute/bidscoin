@@ -62,17 +62,18 @@ extensions  = [ext.value for _,ext in bidsschema.objects.extensions.items() if e
 class EventsParser(ABC):
     """Parser for stimulus presentation logfiles"""
 
-    def __init__(self, sourcefile: Path, eventsdata: dict):
+    def __init__(self, sourcefile: Path, eventsdata: dict, options: dict):
         """
         Reads the events table from the events logfile
 
         :param sourcefile:  The full filepath of the raw logfile
         :param eventsdata:  The run['events'] data (from a bidsmap)
+        :param options:     The plugin options
         """
 
         self.sourcefile = sourcefile
         self._data      = eventsdata
-        # TODO: Check if edits in self.start/timecols propagate back to the bidsmap data
+        self.options    = options
 
     def __repr__(self):
 
@@ -121,6 +122,7 @@ class EventsParser(ABC):
 
         # Loop over the row groups to filter/edit the rows
         rows = pd.Series([len(self.rows) == 0] * len(df)).astype(bool)  # Series with True values if no row expressions were specified
+        rows.index = df.index                                           # Make sure the indices align
         for group in self.rows:
 
             for column, regex in group['include'].items():
@@ -822,7 +824,7 @@ class RunItem:
 
         for name in self.plugins:
             if plugin := bcoin.import_plugin(name, (f"{self.dataformat}Events",)):
-                return getattr(plugin, f"{self.dataformat}Events")(self.provenance, self.events)
+                return getattr(plugin, f"{self.dataformat}Events")(self.provenance, self.events, self.plugins[name])
 
 
 class DataType:

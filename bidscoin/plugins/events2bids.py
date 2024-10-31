@@ -13,7 +13,7 @@ from bidscoin.bids import BidsMap, DataFormat, EventsParser, is_hidden, Plugin
 LOGGER = logging.getLogger(__name__)
 
 # The default/fallback options that are set when installing/using the plugin
-OPTIONS = Plugin({'meta': ['.json', '.tsv']})  # The file extensions of the equally named metadata sourcefiles that are copied over as BIDS sidecar files
+OPTIONS = Plugin({'table': 'event', 'meta': ['.json', '.tsv']})  # The file extensions of the equally named metadata sourcefiles that are copied over as BIDS sidecar files
 
 
 def test(options: Plugin=OPTIONS) -> int:
@@ -228,28 +228,47 @@ def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> None:
 class PresentationEvents(EventsParser):
     """Parser for Presentation (Neurobs) logfiles"""
 
-    def __init__(self, sourcefile: Path, _data):
+    def __init__(self, sourcefile: Path, _data: dict, options: dict):
         """
         Reads the event table from the Presentation logfile
 
         :param sourcefile:  The full filepath of the logfile
         :param data:        The run['events'] data (from a bidsmap)
+        :param options:     The plugin options
         """
 
-        super().__init__(sourcefile, _data)
+        super().__init__(sourcefile, _data, options)
 
-        # Read the event table from the Presentation logfile
-        self.sourcetable = df = pd.read_csv(self.sourcefile, sep='\t', skiprows=3, skip_blank_lines=True)
-        """The Presentation event table (https://www.neurobs.com/pres_docs/html/03_presentation/07_data_reporting/01_logfiles/index.html)"""
-
-        # Drop the stimulus, video and survey tables
-        endoftable = df['Subject'].isin(['Event Type', 'filename', 'Time']).idxmax()
-        if endoftable:
-            LOGGER.bcdebug(f"Dropping sourcetable data at row: {endoftable}")
-            self.sourcetable = df.iloc[:endoftable]
+        # Read the log-tables from the Presentation logfile
+        self._sourcetable = pd.read_csv(self.sourcefile, sep='\t', skiprows=3, skip_blank_lines=True)
+        """The Presentation log-tables (https://www.neurobs.com/pres_docs/html/03_presentation/07_data_reporting/01_logfiles/index.html)"""
 
     @property
     def logtable(self) -> pd.DataFrame:
-        """Returns the source logging data"""
+        """Returns a Presentation log-table"""
 
-        return self.sourcetable
+        nrows          = len(self._sourcetable)
+        stimulus_start = (self._sourcetable.iloc[:, 0] == 'Event Type').idxmax() or nrows
+        video_start    = (self._sourcetable.iloc[:, 0] == 'filename').idxmax() or nrows
+        survey_start   = (self._sourcetable.iloc[:, 0] == 'Time').idxmax() or nrows
+
+        # Drop the stimulus, video and survey tables
+        if self.options['table'] == 'event':
+            begin = 0
+            end   = min(stimulus_start, video_start, survey_start)
+        elif self.options['table'] == 'stimulus':
+            self._sourcetable.columns = self._sourcetable.iloc[stimulus_start]
+            begin = stimulus_start + 1
+            end   = min(video_start, survey_start)
+        elif self.options['table'] == 'video':
+            self._sourcetable.columns = self._sourcetable.iloc[video_start]
+            begin = video_start + 1
+            end   = survey_start
+        else:
+            begin = 0
+            end   = nrows
+            LOGGER.error(f"NOT IMPLEMENTED TABLE: {self.options['table']}")
+
+        LOGGER.bcdebug(f"Slicing '{self.options['table']}' sourcetable[{begin}:{end}]")
+
+        return self._sourcetable.iloc[begin:end]
