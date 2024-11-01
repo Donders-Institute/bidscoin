@@ -820,7 +820,7 @@ class MainWindow(QMainWindow):
             LOGGER.error(f"Cannot add the '{plugin}' plugin as it already exists in the bidsmap")
             return
         module  = bcoin.import_plugin(plugin)
-        options = self.input_bidsmap.plugins.get(plugin, self.template_bidsmap.plugins.get(plugin, module.OPTIONS if 'OPTIONS' in dir(module) else {}))
+        options = self.input_bidsmap.plugins.get(plugin, self.template_bidsmap.plugins.get(plugin, getattr(module, 'OPTIONS', {})))
 
         # Insert the selected plugin in the options_layout
         LOGGER.info(f"Adding the '{plugin}' plugin to bidsmap")
@@ -1256,8 +1256,6 @@ class EditWindow(QDialog):
         table.clearContents()
         table.setRowCount(len(data + extrarow) - header)
         table.setColumnCount(ncols)
-        table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
-        table.horizontalHeader().setSectionResizeMode(ncols - 1, QHeaderView.ResizeMode.Stretch)
 
         for i, row in enumerate(data + extrarow):
 
@@ -1314,6 +1312,8 @@ class EditWindow(QDialog):
                         myitem.setToolTip(get_eventshelp(itemvalue))
                     table.setItem(i, j, myitem)
 
+        table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        table.horizontalHeader().setSectionResizeMode(ncols - 1, QHeaderView.ResizeMode.Stretch)
         table.show()
         table.blockSignals(False)
 
@@ -2267,7 +2267,7 @@ def bidseditor(bidsfolder: str, bidsmap: str='', template: str=bidsmap_template)
 
     # Start the Qt-application
     app = QApplication(sys.argv)
-    app.setApplicationName(f"{bidsmapfile} - BIDS editor {__version__}")
+    app.setApplicationName(f"{input_bidsmap.filepath} - BIDS editor {__version__}")
     mainwin = MainWindow(bidsfolder, input_bidsmap, template_bidsmap, datasaved=True)
     mainwin.show()
     app.exec()

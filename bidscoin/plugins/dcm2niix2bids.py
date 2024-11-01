@@ -46,7 +46,7 @@ def test(options: Plugin=OPTIONS) -> int:
 
     LOGGER.info('Testing the dcm2niix2bids installation:')
 
-    if 'readphysio' not in dir(physio) or 'physio2tsv' not in dir(physio):
+    if not hasattr(physio, 'readphysio') or not hasattr(physio, 'physio2tsv'):
         LOGGER.error("Could not import the expected 'readphysio' and/or 'physio2tsv' from the physio.py utility")
         return 1
     if 'command' not in {**OPTIONS, **options}:

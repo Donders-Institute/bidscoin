@@ -275,11 +275,11 @@ def install_plugins(filenames: List[str]=()) -> None:
             continue
 
         # Add the Options and data format section of the plugin to the default template bidsmap
-        if 'OPTIONS' in dir(module) or 'BIDSMAP' in dir(module):
-            if 'OPTIONS' in dir(module):
+        if hasattr(module, 'OPTIONS') or hasattr(module, 'BIDSMAP'):
+            if hasattr(module, 'OPTIONS'):
                 LOGGER.info(f"Adding default {file.name} bidsmap options to the {bidsmap_template.stem} template")
                 template['Options']['plugins'][file.stem] = module.OPTIONS
-            if 'BIDSMAP' in dir(module):
+            if hasattr(module, 'BIDSMAP'):
                 for key, value in module.BIDSMAP.items():
                     LOGGER.info(f"Adding default {key} bidsmappings to the {bidsmap_template.stem} template")
                     template[key] = value
@@ -331,11 +331,11 @@ def uninstall_plugins(filenames: List[str]=(), wipe: bool=True) -> None:
         if not module:
             LOGGER.warning(f"Cannot remove any {file.stem} bidsmap options from the {bidsmap_template.stem} template")
             continue
-        if 'OPTIONS' in dir(module) or 'BIDSMAP' in dir(module):
-            if 'OPTIONS' in dir(module):
+        if hasattr(module, 'OPTIONS') or hasattr(module, 'BIDSMAP'):
+            if hasattr(module, 'OPTIONS'):
                 LOGGER.info(f"Removing default {file.stem} bidsmap options from the {bidsmap_template.stem} template")
                 template['Options']['plugins'].pop(file.stem, None)
-            if wipe and 'BIDSMAP' in dir(module):
+            if wipe and hasattr(module, 'BIDSMAP'):
                 for key, value in module.BIDSMAP.items():
                     LOGGER.info(f"Removing default {key} bidsmappings from the {bidsmap_template.stem} template")
                     template.pop(key, None)
@@ -376,7 +376,7 @@ def import_plugin(plugin: Union[Path,str], functions: tuple=()) -> Union[types.M
 
         functionsfound = []
         for function in functions:
-            if function not in dir(module):
+            if not hasattr(module, function):
                 LOGGER.verbose(f"Could not find '{function}' in the '{plugin}' plugin")
             elif not callable(getattr(module, function)):
                 LOGGER.error(f"'The {function}' attribute in the '{plugin}' plugin is not callable")
@@ -405,13 +405,13 @@ def test_plugin(plugin: Union[Path,str], options: dict) -> int:
 
     LOGGER.info(f"--------- Testing the '{plugin}' plugin ---------")
 
-    # First test to see if we can import the plugin
+    # First test to see if we can import the core plugin methods
     module = import_plugin(plugin, ('bidsmapper_plugin','bidscoiner_plugin'))
     if module is None:
         return 1
 
     # Then run the plugin's own 'test' routine (if implemented)
-    if 'test' in dir(module) and callable(getattr(module, 'test')):
+    if hasattr(module, 'test') and callable(getattr(module, 'test')):
         try:
             returncode = module.test(options)
             if returncode == 0:

@@ -122,7 +122,6 @@ class EventsParser(ABC):
 
         # Loop over the row groups to filter/edit the rows
         rows = pd.Series([len(self.rows) == 0] * len(df)).astype(bool)  # Series with True values if no row expressions were specified
-        rows.index = df.index                                           # Make sure the indices align
         for group in self.rows:
 
             for column, regex in group['include'].items():

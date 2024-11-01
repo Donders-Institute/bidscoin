@@ -242,28 +242,35 @@ class PresentationEvents(EventsParser):
         # Read the log-tables from the Presentation logfile
         self._sourcetable = pd.read_csv(self.sourcefile, sep='\t', skiprows=3, skip_blank_lines=True)
         """The Presentation log-tables (https://www.neurobs.com/pres_docs/html/03_presentation/07_data_reporting/01_logfiles/index.html)"""
+        self._columns     = self._sourcetable.columns
+        """Store the original column names"""
 
     @property
     def logtable(self) -> pd.DataFrame:
         """Returns a Presentation log-table"""
 
-        nrows          = len(self._sourcetable)
-        stimulus_start = (self._sourcetable.iloc[:, 0] == 'Event Type').idxmax() or nrows
-        video_start    = (self._sourcetable.iloc[:, 0] == 'filename').idxmax() or nrows
-        survey_start   = (self._sourcetable.iloc[:, 0] == 'Time').idxmax() or nrows
+        nrows           = len(self._sourcetable)
+        stimulus_header = (self._sourcetable.iloc[:, 0] == 'Event Type').idxmax() or nrows
+        video_header    = (self._sourcetable.iloc[:, 0] == 'filename').idxmax() or nrows
+        survey_header   = (self._sourcetable.iloc[:, 0] == 'Time').idxmax() or nrows
 
-        # Drop the stimulus, video and survey tables
+        # Keep only the event, stimulus, video or survey table
+        self._sourcetable.columns = self._columns
         if self.options['table'] == 'event':
             begin = 0
-            end   = min(stimulus_start, video_start, survey_start)
+            end   = min(stimulus_header, video_header, survey_header)
         elif self.options['table'] == 'stimulus':
-            self._sourcetable.columns = self._sourcetable.iloc[stimulus_start]
-            begin = stimulus_start + 1
-            end   = min(video_start, survey_start)
+            self._sourcetable.columns = self._sourcetable.iloc[stimulus_header]
+            begin = stimulus_header + 1
+            end   = min(video_header, survey_header)
         elif self.options['table'] == 'video':
-            self._sourcetable.columns = self._sourcetable.iloc[video_start]
-            begin = video_start + 1
-            end   = survey_start
+            self._sourcetable.columns = self._sourcetable.iloc[video_header]
+            begin = video_header + 1
+            end   = survey_header
+        elif self.options['table'] == 'survey':
+            self._sourcetable.columns = self._sourcetable.iloc[survey_header]
+            begin = survey_header + 1
+            end   = nrows
         else:
             begin = 0
             end   = nrows
