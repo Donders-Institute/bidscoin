@@ -47,7 +47,7 @@ In short, the purpose of the plugin is to interact with the data, by providing t
 - **bidsmapper_plugin()**: From a given session folder, identify the different runs (source datatypes) and, if they haven't been discovered yet, add them to the study bidsmap
 - **bidscoiner_plugin()**: From a given session folder, identify the different runs (source datatypes) and convert them to BIDS output files using the mapping data specified in the runitem
 
-Optionally, a ``EventsParser()`` class can be defined to convert stimulus presentation log data to task events files. This class inherits from the equally named class in the ``bids`` library, and should add code to make an initial parsing of the source data to a Pandas dataframe (table).
+Optionally, a ``EventsParser()`` class can be defined to convert stimulus presentation log data to task events files. This class inherits from the equally named class in the ``bids`` library, and should add code to make an initial parsing of the source data to a Pandas DataFrame (table).
 
 The above API is illustrated in more detail in the placeholder Python code below. For real world examples you best first take a look at the nibabel2bids plugin, which exemplifies a clean and fairly minimal implementation of the required functionality. A similar, but somewhat more elaborated implementation (supporting multiple dataformats) can be found in the spec2nii2bids plugin. Finally, the dcm2niix2bids plugin is the more complicated example, due to the logic needed to deal with special output files and various irregularities.
 
