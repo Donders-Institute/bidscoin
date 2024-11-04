@@ -28,7 +28,7 @@ import subprocess
 from pathlib import Path
 from importlib import metadata
 from typing import Tuple, Union, List
-import logging
+from logging import getLogger
 from .due import due, Doi
 try:
     import tomllib
@@ -61,8 +61,9 @@ tutorialurl  = 'https://surfdrive.surf.nl/files/index.php/s/HTxdUbykBZm2cYM/down
 bidscoinroot = Path(__file__).parent
 schemafolder = bidscoinroot/'schema'
 
-# Get the BIDSCOIN_DEBUG environment variable to set the log-messages and logging level, etc
-DEBUG = os.getenv('BIDSCOIN_DEBUG','').upper() in ('1', 'TRUE', 'Y', 'YES')
+# Get the LOGGER and BIDSCOIN_DEBUG environment variable to set the log-messages and logging level, etc
+LOGGER = getLogger(__name__)
+DEBUG  = os.getenv('BIDSCOIN_DEBUG','').upper() in ('1', 'TRUE', 'Y', 'YES')
 
 # Create a BIDScoin user configuration directory if needed
 configdir      = Path(os.getenv('BIDSCOIN_CONFIGDIR') or (Path.home() if os.access(Path.home(),os.W_OK) else Path(tempfile.gettempdir()))/'.bidscoin')/__version__
@@ -97,40 +98,6 @@ if not bidsmap_template.is_file():
 # Register the BIDScoin citation
 due.cite(Doi('10.3389/fninf.2021.770608'), description='A versatile toolkit to convert source data to the Brain Imaging Data Structure (BIDS)',
          path='bidscoin', version=__version__, cite_module=True, tags=['reference-implementation'])
-
-
-class CustomLogger(logging.Logger):
-    """Extend the Logger class to add custom methods for the new levels"""
-
-    # Define custom logging levels
-    BCDEBUG, BCDEBUG_LEVEL = 'BCDEBUG', 11      # NB: using the standard debug mode will generate may debug messages from imports
-    VERBOSE, VERBOSE_LEVEL = 'VERBOSE', 15
-    SUCCESS, SUCCESS_LEVEL = 'SUCCESS', 25
-
-    # Add custom log levels to logging
-    logging.addLevelName(BCDEBUG_LEVEL, BCDEBUG)
-    logging.addLevelName(VERBOSE_LEVEL, VERBOSE)
-    logging.addLevelName(SUCCESS_LEVEL, SUCCESS)
-
-    def bcdebug(self, message, *args, **kwargs):
-        """Custom BIDSCOIN DEBUG messages"""
-        if self.isEnabledFor(self.BCDEBUG_LEVEL):
-            self._log(self.BCDEBUG_LEVEL, message, args, **kwargs)
-
-    def verbose(self, message, *args, **kwargs):
-        """Custom BIDSCOIN VERBOSE messages"""
-        if self.isEnabledFor(self.VERBOSE_LEVEL):
-            self._log(self.VERBOSE_LEVEL, message, args, **kwargs)
-
-    def success(self, message, *args, **kwargs):
-        """Custom BIDSCOIN SUCCESS messages"""
-        if self.isEnabledFor(self.SUCCESS_LEVEL):
-            self._log(self.SUCCESS_LEVEL, message, args, **kwargs)
-
-
-# Get a logger from the custom logger class
-logging.setLoggerClass(CustomLogger)
-LOGGER = logging.getLogger(__name__)
 
 
 def check_version() -> Tuple[str, Union[bool, None], str]:

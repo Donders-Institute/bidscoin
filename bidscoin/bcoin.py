@@ -113,10 +113,16 @@ def synchronize(pbatch, jobids: list, wait: int=15):
 def setup_logging(logfile: Path=Path()):
     """
     Set up the logging framework:
-    - Add a console stream handler for generating terminal output.
-    - Optionally add file handlers for normal log and warning/error log if logfile is provided.
+    1) Extend the Logger class with custom 'bcdebug', 'verbose' and 'success' logging levels / methods
+    2) Add a console streamhandler
+    3) If given a logfile, then add a regular log + a warning/error filehandler
 
-    :param logfile: Path to the logfile. If none, logging is console-only
+    NB: Defining a `CustomLogger(logging.Logger)` class + setting `logging.setLoggerClass(CustomLogger)`
+    (as in https://github.com/xolox/python-verboselogs/blob/master/verboselogs/__init__.py)
+    does not seem to work / is ignored by the plugins. Extending `logging.getLoggerClass()` works robustly
+
+    :param logfile:     Name of the logfile
+    :return:
     """
 
     # Set the default formats
@@ -128,7 +134,28 @@ def setup_logging(logfile: Path=Path()):
         cfmt = '%(levelname)s | %(message)s'
     datefmt  = '%Y-%m-%d %H:%M:%S'
 
-    # Get the root logger and set the appropriate level
+    # Register custom log levels
+    for name, level in {'BCDEBUG': 11, 'VERBOSE': 15, 'SUCCESS': 25}.items():
+        logging.addLevelName(level, name)
+        setattr(logging, name, level)
+
+    # Register custom log methods
+    def bcdebug(self, message, *args, **kws):
+        if self.isEnabledFor(logging.BCDEBUG):
+            self._log(logging.BCDEBUG, message, args, **kws)
+    logging.getLoggerClass().bcdebug = bcdebug
+
+    def verbose(self, message, *args, **kws):
+        if self.isEnabledFor(logging.VERBOSE):
+            self._log(logging.VERBOSE, message, args, **kws)
+    logging.getLoggerClass().verbose = verbose
+
+    def success(self, message, *args, **kws):
+        if self.isEnabledFor(logging.SUCCESS):
+            self._log(logging.SUCCESS, message, args, **kws)
+    logging.getLoggerClass().success = success
+
+    # Set the root logging level
     logger = logging.getLogger()
     logger.setLevel('BCDEBUG' if DEBUG else 'VERBOSE')
 
