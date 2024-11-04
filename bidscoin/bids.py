@@ -115,9 +115,10 @@ class EventsParser(ABC):
         if self.time.get('start'):
             start = pd.Series([True] * len(df))
             for column, value in self.time['start'].items():
-                start &= self.logtable[column].astype(str) == str(value)
+                start &= (self.logtable[column].astype(str) == str(value)).values
             if start.any():
-                df['onset'] = df['onset'] - df['onset'][start].iloc[0]  # Take the time of the first occurrence as zero
+                LOGGER.bcdebug(f"Reseting clock offset of: {df['onset'][start.values].iloc[0]}")
+                df['onset'] = df['onset'] - df['onset'][start.values].iloc[0]  # Take the time of the first occurrence as zero
 
         # Loop over the row groups to filter/edit the rows
         rows = pd.Series([len(self.rows) == 0] * len(df)).astype(bool)  # Boolean series with True values if no row expressions were specified
