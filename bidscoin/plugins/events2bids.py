@@ -249,26 +249,27 @@ class PresentationEvents(EventsParser):
     def logtable(self) -> pd.DataFrame:
         """Returns a Presentation log-table"""
 
-        nrows           = len(self._sourcetable)
-        stimulus_header = (self._sourcetable.iloc[:, 0] == 'Event Type').idxmax() or nrows
-        video_header    = (self._sourcetable.iloc[:, 0] == 'filename').idxmax() or nrows
-        survey_header   = (self._sourcetable.iloc[:, 0] == 'Time').idxmax() or nrows
+        df              = self._sourcetable
+        nrows           = len(df)
+        stimulus_header = (df.iloc[:, 0] == 'Event Type').idxmax() or nrows
+        video_header    = (df.iloc[:, 0] == 'filename').idxmax() or nrows
+        survey_header   = (df.iloc[:, 0] == 'Time').idxmax() or nrows
 
-        # Keep only the event, stimulus, video or survey table
-        self._sourcetable.columns = self._columns
+        # Get the row indices to slice the event, stimulus, video or survey table
+        df.columns = self._columns
         if self.options['table'] == 'event':
             begin = 0
             end   = min(stimulus_header, video_header, survey_header)
         elif self.options['table'] == 'stimulus':
-            self._sourcetable.columns = self._sourcetable.iloc[stimulus_header]
+            df.columns = df.iloc[stimulus_header]
             begin = stimulus_header + 1
             end   = min(video_header, survey_header)
         elif self.options['table'] == 'video':
-            self._sourcetable.columns = self._sourcetable.iloc[video_header]
+            df.columns = df.iloc[video_header]
             begin = video_header + 1
             end   = survey_header
         elif self.options['table'] == 'survey':
-            self._sourcetable.columns = self._sourcetable.iloc[survey_header]
+            df.columns = df.iloc[survey_header]
             begin = survey_header + 1
             end   = nrows
         else:
@@ -276,6 +277,23 @@ class PresentationEvents(EventsParser):
             end   = nrows
             LOGGER.error(f"NOT IMPLEMENTED TABLE: {self.options['table']}")
 
-        LOGGER.bcdebug(f"Slicing '{self.options['table']}' sourcetable[{begin}:{end}]")
+        LOGGER.bcdebug(f"Slicing '{self.options['table']}{df.shape}' sourcetable[{begin}:{end}]")
 
-        return self._sourcetable.iloc[begin:end]
+        # Ensure unique column names by renaming columns with NaN or empty names and by appending suffixes to duplicate names
+        cols = []                               # The new column names
+        dupl = {}                               # The duplicate index number
+        for i, col in enumerate(df.columns):
+            if pd.isna(col) or col == '':       # Check if the column name is NaN or an empty string
+                cols.append(new_col := f"unknown_{i}")
+                LOGGER.info(f"Renaming empty column name at index {i}: {col} -> {new_col}")
+            elif col in dupl:                   # If duplicate, append the index number
+                dupl[col] += 1
+                cols.append(new_col := f"{col}_{dupl[col]}")
+                LOGGER.info(f"Renaming duplicate column name: {col} -> {new_col}")
+            else:                               # First occurrence of the column name, add it to dupl
+                dupl[col] = 0
+                cols.append(col)
+        df.columns = cols
+
+        # Return the sliced the table
+        return df.iloc[begin:end]

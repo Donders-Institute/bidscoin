@@ -102,15 +102,14 @@ class EventsParser(ABC):
         if not self.isvalid:
             return pd.DataFrame()
 
-        # Take the columns of interest from the logtable and rename them
         df = copy.deepcopy(self.logtable)
 
         # Convert the timing values to seconds (with maximally 4 digits after the decimal point)
         df[self.time['cols']] = (df[self.time['cols']].apply(pd.to_numeric, errors='coerce') / self.time['unit']).round(4)
 
-        # Take the columns of interest and from now on use the BIDS column names
-        df         = df.loc[:, [name for item in self.columns for name in item.values()]]
-        df.columns = [name for item in self.columns for name in item.keys()]
+        # Take the logtable columns of interest and from now on use the BIDS column names
+        df         = df.loc[:, [sourcecol for item in self.columns for sourcecol in item.values() if sourcecol]]
+        df.columns = [eventscol for item in self.columns for eventscol, sourcecol in item.items() if sourcecol]
 
         # Set the clock at zero at the start of the experiment
         if self.time.get('start'):
@@ -121,22 +120,22 @@ class EventsParser(ABC):
                 df['onset'] = df['onset'] - df['onset'][start].iloc[0]  # Take the time of the first occurrence as zero
 
         # Loop over the row groups to filter/edit the rows
-        rows = pd.Series([len(self.rows) == 0] * len(df)).astype(bool)  # Series with True values if no row expressions were specified
+        rows = pd.Series([len(self.rows) == 0] * len(df)).astype(bool)  # Boolean series with True values if no row expressions were specified
         for group in self.rows:
 
             for column, regex in group['include'].items():
 
-                # Get the rows that match the expression
+                # Get the rows that match the expression, i.e. make them True
                 rowgroup = self.logtable[column].astype(str).str.fullmatch(str(regex))
 
                 # Add the matching rows to the grand rows group
-                rows |= rowgroup
+                rows |= rowgroup.values
 
                 # Write the value(s) of the matching rows
-                for newcolumn, newvalue in (group.get('cast') or {}).items():
-                    df.loc[rowgroup, newcolumn] = newvalue
+                for colname, values in (group.get('cast') or {}).items():
+                    df.loc[rowgroup, colname] = values
 
-        return df.loc[rows].sort_values(by='onset')
+        return df.loc[rows.values].sort_values(by='onset')
 
     @property
     def columns(self) -> List[dict]:
@@ -177,30 +176,35 @@ class EventsParser(ABC):
                 return False
 
         if not (valid := len(self.columns) >= 2):
-            LOGGER.warning(f"Events table must have at least two columns, got {len(self.columns)} instead")
+            LOGGER.warning(f"Events table must have at least two columns, got {len(self.columns)} instead\n{self}")
             return False
 
         if (key := [*self.columns[0].keys()][0]) != 'onset':
-            LOGGER.warning(f"First events column must be named 'onset', got '{key}' instead")
+            LOGGER.warning(f"First events column must be named 'onset', got '{key}' instead\n{self}")
             valid = False
 
         if (key := [*self.columns[1].keys()][0]) != 'duration':
-            LOGGER.warning(f"Second events column must be named 'duration', got '{key}' instead")
+            LOGGER.warning(f"Second events column must be named 'duration', got '{key}' instead\n{self}")
             valid = False
 
         if len(self.time.get('cols',[])) < 2:
-            LOGGER.warning(f"Events table must have at least two timecol items, got {len(self.time.get('cols',[]))} instead")
+            LOGGER.warning(f"Events table must have at least two timecol items, got {len(self.time.get('cols',[]))} instead\n{self}")
             return False
 
         elif not is_float(self.time.get('unit')):
-            LOGGER.warning(f"Time conversion factor must be a float, got '{self.time.get('unit')}' instead")
+            LOGGER.warning(f"Time conversion factor must be a float, got '{self.time.get('unit')}' instead\n{self}")
             valid = False
 
+        # Check if the logtable has existing and unique column names
+        df = self.logtable
         for name in set([name for item in self.columns for name in item.values()] + [name for item in self.rows for name in item['include'].keys()] +
                         [*self.time.get('start',{}).keys()] + self.time.get('cols',[])):
-            if name not in self.logtable:
-                LOGGER.warning(f"Column '{name}' not found in the event table of {self.sourcefile}")
+            if name and name not in df:
+                LOGGER.warning(f"Column '{name}' not found in the event table of {self}")
                 valid = False
+        if not df.columns[df.columns.duplicated()].empty:
+            LOGGER.warning(f"Duplicate columns found in: {df.columns}\n{self}")
+            valid = False
 
         return valid
 
@@ -677,7 +681,7 @@ class RunItem:
             for ext in ('.tsv', '.tsv.gz'):  # NB: `ext` used to be '.json', which is more generic (but see https://github.com/bids-standard/bids-validator/issues/2113)
                 if run_suffixok := bids_validator.BIDSValidator().is_bids(f"/sub-unknown/{datatype}/{bidsname}{ext}"): break    # NB: Using the BIDSValidator sounds nice but doesn't give any control over the BIDS-version
             run_valsok = run_suffixok
-            LOGGER.bcdebug(f"bidsname={run_suffixok}: /sub-unknown/{datatype}/{bidsname}.*")
+            LOGGER.bcdebug(f"bidsname (suffixok={run_suffixok}): /sub-unknown/{datatype}/{bidsname}.*")
 
         if checks[0] and run_keysok in (None, False):
             LOGGER.bcdebug(f'Invalid "{run_keysok}" key-checks in run-item: "{bids["suffix"]}" ({datatype} -> {provenance})\nRun["bids"]:\t{bids}')
@@ -1100,8 +1104,8 @@ class BidsMap:
             module = bcoin.import_plugin(plugin)
             if not self.plugins.get(plugin):
                 LOGGER.info(f"Adding default bidsmap options from the {plugin} plugin")
-                self.plugins[plugin] = module.OPTIONS if 'OPTIONS' in dir(module) else {}
-            if 'BIDSMAP' in dir(module) and yamlfile.parent == templatefolder:
+                self.plugins[plugin] = module.OPTIONS if hasattr(module, 'OPTIONS') else {}
+            if hasattr(module, 'BIDSMAP') and yamlfile.parent == templatefolder:
                 for dataformat, datasection in module.BIDSMAP.items():
                     if dataformat not in bidsmap_data:
                         LOGGER.info(f"Adding default bidsmappings from the {plugin} plugin")
