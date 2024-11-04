@@ -40,6 +40,7 @@ Options:
       fallback: y                   # Appends unhandled dcm2niix suffixes to the `acq` label if 'y' (recommended, else the suffix data is discarded)
     events2bids:
       table: event                  # The table that is used to generate the output table (https://www.neurobs.com/pres_docs/html/03_presentation/07_data_reporting/01_logfiles/index.html)
+      skiprows: 3                   # The number of (header) rows that precede the actual table data
       meta: [.json, .tsv]
 
 

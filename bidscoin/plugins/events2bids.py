@@ -13,7 +13,7 @@ from bidscoin.bids import BidsMap, DataFormat, EventsParser, is_hidden, Plugin
 LOGGER = logging.getLogger(__name__)
 
 # The default/fallback options that are set when installing/using the plugin
-OPTIONS = Plugin({'table': 'event', 'meta': ['.json', '.tsv']})  # The file extensions of the equally named metadata sourcefiles that are copied over as BIDS sidecar files
+OPTIONS = Plugin({'table': 'event', 'skiprows': 3, 'meta': ['.json', '.tsv']})  # The file extensions of the equally named metadata sourcefiles that are copied over as BIDS sidecar files
 
 
 def test(options: Plugin=OPTIONS) -> int:
@@ -240,9 +240,9 @@ class PresentationEvents(EventsParser):
         super().__init__(sourcefile, _data, options)
 
         # Read the log-tables from the Presentation logfile
-        self._sourcetable = pd.read_csv(self.sourcefile, sep='\t', skiprows=3, skip_blank_lines=True)
+        self._sourcetable = pd.read_csv(self.sourcefile, sep='\t', skiprows=options.get('skiprows',3), skip_blank_lines=True)
         """The Presentation log-tables (https://www.neurobs.com/pres_docs/html/03_presentation/07_data_reporting/01_logfiles/index.html)"""
-        self._columns     = self._sourcetable.columns
+        self._sourcecols  = self._sourcetable.columns
         """Store the original column names"""
 
     @property
@@ -256,7 +256,7 @@ class PresentationEvents(EventsParser):
         survey_header   = (df.iloc[:, 0] == 'Time').idxmax() or nrows
 
         # Get the row indices to slice the event, stimulus, video or survey table
-        df.columns = self._columns
+        df.columns = self._sourcecols
         if self.options['table'] == 'event':
             begin = 0
             end   = min(stimulus_header, video_header, survey_header)
@@ -277,9 +277,7 @@ class PresentationEvents(EventsParser):
             end   = nrows
             LOGGER.error(f"NOT IMPLEMENTED TABLE: {self.options['table']}")
 
-        LOGGER.bcdebug(f"Slicing '{self.options['table']}{df.shape}' sourcetable[{begin}:{end}]")
-
-        # Ensure unique column names by renaming columns with NaN or empty names and by appending suffixes to duplicate names
+        # Ensure unique column names by renaming columns with NaN or empty names, and by appending suffixes to duplicate names
         cols = []                               # The new column names
         dupl = {}                               # The duplicate index number
         for i, col in enumerate(df.columns):
@@ -296,4 +294,5 @@ class PresentationEvents(EventsParser):
         df.columns = cols
 
         # Return the sliced the table
+        LOGGER.bcdebug(f"Slicing '{self.options['table']}{df.shape}' sourcetable[{begin}:{end}]")
         return df.iloc[begin:end]

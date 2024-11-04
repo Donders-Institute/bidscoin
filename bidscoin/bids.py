@@ -117,8 +117,8 @@ class EventsParser(ABC):
             for column, value in self.time['start'].items():
                 start &= (self.logtable[column].astype(str) == str(value)).values
             if start.any():
-                LOGGER.bcdebug(f"Reseting clock offset of: {df['onset'][start.values].iloc[0]}")
-                df['onset'] = df['onset'] - df['onset'][start.values].iloc[0]  # Take the time of the first occurrence as zero
+                LOGGER.bcdebug(f"Resetting clock offset: {df['onset'][start.values].iloc[0]}")
+                df['onset'] -= df['onset'][start.values].iloc[0]  # Take the time of the first occurrence as zero
 
         # Loop over the row groups to filter/edit the rows
         rows = pd.Series([len(self.rows) == 0] * len(df)).astype(bool)  # Boolean series with True values if no row expressions were specified
@@ -197,14 +197,14 @@ class EventsParser(ABC):
             valid = False
 
         # Check if the logtable has existing and unique column names
-        df = self.logtable
+        columns = self.logtable.columns
         for name in set([name for item in self.columns for name in item.values()] + [name for item in self.rows for name in item['include'].keys()] +
                         [*self.time.get('start',{}).keys()] + self.time.get('cols',[])):
-            if name and name not in df:
+            if name and name not in columns:
                 LOGGER.warning(f"Column '{name}' not found in the event table of {self}")
                 valid = False
-        if not df.columns[df.columns.duplicated()].empty:
-            LOGGER.warning(f"Duplicate columns found in: {df.columns}\n{self}")
+        if columns.duplicated().any():
+            LOGGER.warning(f"Duplicate columns found: {columns}\n{self}")
             valid = False
 
         return valid
