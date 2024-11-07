@@ -20,7 +20,7 @@ Project organization
 How to contribute code
 ----------------------
 
-The preferred way to contribute to the BIDScoin code base or documentation is to use a `forking wokflow <https://www.atlassian.com/git/tutorials/comparing-workflows/forking-workflow>`__, i.e. fork the `main repository <https://github.com/Donders-Institute/bidscoin>`__, create a feature branch, and submit a pull request. If you are unsure what that means, here is a set-up workflow you may wish to follow:
+The preferred way to contribute to the BIDScoin code base or documentation is to use a `forking workflow <https://www.atlassian.com/git/tutorials/comparing-workflows/forking-workflow>`__, i.e. fork the `main repository <https://github.com/Donders-Institute/bidscoin>`__, create a feature branch, and submit a pull request. If you are unsure what that means, here is a set-up workflow you may wish to follow:
 
 0. Fork the `project repository <https://github.com/Donders-Institute/bidscoin>`_ on GitHub, by clicking on the “Fork” button near the top of the page — this will create a personal copy of the repository.
 
@@ -39,10 +39,6 @@ The preferred way to contribute to the BIDScoin code base or documentation is to
     pip uninstall bidscoin      # Hence we need to retrospectively remove BIDScoin from site-packages
     # NB: Install dcm2niix yourself (see the online installation instructions)
 
-.. note::
-    Some users have reported issues with pip installing .[dev] or similar syntax on Mac, 
-    if you encounter this issues try switching shells from zsh to bash.
-
 3. When you wish to start a new contribution, create a new branch::
 
     git checkout -b [topic_of_your_contribution]
@@ -54,6 +50,8 @@ The preferred way to contribute to the BIDScoin code base or documentation is to
     git push -u origin topic_of_your_contribution        # Run this command when you are done and the tox tests are passing
 
 Git will provide you with a link which you can click to initiate a pull request (if any of the above seems overwhelming, you can look up the `Git <http://git-scm.com/documentation>`__ or `GitHub <https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request>`__ documentation on the web)
+
+.. Some Mac users on have encountered issues when running pip install bidscoin[dev] or pip install .[all] during setup. If you encounter this try switching from zsh to bash.
 
 Coding guidelines
 -----------------
