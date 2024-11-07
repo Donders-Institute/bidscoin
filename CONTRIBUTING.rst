@@ -39,6 +39,10 @@ The preferred way to contribute to the BIDScoin code base or documentation is to
     pip uninstall bidscoin      # Hence we need to retrospectively remove BIDScoin from site-packages
     # NB: Install dcm2niix yourself (see the online installation instructions)
 
+    .. note::
+        Some users have reported issues with pip installing .[dev] or similar syntax on Mac, 
+        if you encounter this issues try switching shells from zsh to bash.
+
 3. When you wish to start a new contribution, create a new branch::
 
     git checkout -b [topic_of_your_contribution]
