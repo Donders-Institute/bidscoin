@@ -56,10 +56,11 @@ warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Gen
 """
 
 # Define the default paths
-tracking     = {'url': 'https://telemetry.dccn.nl/bidscoin', 'sleep': 1}              # Sleep = Nr of sleeping hours during which usage is not tracked
 tutorialurl  = 'https://surfdrive.surf.nl/files/index.php/s/HTxdUbykBZm2cYM/download'
 bidscoinroot = Path(__file__).parent
 schemafolder = bidscoinroot/'schema'
+tracking     = {'url': 'https://telemetry.dccn.nl/bidscoin', 'sleep': 1}
+"""Sleep: Nr of sleeping hours during which usage/events are not tracked"""
 
 # Get the LOGGER and BIDSCOIN_DEBUG environment variable to set the log-messages and logging level, etc
 LOGGER = getLogger(__name__)
@@ -193,10 +194,10 @@ def trackusage(event: str, dryrun: bool=False) -> dict:
         return data
 
     # Check if we are not asleep
+    trackfile = configdir/'usage'/f"bidscoin_{data['userid']}"
     try:
-        trackfile = configdir/'usage'/f"bidscoin_{data['userid']}"
         trackfile.parent.mkdir(parents=True, exist_ok=True)
-        with shelve.open(str(trackfile), 'c', writeback=True) as tracked:
+        with shelve.open(str(trackfile), writeback=True) as tracked:
             now    = datetime.datetime.now()
             before = tracked.get(event, now.replace(year=2000))
             if (now - before).total_seconds() < tracking['sleep'] * 60 * 60:
@@ -204,15 +205,15 @@ def trackusage(event: str, dryrun: bool=False) -> dict:
             tracked[event] = now
 
     except Exception as shelveerror:
-        warnings.warn(f"Please report the following error to the developers:\n{shelveerror}", RuntimeWarning)
-        for corruptfile in trackfile.parent.glob(trackfile.stem + '.*'):
+        warnings.warn(f"Please report the following error to the developers:\n{shelveerror}: {trackfile}", RuntimeWarning)
+        for corruptfile in trackfile.parent.glob(trackfile.name + '.*'):
             corruptfile.unlink()
         data['event'] = 'trackusage_exception'
 
     # Upload the usage data
     try:
         req = urllib.request.Request(f"{tracking['url']}?{urllib.parse.urlencode(data)}", headers={'User-agent': 'bidscoin-telemetry'})
-        with urllib.request.urlopen(req, timeout=5) as f: pass
+        with urllib.request.urlopen(req, timeout=3) as f: pass
     except urllib.error.URLError as urlerror:
         print(f"{tracking['url']}:\n{urlerror}")
 
