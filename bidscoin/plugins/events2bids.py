@@ -7,7 +7,8 @@ from typing import Union
 from bids_validator import BIDSValidator
 from pathlib import Path
 from bidscoin import bids
-from bidscoin.bids import BidsMap, DataFormat, EventsParser, is_hidden, Plugin
+from bidscoin.plugins import EventsParser
+from bidscoin.bids import BidsMap, DataFormat, is_hidden, Plugin
 # from convert_eprime.utils import remove_unicode
 
 LOGGER = logging.getLogger(__name__)
