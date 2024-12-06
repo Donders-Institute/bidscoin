@@ -9,11 +9,11 @@ name             = 'bidscoin'
 description      = 'Converts and organises raw MRI data-sets according to the Brain Imaging Data Structure (BIDS)'
 version          = '4.5.0'
 readme           = 'README.rst'
-requires-python  = '>= 3.8'
+requires-python  = '>= 3.9'
 license          = {file = 'LICENSE.txt'}
 keywords         = ['bids','mri','imaging','neuroimaging','dicom','par','rec','nifti','bidsapp','defacing','echo-combination','skull-stripping','HPC']
 authors          = [{email = 'm.zwiers@donders.ru.nl'}, {name = 'Marcel Zwiers'}]
-classifiers      = ['Programming Language :: Python :: 3.8',
+classifiers      = ['Programming Language :: Python :: 3',
                     'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
                     'Operating System :: OS Independent',
                     'Intended Audience :: Science/Research']
