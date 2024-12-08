@@ -17,9 +17,6 @@ LOGGER = logging.getLogger(__name__)
 class PluginInterface(ABC):
     """Base interface class for plugins"""
 
-    def __init__(self):
-        pass
-
     def test(self, options) -> int:
         """
         Performs a plugin test
@@ -28,7 +25,7 @@ class PluginInterface(ABC):
         :return:        The errorcode: 0 for successful execution, 1 for general plugin errors, etc
         """
 
-        LOGGER.info(f"Testing {__name__} is not implemented")
+        LOGGER.info(f"The {__name__} plugin test function is not implemented")
 
         return 0
 

@@ -120,7 +120,7 @@ class Interface(PluginInterface):
             bidsname   = run.bidsname(subid, sesid, not bidsignore, runtime=True)
             bidsignore = bidsignore or bids.check_ignore(bidsname+'.json', bidsmap.options['bidsignore'], 'file')
             bidsname   = run.increment_runindex(outfolder, bidsname, scans_table)
-            eventsfile = (outfolder/bidsname).with_suffix('.tsv')
+            target     = (outfolder/bidsname).with_suffix('.tsv')
 
             # Check if the bidsname is valid
             bidstest = (Path('/')/subid/sesid/run.datatype/bidsname).with_suffix('.nii').as_posix()
@@ -129,29 +129,28 @@ class Interface(PluginInterface):
                 LOGGER.warning(f"The '{bidstest}' output name did not pass the bids-validator test")
 
             # Check if file already exists (-> e.g. when a static runindex is used)
-            if eventsfile.is_file():
-                LOGGER.warning(f"{eventsfile} already exists and will be deleted -- check your results carefully!")
-                eventsfile.unlink()
+            if target.is_file():
+                LOGGER.warning(f"{target} already exists and will be deleted -- check your results carefully!")
+                target.unlink()
 
             # Save the sourcefile as a BIDS NIfTI file and write out provenance logging data
-            run.eventsparser().write(eventsfile)
-            bids.bidsprov(bidsses, sourcefile, run, [eventsfile] if eventsfile.is_file() else [])
+            run.eventsparser().write(target)
+            bids.bidsprov(bidsses, sourcefile, run, [target] if target.is_file() else [])
 
             # Check the output
-            if not eventsfile.is_file():
-                LOGGER.error(f"Output file not found: {eventsfile}")
+            if not target.is_file():
+                LOGGER.error(f"Output file not found: {target}")
                 continue
 
             # Load/copy over the source meta-data
-            sidecar  = eventsfile.with_suffix('.json')
+            sidecar  = target.with_suffix('.json')
             metadata = bids.poolmetadata(run.datasource, sidecar, run.meta, options.get('meta', []))
             if metadata:
                 with sidecar.open('w') as json_fid:
                     json.dump(metadata, json_fid, indent=4)
 
             # Add an entry to the scans_table (we typically don't have useful data to put there)
-            scans_table.loc[eventsfile.relative_to(bidsses).as_posix(), 'acq_time'] = 'n/a'
-
+            scans_table.loc[target.relative_to(bidsses).as_posix(), 'acq_time'] = 'n/a'
         if not runid:
             LOGGER.info(f"--> No {__name__} sourcedata found in: {session}")
             return
