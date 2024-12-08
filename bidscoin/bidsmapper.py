@@ -100,7 +100,7 @@ def bidsmapper(sourcefolder: str, bidsfolder: str, bidsmap: str, template: str, 
         bidsmap_old = copy.deepcopy(bidsmap_new)
 
     # Import the data scanning plugins
-    plugins = [plugin for name in bidsmap_new.plugins if (plugin := bcoin.import_plugin(name, ('bidsmapper_plugin',)))]
+    plugins = [plugin for name in bidsmap_new.plugins if (plugin := bcoin.import_plugin(name))]
     if not plugins:
         LOGGER.warning(f"The plugins listed in your bidsmap['Options'] did not have a usable `bidsmapper_plugin` function, nothing to do")
         LOGGER.info('-------------- FINISHED! ------------')
@@ -132,7 +132,7 @@ def bidsmapper(sourcefolder: str, bidsfolder: str, bidsmap: str, template: str, 
                     for plugin in plugins:
                         LOGGER.verbose(f"Executing plugin: {Path(plugin.__file__).stem} -> {sesfolder}")
                         trackusage(Path(plugin.__file__).stem)
-                        plugin.bidsmapper_plugin(sesfolder, bidsmap_new, bidsmap_old, template)
+                        plugin.Interface().bidsmapper(sesfolder, bidsmap_new, bidsmap_old, template)
 
                     # Clean-up the temporary unpacked data
                     if unpacked:

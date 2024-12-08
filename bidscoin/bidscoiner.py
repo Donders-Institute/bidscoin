@@ -98,7 +98,7 @@ def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: 
         return
 
     # Load the data conversion plugins
-    plugins = [plugin for name in bidsmap.plugins if (plugin := bcoin.import_plugin(name, ('bidscoiner_plugin',)))]
+    plugins = [plugin for name in bidsmap.plugins if (plugin := bcoin.import_plugin(name))]
     if not plugins:
         LOGGER.warning(f"The plugins listed in your bidsmap['Options'] did not have a usable `bidscoiner_plugin` function, nothing to do")
         LOGGER.info('-------------- FINISHED! ------------')
@@ -274,7 +274,7 @@ def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: 
                     for plugin in plugins:
                         LOGGER.verbose(f"Executing plugin: {Path(plugin.__file__).stem}")
                         trackusage(Path(plugin.__file__).stem)
-                        personals = plugin.bidscoiner_plugin(sesfolder, bidsmap, bidssession)
+                        personals = plugin.Interface().bidscoiner(sesfolder, bidsmap, bidssession)
 
                         # Add a subject row to the participants table (if there is any data)
                         if next(bidssession.rglob('*.json'), None):

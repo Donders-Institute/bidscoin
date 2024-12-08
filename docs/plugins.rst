@@ -1,7 +1,7 @@
 Plugins
 =======
 
-As shown in the figure below, all interactions of BIDScoin routines with source data are done via a plugin layer that abstracts away differences between source data formats. The bidsmapper and bidscoiner tools loop over the subjects/sessions in your source data repository and then use the plugins that are listed in the bidsmap to do the actual work.
+As shown in the figure below, all interactions of BIDScoin routines with source data are done via an Interface class that abstracts away differences between source data formats. The bidsmapper and bidscoiner tools loop over the subjects/sessions in your source data repository and then use the plugins that are listed in the bidsmap to do the actual work.
 
 .. figure:: ./_static/bidscoin_architecture.png
 
@@ -39,15 +39,15 @@ This paragraph describes the requirements and structure of plugins in order to a
 
 The main task of a plugin is to perform the actual conversion of the source data into a format that is part of the BIDS standard. BIDScoin offers the Python library module named ``bids`` to interact with bidsmaps and to provide the intended output names and meta data. Notably, the bids library contains a class named ``BidsMap()`` that provides various methods and other useful classes for building and interacting with bidsmap data. Bidsmap objects provide consecutive access to ``DataFormat()``, ``Datatype()``, ``RunItem()`` and ``DataSource()`` objects, each of which comes with methods to interact with the corresponding sections of the bidsmap data. The RunItem objects can be used to obtain the mapping to the BIDS output names, and the DataSource object can read the source data attributes and properties. The DataSource object transparently handles dynamic values (including regular expressions) as well as the extended source data attributes.
 
-In short, the purpose of the plugin is to interact with the data, by providing these methods:
+In short, the purpose of the plugin is to interact with the data, by providing methods from the abstract base class ``bidscoin.plugins.PluginInterface``. Most notably, plugins can implement the following methods:
 
-- **test()**: A test function for the plugin + its bidsmap options. Can be called by the user from the bidseditor and the bidscoin utility
+- **test()**: Optional. A test function for the plugin + its bidsmap options. Can be called by the user from the bidseditor and the bidscoin utility
 - **has_support()**: If given a source data file that the plugin supports, then report back the name of its data format, i.e. the name of the section in the bidsmap
 - **get_attribute()**: If given a source data file that the plugin supports, then report back its attribute value (e.g. from the header)
-- **bidsmapper_plugin()**: From a given session folder, identify the different runs (source datatypes) and, if they haven't been discovered yet, add them to the study bidsmap
-- **bidscoiner_plugin()**: From a given session folder, identify the different runs (source datatypes) and convert them to BIDS output files using the mapping data specified in the runitem
+- **bidsmapper()**: Optional. From a given session folder, identify the different runs (source datatypes) and, if they haven't been discovered yet, add them to the study bidsmap
+- **bidscoiner()**: From a given session folder, identify the different runs (source datatypes) and convert them to BIDS output files using the mapping data specified in the runitem
 
-Optionally, a ``EventsParser()`` class can be defined to convert stimulus presentation log data to task events files. This class inherits from the equally named class in the ``bids`` library, and should add code to make an initial parsing of the source data to a Pandas DataFrame (table).
+In addition, a class named ``[DataFormat]Events()`` can be added to convert stimulus presentation log data to task events files. This class inherits from ``bidscoin.plugins.EventsParser``, and must implement code to make an initial parsing of the source data to a Pandas DataFrame (table).
 
 The above API is illustrated in more detail in the placeholder Python code below. For real world examples you best first take a look at the nibabel2bids plugin, which exemplifies a clean and fairly minimal implementation of the required functionality. A similar, but somewhat more elaborated implementation (supporting multiple dataformats) can be found in the spec2nii2bids plugin. Finally, the dcm2niix2bids plugin is the more complicated example, due to the logic needed to deal with special output files and various irregularities.
 
@@ -60,194 +60,83 @@ The above API is illustrated in more detail in the placeholder Python code below
 
     LOGGER = logging.getLogger(__name__)
 
-    # The default options that are set when installing the plugin. This is optional and acts as a fallback
-    # in case the plugin options are not specified in the (template) bidsmap
-    OPTIONS = {'command': 'demo',    # Plugin option
-               'args': 'foo bar'}    # Another plugin option
+    class Interface(PluginInterface):
 
-    # The default bids-mappings that are added when installing the plugin. This is optional and only acts
-    # as a fallback in case the dataformat section is not present in the bidsmap. So far, this feature is
-    # not used by any of the plugins
-    BIDSMAP = {'DemoFormat':{
-        'subject': '<<filepath:/sub-(.*?)/>>',          # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used, e.g. <PatientID>
-        'session': '<<filepath:/sub-.*?/ses-(.*?)/>>',  # This filesystem property extracts the session label from the source directory. NB: Any property or attribute can be used, e.g. <StudyID>
+        def has_support(self, file: Path) -> str:
+            """
+            This plugin function assesses whether a sourcefile is of a supported dataformat
 
-        'func': [                   # ----------------------- All functional runs --------------------
-            {'provenance': '',      # The fullpath name of the source file from which the attributes and properties are read. Serves also as a look-up key to find a run in the bidsmap
-             'properties':          # The matching (regex) criteria go in here
-                {'filepath': '',    # File folder, e.g. ".*Parkinson.*" or ".*(phantom|bottle).*"
-                 'filename': '',    # File name, e.g. ".*fmap.*" or ".*(fmap|field.?map|B0.?map).*"
-                 'filesize': '',    # File size, e.g. "2[4-6]\d MB" for matching files between 240-269 MB
-                 'nrfiles': ''},    # Number of files in the folder that match the above criteria, e.g. "5/d/d" for matching a number between 500-599
-             'attributes':          # The matching (regex) criteria go in here
-                {'ch_num': '.*',
-                 'filetype': '.*',
-                 'freq': '.*',
-                 'ch_name': '.*',
-                 'units': '.*',
-                 'trigger_idx': '.*'},
-             'bids':
-                {'task': '',
-                 'acq': '',
-                 'ce': '',
-                 'dir': '',
-                 'rec': '',
-                 'run': '<<>>',     # This will be updated during bidscoiner runtime (as it depends on the already existing files)
-                 'recording': '',
-                 'suffix': 'physio'},
-             'meta':                # This is an optional entry for meta-data dictionary that are appended to the json sidecar files
-                {'TriggerChannel': '<<trigger_idx>>',
-                 'TimeOffset': '<<time_offset>>'}}],
+            :param file:        The sourcefile that is assessed
+            :param dataformat:  The requested dataformat (optional requirement)
+            :return:            The name of the supported dataformat of the sourcefile. This name should
+                                correspond to the name of a dataformat in the bidsmap
+            """
 
-        'exclude': [  # ----------------------- Data that will be left out -------------
-            {'attributes':
-                {'ch_num': '.*',
-                 'filetype': '.*',
-                 'freq': '.*',
-                 'ch_name': '.*',
-                 'units': '.*',
-                 'trigger_idx': '.*'},
-             'bids':
-                {'task': '',
-                 'acq': '',
-                 'ce': '',
-                 'dir': '',
-                 'rec': '',
-                 'run': '<<>>',
-                 'recording': '',
-                 'suffix': 'physio'}
+            if file.is_file():
 
+                LOGGER.verbose(f'This has_support routine assesses whether "{file}" is of a known dataformat')
+                return 'dataformat_name' if file == 'of_a_supported_format' else ''
 
-    def test(options: dict=OPTIONS) -> int:
-        """
-        Performs a runtime/integration test of the working of this plugin + given options
+            return ''
 
-        :param options: A dictionary with the plugin options, e.g. taken from `bidsmap.plugins[__name__]`
-        :return:        The errorcode (e.g 0 if the tool generated the expected result, > 0 if there was
-                        a tool error)
-        """
+        def get_attribute(self, dataformat: str, sourcefile: Path, attribute: str, options: dict) -> str:
+            """
+            This plugin function reads attributes from the supported sourcefile
 
-        LOGGER.info(f'This is a demo-plugin test routine, validating its working with options: {options}')
+            :param dataformat:  The dataformat of the sourcefile, e.g. DICOM of PAR
+            :param sourcefile:  The sourcefile from which key-value data needs to be read
+            :param attribute:   The attribute key for which the value needs to be retrieved
+            :param options:     A dictionary with the plugin options, e.g. taken from the bidsmap.plugins[__name__]
+            :return:            The retrieved attribute value
+            """
 
-        return 0
+            if dataformat in ('DICOM','PAR'):
+                LOGGER.verbose(f'This is a demo-plugin get_attribute routine, reading the {dataformat} "{attribute}" attribute value from "{sourcefile}"')
+                return read(sourcefile, attribute)
 
+            return ''
 
-    def has_support(file: Path) -> str:
-        """
-        This plugin function assesses whether a sourcefile is of a supported dataformat
+        @due.dcite(Doi('put.your/doi.here'), description='This is an optional duecredit decorator for citing your paper(s)', tags=['implementation'])
+        def bidscoiner(self, session: Path, bidsmap: BidsMap, bidsses: Path) -> Union[None, dict]:
+            """
+            The plugin to convert the runs in the source folder and save them in the bids folder. Each saved datafile should be
+            accompanied by a json sidecar file. The bidsmap options for this plugin can be found in:
 
-        :param file:        The sourcefile that is assessed
-        :param dataformat:  The requested dataformat (optional requirement)
-        :return:            The name of the supported dataformat of the sourcefile. This name should
-                            correspond to the name of a dataformat in the bidsmap
-        """
+            bidsmap.plugins[__name__]
 
-        if file.is_file():
+            See also the dcm2niix2bids plugin for reference implementation
 
-            LOGGER.verbose(f'This has_support routine assesses whether "{file}" is of a known dataformat')
-            return 'dataformat_name' if file == 'of_a_supported_format' else ''
+            :param session:     The full-path name of the subject/session raw data source folder
+            :param bidsmap:     The full mapping heuristics from the bidsmap YAML-file
+            :param bidsses:     The full-path name of the BIDS output `sub-/ses-` folder
+            :return:            A dictionary with personal data for the participants.tsv file (such as sex or age)
+            """
 
-        return ''
+            # Go over the different source files in the session
+            for sourcefile in session.rglob('*'):
 
+                # Check if the sourcefile is of a supported dataformat
+                if is_hidden(sourcefile.relative_to(session)) or not (dataformat := has_support(sourcefile)):
+                    continue
 
-    def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: dict) -> str:
-        """
-        This plugin function reads attributes from the supported sourcefile
+                # Get a matching run from the bidsmap
+                run, runid = bidsmap.get_matching_run(sourcefile, dataformat, runtime=True)
 
-        :param dataformat:  The dataformat of the sourcefile, e.g. DICOM of PAR
-        :param sourcefile:  The sourcefile from which key-value data needs to be read
-        :param attribute:   The attribute key for which the value needs to be retrieved
-        :param options:     A dictionary with the plugin options, e.g. taken from the bidsmap.plugins[__name__]
-        :return:            The retrieved attribute value
-        """
+                # Compose the BIDS filename using the matched run
+                bidsname = run.bidsname(subid, sesid, validkeys=True, runtime=True)
 
-        if dataformat in ('DICOM','PAR'):
-            LOGGER.verbose(f'This is a demo-plugin get_attribute routine, reading the {dataformat} "{attribute}" attribute value from "{sourcefile}"')
-            return read(sourcefile, attribute)
+                # Save the sourcefile as a BIDS NIfTI file
+                targetfile = (outfolder/bidsname).with_suffix('.nii')
+                convert(sourcefile, targetfile)
 
-        return ''
+                # Write out provenance logging data (= useful but not strictly necessary)
+                bids.bidsprov(bidsses, sourcefile, run, targetfile)
 
-
-    def bidsmapper_plugin(session: Path, bidsmap_new: BidsMap, bidsmap_old: BidsMap, template: BidsMap) -> None:
-        """
-        The goal of this plugin function is to identify all the different runs in the session and update the
-        bidsmap if a new run is discovered
-
-        :param session:     The full-path name of the subject/session raw data source folder
-        :param bidsmap_new: The new study bidsmap that we are building
-        :param bidsmap_old: The previous study bidsmap that has precedence over the template bidsmap
-        :param template:    The template bidsmap with the default heuristics
-        """
-
-        # See for every data source in the session if we already discovered it or not
-        for sourcefile in session.rglob('*'):
-
-            # Check if the sourcefile is of a supported dataformat
-            if is_hidden(sourcefile.relative_to(session)) or not (dataformat := has_support(sourcefile)):
-                continue
-
-            # See if we can find a matching run in the old bidsmap
-            run, oldmatch = bidsmap_old.get_matching_run(sourcefile, dataformat)
-
-            # If not, see if we can find a matching run in the template
-            if not oldmatch:
-                run, _ = template.get_matching_run(sourcefile, dataformat)
-
-            # See if we have already put the run somewhere in our new bidsmap
-            if not bidsmap_new.exist_run(run):
-
-                # Communicate with the user if the run was not present in bidsmap_old or in template, i.e. that we found a new sample
-                if not oldmatch:
-                    LOGGER.info(f"Discovered sample: {run.datasource}")
-
-                # Do some stuff with the run if needed
-                pass
-
-                # Copy the filled-in run over to the new bidsmap
-                bidsmap_new.insert_run(run)
-
-
-    @due.dcite(Doi('put.your/doi.here'), description='This is an optional duecredit decorator for citing your paper(s)', tags=['implementation'])
-    def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> Union[None, dict]:
-        """
-        The plugin to convert the runs in the source folder and save them in the bids folder. Each saved datafile should be
-        accompanied by a json sidecar file. The bidsmap options for this plugin can be found in:
-
-        bidsmap.plugins[__name__]
-
-        See also the dcm2niix2bids plugin for reference implementation
-
-        :param session:     The full-path name of the subject/session raw data source folder
-        :param bidsmap:     The full mapping heuristics from the bidsmap YAML-file
-        :param bidsses:     The full-path name of the BIDS output `sub-/ses-` folder
-        :return:            A dictionary with personal data for the participants.tsv file (such as sex or age)
-        """
-
-        # Go over the different source files in the session
-        for sourcefile in session.rglob('*'):
-
-            # Check if the sourcefile is of a supported dataformat
-            if is_hidden(sourcefile.relative_to(session)) or not (dataformat := has_support(sourcefile)):
-                continue
-
-            # Get a matching run from the bidsmap
-            run, runid = bidsmap.get_matching_run(sourcefile, dataformat, runtime=True)
-
-            # Compose the BIDS filename using the matched run
-            bidsname = run.bidsname(subid, sesid, validkeys=True, runtime=True)
-
-            # Save the sourcefile as a BIDS NIfTI file
-            targetfile = (outfolder/bidsname).with_suffix('.nii')
-            convert(sourcefile, targetfile)
-
-            # Write out provenance logging data (= useful but not strictly necessary)
-            bids.bidsprov(bidsses, sourcefile, run, targetfile)
-
-            # Pool all sources of meta-data and save it as a json sidecar file
-            sidecar = targetfile.with_suffix('.json')
-            ext_meta = bidsmap.plugins[__name__]['meta']
-            metadata = bids.poolmetadata(run.datasource, sidecar, run.meta, ext_meta)
-            save(sidecar, metadata)
+                # Pool all sources of meta-data and save it as a json sidecar file
+                sidecar = targetfile.with_suffix('.json')
+                ext_meta = bidsmap.plugins[__name__]['meta']
+                metadata = bids.poolmetadata(run.datasource, sidecar, run.meta, ext_meta)
+                save(sidecar, metadata)
 
 
     class PresentationEvents(EventsParser):

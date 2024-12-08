@@ -18,12 +18,12 @@ template = bids.BidsMap(bidsmap_template, checks=(False, False, False))
 def test_plugin(plugin, options):
 
     # First test to see if we can import the plugin
-    module = bcoin.import_plugin(plugin, ('bidsmapper_plugin', 'bidscoiner_plugin'))
+    module = bcoin.import_plugin(plugin)
     if not inspect.ismodule(module):
         raise ImportError(f"Invalid plugin: '{plugin}'")
 
     # Then run the plugin's own 'test' routine (if implemented)
-    assert module.test(options.get(plugin.stem, {})) == 0
+    assert module.Interface().test(options.get(plugin.stem, {})) == 0
 
     # Test that we don't import invalid plugins
     module = bcoin.import_plugin(plugin, ('foo_plugin', 'bar_plugin'))

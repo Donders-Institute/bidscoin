@@ -12,6 +12,7 @@ from typing import Union
 from pathlib import Path
 from bidscoin import bids
 from bidscoin.bids import BidsMap, DataFormat, Plugin, is_hidden
+from bidscoin.plugins import PluginInterface
 
 try:
     from nibabel.testing import data_path
@@ -26,221 +27,182 @@ OPTIONS = Plugin({'ext': '.nii.gz',                                         # Th
                   'meta': ['.json', '.tsv', '.tsv.gz', '.bval', '.bvec']})  # The file extensions of the equally named metadata sourcefiles that are copied over as BIDS sidecar files
 
 
-def test(options: Plugin=OPTIONS) -> int:
-    """
-    Performs a nibabel test
+class Interface(PluginInterface):
 
-    :param options: A dictionary with the plugin options, e.g. taken from the bidsmap.plugins['nibabel2bids']
-    :return:        The errorcode: 0 for successful execution, 1 for general tool errors, 2 for `ext` option errors, 3 for `meta` option errors
-    """
+    def test(self, options: Plugin=OPTIONS) -> int:
+        """
+        Performs a nibabel test
 
-    LOGGER.info('Testing the nibabel2bids installation:')
+        :param options: A dictionary with the plugin options, e.g. taken from the bidsmap.plugins['nibabel2bids']
+        :return:        The errorcode: 0 for successful execution, 1 for general tool errors, 2 for `ext` option errors, 3 for `meta` option errors
+        """
 
-    # Test the nibabel installation
-    try:
+        LOGGER.info('Testing the nibabel2bids installation:')
 
-        LOGGER.info(f"Nibabel version: {nib.__version__}")
-        if options.get('ext',OPTIONS['ext']) not in ('.nii', '.nii.gz'):
-            LOGGER.error(f"The 'ext: {options.get('ext')}' value in the nibabel2bids options is not '.nii' or '.nii.gz'")
-            return 2
+        # Test the nibabel installation
+        try:
 
-        if not isinstance(options.get('meta',OPTIONS['meta']), list):
-            LOGGER.error(f"The 'meta: {options.get('meta')}' value in the nibabel2bids options is not a list")
-            return 3
+            LOGGER.info(f"Nibabel version: {nib.__version__}")
+            if options.get('ext',OPTIONS['ext']) not in ('.nii', '.nii.gz'):
+                LOGGER.error(f"The 'ext: {options.get('ext')}' value in the nibabel2bids options is not '.nii' or '.nii.gz'")
+                return 2
 
-        niifile = Path(data_path)/'anatomical.nii'
-        assert has_support(niifile) == 'Nibabel'
-        assert str(get_attribute('Nibabel', niifile, 'descrip', options)) == "b'spm - 3D normalized'"
+            if not isinstance(options.get('meta',OPTIONS['meta']), list):
+                LOGGER.error(f"The 'meta: {options.get('meta')}' value in the nibabel2bids options is not a list")
+                return 3
 
-    except Exception as nibabelerror:
+            niifile = Path(data_path)/'anatomical.nii'
+            assert self.has_support(niifile) == 'Nibabel'
+            assert str(self.get_attribute('Nibabel', niifile, 'descrip', options)) == "b'spm - 3D normalized'"
 
-        LOGGER.error(f"Nibabel error:\n{nibabelerror}")
-        return 1
+        except Exception as nibabelerror:
 
-    return 0
+            LOGGER.error(f"Nibabel error:\n{nibabelerror}")
+            return 1
+
+        return 0
 
 
-def has_support(file: Path, dataformat: Union[DataFormat, str]='') -> str:
-    """
-    This plugin function assesses whether a sourcefile is of a supported dataformat
+    def has_support(self, file: Path, dataformat: Union[DataFormat, str]='') -> str:
+        """
+        This plugin function assesses whether a sourcefile is of a supported dataformat
 
-    :param file:        The sourcefile that is assessed
-    :param dataformat:  The requested dataformat (optional requirement)
-    :return:            The valid/supported dataformat of the sourcefile
-    """
+        :param file:        The sourcefile that is assessed
+        :param dataformat:  The requested dataformat (optional requirement)
+        :return:            The valid/supported dataformat of the sourcefile
+        """
 
-    if dataformat and dataformat != 'Nibabel':
+        if dataformat and dataformat != 'Nibabel':
+            return ''
+
+        ext = ''.join(file.suffixes)
+        if file.is_file() and ext.lower() in sum((klass.valid_exts for klass in nib.imageclasses.all_image_classes), ('.nii.gz',)):
+            return 'Nibabel'
+
         return ''
 
-    ext = ''.join(file.suffixes)
-    if file.is_file() and ext.lower() in sum((klass.valid_exts for klass in nib.imageclasses.all_image_classes), ('.nii.gz',)):
-        return 'Nibabel'
 
-    return ''
+    def get_attribute(self, dataformat: Union[DataFormat, str], sourcefile: Path, attribute: str, options: Plugin) -> Union[str, int, float, list]:
+        """
+        This plugin supports reading attributes from DICOM and PAR dataformats
 
+        :param dataformat:  The bidsmap-dataformat of the sourcefile, e.g. DICOM of PAR
+        :param sourcefile:  The sourcefile from which the attribute value should be read
+        :param attribute:   The attribute key for which the value should be read
+        :param options:     A dictionary with the plugin options, e.g. taken from the bidsmap.plugins['nibabel2bids']
+        :return:            The retrieved attribute value
+        """
 
-def get_attribute(dataformat: Union[DataFormat, str], sourcefile: Path, attribute: str, options: Plugin) -> Union[str, int, float, list]:
-    """
-    This plugin supports reading attributes from DICOM and PAR dataformats
+        value = None
 
-    :param dataformat:  The bidsmap-dataformat of the sourcefile, e.g. DICOM of PAR
-    :param sourcefile:  The sourcefile from which the attribute value should be read
-    :param attribute:   The attribute key for which the value should be read
-    :param options:     A dictionary with the plugin options, e.g. taken from the bidsmap.plugins['nibabel2bids']
-    :return:            The retrieved attribute value
-    """
+        if dataformat == 'Nibabel':
 
-    value = None
+            try:
+                value = nib.load(sourcefile).header.get(attribute)
+                if value is not None:
+                    value = value.tolist()
 
-    if dataformat == 'Nibabel':
+            except Exception:
+                LOGGER.exception(f"Could not get the nibabel '{attribute}' attribute from {sourcefile} -> {value}")
 
-        try:
-            value = nib.load(sourcefile).header.get(attribute)
-            if value is not None:
-                value = value.tolist()
-
-        except Exception:
-            LOGGER.exception(f"Could not get the nibabel '{attribute}' attribute from {sourcefile} -> {value}")
-
-    return value
+        return value
 
 
-def bidsmapper_plugin(session: Path, bidsmap_new: BidsMap, bidsmap_old: BidsMap, template: BidsMap) -> None:
-    """
-    The goal of this plugin function is to identify all the different runs in the session and update the
-    bidsmap if a new run is discovered
+    def bidscoiner(self, session: Path, bidsmap: BidsMap, bidsses: Path) -> None:
+        """
+        The bidscoiner plugin to convert the session Nibabel source-files into BIDS-valid NIfTI-files in the
+        corresponding bids session-folder
 
-    :param session:     The full-path name of the subject/session raw data source folder
-    :param bidsmap_new: The new study bidsmap that we are building
-    :param bidsmap_old: The previous study bidsmap that has precedence over the template bidsmap
-    :param template:    The template bidsmap with the default heuristics
-    """
+        :param session:     The full-path name of the subject/session source folder
+        :param bidsmap:     The full mapping heuristics from the bidsmap YAML-file
+        :param bidsses:     The full-path name of the BIDS output `sub-/ses-` folder
+        :return:            Nothing (i.e. personal data is not available)
+        """
 
-    # See for every source file in the session if we already discovered it or not
-    for sourcefile in session.rglob('*'):
+        # Get the subject identifiers from the bidsses folder
+        subid   = bidsses.name if bidsses.name.startswith('sub-') else bidsses.parent.name
+        sesid   = bidsses.name if bidsses.name.startswith('ses-') else ''
+        options = bidsmap.plugins['nibabel2bids']
+        runid   = ''
 
-        # Check if the sourcefile is of a supported dataformat
-        if is_hidden(sourcefile.relative_to(session)) or not (dataformat := has_support(sourcefile)):
-            continue
-
-        # See if we can find a matching run in the old bidsmap
-        run, oldmatch = bidsmap_old.get_matching_run(sourcefile, dataformat)
-
-        # If not, see if we can find a matching run in the template
-        if not oldmatch:
-            run, _ = template.get_matching_run(sourcefile, dataformat)
-
-        # See if we have already put the run somewhere in our new bidsmap
-        if not bidsmap_new.exist_run(run):
-
-            # Communicate with the user if the run was not present in bidsmap_old or in template, i.e. that we found a new sample
-            if not oldmatch:
-                LOGGER.info(f"Discovered sample: {run.datasource}")
-            else:
-                LOGGER.bcdebug(f"Known sample: {run.datasource}")
-
-            # Copy the filled-in run over to the new bidsmap
-            bidsmap_new.insert_run(run)
-
+        # Read or create a scans_table and tsv-file
+        scans_tsv = bidsses/f"{subid}{'_'+sesid if sesid else ''}_scans.tsv"
+        if scans_tsv.is_file():
+            scans_table = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
         else:
-            LOGGER.bcdebug(f"Existing/duplicate sample: {run.datasource}")
+            scans_table = pd.DataFrame(columns=['acq_time'], dtype='str')
+            scans_table.index.name = 'filename'
 
+        # Collect the different Nibabel source files for all files in the session
+        for sourcefile in session.rglob('*'):
 
-def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> None:
-    """
-    The bidscoiner plugin to convert the session Nibabel source-files into BIDS-valid NIfTI-files in the
-    corresponding bids session-folder
+            # Check if the sourcefile is of a supported dataformat
+            if is_hidden(sourcefile.relative_to(session)) or not (dataformat := self.has_support(sourcefile)):
+                continue
 
-    :param session:     The full-path name of the subject/session source folder
-    :param bidsmap:     The full mapping heuristics from the bidsmap YAML-file
-    :param bidsses:     The full-path name of the BIDS output `sub-/ses-` folder
-    :return:            Nothing (i.e. personal data is not available)
-    """
+            # Get a matching run from the bidsmap
+            run, runid = bidsmap.get_matching_run(sourcefile, dataformat, runtime=True)
 
-    # Get the subject identifiers from the bidsses folder
-    subid   = bidsses.name if bidsses.name.startswith('sub-') else bidsses.parent.name
-    sesid   = bidsses.name if bidsses.name.startswith('ses-') else ''
-    options = bidsmap.plugins['nibabel2bids']
-    runid   = ''
+            # Check if we should ignore this run
+            if run.datatype in bidsmap.options['ignoretypes']:
+                LOGGER.info(f"--> Leaving out: {run.datasource}")
+                bids.bidsprov(bidsses, sourcefile, run)                     # Write out empty provenance logging data
+                continue
 
-    # Read or create a scans_table and tsv-file
-    scans_tsv = bidsses/f"{subid}{'_'+sesid if sesid else ''}_scans.tsv"
-    if scans_tsv.is_file():
-        scans_table = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
-    else:
-        scans_table = pd.DataFrame(columns=['acq_time'], dtype='str')
-        scans_table.index.name = 'filename'
+            # Check if we already know this run
+            if not runid:
+                LOGGER.error(f"Skipping unknown run: {run.datasource}\n-> Re-run the bidsmapper and delete {bidsses} to solve this warning")
+                bids.bidsprov(bidsses, sourcefile)                          # Write out empty provenance logging data
+                continue
 
-    # Collect the different Nibabel source files for all files in the session
-    for sourcefile in session.rglob('*'):
+            LOGGER.info(f"--> Coining: {run.datasource}")
 
-        # Check if the sourcefile is of a supported dataformat
-        if is_hidden(sourcefile.relative_to(session)) or not (dataformat := has_support(sourcefile)):
-            continue
+            # Create the BIDS session/datatype output folder
+            outfolder = bidsses/run.datatype
+            outfolder.mkdir(parents=True, exist_ok=True)
 
-        # Get a matching run from the bidsmap
-        run, runid = bidsmap.get_matching_run(sourcefile, dataformat, runtime=True)
+            # Compose the BIDS filename using the matched run
+            bidsignore = bids.check_ignore(run.datatype, bidsmap.options['bidsignore'])
+            bidsname   = run.bidsname(subid, sesid, not bidsignore, runtime=True)
+            bidsignore = bidsignore or bids.check_ignore(bidsname+'.json', bidsmap.options['bidsignore'], 'file')
+            bidsname   = run.increment_runindex(outfolder, bidsname, scans_table)
+            target     = (outfolder/bidsname).with_suffix(options.get('ext', ''))
 
-        # Check if we should ignore this run
-        if run.datatype in bidsmap.options['ignoretypes']:
-            LOGGER.info(f"--> Leaving out: {run.datasource}")
-            bids.bidsprov(bidsses, sourcefile, run)                     # Write out empty provenance logging data
-            continue
+            # Check if the bidsname is valid
+            bidstest = (Path('/')/subid/sesid/run.datatype/bidsname).with_suffix('.nii').as_posix()
+            isbids   = BIDSValidator().is_bids(bidstest)
+            if not isbids and not bidsignore:
+                LOGGER.warning(f"The '{bidstest}' output name did not pass the bids-validator test")
 
-        # Check if we already know this run
+            # Check if file already exists (-> e.g. when a static runindex is used)
+            if target.is_file():
+                LOGGER.warning(f"{target} already exists and will be deleted -- check your results carefully!")
+                target.unlink()
+
+            # Save the sourcefile as a BIDS NIfTI file and write out provenance logging data
+            nib.save(nib.load(sourcefile), target)
+            bids.bidsprov(bidsses, sourcefile, run, [target] if target.is_file() else [])
+
+            # Check the output
+            if not target.is_file():
+                LOGGER.error(f"Output file not found: {target}")
+                continue
+
+            # Load/copy over the source meta-data
+            sidecar  = target.with_suffix('').with_suffix('.json')
+            metadata = bids.poolmetadata(run.datasource, sidecar, run.meta, options.get('meta', []))
+            if metadata:
+                with sidecar.open('w') as json_fid:
+                    json.dump(metadata, json_fid, indent=4)
+
+            # Add an entry to the scans_table (we typically don't have useful data to put there)
+            acq_time = dateutil.parser.parse(f"1925-01-01T{metadata.get('AcquisitionTime', '')}")
+            scans_table.loc[target.relative_to(bidsses).as_posix(), 'acq_time'] = acq_time.isoformat()
+
         if not runid:
-            LOGGER.error(f"Skipping unknown run: {run.datasource}\n-> Re-run the bidsmapper and delete {bidsses} to solve this warning")
-            bids.bidsprov(bidsses, sourcefile)                          # Write out empty provenance logging data
-            continue
+            LOGGER.info(f"--> No {__name__} sourcedata found in: {session}")
+            return
 
-        LOGGER.info(f"--> Coining: {run.datasource}")
-
-        # Create the BIDS session/datatype output folder
-        outfolder = bidsses/run.datatype
-        outfolder.mkdir(parents=True, exist_ok=True)
-
-        # Compose the BIDS filename using the matched run
-        bidsignore = bids.check_ignore(run.datatype, bidsmap.options['bidsignore'])
-        bidsname   = run.bidsname(subid, sesid, not bidsignore, runtime=True)
-        bidsignore = bidsignore or bids.check_ignore(bidsname+'.json', bidsmap.options['bidsignore'], 'file')
-        bidsname   = run.increment_runindex(outfolder, bidsname, scans_table)
-        target     = (outfolder/bidsname).with_suffix(options.get('ext', ''))
-
-        # Check if the bidsname is valid
-        bidstest = (Path('/')/subid/sesid/run.datatype/bidsname).with_suffix('.nii').as_posix()
-        isbids   = BIDSValidator().is_bids(bidstest)
-        if not isbids and not bidsignore:
-            LOGGER.warning(f"The '{bidstest}' output name did not pass the bids-validator test")
-
-        # Check if file already exists (-> e.g. when a static runindex is used)
-        if target.is_file():
-            LOGGER.warning(f"{target} already exists and will be deleted -- check your results carefully!")
-            target.unlink()
-
-        # Save the sourcefile as a BIDS NIfTI file and write out provenance logging data
-        nib.save(nib.load(sourcefile), target)
-        bids.bidsprov(bidsses, sourcefile, run, [target] if target.is_file() else [])
-
-        # Check the output
-        if not target.is_file():
-            LOGGER.error(f"Output file not found: {target}")
-            continue
-
-        # Load/copy over the source meta-data
-        sidecar  = target.with_suffix('').with_suffix('.json')
-        metadata = bids.poolmetadata(run.datasource, sidecar, run.meta, options.get('meta', []))
-        if metadata:
-            with sidecar.open('w') as json_fid:
-                json.dump(metadata, json_fid, indent=4)
-
-        # Add an entry to the scans_table (we typically don't have useful data to put there)
-        acq_time = dateutil.parser.parse(f"1925-01-01T{metadata.get('AcquisitionTime', '')}")
-        scans_table.loc[target.relative_to(bidsses).as_posix(), 'acq_time'] = acq_time.isoformat()
-
-    if not runid:
-        LOGGER.info(f"--> No {__name__} sourcedata found in: {session}")
-        return
-
-    # Write the scans_table to disk
-    LOGGER.verbose(f"Writing data to: {scans_tsv}")
-    scans_table.replace('','n/a').to_csv(scans_tsv, sep='\t', encoding='utf-8', na_rep='n/a')
+        # Write the scans_table to disk
+        LOGGER.verbose(f"Writing data to: {scans_tsv}")
+        scans_table.replace('','n/a').to_csv(scans_tsv, sep='\t', encoding='utf-8', na_rep='n/a')

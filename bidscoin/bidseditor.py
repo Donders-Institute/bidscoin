@@ -10,7 +10,7 @@ import json
 import csv
 import nibabel as nib
 from bids_validator import BIDSValidator
-from typing import Union, List, Dict
+from typing import Union
 from pydicom import dcmread, datadict, config
 from pathlib import Path
 from functools import partial
@@ -163,9 +163,9 @@ class MainWindow(QMainWindow):
         self.datasaved                   = datasaved
         """True if data has been saved on disk"""
         self.dataformats                 = [dataformat.dataformat for dataformat in input_bidsmap.dataformats if input_bidsmap.dir(dataformat)]
-        self.bidsignore: List[str]       = input_bidsmap.options['bidsignore']
-        self.unknowndatatypes: List[str] = input_bidsmap.options['unknowntypes']
-        self.ignoredatatypes: List[str]  = input_bidsmap.options['ignoretypes']
+        self.bidsignore: list[str]       = input_bidsmap.options['bidsignore']
+        self.unknowndatatypes: list[str] = input_bidsmap.options['unknowntypes']
+        self.ignoredatatypes: list[str]  = input_bidsmap.options['ignoretypes']
 
         # Set up the tabs, add the tables and put the bidsmap data in them
         tabwidget = self.tabwidget = QtWidgets.QTabWidget()
@@ -253,9 +253,9 @@ class MainWindow(QMainWindow):
         rowindexes = [index.row() for index in table.selectedIndexes() if index.column() == colindex]
         if rowindexes and colindex in (-1, 0, 4):      # User clicked the index, the edit-button or elsewhere (i.e. not on an activated widget)
             return
-        runitems: List[RunItem] = []
-        subids: List[str]   = []
-        sesids: List[str]   = []
+        runitems: list[RunItem] = []
+        subids: list[str]   = []
+        sesids: list[str]   = []
         for index in rowindexes:
             datatype   = table.item(index, 2).text()
             provenance = table.item(index, 5).text()
@@ -1000,8 +1000,8 @@ class EditWindow(QDialog):
         self.datasource        = runitem.datasource
         self.dataformat        = runitem.dataformat
         """The data format of the run-item being edited (bidsmap[dataformat][datatype][run-item])"""
-        self.unknowndatatypes: List[str] = [datatype for datatype in bidsmap.options['unknowntypes'] if datatype in template_bidsmap.dataformat(self.dataformat).datatypes]
-        self.ignoredatatypes: List[str]  = [datatype for datatype in bidsmap.options['ignoretypes']  if datatype in template_bidsmap.dataformat(self.dataformat).datatypes]
+        self.unknowndatatypes: list[str] = [datatype for datatype in bidsmap.options['unknowntypes'] if datatype in template_bidsmap.dataformat(self.dataformat).datatypes]
+        self.ignoredatatypes: list[str]  = [datatype for datatype in bidsmap.options['ignoretypes']  if datatype in template_bidsmap.dataformat(self.dataformat).datatypes]
         self.bidsdatatypes     = [str(datatype) for datatype in template_bidsmap.dataformat(self.dataformat).datatypes if datatype not in self.unknowndatatypes + self.ignoredatatypes + ['subject', 'session']]
         self.bidsignore        = bidsmap.options['bidsignore']
         self.output_bidsmap    = bidsmap
@@ -1842,7 +1842,7 @@ class EditWindow(QDialog):
             bidsmap.save()
             QMessageBox.information(self, 'Edit BIDS mapping', f"Successfully exported:\n\n{self.target_run} -> {yamlfile}")
 
-    def get_allowed_suffixes(self) -> Dict[str, set]:
+    def get_allowed_suffixes(self) -> dict[str, set]:
         """Derive the possible suffixes for each datatype from the template. """
 
         allowed_suffixes = {}
@@ -1892,7 +1892,7 @@ class EditWindow(QDialog):
 
 class CompareWindow(QDialog):
 
-    def __init__(self, runitems: List[RunItem], subid: List[str], sesid: List[str]):
+    def __init__(self, runitems: list[RunItem], subid: list[str], sesid: list[str]):
         super().__init__()
 
         # Set up the window

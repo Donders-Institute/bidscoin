@@ -6,7 +6,6 @@ import logging
 import uuid
 from pydicom import fileset
 from pathlib import Path
-from typing import List, Set
 from importlib.util import find_spec
 from typing import Union
 if find_spec('bidscoin') is None:
@@ -81,7 +80,7 @@ def cleanup(name: str) -> str:
     return name
 
 
-def sortsession(sessionfolder: Path, dicomfiles: List[Path], folderscheme: str, namescheme: str, force: bool, dryrun: bool) -> None:
+def sortsession(sessionfolder: Path, dicomfiles: list[Path], folderscheme: str, namescheme: str, force: bool, dryrun: bool) -> None:
     """
     Sorts dicomfiles into subfolders (e.g. a 3-digit SeriesNumber-SeriesDescription subfolder, such as '003-T1MPRAGE')
 
@@ -136,7 +135,7 @@ def sortsession(sessionfolder: Path, dicomfiles: List[Path], folderscheme: str, 
 
 
 def sortsessions(sourcefolder: Path, subprefix: Union[str,None]='', sesprefix: str='', folderscheme: str='{SeriesNumber:03d}-{SeriesDescription}',
-                 namescheme: str='', pattern: str=r'.*\.(IMA|dcm)$', recursive: bool=True, force: bool=False, dryrun: bool=False) -> Set[Path]:
+                 namescheme: str='', pattern: str=r'.*\.(IMA|dcm)$', recursive: bool=True, force: bool=False, dryrun: bool=False) -> set[Path]:
     """
     Wrapper around sortsession() to loop over subjects and sessions and map the session DICOM files
 
@@ -168,7 +167,7 @@ def sortsessions(sourcefolder: Path, subprefix: Union[str,None]='', sesprefix: s
         return set()
 
     # Do a recursive call if a sub- or ses-prefix is given
-    sessions: Set[Path] = set()                 # Collect the sorted session-folders
+    sessions: set[Path] = set()                 # Collect the sorted session-folders
     if subprefix or sesprefix:
         LOGGER.info(f"Searching for subject/session folders in: {sourcefolder}")
         for subjectfolder in lsdirs(sourcefolder, (subprefix or '') + '*'):

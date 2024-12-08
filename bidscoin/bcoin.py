@@ -19,7 +19,7 @@ from functools import lru_cache
 from importlib.metadata import entry_points
 from importlib.util import spec_from_file_location, module_from_spec
 from pathlib import Path
-from typing import Tuple, Union, List
+from typing import Union
 from ruamel.yaml import YAML
 from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
@@ -241,7 +241,7 @@ def list_executables(show: bool=False) -> list:
     return scripts
 
 
-def list_plugins(show: bool=False) -> Tuple[List[Path], List[Path]]:
+def list_plugins(show: bool=False) -> tuple[list[Path], list[Path]]:
     """
     :param show: Print the template bidsmaps and installed plugins if True
     :return:     List of the installed plugins and template bidsmaps
@@ -264,7 +264,7 @@ def list_plugins(show: bool=False) -> Tuple[List[Path], List[Path]]:
     return plugins, templates
 
 
-def install_plugins(filenames: List[str]=()) -> None:
+def install_plugins(filenames: list[str]=()) -> None:
     """
     Installs template bidsmaps and plugins and adds the plugin Options and data format section to the default template bidsmap
 
@@ -296,7 +296,7 @@ def install_plugins(filenames: List[str]=()) -> None:
             continue
 
         # Check if we can import the plugin
-        module = import_plugin(file, ('bidsmapper_plugin', 'bidscoiner_plugin'))
+        module = import_plugin(file)
         if not module:
             LOGGER.error(f"Plugin failure, please re-install a valid version of '{file.name}'")
             continue
@@ -316,7 +316,7 @@ def install_plugins(filenames: List[str]=()) -> None:
         LOGGER.success(f"The '{file.name}' plugin was successfully installed")
 
 
-def uninstall_plugins(filenames: List[str]=(), wipe: bool=True) -> None:
+def uninstall_plugins(filenames: list[str]=(), wipe: bool=True) -> None:
     """
     Uninstalls template bidsmaps and plugins and removes the plugin Options and data format section from the default template bidsmap
 
@@ -338,7 +338,7 @@ def uninstall_plugins(filenames: List[str]=(), wipe: bool=True) -> None:
 
         # First check if we can import the plugin
         if file.suffix == '.py':
-            module = import_plugin(pluginfolder/file.name, ('bidsmapper_plugin', 'bidscoiner_plugin'))
+            module = import_plugin(pluginfolder/file.name)
         else:
             module = None
 
@@ -373,13 +373,13 @@ def uninstall_plugins(filenames: List[str]=(), wipe: bool=True) -> None:
 
 
 @lru_cache()
-def import_plugin(plugin: Union[Path,str], functions: tuple=()) -> Union[types.ModuleType, None]:
+def import_plugin(plugin: Union[Path,str], classes: tuple=('Interface',)) -> Union[types.ModuleType, None]:
     """
     Imports the plugin if it contains any of the specified functions
 
-    :param plugin:      Name of the plugin in the bidscoin "plugins" folder or the fullpath name
-    :param functions:   List of functions of which at least one of them should be present in the plugin
-    :return:            The imported plugin-module
+    :param plugin:  Name of the plugin in the bidscoin "plugins" folder or the fullpath name
+    :param classes: List of classes of which at least one of them should be present in the plugin
+    :return:        The imported plugin-module
     """
 
     if not plugin: return
@@ -401,17 +401,17 @@ def import_plugin(plugin: Union[Path,str], functions: tuple=()) -> Union[types.M
         module = module_from_spec(spec)
         spec.loader.exec_module(module)
 
-        functionsfound = []
-        for function in functions:
-            if not hasattr(module, function):
-                LOGGER.verbose(f"Could not find '{function}' in the '{plugin}' plugin")
-            elif not callable(getattr(module, function)):
-                LOGGER.error(f"'The {function}' attribute in the '{plugin}' plugin is not callable")
+        classesfound = []
+        for klass in classes:
+            if not hasattr(module, klass):
+                LOGGER.verbose(f"Could not find '{klass}' in the '{plugin}' plugin")
+            elif not callable(getattr(module, klass)):
+                LOGGER.error(f"'The {klass}' attribute in the '{plugin}' plugin is not callable")
             else:
-                functionsfound.append(function)
+                classesfound.append(klass)
 
-        if functions and not functionsfound:
-            LOGGER.bcdebug(f"Plugin '{plugin}' does not contain {functions} functions")
+        if classes and not classesfound:
+            LOGGER.bcdebug(f"Plugin '{plugin}' does not contain {classes} classes")
         else:
             return module
 
@@ -432,26 +432,22 @@ def test_plugin(plugin: Union[Path,str], options: dict) -> int:
 
     LOGGER.info(f"--------- Testing the '{plugin}' plugin ---------")
 
-    # First test to see if we can import the core plugin methods
-    module = import_plugin(plugin, ('bidsmapper_plugin','bidscoiner_plugin'))
+    # First test to see if we can import the plugin interface
+    module = import_plugin(plugin)
     if module is None:
         return 1
 
     # Then run the plugin's own 'test' routine (if implemented)
-    if hasattr(module, 'test') and callable(getattr(module, 'test')):
-        try:
-            returncode = module.test(options)
-            if returncode == 0:
-                LOGGER.success(f"The '{plugin}' plugin functioned correctly")
-            else:
-                LOGGER.warning(f"The '{plugin}' plugin did not function correctly")
-            return returncode
-        except Exception as pluginerror:
-            LOGGER.error(f"Could not run {plugin}.test(options):\n{pluginerror}")
-            return 1
-    else:
-        LOGGER.info(f"The '{plugin}' did not have a test routine")
-        return 0
+    try:
+        returncode = module.Interface().test(options)
+        if returncode == 0:
+            LOGGER.success(f"The '{plugin}' plugin functioned correctly")
+        else:
+            LOGGER.warning(f"The '{plugin}' plugin did not function correctly")
+        return returncode
+    except Exception as pluginerror:
+        LOGGER.error(f"Could not run {plugin}.test(options):\n{pluginerror}")
+        return 1
 
 
 def test_bidsmap(bidsmapfile: str):

@@ -1,17 +1,114 @@
-"""Pre-installed plugins"""
+"""Base classes for the pre-installed plugins"""
 
 import logging
 import copy
 import pandas as pd
 from pathlib import Path
 from abc import ABC, abstractmethod
-from typing import List
+from typing import Union
+from bidscoin import is_hidden
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from bidscoin.bids import BidsMap   # = Circular import
 
 LOGGER = logging.getLogger(__name__)
 
 
+class PluginInterface(ABC):
+    """Base interface class for plugins"""
+
+    def __init__(self):
+        pass
+
+    def test(self, options) -> int:
+        """
+        Performs a plugin test
+
+        :param options: A dictionary with the plugin options, e.g. taken from the bidsmap.plugins[__name__]
+        :return:        The errorcode: 0 for successful execution, 1 for general plugin errors, etc
+        """
+
+        LOGGER.info(f"Testing {__name__} is not implemented")
+
+        return 0
+
+    @abstractmethod
+    def has_support(self, file: Path, dataformat: str) -> str:
+        """
+        This plugin function assesses whether a sourcefile is of a supported dataformat
+
+        :param file:        The sourcefile that is assessed
+        :param dataformat:  The requested dataformat (optional requirement)
+        :return:            The valid/supported dataformat of the sourcefile
+        """
+
+    @abstractmethod
+    def get_attribute(self, dataformat, sourcefile: Path, attribute: str, options: dict) -> Union[str, int, float, list]:
+        """
+        This plugin supports reading attributes from DICOM and PAR dataformats
+
+        :param dataformat:  The bidsmap-dataformat of the sourcefile, e.g. DICOM of PAR
+        :param sourcefile:  The sourcefile from which the attribute value should be read
+        :param attribute:   The attribute key for which the value should be read
+        :param options:     A dictionary with the plugin options, e.g. taken from the bidsmap.plugins['nibabel2bids']
+        :return:            The retrieved attribute value
+        """
+
+    def bidsmapper(self, session: Path, bidsmap_new: 'BidsMap', bidsmap_old: 'BidsMap', template: 'BidsMap') -> None:
+        """
+        The goal of this plugin function is to identify all the different runs in the session and update the
+        bidsmap if a new run is discovered
+
+        :param session:     The full-path name of the subject/session raw data source folder
+        :param bidsmap_new: The new study bidsmap that we are building
+        :param bidsmap_old: The previous study bidsmap that has precedence over the template bidsmap
+        :param template:    The template bidsmap with the default heuristics
+        """
+
+        # See for every source file in the session if we already discovered it or not
+        for sourcefile in session.rglob('*'):
+
+            # Check if the sourcefile is of a supported dataformat
+            if is_hidden(sourcefile.relative_to(session)) or not (dataformat := self.has_support(sourcefile, dataformat='')):
+                continue
+
+            # See if we can find a matching run in the old bidsmap
+            run, oldmatch = bidsmap_old.get_matching_run(sourcefile, dataformat)
+
+            # If not, see if we can find a matching run in the template
+            if not oldmatch:
+                run, _ = template.get_matching_run(sourcefile, dataformat)
+
+            # See if we have already put the run somewhere in our new bidsmap
+            if not bidsmap_new.exist_run(run):
+
+                # Communicate with the user if the run was not present in bidsmap_old or in template, i.e. that we found a new sample
+                if not oldmatch:
+                    LOGGER.info(f"Discovered sample: {run.datasource}")
+                else:
+                    LOGGER.bcdebug(f"Known sample: {run.datasource}")
+
+                # Copy the filled-in run over to the new bidsmap
+                bidsmap_new.insert_run(run)
+
+            else:
+                LOGGER.bcdebug(f"Existing/duplicate sample: {run.datasource}")
+
+    @abstractmethod
+    def bidscoiner(self, session: Path, bidsmap: 'BidsMap', bidsses: Path) -> None:
+        """
+        The bidscoiner plugin to convert the session Nibabel source-files into BIDS-valid NIfTI-files in the
+        corresponding bids session-folder
+
+        :param session:     The full-path name of the subject/session source folder
+        :param bidsmap:     The full mapping heuristics from the bidsmap YAML-file
+        :param bidsses:     The full-path name of the BIDS output `sub-/ses-` folder
+        :return:            Nothing (i.e. personal data is not available)
+        """
+
+
 class EventsParser(ABC):
-    """Parser for stimulus presentation logfiles"""
+    """Base parser for stimulus presentation logfiles"""
 
     def __init__(self, sourcefile: Path, eventsdata: dict, options: dict):
         """
@@ -90,21 +187,21 @@ class EventsParser(ABC):
         return df.loc[rows.values].sort_values(by='onset')
 
     @property
-    def columns(self) -> List[dict]:
+    def columns(self) -> list[dict]:
         """List with mappings for the column names of the eventstable"""
         return self._data.get('columns') or []
 
     @columns.setter
-    def columns(self, value: List[dict]):
+    def columns(self, value: list[dict]):
         self._data['columns'] = value
 
     @property
-    def rows(self) -> List[dict]:
+    def rows(self) -> list[dict]:
         """List with fullmatch regular expression dictionaries that yield row sets in the eventstable"""
         return self._data.get('rows') or []
 
     @rows.setter
-    def rows(self, value: List[dict]):
+    def rows(self, value: list[dict]):
         self._data['rows'] = value
 
     @property
@@ -139,8 +236,8 @@ class EventsParser(ABC):
             LOGGER.warning(f"Second events column must be named 'duration', got '{key}' instead\n{self}")
             valid = False
 
-        if len(self.time.get('cols',[])) < 2:
-            LOGGER.warning(f"Events table must have at least two timecol items, got {len(self.time.get('cols',[]))} instead\n{self}")
+        if len(self.time.get('cols', [])) < 2:
+            LOGGER.warning(f"Events table must have at least two timecol items, got {len(self.time.get('cols', []))} instead\n{self}")
             return False
 
         elif not is_float(self.time.get('unit')):
@@ -150,7 +247,7 @@ class EventsParser(ABC):
         # Check if the logtable has existing and unique column names
         columns = self.logtable.columns
         for name in set([name for item in self.columns for name in item.values()] + [name for item in self.rows for name in item['include'].keys()] +
-                        [*self.time.get('start',{}).keys()] + self.time.get('cols',[])):
+                        [*self.time.get('start', {}).keys()] + self.time.get('cols', [])):
             if name and name not in columns:
                 LOGGER.warning(f"Column '{name}' not found in the event table of {self}")
                 valid = False
@@ -164,4 +261,3 @@ class EventsParser(ABC):
         """Write the eventstable to a BIDS events.tsv file"""
 
         self.eventstable.to_csv(targetfile, sep='\t', index=False)
-

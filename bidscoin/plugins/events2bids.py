@@ -7,9 +7,9 @@ from typing import Union
 from bids_validator import BIDSValidator
 from pathlib import Path
 from bidscoin import bids
-from bidscoin.plugins import EventsParser
+from bidscoin.plugins import PluginInterface, EventsParser
 from bidscoin.bids import BidsMap, DataFormat, is_hidden, Plugin
-# from convert_eprime.utils import remove_unicode
+# TODO: from convert_eprime.utils import ..
 
 LOGGER = logging.getLogger(__name__)
 
@@ -17,213 +17,148 @@ LOGGER = logging.getLogger(__name__)
 OPTIONS = Plugin({'table': 'event', 'skiprows': 3, 'meta': ['.json', '.tsv']})  # The file extensions of the equally named metadata sourcefiles that are copied over as BIDS sidecar files
 
 
-def test(options: Plugin=OPTIONS) -> int:
-    """
-    Performs a Presentation test
+class Interface(PluginInterface):
 
-    :param options: A dictionary with the plugin options, e.g. taken from the bidsmap.plugins['events2bids']
-    :return:        The errorcode: 0 for successful execution, 1 for general tool errors, 2 for `ext` option errors, 3 for `meta` option errors
-    """
+    def has_support(self, file: Path, dataformat: Union[DataFormat, str]='') -> str:
+        """
+        This plugin function assesses whether a sourcefile is of a supported dataformat
 
-    LOGGER.info('Testing the events2bids installation:')
+        :param file:        The sourcefile that is assessed
+        :param dataformat:  The requested dataformat (optional requirement)
+        :return:            The valid/supported dataformat of the sourcefile
+        """
 
-    # Test the Presentation installation
-    try:
-        pass
+        if dataformat and dataformat != 'Presentation':
+            return ''
 
-    except Exception as eventserror:
+        ext = ''.join(file.suffixes)
+        if ext.lower() in ('.log',):
+            return 'Presentation'
 
-        LOGGER.error(f"Events2bids error:\n{eventserror}")
-        return 1
-
-    return 0
-
-
-def has_support(file: Path, dataformat: Union[DataFormat, str]='') -> str:
-    """
-    This plugin function assesses whether a sourcefile is of a supported dataformat
-
-    :param file:        The sourcefile that is assessed
-    :param dataformat:  The requested dataformat (optional requirement)
-    :return:            The valid/supported dataformat of the sourcefile
-    """
-
-    if dataformat and dataformat != 'Presentation':
         return ''
 
-    ext = ''.join(file.suffixes)
-    if ext.lower() in ('.log',):
-        return 'Presentation'
+    def get_attribute(self, dataformat: Union[DataFormat, str], sourcefile: Path, attribute: str, options) -> Union[str, int, float, list]:
+        """
+        This plugin supports reading attributes from DICOM and PAR dataformats
 
-    return ''
+        :param dataformat:  The bidsmap-dataformat of the sourcefile, e.g. DICOM of PAR
+        :param sourcefile:  The sourcefile from which the attribute value should be read
+        :param attribute:   The attribute key for which the value should be read
+        :param options:     A dictionary with the plugin options, e.g. taken from the bidsmap.plugins['events2bids']
+        :return:            The retrieved attribute value
+        """
 
+        if dataformat == 'Presentation':
 
-def get_attribute(dataformat: Union[DataFormat, str], sourcefile: Path, attribute: str, options: Plugin) -> Union[str, int, float, list]:
-    """
-    This plugin supports reading attributes from DICOM and PAR dataformats
+            try:
+                with sourcefile.open() as fid:
+                    while '-' in (line := fid.readline()):
+                        key, value = line.split('-', 1)
+                        if attribute == key.strip():
+                            return value.strip()
 
-    :param dataformat:  The bidsmap-dataformat of the sourcefile, e.g. DICOM of PAR
-    :param sourcefile:  The sourcefile from which the attribute value should be read
-    :param attribute:   The attribute key for which the value should be read
-    :param options:     A dictionary with the plugin options, e.g. taken from the bidsmap.plugins['events2bids']
-    :return:            The retrieved attribute value
-    """
+            except (IOError, OSError) as ioerror:
+                LOGGER.exception(f"Could not get the Presentation '{attribute}' attribute from {sourcefile}\n{ioerror}")
 
-    if dataformat == 'Presentation':
+        return ''
 
-        try:
-            with sourcefile.open() as fid:
-                while '-' in (line := fid.readline()):
-                    key, value = line.split('-', 1)
-                    if attribute == key.strip():
-                        return value.strip()
+    def bidscoiner(self, session: Path, bidsmap: BidsMap, bidsses: Path) -> None:
+        """
+        The bidscoiner plugin to convert the session Presentation source-files into BIDS-valid NIfTI-files in the
+        corresponding bids session-folder
 
-        except (IOError, OSError) as ioerror:
-            LOGGER.exception(f"Could not get the Presentation '{attribute}' attribute from {sourcefile}\n{ioerror}")
+        :param session:     The full-path name of the subject/session source folder
+        :param bidsmap:     The full mapping heuristics from the bidsmap YAML-file
+        :param bidsses:     The full-path name of the BIDS output `sub-/ses-` folder
+        :return:            Nothing (i.e. personal data is not available)
+        """
 
-    return ''
+        # Get the subject identifiers from the bidsses folder
+        subid   = bidsses.name if bidsses.name.startswith('sub-') else bidsses.parent.name
+        sesid   = bidsses.name if bidsses.name.startswith('ses-') else ''
+        options = bidsmap.plugins['events2bids']
+        runid   = ''
 
-
-def bidsmapper_plugin(session: Path, bidsmap_new: BidsMap, bidsmap_old: BidsMap, template: BidsMap) -> None:
-    """
-    The goal of this plugin function is to identify all the different runs in the session and update the
-    bidsmap if a new run is discovered
-
-    :param session:     The full-path name of the subject/session raw data source folder
-    :param bidsmap_new: The new study bidsmap that we are building
-    :param bidsmap_old: The previous study bidsmap that has precedence over the template bidsmap
-    :param template:    The template bidsmap with the default heuristics
-    """
-
-    # See for every source file in the session if we already discovered it or not
-    for sourcefile in session.rglob('*'):
-
-        # Check if the sourcefile is of a supported dataformat
-        if is_hidden(sourcefile.relative_to(session)) or not (dataformat := has_support(sourcefile)):
-            if not is_hidden(sourcefile.relative_to(session)):
-                LOGGER.bcdebug(f"Skipping {sourcefile} (not supported by {dataformat})")
-            continue
-
-        # See if we can find a matching run in the old bidsmap
-        run, oldmatch = bidsmap_old.get_matching_run(sourcefile, dataformat)
-
-        # If not, see if we can find a matching run in the template
-        if not oldmatch:
-            run, _ = template.get_matching_run(sourcefile, dataformat)
-
-        # See if we have already put the run somewhere in our new bidsmap
-        if not bidsmap_new.exist_run(run):
-
-            # Communicate with the user if the run was not present in bidsmap_old or in template, i.e. that we found a new sample
-            if not oldmatch:
-                LOGGER.info(f"Discovered sample: {run.datasource}")
-            else:
-                LOGGER.bcdebug(f"Known sample: {run.datasource}")
-
-            # Copy the filled-in run over to the new bidsmap
-            bidsmap_new.insert_run(run)
-
+        # Read or create a scans_table and tsv-file
+        scans_tsv = bidsses/f"{subid}{'_'+sesid if sesid else ''}_scans.tsv"
+        if scans_tsv.is_file():
+            scans_table = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
         else:
-            LOGGER.bcdebug(f"Existing/duplicate sample: {run.datasource}")
+            scans_table = pd.DataFrame(columns=['acq_time'], dtype='str')
+            scans_table.index.name = 'filename'
 
+        # Collect the different Presentation source files for all files in the session
+        for sourcefile in session.rglob('*'):
 
-def bidscoiner_plugin(session: Path, bidsmap: BidsMap, bidsses: Path) -> None:
-    """
-    The bidscoiner plugin to convert the session Presentation source-files into BIDS-valid NIfTI-files in the
-    corresponding bids session-folder
+            # Check if the sourcefile is of a supported dataformat
+            if is_hidden(sourcefile.relative_to(session)) or not (dataformat := self.has_support(sourcefile)):
+                continue
 
-    :param session:     The full-path name of the subject/session source folder
-    :param bidsmap:     The full mapping heuristics from the bidsmap YAML-file
-    :param bidsses:     The full-path name of the BIDS output `sub-/ses-` folder
-    :return:            Nothing (i.e. personal data is not available)
-    """
+            # Get a matching run from the bidsmap
+            run, runid = bidsmap.get_matching_run(sourcefile, dataformat, runtime=True)
 
-    # Get the subject identifiers from the bidsses folder
-    subid   = bidsses.name if bidsses.name.startswith('sub-') else bidsses.parent.name
-    sesid   = bidsses.name if bidsses.name.startswith('ses-') else ''
-    options = bidsmap.plugins['events2bids']
-    runid   = ''
+            # Check if we should ignore this run
+            if run.datatype in bidsmap.options['ignoretypes']:
+                LOGGER.info(f"--> Leaving out: {run.datasource}")
+                bids.bidsprov(bidsses, sourcefile, run)                     # Write out empty provenance logging data
+                continue
 
-    # Read or create a scans_table and tsv-file
-    scans_tsv = bidsses/f"{subid}{'_'+sesid if sesid else ''}_scans.tsv"
-    if scans_tsv.is_file():
-        scans_table = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
-    else:
-        scans_table = pd.DataFrame(columns=['acq_time'], dtype='str')
-        scans_table.index.name = 'filename'
+            # Check if we already know this run
+            if not runid:
+                LOGGER.error(f"Skipping unknown run: {run.datasource}\n-> Re-run the bidsmapper and delete {bidsses} to solve this warning")
+                bids.bidsprov(bidsses, sourcefile)                          # Write out empty provenance logging data
+                continue
 
-    # Collect the different Presentation source files for all files in the session
-    for sourcefile in session.rglob('*'):
+            LOGGER.info(f"--> Coining: {run.datasource}")
 
-        # Check if the sourcefile is of a supported dataformat
-        if is_hidden(sourcefile.relative_to(session)) or not (dataformat := has_support(sourcefile)):
-            continue
+            # Create the BIDS session/datatype output folder
+            outfolder = bidsses/run.datatype
+            outfolder.mkdir(parents=True, exist_ok=True)
 
-        # Get a matching run from the bidsmap
-        run, runid = bidsmap.get_matching_run(sourcefile, dataformat, runtime=True)
+            # Compose the BIDS filename using the matched run
+            bidsignore = bids.check_ignore(run.datatype, bidsmap.options['bidsignore'])
+            bidsname   = run.bidsname(subid, sesid, not bidsignore, runtime=True)
+            bidsignore = bidsignore or bids.check_ignore(bidsname+'.json', bidsmap.options['bidsignore'], 'file')
+            bidsname   = run.increment_runindex(outfolder, bidsname, scans_table)
+            eventsfile = (outfolder/bidsname).with_suffix('.tsv')
 
-        # Check if we should ignore this run
-        if run.datatype in bidsmap.options['ignoretypes']:
-            LOGGER.info(f"--> Leaving out: {run.datasource}")
-            bids.bidsprov(bidsses, sourcefile, run)                     # Write out empty provenance logging data
-            continue
+            # Check if the bidsname is valid
+            bidstest = (Path('/')/subid/sesid/run.datatype/bidsname).with_suffix('.nii').as_posix()
+            isbids   = BIDSValidator().is_bids(bidstest)
+            if not isbids and not bidsignore:
+                LOGGER.warning(f"The '{bidstest}' output name did not pass the bids-validator test")
 
-        # Check if we already know this run
+            # Check if file already exists (-> e.g. when a static runindex is used)
+            if eventsfile.is_file():
+                LOGGER.warning(f"{eventsfile} already exists and will be deleted -- check your results carefully!")
+                eventsfile.unlink()
+
+            # Save the sourcefile as a BIDS NIfTI file and write out provenance logging data
+            run.eventsparser().write(eventsfile)
+            bids.bidsprov(bidsses, sourcefile, run, [eventsfile] if eventsfile.is_file() else [])
+
+            # Check the output
+            if not eventsfile.is_file():
+                LOGGER.error(f"Output file not found: {eventsfile}")
+                continue
+
+            # Load/copy over the source meta-data
+            sidecar  = eventsfile.with_suffix('.json')
+            metadata = bids.poolmetadata(run.datasource, sidecar, run.meta, options.get('meta', []))
+            if metadata:
+                with sidecar.open('w') as json_fid:
+                    json.dump(metadata, json_fid, indent=4)
+
+            # Add an entry to the scans_table (we typically don't have useful data to put there)
+            scans_table.loc[eventsfile.relative_to(bidsses).as_posix(), 'acq_time'] = 'n/a'
+
         if not runid:
-            LOGGER.error(f"Skipping unknown run: {run.datasource}\n-> Re-run the bidsmapper and delete {bidsses} to solve this warning")
-            bids.bidsprov(bidsses, sourcefile)                          # Write out empty provenance logging data
-            continue
+            LOGGER.info(f"--> No {__name__} sourcedata found in: {session}")
+            return
 
-        LOGGER.info(f"--> Coining: {run.datasource}")
-
-        # Create the BIDS session/datatype output folder
-        outfolder = bidsses/run.datatype
-        outfolder.mkdir(parents=True, exist_ok=True)
-
-        # Compose the BIDS filename using the matched run
-        bidsignore = bids.check_ignore(run.datatype, bidsmap.options['bidsignore'])
-        bidsname   = run.bidsname(subid, sesid, not bidsignore, runtime=True)
-        bidsignore = bidsignore or bids.check_ignore(bidsname+'.json', bidsmap.options['bidsignore'], 'file')
-        bidsname   = run.increment_runindex(outfolder, bidsname, scans_table)
-        eventsfile = (outfolder/bidsname).with_suffix('.tsv')
-
-        # Check if the bidsname is valid
-        bidstest = (Path('/')/subid/sesid/run.datatype/bidsname).with_suffix('.nii').as_posix()
-        isbids   = BIDSValidator().is_bids(bidstest)
-        if not isbids and not bidsignore:
-            LOGGER.warning(f"The '{bidstest}' output name did not pass the bids-validator test")
-
-        # Check if file already exists (-> e.g. when a static runindex is used)
-        if eventsfile.is_file():
-            LOGGER.warning(f"{eventsfile} already exists and will be deleted -- check your results carefully!")
-            eventsfile.unlink()
-
-        # Save the sourcefile as a BIDS NIfTI file and write out provenance logging data
-        run.eventsparser().write(eventsfile)
-        bids.bidsprov(bidsses, sourcefile, run, [eventsfile] if eventsfile.is_file() else [])
-
-        # Check the output
-        if not eventsfile.is_file():
-            LOGGER.error(f"Output file not found: {eventsfile}")
-            continue
-
-        # Load/copy over the source meta-data
-        sidecar  = eventsfile.with_suffix('.json')
-        metadata = bids.poolmetadata(run.datasource, sidecar, run.meta, options.get('meta', []))
-        if metadata:
-            with sidecar.open('w') as json_fid:
-                json.dump(metadata, json_fid, indent=4)
-
-        # Add an entry to the scans_table (we typically don't have useful data to put there)
-        scans_table.loc[eventsfile.relative_to(bidsses).as_posix(), 'acq_time'] = 'n/a'
-
-    if not runid:
-        LOGGER.info(f"--> No {__name__} sourcedata found in: {session}")
-        return
-
-    # Write the scans_table to disk
-    LOGGER.verbose(f"Writing data to: {scans_tsv}")
-    scans_table.replace('','n/a').to_csv(scans_tsv, sep='\t', encoding='utf-8', na_rep='n/a')
+        # Write the scans_table to disk
+        LOGGER.verbose(f"Writing data to: {scans_tsv}")
+        scans_table.replace('','n/a').to_csv(scans_tsv, sep='\t', encoding='utf-8', na_rep='n/a')
 
 
 class PresentationEvents(EventsParser):

@@ -27,7 +27,7 @@ import tempfile
 import subprocess
 from pathlib import Path
 from importlib import metadata
-from typing import Tuple, Union, List
+from typing import Union
 from logging import getLogger
 from .due import due, Doi
 try:
@@ -101,7 +101,7 @@ due.cite(Doi('10.3389/fninf.2021.770608'), description='A versatile toolkit to c
          path='bidscoin', version=__version__, cite_module=True, tags=['reference-implementation'])
 
 
-def check_version() -> Tuple[str, Union[bool, None], str]:
+def check_version() -> tuple[str, Union[bool, None], str]:
     """
     Compares the BIDSCOIN version from the local metadata to the remote pypi repository
 
@@ -141,7 +141,7 @@ def is_hidden(path: Path):
     return hidden
 
 
-def lsdirs(folder: Path, wildcard: str='*') -> List[Path]:
+def lsdirs(folder: Path, wildcard: str='*') -> list[Path]:
     """
     Gets all sorted directories in a folder, ignores files. Foldernames starting with a dot are considered hidden and will be skipped
 

@@ -21,7 +21,7 @@ import dateutil.parser
 from fnmatch import fnmatch
 from functools import lru_cache
 from pathlib import Path
-from typing import List, Set, Tuple, Union, Dict, Any, Iterable, NewType
+from typing import Union, Any, Iterable, NewType
 from pydicom import dcmread, fileset, config
 from importlib.util import find_spec
 if find_spec('bidscoin') is None:
@@ -32,17 +32,17 @@ from bidscoin.utilities import dicomsort
 from bidscoin.plugins import EventsParser
 from ruamel.yaml import YAML
 yaml = YAML()
-yaml.representer.ignore_aliases = lambda *data: True                            # Expand aliases (https://stackoverflow.com/questions/58091449/disabling-alias-for-yaml-file-in-python)
+yaml.representer.ignore_aliases = lambda *data: True    # Expand aliases (https://stackoverflow.com/questions/58091449/disabling-alias-for-yaml-file-in-python)
 config.INVALID_KEY_BEHAVIOR = 'IGNORE'
 
 # Define custom data types (replace with proper classes or TypeAlias of Python >= 3.10)
-Plugin     = NewType('Plugin',     Dict[str, Any])
-Plugins    = NewType('Plugin',     Dict[str, Plugin])
-Options    = NewType('Options',    Dict[str, Any])
-Properties = NewType('Properties', Dict[str, Any])
-Attributes = NewType('Attributes', Dict[str, Any])
-Bids       = NewType('Bids',       Dict[str, Any])
-Meta       = NewType('Meta',       Dict[str, Any])
+Plugin     = NewType('Plugin',     dict[str, Any])
+Plugins    = NewType('Plugin',     dict[str, Plugin])
+Options    = NewType('Options',    dict[str, Any])
+Properties = NewType('Properties', dict[str, Any])
+Attributes = NewType('Attributes', dict[str, Any])
+Bids       = NewType('Bids',       dict[str, Any])
+Meta       = NewType('Meta',       dict[str, Any])
 
 LOGGER = logging.getLogger(__name__)
 
@@ -125,10 +125,10 @@ class DataSource:
             return ''
 
         for plugin, options in self.plugins.items():
-            module = bcoin.import_plugin(plugin, ('has_support',))
+            module = bcoin.import_plugin(plugin)
             if module:
                 try:
-                    supported = module.has_support(self.path, self.dataformat)
+                    supported = module.Interface().has_support(self.path, self.dataformat)
                 except Exception as moderror:
                     supported = ''
                     LOGGER.exception(f"The {plugin} plugin crashed while reading {self.path}\n{moderror}")
@@ -226,9 +226,9 @@ class DataSource:
 
                 elif self.dataformat or self.has_support():
                     for plugin, options in self.plugins.items():
-                        module = bcoin.import_plugin(plugin, ('get_attribute',))
+                        module = bcoin.import_plugin(plugin)
                         if module:
-                            attributeval = module.get_attribute(self.dataformat, self.path, attributekey, options)
+                            attributeval = module.Interface().get_attribute(self.dataformat, self.path, attributekey, options)
                             attributeval = str(attributeval) if attributeval is not None else ''
                         if attributeval:
                             break
@@ -278,7 +278,7 @@ class DataSource:
 
         return Attributes(attributes)
 
-    def subid_sesid(self, subid: str=None, sesid: str=None) -> Tuple[str, str]:
+    def subid_sesid(self, subid: str=None, sesid: str=None) -> tuple[str, str]:
         """
         Extract the cleaned-up subid and sesid from the datasource properties or attributes
 
@@ -447,7 +447,7 @@ class RunItem:
         else:
             return NotImplemented
 
-    def check(self, checks: Tuple[bool, bool, bool]=(False, False, False)) -> Tuple[Union[bool, None], Union[bool, None], Union[bool, None]]:
+    def check(self, checks: tuple[bool, bool, bool]=(False, False, False)) -> tuple[Union[bool, None], Union[bool, None], Union[bool, None]]:
         """
         Check run for required and optional entities using the BIDS schema files
 
@@ -607,7 +607,7 @@ class RunItem:
 
         return bidsname
 
-    def increment_runindex(self, outfolder: Path, bidsname: str, scans_table: pd.DataFrame=None, targets: Set[Path]=()) -> str:
+    def increment_runindex(self, outfolder: Path, bidsname: str, scans_table: pd.DataFrame=None, targets: set[Path]=()) -> str:
         """
         Checks if a file with the same bidsname already exists in the folder and then increments the dynamic runindex
         (if any) until no such file is found.
@@ -721,7 +721,7 @@ class DataType:
         return hash(str(self))
 
     @property
-    def runitems(self) -> List[RunItem]:
+    def runitems(self) -> list[RunItem]:
         """Returns a list of the RunItem objects for this datatype"""
 
         return [RunItem(self.dataformat, self.datatype, rundata, self.options, self.plugins) for rundata in self._data]
@@ -836,7 +836,7 @@ class DataFormat:
         self._data['session'] = value
 
     @property
-    def datatypes(self) -> List[DataType]:
+    def datatypes(self) -> list[DataType]:
         """Gets a list of DataType objects for the dataformat"""
 
         return [DataType(self.dataformat, datatype, self._data[datatype], self.options, self.plugins) for datatype in self._data if datatype not in ('subject', 'session')]
@@ -881,7 +881,7 @@ class DataFormat:
 class BidsMap:
     """Reads and writes mapping heuristics from the bidsmap YAML-file"""
 
-    def __init__(self, yamlfile: Path, folder: Path=templatefolder, plugins: Iterable[Union[Path,str]]=(), checks: Tuple[bool,bool,bool]=(True,True,True)):
+    def __init__(self, yamlfile: Path, folder: Path=templatefolder, plugins: Iterable[Union[Path,str]]=(), checks: tuple[bool,bool,bool]=(True,True,True)):
         """
         Read and standardize the bidsmap (i.e. add missing information and perform checks). If yamlfile is not fullpath, then 'folder' is first searched before
         the default 'heuristics'. If yamfile is empty, then first 'bidsmap.yaml' is searched for, then 'bidsmap_template'. So fullpath
@@ -1119,7 +1119,7 @@ class BidsMap:
 
         return valid
 
-    def check(self, checks: Tuple[bool, bool, bool]=(True, True, True)) -> Tuple[Union[bool, None], Union[bool, None], Union[bool, None]]:
+    def check(self, checks: tuple[bool, bool, bool]=(True, True, True)) -> tuple[Union[bool, None], Union[bool, None], Union[bool, None]]:
         """
         Check all non-ignored runs in the bidsmap for required and optional entities using the BIDS schema files
 
@@ -1207,7 +1207,7 @@ class BidsMap:
 
         return valid
 
-    def dir(self, dataformat: Union[str, DataFormat]) -> List[Path]:
+    def dir(self, dataformat: Union[str, DataFormat]) -> list[Path]:
         """
         Make a provenance list of all the runs in the bidsmap[dataformat]
 
@@ -1268,7 +1268,7 @@ class BidsMap:
 
         return False
 
-    def get_matching_run(self, sourcefile: Union[str, Path], dataformat, runtime=False) -> Tuple[RunItem, str]:
+    def get_matching_run(self, sourcefile: Union[str, Path], dataformat, runtime=False) -> tuple[RunItem, str]:
         """
         Find the first run in the bidsmap with properties and attributes that match with the data source. Only non-empty
         properties and attributes are matched, except when runtime is True, then the empty attributes are also matched.
@@ -1534,7 +1534,7 @@ class BidsMap:
             LOGGER.error(f"Number of runs in bidsmap['{runitem.dataformat}'] changed unexpectedly: {num_runs_in} -> {num_runs_out}")
 
 
-def unpack(sesfolder: Path, wildcard: str='', workfolder: Path='', _subprefix: Union[str,None]='') -> Tuple[Set[Path], bool]:
+def unpack(sesfolder: Path, wildcard: str='', workfolder: Path='', _subprefix: Union[str,None]='') -> tuple[set[Path], bool]:
     """
     Unpacks and sorts DICOM files in sourcefolder to a temporary folder if sourcefolder contains a DICOMDIR file or .tar.gz, .gz or .zip files
 
@@ -1572,7 +1572,7 @@ def unpack(sesfolder: Path, wildcard: str='', workfolder: Path='', _subprefix: U
         shutil.copytree(sesfolder, worksesfolder, dirs_exist_ok=True)
 
         # Unpack the zip/tarball files in the temporary folder
-        sessions: Set[Path] = set()
+        sessions: set[Path] = set()
         for tarzipfile in [worksesfolder/tarzipfile.name for tarzipfile in tarzipfiles]:
             LOGGER.info(f"Unpacking: {tarzipfile.name} -> {worksesfolder}")
             try:
@@ -1674,7 +1674,7 @@ def get_dicomfile(folder: Path, index: int=0) -> Path:
     return Path()
 
 
-def get_parfiles(folder: Path) -> List[Path]:
+def get_parfiles(folder: Path) -> list[Path]:
     """
     Gets the Philips PAR-file from the folder
 
@@ -1685,7 +1685,7 @@ def get_parfiles(folder: Path) -> List[Path]:
     if is_hidden(Path(folder.name)):
         return []
 
-    parfiles: List[Path] = []
+    parfiles: list[Path] = []
     for file in sorted(folder.iterdir()):
         if not is_hidden(file.relative_to(folder)) and is_parfile(file):
             parfiles.append(file)
@@ -2334,7 +2334,7 @@ def check_runindices(session: Path) -> bool:
     return True
 
 
-def limitmatches(fmap: str, matches: List[str], limits: str, niifiles: Set[str], scans_table: pd.DataFrame):
+def limitmatches(fmap: str, matches: list[str], limits: str, niifiles: set[str], scans_table: pd.DataFrame):
     """
     Helper function for addmetadata() to check if there are multiple fieldmap runs and get the lower- and upperbound from
     the AcquisitionTime to bound the grand list of matches to adjacent runs. The resulting list is appended to niifiles
@@ -2518,7 +2518,7 @@ def addmetadata(bidsses: Path):
                     json.dump(jsondata, sidecar, indent=4)
 
 
-def poolmetadata(datasource: DataSource, targetmeta: Path, usermeta: Meta, extensions: Iterable, sourcemeta: Path=Path()) -> Meta:
+def poolmetadata(datasource: DataSource, targetmeta: Path, usermeta: Meta, metaext: Iterable, sourcemeta: Path=Path()) -> Meta:
     """
     Load the metadata from the target (json sidecar), then add metadata from the source (json sidecar) and finally add
     the user metadata (meta table). Source metadata other than json sidecars are copied over to the target folder. Special
@@ -2529,7 +2529,7 @@ def poolmetadata(datasource: DataSource, targetmeta: Path, usermeta: Meta, exten
     :param datasource:  The data source from which dynamic values are read
     :param targetmeta:  The filepath of the target data file with meta-data
     :param usermeta:    A user metadata dict, e.g. the meta table from a run-item
-    :param extensions:  A list of file extensions of the source metadata files, e.g. as specified in bidsmap.plugins['plugin']['meta']
+    :param metaext:     A list of file extensions of the source metadata files, e.g. as specified in bidsmap.plugins['plugin']['meta']
     :param sourcemeta:  The filepath of the source data file with associated/equally named meta-data files (name may include wildcards). Leave empty to use datasource.path
     :return:            The combined target + source + user metadata
     """
@@ -2544,7 +2544,7 @@ def poolmetadata(datasource: DataSource, targetmeta: Path, usermeta: Meta, exten
             metapool = json.load(json_fid)
 
     # Add the source metadata to the metadict or copy it over
-    for ext in extensions:
+    for ext in metaext:
         for sourcefile in sourcemeta.parent.glob(sourcemeta.with_suffix('').with_suffix(ext).name):
             LOGGER.verbose(f"Copying source data from: '{sourcefile}''")
 
@@ -2600,7 +2600,7 @@ def poolmetadata(datasource: DataSource, targetmeta: Path, usermeta: Meta, exten
     return Meta(metapool)
 
 
-def addparticipant(participants_tsv: Path, subid: str='', sesid: str='', data: dict=None, dryrun: bool=False) -> Tuple[pd.DataFrame, dict]:
+def addparticipant(participants_tsv: Path, subid: str='', sesid: str='', data: dict=None, dryrun: bool=False) -> tuple[pd.DataFrame, dict]:
     """
     Read/create and/or add (if it's not there yet) a participant to the participants.tsv/.json file
 
