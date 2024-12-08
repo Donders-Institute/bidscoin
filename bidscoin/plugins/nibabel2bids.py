@@ -62,7 +62,6 @@ class Interface(PluginInterface):
 
         return 0
 
-
     def has_support(self, file: Path, dataformat: Union[DataFormat, str]='') -> str:
         """
         This plugin function assesses whether a sourcefile is of a supported dataformat
@@ -80,7 +79,6 @@ class Interface(PluginInterface):
             return 'Nibabel'
 
         return ''
-
 
     def get_attribute(self, dataformat: Union[DataFormat, str], sourcefile: Path, attribute: str, options: Plugin) -> Union[str, int, float, list]:
         """
@@ -106,7 +104,6 @@ class Interface(PluginInterface):
                 LOGGER.exception(f"Could not get the nibabel '{attribute}' attribute from {sourcefile} -> {value}")
 
         return value
-
 
     def bidscoiner(self, session: Path, bidsmap: BidsMap, bidsses: Path) -> None:
         """

@@ -12,7 +12,7 @@ if find_spec('bidscoin') is None:
     sys.path.append(str(Path(__file__).parents[2]))
 from bidscoin import bcoin, bids, lsdirs, trackusage, __version__
 from bidscoin.bids import BidsMap
-from bidscoin.plugins import unpack
+from bidscoin.utilities import unpack
 
 
 def scanpersonals(bidsmap: BidsMap, session: Path, personals: dict, keys: list) -> bool:

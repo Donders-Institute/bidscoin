@@ -21,7 +21,7 @@ from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     sys.path.append(str(Path(__file__).parents[1]))
 from bidscoin import bcoin, bids, lsdirs, bidsversion, trackusage, __version__, DEBUG
-from bidscoin.plugins import unpack
+from bidscoin.utilities import unpack
 
 
 def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: bool=False, bidsmap: str='bidsmap.yaml', cluster: str='') -> None:

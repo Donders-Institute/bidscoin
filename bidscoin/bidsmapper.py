@@ -20,7 +20,7 @@ if find_spec('bidscoin') is None:
     sys.path.append(str(Path(__file__).parents[1]))
 from bidscoin import bcoin, lsdirs, trackusage, check_version, __version__
 from bidscoin.bids import BidsMap
-from bidscoin.plugins import unpack
+from bidscoin.utilities import unpack
 
 _, uptodate, versionmessage = check_version()
 

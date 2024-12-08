@@ -12,7 +12,8 @@ from bids_validator import BIDSValidator
 from pathlib import Path
 from bidscoin import run_command, is_hidden, bids, due, Doi
 from bidscoin.bids import BidsMap, DataFormat, Plugin
-from bidscoin.plugins import PluginInterface, is_dicomfile, get_twixfield, get_sparfield, get_p7field
+from bidscoin.plugins import PluginInterface
+from bidscoin.utilities import is_dicomfile, get_twixfield, get_sparfield, get_p7field
 
 LOGGER = logging.getLogger(__name__)
 
@@ -45,7 +46,6 @@ class Interface(PluginInterface):
         # Test the spec2nii installation
         return run_command(f"{options.get('command',OPTIONS['command'])} -v")
 
-
     def has_support(self, file: Path, dataformat: Union[DataFormat, str]='') -> str:
         """
         This plugin function assesses whether a sourcefile is of a supported dataformat
@@ -67,7 +67,6 @@ class Interface(PluginInterface):
             return 'Pfile'
 
         return ''
-
 
     def get_attribute(self, dataformat: Union[DataFormat, str], sourcefile: Path, attribute: str, options: Plugin) -> str:
         """

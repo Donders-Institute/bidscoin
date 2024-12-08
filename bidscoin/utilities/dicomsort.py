@@ -12,6 +12,7 @@ if find_spec('bidscoin') is None:
     import sys
     sys.path.append(str(Path(__file__).parents[2]))
 from bidscoin import bcoin, lsdirs, trackusage
+from bidscoin.utilities import get_dicomfield
 
 LOGGER = logging.getLogger(__name__)
 
@@ -26,9 +27,6 @@ def construct_name(scheme: str, dicomfile: Path, force: bool) -> str:
     :param force:       Construct the new name even in the presence of missing DICOM fields in the scheme
     :return:            The new name constructed from the scheme
     """
-
-    # Avoid circular import from bidscoin.plugins
-    from bidscoin.plugins import get_dicomfield
 
     # Alternative field names based on earlier DICOM versions or on other reasons
     alternatives = {'PatientName':'PatientsName', 'SeriesDescription':'ProtocolName', 'InstanceNumber':'ImageNumber', 'SeriesNumber':'SeriesInstanceUID',

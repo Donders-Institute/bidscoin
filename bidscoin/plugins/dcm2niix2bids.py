@@ -14,9 +14,9 @@ from bids_validator import BIDSValidator
 from typing import Union
 from pathlib import Path
 from bidscoin import bids, run_command, lsdirs, due, Doi
-from bidscoin.utilities import physio
+from bidscoin.utilities import physio, is_dicomfile, is_parfile, get_dicomfield, get_parfield, get_dicomfile, get_parfiles
 from bidscoin.bids import BidsMap, DataFormat, Plugin, Plugins
-from bidscoin.plugins import PluginInterface, is_dicomfile, is_parfile, get_dicomfield, get_parfield, get_dicomfile, get_parfiles
+from bidscoin.plugins import PluginInterface
 try:
     from nibabel.testing import data_path
 except ImportError:
@@ -92,7 +92,6 @@ class Interface(PluginInterface):
 
         return ''
 
-
     def get_attribute(self, dataformat: Union[DataFormat, str], sourcefile: Path, attribute: str, options) -> Union[str, int]:
         """
         This plugin supports reading attributes from DICOM and PAR dataformats
@@ -108,7 +107,6 @@ class Interface(PluginInterface):
 
         if dataformat == 'PAR':
             return get_parfield(attribute, sourcefile)
-
 
     def bidsmapper(self, session: Path, bidsmap_new: BidsMap, bidsmap_old: BidsMap, template: BidsMap) -> None:
         """
@@ -190,7 +188,6 @@ class Interface(PluginInterface):
             else:
                 LOGGER.bcdebug(f"Existing/duplicate sample: {run.datasource}")
 
-
     @due.dcite(Doi('10.1016/j.jneumeth.2016.03.001'), description='dcm2niix: DICOM to NIfTI converter', tags=['reference-implementation'])
     def bidscoiner(self, session: Path, bidsmap: BidsMap, bidsses: Path) -> Union[None, dict]:
         """
@@ -206,9 +203,8 @@ class Interface(PluginInterface):
         """
 
         # Get the subject identifiers and the BIDS root folder from the bidsses folder
-        subid      = bidsses.name if bidsses.name.startswith('sub-') else bidsses.parent.name
-        sesid      = bidsses.name if bidsses.name.startswith('ses-') else ''
-        bidsfolder = bidsses.parent.parent if sesid else bidsses.parent
+        subid = bidsses.name if bidsses.name.startswith('sub-') else bidsses.parent.name
+        sesid = bidsses.name if bidsses.name.startswith('ses-') else ''
 
         # Get started and see what dataformat we have
         options          = Plugin(bidsmap.plugins['dcm2niix2bids'])
@@ -222,13 +218,10 @@ class Interface(PluginInterface):
 
         # Make a list of all the data sources/runs
         sources: list[Path] = []
-        manufacturer = 'UNKNOWN'
         if dataformat == 'DICOM':
-            sources      = lsdirs(session, '**/*')
-            manufacturer = datasource.attributes('Manufacturer')
+            sources = lsdirs(session, '**/*')
         elif dataformat == 'PAR':
-            sources      = get_parfiles(session)
-            manufacturer = 'Philips Medical Systems'
+            sources = get_parfiles(session)
         else:
             LOGGER.error(f"Unsupported dataformat '{dataformat}'")
 

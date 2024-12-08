@@ -1,11 +1,99 @@
+import pytest
 import shutil
 import csv
 from pydicom.data import get_testdata_file
+from nibabel.testing import data_path
 from pathlib import Path
 from bidscoin import bcoin
+from bidscoin import utilities
 from bidscoin.utilities import dicomsort, rawmapper, bidsparticipants
+from importlib.util import find_spec
 
 bcoin.setup_logging()
+
+
+@pytest.fixture(scope='module')
+def dcm_file():
+    return Path(get_testdata_file('MR_small.dcm'))
+
+
+@pytest.fixture(scope='module')
+def dcm_file_csa():
+    return Path(data_path)/'1.dcm'
+
+
+@pytest.fixture(scope='module')
+def dicomdir():
+    return Path(get_testdata_file('DICOMDIR'))
+
+
+@pytest.fixture(scope='module')
+def par_file():
+    return Path(data_path)/'phantom_EPI_asc_CLEAR_2_1.PAR'
+
+
+def test_unpack(dicomdir, tmp_path):
+    sessions, unpacked = utilities.unpack(dicomdir.parent, '', tmp_path, None)   # None -> simulate commandline usage of dicomsort()
+    assert unpacked
+    assert len(sessions) == 6
+    for session in sessions:
+        assert 'Doe^Archibald' in session.parts or 'Doe^Peter' in session.parts
+
+
+def test_is_dicomfile(dcm_file):
+    assert utilities.is_dicomfile(dcm_file)
+
+
+def test_is_parfile(par_file):
+    assert utilities.is_parfile(par_file)
+
+
+def test_get_dicomfile(dcm_file, dicomdir):
+    assert utilities.get_dicomfile(dcm_file.parent).name == '693_J2KI.dcm'
+    assert utilities.get_dicomfile(dicomdir.parent).name == '6154'
+
+
+def test_get_dicomfield(dcm_file_csa):
+
+    # -> Standard DICOM
+    value = utilities.get_dicomfield('SeriesDescription', dcm_file_csa)
+    assert value == 'CBU_DTI_64D_1A'
+
+    # -> The pydicom-style tag number
+    value = utilities.get_dicomfield('SeriesNumber', dcm_file_csa)
+    assert value == 12
+    assert value == utilities.get_dicomfield('0x00200011', dcm_file_csa)
+    assert value == utilities.get_dicomfield('(0x20,0x11)', dcm_file_csa)
+    assert value == utilities.get_dicomfield('(0020,0011)', dcm_file_csa)
+
+    # -> The special PhaseEncodingDirection tag
+    value = utilities.get_dicomfield('PhaseEncodingDirection', dcm_file_csa)
+    assert value == 'AP'
+
+    # -> CSA Series header
+    value = utilities.get_dicomfield('PhaseGradientAmplitude', dcm_file_csa)
+    assert value == '0.0'
+
+    # -> CSA Image header
+    value = utilities.get_dicomfield('ImaCoilString', dcm_file_csa)
+    assert value == 'T:HEA;HEP'
+
+    value = utilities.get_dicomfield('B_matrix', dcm_file_csa)
+    assert value == ''
+
+    value = utilities.get_dicomfield('NonExistingTag', dcm_file_csa)
+    assert value == ''
+
+    # -> CSA MrPhoenixProtocol
+    if find_spec('dicom_parser'):
+        value = utilities.get_dicomfield('MrPhoenixProtocol.tProtocolName', dcm_file_csa)
+        assert value == 'CBU+AF8-DTI+AF8-64D+AF8-1A'
+
+        value = utilities.get_dicomfield('MrPhoenixProtocol.sDiffusion', dcm_file_csa)
+        assert value == "{'lDiffWeightings': 2, 'alBValue': [None, 1000], 'lNoiseLevel': 40, 'lDiffDirections': 64, 'ulMode': 256}"
+
+        value = utilities.get_dicomfield('MrPhoenixProtocol.sProtConsistencyInfo.tBaselineString', dcm_file_csa)
+        assert value == 'N4_VB17A_LATEST_20090307'
 
 
 def test_dicomsort(tmp_path):
