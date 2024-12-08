@@ -12,7 +12,7 @@ from bids_validator import BIDSValidator
 from pathlib import Path
 from bidscoin import run_command, is_hidden, bids, due, Doi
 from bidscoin.bids import BidsMap, DataFormat, Plugin
-from bidscoin.plugins import PluginInterface
+from bidscoin.plugins import PluginInterface, is_dicomfile, get_twixfield, get_sparfield, get_p7field
 
 LOGGER = logging.getLogger(__name__)
 
@@ -36,9 +36,6 @@ class Interface(PluginInterface):
 
         LOGGER.info('Testing the spec2nii2bids installation:')
 
-        if not all(hasattr(bids, name) for name in ('get_twixfield', 'get_sparfield', 'get_p7field')):
-            LOGGER.error("Could not import the expected 'get_twixfield', 'get_sparfield' and/or 'get_p7field' from the bids.py library")
-            return 1
         if 'command' not in {**OPTIONS, **options}:
             LOGGER.error(f"The expected 'command' key is not defined in the spec2nii2bids options")
             return 1
@@ -66,7 +63,7 @@ class Interface(PluginInterface):
             return 'Twix'
         elif suffix == '.spar':
             return 'SPAR'
-        elif suffix == '.7' and not bids.is_dicomfile(file):
+        elif suffix == '.7' and not is_dicomfile(file):
             return 'Pfile'
 
         return ''
@@ -92,15 +89,15 @@ class Interface(PluginInterface):
 
         if dataformat == 'Twix':
 
-            return bids.get_twixfield(attribute, sourcefile, options.get('multiraid', OPTIONS['multiraid']))
+            return get_twixfield(attribute, sourcefile, options.get('multiraid', OPTIONS['multiraid']))
 
         if dataformat == 'SPAR':
 
-            return bids.get_sparfield(attribute, sourcefile)
+            return get_sparfield(attribute, sourcefile)
 
         if dataformat == 'Pfile':
 
-            return bids.get_p7field(attribute, sourcefile)
+            return get_p7field(attribute, sourcefile)
 
         LOGGER.error(f"Unsupported MRS data-format: {dataformat}")
 

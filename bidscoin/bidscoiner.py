@@ -21,6 +21,7 @@ from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     sys.path.append(str(Path(__file__).parents[1]))
 from bidscoin import bcoin, bids, lsdirs, bidsversion, trackusage, __version__, DEBUG
+from bidscoin.plugins import unpack
 
 
 def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: bool=False, bidsmap: str='bidsmap.yaml', cluster: str='') -> None:
@@ -253,7 +254,7 @@ def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: 
             for session in sessions:
 
                 # Unpack the data in a temporary folder if it is tarballed/zipped and/or contains a DICOMDIR file
-                sesfolders, unpacked = bids.unpack(session, bidsmap.options.get('unzip',''))
+                sesfolders, unpacked = unpack(session, bidsmap.options.get('unzip',''))
                 for sesfolder in sesfolders:
 
                     # Check if we should skip the session-folder

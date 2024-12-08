@@ -5,9 +5,7 @@ import shutil
 import re
 import json
 from datetime import datetime, timedelta
-from importlib.util import find_spec
 from pathlib import Path
-from nibabel.testing import data_path
 from pydicom.data import get_testdata_file
 from bidscoin import bcoin, bids, bidsmap_template, bidscoinroot
 from bidscoin.bids import BidsMap, RunItem, DataSource, Plugin, Meta
@@ -21,18 +19,8 @@ def dcm_file():
 
 
 @pytest.fixture(scope='module')
-def dcm_file_csa():
-    return Path(data_path)/'1.dcm'
-
-
-@pytest.fixture(scope='module')
 def dicomdir():
     return Path(get_testdata_file('DICOMDIR'))
-
-
-@pytest.fixture(scope='module')
-def par_file():
-    return Path(data_path)/'phantom_EPI_asc_CLEAR_2_1.PAR'
 
 
 @pytest.fixture(scope='module')
@@ -487,74 +475,10 @@ class TestBidsMap:
         assert bidsmap.exist_run(runitem) is False
 
 
-def test_unpack(dicomdir, tmp_path):
-    sessions, unpacked = bids.unpack(dicomdir.parent, '', tmp_path, None)   # None -> simulate commandline usage of dicomsort()
-    assert unpacked
-    assert len(sessions) == 6
-    for session in sessions:
-        assert 'Doe^Archibald' in session.parts or 'Doe^Peter' in session.parts
-
-
-def test_is_dicomfile(dcm_file):
-    assert bids.is_dicomfile(dcm_file)
-
-
-def test_is_parfile(par_file):
-    assert bids.is_parfile(par_file)
-
-
-def test_get_dicomfile(dcm_file, dicomdir):
-    assert bids.get_dicomfile(dcm_file.parent).name == '693_J2KI.dcm'
-    assert bids.get_dicomfile(dicomdir.parent).name == '6154'
-
-
 def test_get_datasource(dicomdir):
     datasource = bids.get_datasource(dicomdir.parent, {'dcm2niix2bids': {}})
     assert datasource.has_support()
     assert datasource.dataformat == 'DICOM'
-
-
-def test_get_dicomfield(dcm_file_csa):
-
-    # -> Standard DICOM
-    value = bids.get_dicomfield('SeriesDescription', dcm_file_csa)
-    assert value == 'CBU_DTI_64D_1A'
-
-    # -> The pydicom-style tag number
-    value = bids.get_dicomfield('SeriesNumber', dcm_file_csa)
-    assert value == 12
-    assert value == bids.get_dicomfield('0x00200011', dcm_file_csa)
-    assert value == bids.get_dicomfield('(0x20,0x11)', dcm_file_csa)
-    assert value == bids.get_dicomfield('(0020,0011)', dcm_file_csa)
-
-    # -> The special PhaseEncodingDirection tag
-    value = bids.get_dicomfield('PhaseEncodingDirection', dcm_file_csa)
-    assert value == 'AP'
-
-    # -> CSA Series header
-    value = bids.get_dicomfield('PhaseGradientAmplitude', dcm_file_csa)
-    assert value == '0.0'
-
-    # -> CSA Image header
-    value = bids.get_dicomfield('ImaCoilString', dcm_file_csa)
-    assert value == 'T:HEA;HEP'
-
-    value = bids.get_dicomfield('B_matrix', dcm_file_csa)
-    assert value == ''
-
-    value = bids.get_dicomfield('NonExistingTag', dcm_file_csa)
-    assert value == ''
-
-    # -> CSA MrPhoenixProtocol
-    if find_spec('dicom_parser'):
-        value = bids.get_dicomfield('MrPhoenixProtocol.tProtocolName', dcm_file_csa)
-        assert value == 'CBU+AF8-DTI+AF8-64D+AF8-1A'
-
-        value = bids.get_dicomfield('MrPhoenixProtocol.sDiffusion', dcm_file_csa)
-        assert value == "{'lDiffWeightings': 2, 'alBValue': [None, 1000], 'lNoiseLevel': 40, 'lDiffDirections': 64, 'ulMode': 256}"
-
-        value = bids.get_dicomfield('MrPhoenixProtocol.sProtConsistencyInfo.tBaselineString', dcm_file_csa)
-        assert value == 'N4_VB17A_LATEST_20090307'
 
 
 def test_match_runvalue():

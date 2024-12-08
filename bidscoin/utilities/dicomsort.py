@@ -11,7 +11,7 @@ from typing import Union
 if find_spec('bidscoin') is None:
     import sys
     sys.path.append(str(Path(__file__).parents[2]))
-from bidscoin import bcoin, bids, lsdirs, trackusage
+from bidscoin import bcoin, lsdirs, trackusage
 
 LOGGER = logging.getLogger(__name__)
 
@@ -27,15 +27,18 @@ def construct_name(scheme: str, dicomfile: Path, force: bool) -> str:
     :return:            The new name constructed from the scheme
     """
 
+    # Avoid circular import from bidscoin.plugins
+    from bidscoin.plugins import get_dicomfield
+
     # Alternative field names based on earlier DICOM versions or on other reasons
     alternatives = {'PatientName':'PatientsName', 'SeriesDescription':'ProtocolName', 'InstanceNumber':'ImageNumber', 'SeriesNumber':'SeriesInstanceUID',
                     'PatientsName':'PatientName', 'ProtocolName':'SeriesDescription', 'ImageNumber':'InstanceNumber'}
 
     schemevalues = {}
     for field in re.findall(r'(?<={)([a-zA-Z0-9]+)(?::\d+[d-gD-Gn])?(?=})', scheme):
-        value = cleanup(bids.get_dicomfield(field, dicomfile))
+        value = cleanup(get_dicomfield(field, dicomfile))
         if not value and value != 0 and field in alternatives.keys():
-            value = cleanup(bids.get_dicomfield(alternatives[field], dicomfile))
+            value = cleanup(get_dicomfield(alternatives[field], dicomfile))
             if field == 'SeriesNumber':
                 value = int(value.replace('.',''))      # Convert the SeriesInstanceUID to an int
         if not value and value != 0 and not force:

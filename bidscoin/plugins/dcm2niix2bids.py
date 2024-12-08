@@ -16,7 +16,7 @@ from pathlib import Path
 from bidscoin import bids, run_command, lsdirs, due, Doi
 from bidscoin.utilities import physio
 from bidscoin.bids import BidsMap, DataFormat, Plugin, Plugins
-from bidscoin.plugins import PluginInterface
+from bidscoin.plugins import PluginInterface, is_dicomfile, is_parfile, get_dicomfield, get_parfield, get_dicomfile, get_parfiles
 try:
     from nibabel.testing import data_path
 except ImportError:
@@ -84,10 +84,10 @@ class Interface(PluginInterface):
         if dataformat and dataformat not in ('DICOM', 'PAR'):
             return ''
 
-        if bids.is_dicomfile(file):     # To support pet2bids add: and bids.get_dicomfield('Modality', file) != 'PT'
+        if is_dicomfile(file):     # To support pet2bids add: and get_dicomfield('Modality', file) != 'PT'
             return 'DICOM'
 
-        if bids.is_parfile(file):
+        if is_parfile(file):
             return 'PAR'
 
         return ''
@@ -104,10 +104,10 @@ class Interface(PluginInterface):
         :return:            The retrieved attribute value
         """
         if dataformat == 'DICOM':
-            return bids.get_dicomfield(attribute, sourcefile)
+            return get_dicomfield(attribute, sourcefile)
 
         if dataformat == 'PAR':
-            return bids.get_parfield(attribute, sourcefile)
+            return get_parfield(attribute, sourcefile)
 
 
     def bidsmapper(self, session: Path, bidsmap_new: BidsMap, bidsmap_old: BidsMap, template: BidsMap) -> None:
@@ -133,11 +133,11 @@ class Interface(PluginInterface):
         if dataformat == 'DICOM':
             for sourcedir in lsdirs(session, '**/*'):
                 for n in range(1):      # Option: Use range(2) to scan two files and catch e.g. magnitude1/2 fieldmap files that are stored in one Series folder (but bidscoiner sees only the first file anyhow and it makes bidsmapper 2x slower :-()
-                    sourcefile = bids.get_dicomfile(sourcedir, n)
+                    sourcefile = get_dicomfile(sourcedir, n)
                     if sourcefile.name:
                         sourcefiles.append(sourcefile)
         elif dataformat == 'PAR':
-            sourcefiles = bids.get_parfiles(session)
+            sourcefiles = get_parfiles(session)
         else:
             LOGGER.error(f"Unsupported dataformat '{dataformat}'")
 
@@ -227,7 +227,7 @@ class Interface(PluginInterface):
             sources      = lsdirs(session, '**/*')
             manufacturer = datasource.attributes('Manufacturer')
         elif dataformat == 'PAR':
-            sources      = bids.get_parfiles(session)
+            sources      = get_parfiles(session)
             manufacturer = 'Philips Medical Systems'
         else:
             LOGGER.error(f"Unsupported dataformat '{dataformat}'")
@@ -245,7 +245,7 @@ class Interface(PluginInterface):
 
             # Get a sourcefile
             if dataformat == 'DICOM':
-                sourcefile = bids.get_dicomfile(source)
+                sourcefile = get_dicomfile(source)
             else:
                 sourcefile = source
             if not sourcefile.name or not self.has_support(sourcefile):
@@ -302,7 +302,7 @@ class Interface(PluginInterface):
             # Convert physiological log files (dcm2niix can't handle these)
             if suffix == 'physio':
                 target = (outfolder/bidsname).with_suffix('.tsv.gz')
-                if bids.get_dicomfile(source, 2).name:                  # TODO: issue warning or support PAR
+                if get_dicomfile(source, 2).name:                  # TODO: issue warning or support PAR
                     LOGGER.warning(f"Found > 1 DICOM file in {source}, using: {sourcefile}")
                 try:
                     physiodata = physio.readphysio(sourcefile)

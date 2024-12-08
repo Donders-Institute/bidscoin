@@ -9,6 +9,7 @@ if find_spec('bidscoin') is None:
     import sys
     sys.path.append(str(Path(__file__).parents[2]))
 from bidscoin import lsdirs, bids, trackusage
+from bidscoin.plugins import get_dicomfield, get_dicomfile
 
 
 def rawmapper(sourcefolder, outfolder: str='', sessions: tuple=(), rename: bool=False, clobber: bool=False, field: tuple=('PatientComments',), wildcard: str= '*', subprefix: str= 'sub-', sesprefix: str= 'ses-', dryrun: bool=False) -> None:
@@ -75,14 +76,14 @@ def rawmapper(sourcefolder, outfolder: str='', sessions: tuple=(), rename: bool=
         series = lsdirs(session, wildcard)
         if not series:
             series    = Path()
-            dicomfile = bids.get_dicomfile(session)     # Try and see if there is a DICOM file in the root of the session folder
+            dicomfile = get_dicomfile(session)     # Try and see if there is a DICOM file in the root of the session folder
         else:
             series    = series[0]                       # NB: Assumes the first folder contains a dicom file and that all folders give the same info
-            dicomfile = bids.get_dicomfile(series)      # Try and see if there is a DICOM file in the root of the session folder
+            dicomfile = get_dicomfile(series)      # Try and see if there is a DICOM file in the root of the session folder
         if not dicomfile.name:
             print(f"No DICOM files found in: {session}")
             continue
-        dicomval = [str(bids.get_dicomfield(dcmfield, dicomfile)) for dcmfield in field]
+        dicomval = [str(get_dicomfield(dcmfield, dicomfile)) for dcmfield in field]
 
         # Rename the session subfolder in the sourcefolder and print & save this info
         if rename:

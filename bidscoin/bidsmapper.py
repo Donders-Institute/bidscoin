@@ -18,8 +18,9 @@ from pathlib import Path
 from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     sys.path.append(str(Path(__file__).parents[1]))
-from bidscoin import bcoin, bids, lsdirs, trackusage, check_version, __version__
+from bidscoin import bcoin, lsdirs, trackusage, check_version, __version__
 from bidscoin.bids import BidsMap
+from bidscoin.plugins import unpack
 
 _, uptodate, versionmessage = check_version()
 
@@ -122,7 +123,7 @@ def bidsmapper(sourcefolder: str, bidsfolder: str, bidsmap: str, template: str, 
                 LOGGER.info(f"Mapping: {session} (subject {n}/{len(subjects)})")
 
                 # Unpack the data in a temporary folder if it is tarballed/zipped and/or contains a DICOMDIR file
-                sesfolders, unpacked = bids.unpack(session, unzip)
+                sesfolders, unpacked = unpack(session, unzip)
                 for sesfolder in sesfolders:
                     if store:
                         bidsmap_new.store = {'source': sesfolder.parent.parent.parent.parent if unpacked else rawfolder.parent,

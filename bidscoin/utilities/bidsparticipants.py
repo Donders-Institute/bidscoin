@@ -12,6 +12,7 @@ if find_spec('bidscoin') is None:
     sys.path.append(str(Path(__file__).parents[2]))
 from bidscoin import bcoin, bids, lsdirs, trackusage, __version__
 from bidscoin.bids import BidsMap
+from bidscoin.plugins import unpack
 
 
 def scanpersonals(bidsmap: BidsMap, session: Path, personals: dict, keys: list) -> bool:
@@ -123,7 +124,7 @@ def bidsparticipants(sourcefolder: str, bidsfolder: str, keys: list, bidsmap: st
                 subid, sesid = bids.DataSource(session/'dum.my', bidsmap.plugins, '', bidsmap.options).subid_sesid()
 
                 # Unpack the data in a temporary folder if it is tarballed/zipped and/or contains a DICOMDIR file
-                sesfolders, unpacked = bids.unpack(session, bidsmap.options.get('unzip',''))
+                sesfolders, unpacked = unpack(session, bidsmap.options.get('unzip',''))
                 for sesfolder in sesfolders:
 
                     # Update/append the personal source data
