@@ -10,8 +10,8 @@ import dateutil.parser
 from typing import Union
 from bids_validator import BIDSValidator
 from pathlib import Path
-from bidscoin import run_command, bids, due, Doi
-from bidscoin.bids import BidsMap, DataFormat, Plugin, is_hidden
+from bidscoin import run_command, is_hidden, bids, due, Doi
+from bidscoin.bids import BidsMap, DataFormat, Plugin
 from bidscoin.plugins import PluginInterface
 
 LOGGER = logging.getLogger(__name__)

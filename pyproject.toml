@@ -99,7 +99,7 @@ testpaths        = ['tests']
 legacy_tox_ini = """
 [tox]
 min_version      = 4.0
-envlist          = py38, py39, py310, py311, py312, py313, docs
+envlist          = py39, py310, py311, py312, py313, docs
 
 [testenv]
 extras           = all

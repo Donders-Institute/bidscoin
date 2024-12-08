@@ -57,6 +57,7 @@ The above API is illustrated in more detail in the placeholder Python code below
     from pathlib import Path
     from bidscoin.due import due, Doi
     from bidscoin.bids import BidsMap, EventsParser, is_hidden
+    from bidscoin.plugins import PluginInterface
 
     LOGGER = logging.getLogger(__name__)
 

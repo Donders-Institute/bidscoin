@@ -6,9 +6,9 @@ import pandas as pd
 from typing import Union
 from bids_validator import BIDSValidator
 from pathlib import Path
-from bidscoin import bids
+from bidscoin import bids, is_hidden
 from bidscoin.plugins import PluginInterface, EventsParser
-from bidscoin.bids import BidsMap, DataFormat, is_hidden, Plugin
+from bidscoin.bids import BidsMap, DataFormat, Plugin
 # TODO: from convert_eprime.utils import ..
 
 LOGGER = logging.getLogger(__name__)

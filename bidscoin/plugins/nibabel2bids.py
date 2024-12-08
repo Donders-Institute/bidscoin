@@ -10,8 +10,8 @@ import nibabel as nib
 from bids_validator import BIDSValidator
 from typing import Union
 from pathlib import Path
-from bidscoin import bids
-from bidscoin.bids import BidsMap, DataFormat, Plugin, is_hidden
+from bidscoin import bids, is_hidden
+from bidscoin.bids import BidsMap, DataFormat, Plugin
 from bidscoin.plugins import PluginInterface
 
 try:
