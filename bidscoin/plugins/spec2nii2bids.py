@@ -141,13 +141,13 @@ class Interface(PluginInterface):
             # Check if we should ignore this run
             if run.datatype in bidsmap.options['ignoretypes']:
                 LOGGER.info(f"--> Leaving out: {run.datasource}")
-                bids.bidsprov(bidsses, sourcefile, run)             # Write out empty provenance logging data
+                bids.bidsprov(bidsses, sourcefile, run)                     # Write out empty provenance logging data
                 continue
 
-            # Check that we know this run
+            # Check if we already know this run
             if not runid:
-                LOGGER.error(f"Skipping unknown run: {run.datasource}\n-> Re-run the bidsmapper and delete the MRS output data in {bidsses} to solve this warning")
-                bids.bidsprov(bidsses, sourcefile)                  # Write out empty provenance logging data
+                LOGGER.error(f"Skipping unknown run: {run.datasource}\n-> Re-run the bidsmapper and delete {bidsses} to solve this warning")
+                bids.bidsprov(bidsses, sourcefile)                          # Write out empty provenance logging data
                 continue
 
             LOGGER.info(f"--> Coining: {run.datasource}")
@@ -158,7 +158,7 @@ class Interface(PluginInterface):
 
             # Compose the BIDS filename using the matched run
             bidsignore = bids.check_ignore(run.datatype, bidsmap.options['bidsignore'])
-            bidsname   = run.get_bidsname(subid, sesid, not bidsignore, runtime=True)
+            bidsname   = run.bidsname(subid, sesid, not bidsignore, runtime=True)
             bidsignore = bidsignore or bids.check_ignore(bidsname+'.json', bidsmap.options['bidsignore'], 'file')
             bidsname   = run.increment_runindex(outfolder, bidsname, scans_table)
             target     = (outfolder/bidsname).with_suffix('.nii.gz')

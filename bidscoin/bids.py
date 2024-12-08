@@ -610,7 +610,7 @@ class RunItem:
         to 'run-1', and, optionally, do the same for entries in scans_table and targets (i.e. keep them in sync)
 
         :param outfolder:   The full pathname of the bids output folder
-        :param bidsname:    The bidsname with a provisional runindex, e.g. from get_bidsname()
+        :param bidsname:    The bidsname with a provisional runindex, e.g. from RunItem.bidsname()
         :param scans_table  The scans.tsv table that need to remain in sync when renaming a run-less file
         :param targets:     The set of output targets that need to remain in sync when renaming a run-less file
         :return:            The bidsname with the original or incremented runindex
@@ -877,8 +877,8 @@ class BidsMap:
 
     def __init__(self, yamlfile: Path, folder: Path=templatefolder, plugins: Iterable[Union[Path,str]]=(), checks: tuple[bool,bool,bool]=(True,True,True)):
         """
-        Read and standardize the bidsmap (i.e. add missing information and perform checks). If yamlfile is not fullpath, then 'folder' is first searched before
-        the default 'heuristics'. If yamfile is empty, then first 'bidsmap.yaml' is searched for, then 'bidsmap_template'. So fullpath
+        Read and standardize the bidsmap (i.e. add missing information and perform checks). If yamlfile is not fullpath, then the (bidscoin) 'folder' is first
+        searched before the default 'heuristics'. If yamfile is empty, then first 'bidsmap.yaml' is searched for, then 'bidsmap_template'. So fullpath
         has precedence over folder and bidsmap.yaml has precedence over the bidsmap_template.
 
         :param yamlfile:    The full pathname or basename of the bidsmap yaml-file
@@ -963,8 +963,8 @@ class BidsMap:
                     provenance = Path(runitem.provenance)
                     if not provenance.is_file():
                         for n, part in enumerate(provenance.parts):
-                            if part == 'bidscoin' and provenance.parts[n + 1] == 'provenance':
-                                store = folder/provenance.relative_to(*provenance.parts[0:n + 1])
+                            if part == 'bidscoin' and provenance.parts[n + 1] == 'provenance':           # = old bidscoin folder, i.e. bidsfolder/code/bidscoin[/provenance]
+                                store = folder/provenance.relative_to(Path(*provenance.parts[0:n + 1]))  # = new bidscoin folder, i.e. folder/provenance (relative to old bidscoin folder)
                                 if store.is_file():
                                     LOGGER.bcdebug(f"Updating provenance: {provenance} -> {store}")
                                     runitem.provenance = str(store)
@@ -1643,7 +1643,7 @@ def get_bidsvalue(bidsfile: Union[str, Path], bidskey: str, newvalue: str='') ->
     bidsname (e.g. 'fallback') then, as a fallback, the newvalue is appended to the acquisition label. If newvalue is empty
     (= default), then the parsed existing bidsvalue is returned and nothing is set
 
-    :param bidsfile:    The bidsname (e.g. as returned from get_bidsname or fullpath)
+    :param bidsfile:    The bidsname (e.g. as returned from RunItem.bidsname() or fullpath)
     :param bidskey:     The name of the bidskey, e.g. 'echo' or 'suffix'
     :param newvalue:    The new bidsvalue. NB: remove non-BIDS compliant characters beforehand (e.g. using sanitize)
     :return:            The bidsname with the new bidsvalue or, if newvalue is empty, the existing bidsvalue
@@ -1700,7 +1700,7 @@ def insert_bidskeyval(bidsfile: Union[str, Path], bidskey: str, newvalue: str, v
     """
     Inserts or replaces the bids key-label pair into the bidsfile. All invalid keys are removed from the name
 
-    :param bidsfile:    The bidsname (e.g. as returned from get_bidsname or fullpath)
+    :param bidsfile:    The bidsname (e.g. as returned from RunItem.bidsname() or fullpath)
     :param bidskey:     The name of the new bidskey, e.g. 'echo' or 'suffix'
     :param newvalue:    The value of the new bidskey
     :param validkeys:   Removes non-BIDS-compliant bids-keys if True
