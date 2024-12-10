@@ -26,7 +26,7 @@ from tqdm.contrib.logging import logging_redirect_tqdm
 from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     sys.path.append(str(Path(__file__).parents[1]))
-from bidscoin import templatefolder, pluginfolder, bidsmap_template, tutorialurl, trackusage, tracking, configfile, config, DEBUG
+from bidscoin import templatefolder, pluginfolder, bidsmap_template, tutorialurl, trackusage, tracking, configdir, configfile, config, DEBUG
 
 yaml = YAML()
 yaml.representer.ignore_aliases = lambda *data: True                         # Expand aliases (https://stackoverflow.com/questions/58091449/disabling-alias-for-yaml-file-in-python)
@@ -625,6 +625,19 @@ def reportcredits(args: list) -> None:
             LOGGER.info(f"No DueCredit citation files found in {Path(args[0]).resolve()} and {report.parent}")
 
 
+def reset(delete: bool) -> None:
+    """
+    Resets the configuration directory by deleting it if the `delete` parameter is set to True
+
+    :param delete: If set to True, the configuration directory will be removed
+    :return: None
+    """
+
+    if not delete: return
+
+    shutil.rmtree(configdir)
+
+
 def settracking(value: str) -> None:
     """
     Set or show usage tracking
@@ -677,6 +690,7 @@ def main():
         pulltutorialdata(tutorialfolder=args.download)
         test_bidscoin(bidsmapfile=args.test)
         test_bidsmap(bidsmapfile=args.bidsmaptest)
+        reset(delete=args.reset)
         settracking(value=args.tracking)
         reportcredits(args=args.credits)
 

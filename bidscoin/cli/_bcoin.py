@@ -54,6 +54,7 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument('-t', '--test',        help='Test the bidscoin installation and template bidsmap', nargs='?', metavar='TEMPLATE', const=bidsmap_template)
     parser.add_argument('-b', '--bidsmaptest', help='Test the run-items and their bidsnames of all normal runs in the study bidsmap. Provide the bids-folder or the bidsmap filepath', metavar='BIDSMAP')
     parser.add_argument('-c', '--credits',     help='Show duecredit citations for your BIDS repository. You can also add duecredit summary arguments (without dashes), e.g. `style {apa,harvard1}` or `format {text,bibtex}`.', metavar='OPTIONS', nargs='+')
+    parser.add_argument('-r', '--reset',       help='Restore the settings, plugins and template bidsmaps in your home directory to their default values', action='store_true')
     parser.add_argument(      '--tracking',    help='Show the usage tracking info {show}, or set usage tracking to {yes} or {no}', choices=['yes','no','show'])
     parser.add_argument('-v', '--version',     help='Show the installed version and check for updates', action='version', version=f"BIDS-version:\t\t{bidsversion()}\nBIDScoin-version:\t{__version__}, {versionmessage}")
 

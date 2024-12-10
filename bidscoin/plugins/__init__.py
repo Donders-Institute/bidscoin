@@ -63,7 +63,10 @@ class PluginInterface(ABC):
         """
 
         # See for every source file in the session if we already discovered it or not
-        for sourcefile in session.rglob('*'):
+        sourcefiles = session.rglob('*')
+        if not sourcefiles:
+            LOGGER.info(f"No {__name__} sourcedata found in: {session}")
+        for sourcefile in sourcefiles:
 
             # Check if the sourcefile is of a supported dataformat
             if is_hidden(sourcefile.relative_to(session)) or not (dataformat := self.has_support(sourcefile, dataformat='')):

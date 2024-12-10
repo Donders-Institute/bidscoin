@@ -41,7 +41,6 @@ def construct_name(scheme: str, dicomfile: Path, force: bool) -> str:
                 value = int(value.replace('.',''))      # Convert the SeriesInstanceUID to an int
         if not value and value != 0 and not force:
             LOGGER.error(f"Missing '{field}' DICOM field specified in the '{scheme}' folder/naming scheme, cannot find a safe name for: {dicomfile}\n")
-            trackusage('dicomsort_error')
             return ''
         else:
             schemevalues[field] = value
@@ -113,7 +112,6 @@ def sortsession(sessionfolder: Path, dicomfiles: list[Path], folderscheme: str, 
             subfolder = construct_name(folderscheme, dicomfile, force)
             if not subfolder:
                 LOGGER.error('Cannot create subfolders, aborting dicomsort()...')
-                trackusage('dicomsort_error')
                 return
             destination = sessionfolder/subfolder
             if not destination.is_dir():

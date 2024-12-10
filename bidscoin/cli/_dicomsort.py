@@ -22,7 +22,7 @@ def get_parser():
                                             '  dicomsort raw/sub-011/ses-mri01\n'
                                             '  dicomsort raw --subprefix sub- --sesprefix ses-\n'
                                             '  dicomsort myproject/raw/DICOMDIR --subprefix pat^ --sesprefix\n'
-                                            '  dicomsort sub-011/ses-mri01/DICOMDIR -n {AcquisitionNumber:05d}_{InstanceNumber:05d}.dcm\n ')
+                                            "  dicomsort sub-011/ses-mri01/DICOMDIR -n '{AcquisitionNumber:05d}_{InstanceNumber:05d}.dcm'\n ")
     parser.add_argument('sourcefolder',         help='The root folder containing the [sub/][ses/] dicomfiles or the DICOMDIR file')
     parser.add_argument('-i','--subprefix',     help='Provide a prefix string to recursively sort sourcefolder/subject subfolders (e.g. "sub-" or "S_")', metavar='PREFIX')
     parser.add_argument('-j','--sesprefix',     help='Provide a prefix string to recursively sort sourcefolder/subject/session subfolders (e.g. "ses-" or "T_")', metavar='PREFIX')

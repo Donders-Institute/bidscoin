@@ -24,6 +24,7 @@ if find_spec('bidscoin') is None:
     sys.path.append(str(Path(__file__).parents[1]))
 from bidscoin import bcoin, bids, bidsversion, check_version, trackusage, bidsmap_template, __version__
 from bidscoin.bids import BidsMap, RunItem, DataType
+from bidscoin.utilities import is_dicomfile, is_parfile
 config.INVALID_KEY_BEHAVIOR = 'IGNORE'
 
 ROW_HEIGHT       = 22
@@ -958,7 +959,7 @@ class MainWindow(QMainWindow):
         datafile = Path(self.filesystem.fileInfo(index).absoluteFilePath())
         if datafile.is_file():
             ext = ''.join(datafile.suffixes).lower()
-            if bids.is_dicomfile(datafile) or bids.is_parfile(datafile) or ext in sum((klass.valid_exts for klass in nib.imageclasses.all_image_classes), ('.nii.gz',)):
+            if is_dicomfile(datafile) or is_parfile(datafile) or ext in sum((klass.valid_exts for klass in nib.imageclasses.all_image_classes), ('.nii.gz',)):
                 self.popup = InspectWindow(datafile)
                 self.popup.show()
                 self.popup.scrollbar.setValue(0)  # This can only be done after self.popup.show()
@@ -2041,11 +2042,11 @@ class InspectWindow(QDialog):
         super().__init__()
 
         ext = ''.join(filename.suffixes).lower()
-        if bids.is_dicomfile(filename):
+        if is_dicomfile(filename):
             if filename.name == 'DICOMDIR':
                 LOGGER.bcdebug(f"Getting DICOM fields from {filename} will raise dcmread error below if pydicom => v3.0")
             text = str(dcmread(filename, force=True))
-        elif bids.is_parfile(filename) or ext in ('.spar', '.txt', '.text', '.log'):
+        elif is_parfile(filename) or ext in ('.spar', '.txt', '.text', '.log'):
             text = filename.read_text()
         elif ext == '.7':
             try:

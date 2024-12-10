@@ -1262,7 +1262,7 @@ class BidsMap:
 
         return False
 
-    def get_matching_run(self, sourcefile: Union[str, Path], dataformat, runtime=False) -> tuple[RunItem, str]:
+    def get_matching_run(self, sourcefile: Union[str, Path], dataformat: str='', runtime: bool=False) -> tuple[RunItem, str]:
         """
         Find the first run in the bidsmap with properties and attributes that match with the data source. Only non-empty
         properties and attributes are matched, except when runtime is True, then the empty attributes are also matched.
@@ -1271,12 +1271,21 @@ class BidsMap:
         ignoredatatypes (e.g. 'exclude') -> normal datatypes (e.g. 'anat') -> unknowndatatypes (e.g. 'extra_data')
 
         :param sourcefile:  The full filepath of the data source for which to get a run-item
-        :param dataformat:  The dataformat section in the bidsmap in which a matching run is searched for, e.g. 'DICOM'
+        :param dataformat:  The dataformat section in the bidsmap in which a matching run is searched for, e.g. 'DICOM'. Leave empty to recursively search through all dataformats
         :param runtime:     Dynamic <<values>> are expanded if True
         :return:            (run, provenance) A vanilla run that has all its attributes populated with the source file attributes.
                             If there is a match, the provenance of the bidsmap entry is returned, otherwise it will be ''
         """
 
+        # Iterate over all dataformats if dataformat is not given
+        if not dataformat:
+            runitem, provenance = RunItem(), ''
+            for dformat in self.dataformats:
+                runitem, provenance = self.get_matching_run(sourcefile, dformat.dataformat, runtime)
+                if provenance: break
+            return runitem, provenance
+
+        # Defaults
         datasource       = DataSource(sourcefile, self.plugins, dataformat, options=self.options)
         unknowndatatypes = self.options.get('unknowntypes') or ['unknown_data']
         ignoredatatypes  = self.options.get('ignoretypes') or []
@@ -1284,7 +1293,7 @@ class BidsMap:
         rundata          = {'provenance': str(sourcefile), 'properties': {}, 'attributes': {}, 'bids': {}, 'meta': {}, 'events': {}}
         """The a run-item data structure. NB: Keep in sync with the RunItem() data attributes"""
 
-        # Loop through all datatypes and runs; all info goes cleanly into runitem (to avoid formatting problem of the CommentedMap)
+        # Iterate over all datatypes and runs; all info goes cleanly into runitem (to avoid formatting problem of the CommentedMap)
         if 'fmap' in normaldatatypes:
             normaldatatypes.insert(0, normaldatatypes.pop(normaldatatypes.index('fmap')))   # Put fmap at the front (to catch inverted polarity scans first
         for datatype in ignoredatatypes + normaldatatypes + unknowndatatypes:                      # The ordered datatypes in which a matching run is searched for

@@ -103,7 +103,7 @@ def bidsmapper(sourcefolder: str, bidsfolder: str, bidsmap: str, template: str, 
     # Import the data scanning plugins
     plugins = [plugin for name in bidsmap_new.plugins if (plugin := bcoin.import_plugin(name))]
     if not plugins:
-        LOGGER.warning(f"The plugins listed in your bidsmap['Options'] did not have a usable `bidsmapper_plugin` function, nothing to do")
+        LOGGER.warning(f"The {bidsmap_new.plugins.keys()} plugins listed in your bidsmap['Options'] did not have a usable `bidsmapper` interface, nothing to do")
         LOGGER.info('-------------- FINISHED! ------------')
         LOGGER.info('')
         return bidsmap_new

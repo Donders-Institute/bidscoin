@@ -61,6 +61,7 @@ Run your pip install command as before with the additional ``--upgrade`` or ``--
 .. caution::
    - The bidsmaps are not guaranteed to be compatible between different BIDScoin versions
    - After a successful BIDScoin installation or upgrade, it may be needed to (re)do any adjustments that were done on your `template bidsmap <./bidsmap.html#building-your-own-template-bidsmap>`__
+   - The code on GitHub does not always have a unique version number. Therefore, if you install the latest code from github, and then later re-install a newer BIDScoin with the same version number (e.g. the stable version from PyPi), then you need to actively delete your old user configuration. You can do this most easily by running ``bidscoin --reset``
 
 Dcm2niix installation
 ---------------------

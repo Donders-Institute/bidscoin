@@ -110,7 +110,7 @@ The ``dicomsort`` command-line tool is a utility to move your flat- or DICOMDIR-
       dicomsort raw/sub-011/ses-mri01
       dicomsort raw --subprefix sub- --sesprefix ses-
       dicomsort myproject/raw/DICOMDIR --subprefix pat^ --sesprefix
-      dicomsort sub-011/ses-mri01/DICOMDIR -n {AcquisitionNumber:05d}_{InstanceNumber:05d}.dcm
+      dicomsort sub-011/ses-mri01/DICOMDIR -n '{AcquisitionNumber:05d}_{InstanceNumber:05d}.dcm'
 
 rawmapper
 ---------
@@ -140,8 +140,8 @@ Another command-line utility that can be helpful in organizing your source data 
                             subid/sesid foldernames (default: ['PatientComments', 'ImageComments'])
       -w PATTERN, --wildcard PATTERN
                             The Unix style pathname pattern expansion that is used to select the series
-                            from which the dicomfield is being mapped (can contain wildcards) (default:
-                            *)
+                            folders from which the dicomfield is being mapped (can contain wildcards)
+                            (default: *)
       -o FOLDER, --outfolder FOLDER
                             The mapper-file is normally saved in sourcefolder or, when using this option,
                             in outfolder (default: None)

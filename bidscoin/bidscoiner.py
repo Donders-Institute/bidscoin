@@ -101,7 +101,7 @@ def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: 
     # Load the data conversion plugins
     plugins = [plugin for name in bidsmap.plugins if (plugin := bcoin.import_plugin(name))]
     if not plugins:
-        LOGGER.warning(f"The plugins listed in your bidsmap['Options'] did not have a usable `bidscoiner_plugin` function, nothing to do")
+        LOGGER.warning(f"The {bidsmap.plugins.keys()} plugins listed in your bidsmap['Options'] did not have a usable `bidscoiner` interface, nothing to do")
         LOGGER.info('-------------- FINISHED! ------------')
         LOGGER.info('')
         return

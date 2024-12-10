@@ -140,6 +140,8 @@ class Interface(PluginInterface):
             LOGGER.error(f"Unsupported dataformat '{dataformat}'")
 
         # See for every data source in the session if we already discovered it or not
+        if not sourcefiles:
+            LOGGER.info(f"No {__name__} sourcedata found in: {session}")
         for sourcefile in sourcefiles:
 
             # Check if the source files all have approximately the same size (difference < 50kB)
