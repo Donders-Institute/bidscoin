@@ -147,6 +147,9 @@ class MainWindow(QMainWindow):
                 input_bidsmap = copy.deepcopy(template_bidsmap)
                 input_bidsmap.delete_runs()
 
+        # Make sure we do not try to add data samples to the provenance store (i.e. when using bidsmapper -s)
+        input_bidsmap.store = {}
+
         # Keep track of the EditWindow status
         self.editwindow_opened: Union[str,None] = None
         """The provenance of the run-item that is opened in the EditWindow"""
