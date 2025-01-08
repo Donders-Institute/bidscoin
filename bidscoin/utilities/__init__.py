@@ -25,7 +25,7 @@ def unpack(sesfolder: Path, wildcard: str='', workfolder: Path='', _subprefix: U
     :param wildcard:    A glob search pattern to select the tarball/zipped files (leave empty to skip unzipping)
     :param workfolder:  A root folder for temporary data
     :param _subprefix:  A pytest helper variable that is passed to dicomsort.sortsessions(args, subprefix=_subprefix)
-    :return:            Either ({a set of unpacked session folders}, True), or ({sourcefolder}, False)
+    :return:            Either ({a set of unpacked session folders}, True), or ({sesfolder}, False)
     """
 
     # Avoid circular import

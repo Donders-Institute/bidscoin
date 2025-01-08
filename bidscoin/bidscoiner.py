@@ -257,25 +257,26 @@ def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: 
                 sesfolders, unpacked = unpack(session, bidsmap.options.get('unzip',''))
                 for sesfolder in sesfolders:
 
-                    # Check if we should skip the session-folder
-                    datasource = bids.get_datasource(sesfolder, bidsmap.plugins)
-                    if not datasource.dataformat:
-                        LOGGER.info(f">>> No datasources found in '{sesfolder}'")
-                        continue
-                    LOGGER.info(f">>> Coining datasources in: {sesfolder}")
-                    subid        = bidsmap.dataformat(datasource.dataformat).subject
-                    sesid        = bidsmap.dataformat(datasource.dataformat).session
-                    subid, sesid = datasource.subid_sesid(subid, sesid or '')
-                    bidssession  = bidsfolder/subid/sesid       # TODO: Support DICOMDIR with multiple subjects (as in PYDICOMDIR)
-                    if bidssession.is_dir():
-                        LOGGER.warning(f"Existing BIDS output-directory found, which may result in duplicate data (with increased run-index). Make sure {bidssession} was cleaned-up from old data before (re)running the bidscoiner")
-                    bidssession.mkdir(parents=True, exist_ok=True)
-
                     # Run the bidscoiner plugins
                     for plugin in plugins:
-                        LOGGER.verbose(f"Executing plugin: {Path(plugin.__file__).stem}")
-                        trackusage(Path(plugin.__file__).stem)
-                        personals = plugin.Interface().bidscoiner(sesfolder, bidsmap, bidssession)
+
+                        # Check if we should skip the sesfolder
+                        name       = Path(plugin.__file__).stem
+                        datasource = bids.get_datasource(sesfolder, {name: bidsmap.plugins[name]})
+                        if not datasource.dataformat:
+                            LOGGER.info(f">>> No {name} datasources found in '{sesfolder}'")
+                            continue
+                        LOGGER.info(f">>> Coining {name} datasources in: {sesfolder}")
+                        subid        = bidsmap.dataformat(datasource.dataformat).subject
+                        sesid        = bidsmap.dataformat(datasource.dataformat).session
+                        subid, sesid = datasource.subid_sesid(subid, sesid or '')
+                        bidssession  = bidsfolder/subid/sesid       # TODO: Support DICOMDIR with multiple subjects (as in PYDICOMDIR)
+                        bidssession.mkdir(parents=True, exist_ok=True)
+
+                        LOGGER.verbose(f"Executing plugin: {name}")
+                        trackusage(name)
+                        plugin.Interface().bidscoiner(sesfolder, bidsmap, bidssession)
+                        personals = plugin.Interface().personals(bidsmap, datasource)
 
                         # Add a subject row to the participants table (if there is any data)
                         if next(bidssession.rglob('*.json'), None):

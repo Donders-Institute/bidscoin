@@ -47,7 +47,7 @@ def scanpersonals(bidsmap: BidsMap, session: Path, personals: dict, keys: list) 
         elif age.endswith('M'): age = float(age.rstrip('M')) / 12
         elif age.endswith('Y'): age = float(age.rstrip('Y'))
         if age:
-            if bidsmap.plugins['dcm2niix2bids'].get('anon', 'y') in ('y','yes'):
+            if bidsmap.options.get('anon','y') in ('y','yes'):
                 age = int(float(age))
             personals['age'] = str(age)
 

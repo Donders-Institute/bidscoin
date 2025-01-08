@@ -316,7 +316,7 @@ def install_plugins(filenames: list[str]=()) -> None:
         LOGGER.success(f"The '{file.name}' plugin was successfully installed")
 
 
-def uninstall_plugins(filenames: list[str]=(), wipe: bool=True) -> None:
+def uninstall_plugins(filenames: list[str]=(), wipe: bool=False) -> None:
     """
     Uninstalls template bidsmaps and plugins and removes the plugin Options and data format section from the default template bidsmap
 
@@ -358,14 +358,15 @@ def uninstall_plugins(filenames: list[str]=(), wipe: bool=True) -> None:
         if not module:
             LOGGER.warning(f"Cannot remove any {file.stem} bidsmap options from the {bidsmap_template.stem} template")
             continue
-        if hasattr(module, 'OPTIONS') or hasattr(module, 'BIDSMAP'):
-            if hasattr(module, 'OPTIONS'):
-                LOGGER.info(f"Removing default {file.stem} bidsmap options from the {bidsmap_template.stem} template")
-                template['Options']['plugins'].pop(file.stem, None)
-            if wipe and hasattr(module, 'BIDSMAP'):
-                for key, value in module.BIDSMAP.items():
-                    LOGGER.info(f"Removing default {key} bidsmappings from the {bidsmap_template.stem} template")
-                    template.pop(key, None)
+        if removed := hasattr(module, 'OPTIONS'):
+            LOGGER.info(f"Removing default {file.stem} bidsmap options from the {bidsmap_template.stem} template")
+            template['Options']['plugins'].pop(file.stem, None)
+        if wipe and hasattr(module, 'BIDSMAP'):
+            removed = True
+            for key, value in module.BIDSMAP.items():
+                LOGGER.info(f"Removing default {key} bidsmappings from the {bidsmap_template.stem} template")
+                template.pop(key, None)
+        if removed:
             with open(bidsmap_template, 'w') as stream:
                 yaml.dump(template, stream)
 

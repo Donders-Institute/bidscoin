@@ -14,7 +14,7 @@
 
             "bidscoin": {
                "type": "object",
-               "required": ["version", "bidsignore", "subprefix", "sesprefix", "unknowntypes", "ignoretypes", "unzip"],
+               "required": ["version", "bidsignore", "subprefix", "sesprefix", "unknowntypes", "ignoretypes", "anon", "unzip"],
                "properties": {
                   "version": { "type": "string" },
                   "bidsignore": { "type": "array" },
@@ -22,6 +22,7 @@
                   "sesprefix": { "type": ["string", "null"] },
                   "unknowntypes": { "type": ["array"] },
                   "ignoretypes": { "type": ["array"] },
+                  "anon": { "type": ["string", "null"] },
                   "unzip": { "type": ["string", "null"] }
                },
                "additionalProperties": false
@@ -35,7 +36,6 @@
                   "properties": {
                      "command": { "type": "string" },
                      "args": { "type": ["string", "null"] },
-                     "anon": { "type": ["string", "null"] },
                      "meta": { "type": ["array"] },
                      "fallback": { "type": ["string", "null"] }
                   }
@@ -49,16 +49,23 @@
    "additionalProperties": {
       "description": "Dataformat key (this key is issued by the output of the handling plugin's `has_support()` function)",
       "type": "object",
-      "required": ["subject", "session"],
+      "required": ["participant"],
 
       "properties": {
-         "subject": {
-            "type": "string",
-            "description": "The participant label (typically a dynamic value)"
-         },
-         "session": {
-            "type": ["string", "integer", "null"],
-            "description": "The session label (typically a dynamic value)"
+         "participant": {
+            "description": "The content of the participants table",
+            "type": "object",
+            "required": ["participant_id", "session_id"],
+            "properties": {
+               "participant_id": {
+                  "type": "string",
+                  "description": "The participant label (typically a dynamic value)"
+               },
+               "session_id": {
+                  "type": ["string", "integer", "null"],
+                  "description": "The session label (typically a dynamic value)"
+               }
+            }
          }
       },
 

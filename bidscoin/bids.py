@@ -770,7 +770,7 @@ class DataFormat:
         Reads from a YAML dataformat dictionary
 
         :param dataformat: The name of the dataformat (= section in the bidsmap)
-        :param data:       The YAML dataformat dictionary, i.e. subject and session items + a set of datatypes
+        :param data:       The YAML dataformat dictionary, i.e. participant items + a set of datatypes
         :param options:    The dictionary with the BIDScoin options
         :param plugins:    The plugin dictionaries with their options
         """
@@ -785,7 +785,7 @@ class DataFormat:
         self.plugins    = plugins
         """The plugin dictionaries with their options"""
         self._data      = data
-        """The YAML dataformat dictionary, i.e. subject and session items + a set of datatypes"""
+        """The YAML dataformat dictionary, i.e. participant items + a set of datatypes"""
 
     def __str__(self):
 
@@ -809,31 +809,42 @@ class DataFormat:
         return hash(str(self))
 
     @property
+    def participant(self) -> dict:
+        """The data to populate the participants.tsv table"""
+
+        return self._data['participant']
+
+    @participant.setter
+    def participant(self, value: dict):
+
+        self._data['participant'] = value
+
+    @property
     def subject(self) -> str:
         """The regular expression for extracting the subject identifier"""
 
-        return self._data['subject']
+        return self._data['participant']['participant_id']
 
     @subject.setter
     def subject(self, value: str):
 
-        self._data['subject'] = value
+        self._data['participant']['participant_id'] = value
 
     @property
     def session(self) -> str:
         """The regular expression for extracting the session identifier"""
 
-        return self._data['session']
+        return self._data['participant']['session_id']
 
     @session.setter
     def session(self, value: str):
-        self._data['session'] = value
+        self._data['participant']['session_id'] = value
 
     @property
     def datatypes(self) -> list[DataType]:
         """Gets a list of DataType objects for the dataformat"""
 
-        return [DataType(self.dataformat, datatype, self._data[datatype], self.options, self.plugins) for datatype in self._data if datatype not in ('subject', 'session')]
+        return [DataType(self.dataformat, datatype, self._data[datatype], self.options, self.plugins) for datatype in self._data if datatype not in ('participant',)]
 
     def datatype(self, datatype: Union[str, DataType]) -> DataType:
         """Gets the DataType object for the dataformat"""
@@ -2100,7 +2111,6 @@ def addparticipant(participants_tsv: Path, subid: str='', sesid: str='', data: d
         if subid not in table.index:
             if sesid:
                 table.loc[subid, 'session_id'] = sesid
-            table.loc[subid, 'group'] = None
             data_added                = True
         for key in data:
             if key not in table or pd.isnull(table.loc[subid, key]) or table.loc[subid, key] == 'n/a':
@@ -2121,9 +2131,6 @@ def addparticipant(participants_tsv: Path, subid: str='', sesid: str='', data: d
             if not meta.get('session_id') and 'session_id' in table.columns:
                 meta['session_id'] = {'Description': 'Session identifier'}
                 key_added          = True
-            if not meta.get('group') and 'group' in table.columns:
-                meta['group'] = {'Description': 'Group identifier'}
-                key_added     = True
             for col in table.columns:
                 if col not in meta:
                     key_added = True

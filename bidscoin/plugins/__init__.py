@@ -3,13 +3,14 @@
 import logging
 import copy
 import pandas as pd
+import dateutil.parser
 from pathlib import Path
 from abc import ABC, abstractmethod
 from typing import Union
 from bidscoin import is_hidden
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from bidscoin.bids import BidsMap   # = Circular import
+    from bidscoin.bids import BidsMap, DataSource       # = Circular import
 
 LOGGER = logging.getLogger(__name__)
 
@@ -50,6 +51,48 @@ class PluginInterface(ABC):
         :param options:     A dictionary with the plugin options, e.g. taken from the bidsmap.plugins['nibabel2bids']
         :return:            The retrieved attribute value
         """
+
+    def personals(self, bidsmap: 'BidsMap', datasource: 'DataSource') -> dict:
+        """
+        Collects personal data from a datasource to populate the participants.tsv file. See code for ad hoc age/sex encoding corrections
+
+        :param bidsmap:     The full mapping heuristics from the bidsmap YAML-file
+        :param datasource:  The data source from which (personal) dynamic values are read
+        :return:            A dictionary with the personal data (e.g. age or sex)
+        """
+
+        personals = {}
+        for key, value in bidsmap.dataformat(datasource.dataformat).participant:
+            if key in ('participant_id', 'session_id'):
+                continue
+            else:
+                personals[key] = datasource.dynamicvalue(value, cleanup=False, runtime=True)
+
+            # Perform ad hoc age encoding corrections (-> DICOM/Twix PatientAge: nnnD, nnnW, nnnM or nnnY)
+            if key == 'age' and personals['age'] and isinstance(personals['age'], str):
+                age = personals['age']
+                try:
+                    if '-' in age:      # -> Pfile: rhr_rh_scan_date - rhe_dateofbirth
+                        scandate, dateofbirth = age.split('-', 1)
+                        age = dateutil.parser.parse(scandate) - dateutil.parser.parse(dateofbirth)
+                        age = str(age.days) + 'D'
+                    if   age.endswith('D'): age = float(age.rstrip('D')) / 365.2524
+                    elif age.endswith('W'): age = float(age.rstrip('W')) / 52.1775
+                    elif age.endswith('M'): age = float(age.rstrip('M')) / 12
+                    elif age.endswith('Y'): age = float(age.rstrip('Y'))
+                    if bidsmap.options.get('anon','y') in ('y','yes'):
+                        age = int(float(age))
+                    personals['age'] = str(age)             # Or better keep it as int/float?
+                except Exception as exc:
+                    LOGGER.warning(f"Could not parse '{personals['age']}' as 'age' from: {datasource}\n{exc}")
+
+            # Perform add hoc sex encoding corrections (-> Pfile rhe_patsex: 0=O, 1=M, 2=F)
+            elif key == 'sex':
+                if   personals['sex'] == '0': personals['sex'] = 'O'
+                elif personals['sex'] == '1': personals['sex'] = 'M'
+                elif personals['sex'] == '2': personals['sex'] = 'F'
+
+        return personals
 
     def bidsmapper(self, session: Path, bidsmap_new: 'BidsMap', bidsmap_old: 'BidsMap', template: 'BidsMap') -> None:
         """

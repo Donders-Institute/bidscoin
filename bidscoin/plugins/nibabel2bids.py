@@ -74,8 +74,7 @@ class Interface(PluginInterface):
         if dataformat and dataformat != 'Nibabel':
             return ''
 
-        ext = ''.join(file.suffixes)
-        if file.is_file() and ext.lower() in sum((klass.valid_exts for klass in nib.imageclasses.all_image_classes), ('.nii.gz',)):
+        if file.is_file() and file.suffix.lower() in sum((klass.valid_exts for klass in nib.imageclasses.all_image_classes), ('.nii',)) or file.name.endswith('.nii.gz'):
             return 'Nibabel'
 
         return ''
@@ -110,10 +109,9 @@ class Interface(PluginInterface):
         The bidscoiner plugin to convert the session Nibabel source-files into BIDS-valid NIfTI-files in the
         corresponding bids session-folder
 
-        :param session:     The full-path name of the subject/session source folder
-        :param bidsmap:     The full mapping heuristics from the bidsmap YAML-file
-        :param bidsses:     The full-path name of the BIDS output `sub-/ses-` folder
-        :return:            Nothing (i.e. personal data is not available)
+        :param session: The full-path name of the subject/session source folder
+        :param bidsmap: The full mapping heuristics from the bidsmap YAML-file
+        :param bidsses: The full-path name of the BIDS output `sub-/ses-` folder
         """
 
         # Get the subject identifiers from the bidsses folder

@@ -32,7 +32,6 @@ LOGGER = logging.getLogger(__name__)
 # The default options that are set when installing the plugin
 OPTIONS = Plugin({'command': 'dcm2niix',                    # Command to run dcm2niix, e.g. "module add dcm2niix/1.0.20180622; dcm2niix" or "PATH=/opt/dcm2niix/bin:$PATH; dcm2niix" or /opt/dcm2niix/bin/dcm2niix or 'C:\"Program Files"\dcm2niix\dcm2niix.exe' (use quotes to deal with whitespaces in the path)
                   'args': '-b y -z y -i n',                 # Argument string that is passed to dcm2niix. Tip: SPM users may want to use '-z n' (which produces unzipped NIfTI's, see dcm2niix -h for more information)
-                  'anon': 'y',                              # Set this anonymization flag to 'y' to round off age and discard acquisition date from the metadata
                   'meta': ['.json', '.tsv', '.tsv.gz'],     # The file extensions of the equally named metadata sourcefiles that are copied over as BIDS sidecar files
                   'fallback': 'y'})                         # Appends unhandled dcm2niix suffixes to the `acq` label if 'y' (recommended, else the suffix data is discarding)
 
@@ -141,7 +140,7 @@ class Interface(PluginInterface):
 
         # See for every data source in the session if we already discovered it or not
         if not sourcefiles:
-            LOGGER.info(f"No {__name__} sourcedata found in: {session}")
+            LOGGER.info(f"No dcm2niix2bids sourcedata found in: {session}")
         for sourcefile in sourcefiles:
 
             # Check if the source files all have approximately the same size (difference < 50kB)
@@ -191,7 +190,7 @@ class Interface(PluginInterface):
                 LOGGER.bcdebug(f"Existing/duplicate sample: {run.datasource}")
 
     @due.dcite(Doi('10.1016/j.jneumeth.2016.03.001'), description='dcm2niix: DICOM to NIfTI converter', tags=['reference-implementation'])
-    def bidscoiner(self, session: Path, bidsmap: BidsMap, bidsses: Path) -> Union[None, dict]:
+    def bidscoiner(self, session: Path, bidsmap: BidsMap, bidsses: Path) -> None:
         """
         The bidscoiner plugin to convert the session DICOM and PAR/REC source-files into BIDS-valid NIfTI-files in the corresponding
         bids session-folder and extract personals (e.g. Age, Sex) from the source header. The bidsmap options for this plugin can be found in:
@@ -214,9 +213,6 @@ class Interface(PluginInterface):
         fallback         = 'fallback' if options.get('fallback','y').lower() in ('y', 'yes', 'true') else ''
         datasource       = bids.get_datasource(session, Plugins({'dcm2niix2bids': options}))
         dataformat       = datasource.dataformat
-        if not dataformat:
-            LOGGER.info(f"--> No {__name__} sourcedata found in: {session}")
-            return
 
         # Make a list of all the data sources/runs
         sources: list[Path] = []
@@ -487,7 +483,7 @@ class Interface(PluginInterface):
                         acq_time = f"1925-01-01T{metadata.get('AcquisitionTime','')}"
                     try:
                         acq_time = dateutil.parser.parse(acq_time)
-                        if options.get('anon','y') in ('y','yes'):
+                        if bidsmap.options.get('anon','y') in ('y','yes'):
                             acq_time = acq_time.replace(year=1925, month=1, day=1)      # Privacy protection (see BIDS specification)
                         acq_time = acq_time.isoformat()
                     except Exception as jsonerror:
@@ -513,23 +509,3 @@ class Interface(PluginInterface):
         LOGGER.verbose(f"Writing acquisition time data to: {scans_tsv}")
         scans_table.sort_values(by=['acq_time','filename'], inplace=True)
         scans_table.replace('','n/a').to_csv(scans_tsv, sep='\t', encoding='utf-8', na_rep='n/a')
-
-        # Collect personal data for the participants.tsv file
-        if dataformat == 'DICOM':                               # PAR does not contain personal info?
-            age = datasource.attributes('PatientAge')           # A string of characters with one of the following formats: nnnD, nnnW, nnnM, nnnY
-            try:
-                if   age.endswith('D'): age = float(age.rstrip('D')) / 365.2524
-                elif age.endswith('W'): age = float(age.rstrip('W')) / 52.1775
-                elif age.endswith('M'): age = float(age.rstrip('M')) / 12
-                elif age.endswith('Y'): age = float(age.rstrip('Y'))
-                if age and options.get('anon','y') in ('y','yes'):
-                    age = int(float(age))
-            except Exception as exc:
-                LOGGER.warning(f"Could not parse age from: {datasource}\n{exc}")
-            personals           = {}
-            personals['age']    = str(age)
-            personals['sex']    = datasource.attributes('PatientSex')
-            personals['size']   = datasource.attributes('PatientSize')
-            personals['weight'] = datasource.attributes('PatientWeight')
-
-            return personals

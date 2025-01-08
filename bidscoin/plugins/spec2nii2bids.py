@@ -20,7 +20,6 @@ LOGGER = logging.getLogger(__name__)
 # The default options that are set when installing the plugin
 OPTIONS = Plugin({'command': 'spec2nii',    # Command to run spec2nii, e.g. "module add spec2nii; spec2nii" or "PATH=/opt/spec2nii/bin:$PATH; spec2nii" or /opt/spec2nii/bin/spec2nii or 'C:\"Program Files"\spec2nii\spec2nii.exe' (note the quotes to deal with the whitespace)
                   'args': None,             # Argument string that is passed to spec2nii (see spec2nii -h for more information)
-                  'anon': 'y',              # Set this anonymization flag to 'y' to round off age and discard acquisition date from the metadata
                   'meta': ['.json', '.tsv', '.tsv.gz'],  # The file extensions of the equally named metadata source files that are copied over as BIDS sidecar files
                   'multiraid': 2})          # The mapVBVD argument for selecting the multiraid Twix file to load (default = 2, i.e. 2nd file)
 
@@ -101,17 +100,16 @@ class Interface(PluginInterface):
         LOGGER.error(f"Unsupported MRS data-format: {dataformat}")
 
     @due.dcite(Doi('10.1002/mrm.29418'), description='Multi-format in vivo MR spectroscopy conversion to NIFTI', tags=['reference-implementation'])
-    def bidscoiner(self, session: Path, bidsmap: BidsMap, bidsses: Path) -> Union[None, dict]:
+    def bidscoiner(self, session: Path, bidsmap: BidsMap, bidsses: Path) -> None:
         """
         This wrapper function around spec2nii converts the MRS data in the session folder and saves it in the bidsfolder.
         Each saved datafile should be accompanied by a json sidecar file. The bidsmap options for this plugin can be found in:
 
         bidsmap.plugins['spec2nii2bids']
 
-        :param session:     The full-path name of the subject/session raw data source folder
-        :param bidsmap:     The full mapping heuristics from the bidsmap YAML-file
-        :param bidsses:     The full-path name of the BIDS output `sub-/ses-` folder
-        :return:            A dictionary with personal data for the participants.tsv file (such as sex or age)
+        :param session: The full-path name of the subject/session raw data source folder
+        :param bidsmap: The full mapping heuristics from the bidsmap YAML-file
+        :param bidsses: The full-path name of the BIDS output `sub-/ses-` folder
         """
 
         # Get started
@@ -205,9 +203,9 @@ class Interface(PluginInterface):
                     json.dump(metadata, json_fid, indent=4)
 
             # Parse the acquisition time from the source header or else from the json file (NB: assuming the source file represents the first acquisition)
-            attributes = run.datasource.attributes
             if not bidsignore:
-                acq_time = ''
+                acq_time   = ''
+                attributes = run.datasource.attributes
                 if dataformat == 'SPAR':
                     acq_time = attributes('scan_date')
                 elif dataformat == 'Twix':
@@ -218,7 +216,7 @@ class Interface(PluginInterface):
                     acq_time = f"1925-01-01T{metadata.get('AcquisitionTime','')}"
                 try:
                     acq_time = dateutil.parser.parse(acq_time)
-                    if options.get('anon',OPTIONS['anon']) in ('y','yes'):
+                    if bidsmap.options.get('anon','y') in ('y','yes'):
                         acq_time = acq_time.replace(year=1925, month=1, day=1)      # Privacy protection (see BIDS specification)
                     acq_time = acq_time.isoformat()
                 except Exception as jsonerror:
@@ -234,35 +232,3 @@ class Interface(PluginInterface):
         LOGGER.verbose(f"Writing acquisition time data to: {scans_tsv}")
         scans_table.sort_values(by=['acq_time', 'filename'], inplace=True)
         scans_table.replace('','n/a').to_csv(scans_tsv, sep='\t', encoding='utf-8', na_rep='n/a')
-
-        # Collect personal data for the participants.tsv file (assumes the dataformat and personal attributes remain the same in the session)
-        personals = {}
-        age       = ''
-        if dataformat == 'Twix':
-            personals['sex']    = attributes('PatientSex')
-            personals['size']   = attributes('PatientSize')
-            personals['weight'] = attributes('PatientWeight')
-            age = attributes('PatientAge')                   # A string of characters with one of the following formats: nnnD, nnnW, nnnM, nnnY
-        elif dataformat == 'Pfile':
-            sex = attributes('rhe_patsex')
-            if   sex == '0': personals['sex'] = 'O'
-            elif sex == '1': personals['sex'] = 'M'
-            elif sex == '2': personals['sex'] = 'F'
-            try:
-                age = dateutil.parser.parse(attributes('rhr_rh_scan_date')) - dateutil.parser.parse(attributes('rhe_dateofbirth'))
-                age = str(age.days) + 'D'
-            except dateutil.parser.ParserError as exc:
-                pass
-        try:
-            if   age.endswith('D'): age = float(age.rstrip('D')) / 365.2524
-            elif age.endswith('W'): age = float(age.rstrip('W')) / 52.1775
-            elif age.endswith('M'): age = float(age.rstrip('M')) / 12
-            elif age.endswith('Y'): age = float(age.rstrip('Y'))
-            if age:
-                if options.get('anon',OPTIONS['anon']) in ('y','yes'):
-                    age = int(float(age))
-                personals['age'] = str(age)
-        except Exception as exc:
-            LOGGER.warning(f"Could not parse age from: {run.datasource}\n{exc}")
-
-        return personals

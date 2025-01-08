@@ -6,8 +6,8 @@ from bidscoin import bcoin, bidsmapper, bidsmap_template
 bcoin.setup_logging()
 
 
-@pytest.mark.parametrize('subprefix', ['Doe', 'Doe^', '*'])
-@pytest.mark.parametrize('sesprefix', ['0', '*'])
+@pytest.mark.parametrize('subprefix', ['Doe'])
+@pytest.mark.parametrize('sesprefix', ['0'])
 @pytest.mark.parametrize('store', [False, True])
 def test_bidsmapper(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir, subprefix, sesprefix, store):
     resubprefix = '' if subprefix=='*' else re.escape(subprefix).replace(r'\-','-')

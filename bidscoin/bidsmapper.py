@@ -120,9 +120,8 @@ def bidsmapper(sourcefolder: str, bidsfolder: str, bidsmap: str, template: str, 
                 sessions = [subject]
             for session in sessions:
 
-                LOGGER.info(f"Mapping: {session} (subject {n}/{len(subjects)})")
-
                 # Unpack the data in a temporary folder if it is tarballed/zipped and/or contains a DICOMDIR file
+                LOGGER.info(f"Mapping: {session} (subject {n}/{len(subjects)})")
                 sesfolders, unpacked = unpack(session, unzip)
                 for sesfolder in sesfolders:
                     if store:

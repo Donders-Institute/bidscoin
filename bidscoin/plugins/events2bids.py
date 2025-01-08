@@ -31,8 +31,7 @@ class Interface(PluginInterface):
         if dataformat and dataformat != 'Presentation':
             return ''
 
-        ext = ''.join(file.suffixes)
-        if ext.lower() in ('.log',):
+        if file.suffix.lower() in ('.log',):
             return 'Presentation'
 
         return ''
@@ -67,10 +66,9 @@ class Interface(PluginInterface):
         The bidscoiner plugin to convert the session Presentation source-files into BIDS-valid NIfTI-files in the
         corresponding bids session-folder
 
-        :param session:     The full-path name of the subject/session source folder
-        :param bidsmap:     The full mapping heuristics from the bidsmap YAML-file
-        :param bidsses:     The full-path name of the BIDS output `sub-/ses-` folder
-        :return:            Nothing (i.e. personal data is not available)
+        :param session: The full-path name of the subject/session source folder
+        :param bidsmap: The full mapping heuristics from the bidsmap YAML-file
+        :param bidsses: The full-path name of the BIDS output `sub-/ses-` folder
         """
 
         # Get the subject identifiers from the bidsses folder

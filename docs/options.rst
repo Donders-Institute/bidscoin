@@ -23,6 +23,7 @@ These setting can be used by all the BIDScoin tools:
 - ``datatypes``: Datatypes that are converted to BIDS. This can be useful for ignoring/excluding specific data types (without changing their mappings)
 - ``unknowntypes``: Datatypes that are not part of BIDS but that are converted to a BIDS-like entries in the BIDS folder
 - ``ignoretypes``: Datatypes that are excluded/not converted"""
+- ``anon``: Set this anonymization flag to 'y' to round off age and to discard acquisition date from the meta data
 - ``unzip``: Wildcard pattern to select tarball/zip-files in the source folders that need to be unzipped (in a tempdir) to expose the data. Use for instance '\*.tar.gz' if your source data looks like ``sub-01\01_MPRAGE\dcmfiles.tar.gz``, etc
 
 The core working of BIDScoin and its plugins can be tested by clicking the corresponding [Test] button and inspection of the terminal output.
@@ -41,7 +42,6 @@ The `dcm2niix2bids plugin <./plugins.html#dcm2niix2bids>`__ is the default bidsc
   - ``C:\"Program Files"\dcm2niix\dcm2niix.exe`` (use quotes to deal with whitespaces in your fullpath)
 
 - ``args``: Argument string that is passed as input to dcm2niix to customize its behavior, e.g. ``-z n -i y`` for ignoring derived data and having uncompressed output data.
-- ``anon``: Set this anonymization flag to 'y' to round off age and to discard acquisition date from the meta data
 - ``meta``: The file extensions of the associated / equally named (meta)data sourcefiles that are copied over as BIDS (sidecar) files, such as ``['.json', '.tsv', '.tsv.gz']``. You can use this to enrich json sidecar files or add data that is not supported by this plugin. For instance, with each PET DICOM image you can put a small json file with key-value pairs that are not contained in the DICOM header (such as ``{InjectedRadioactivity: 400, InjectedMass: 10}``). NB: Data entered in the meta table of the bidseditor GUI always has priority over data in source json files, which itself has priority over dcm2niix-generated json data.
 - ``fallback``: Appends unhandled dcm2niix suffixes to the `acq` label if 'y' (recommended, else the suffix data is discarded)
 
@@ -57,7 +57,6 @@ The `spec2nii2bids plugin <./plugins.html#spec2nii2bids>`__ is an optional bidsc
 
 - ``command``: Command to run spec2nii, such as ``spec2nii`` (see the dcm2niix plugin for more examples to set the path)
 - ``args``: Argument string that is passed as input to spec2nii to customize its behavior
-- ``anon``: Set this anonymization flag to 'y' to round off age and to discard acquisition date from the meta data
 - ``meta``: The file extensions of the associated / equally named (meta)data sourcefiles that are copied over as BIDS (sidecar) files, such as ``['.json', '.tsv', '.tsv.gz']``. You can use this to enrich json sidecar files or add data that is not supported by this plugin. NB: Data entered in the meta table of the bidseditor GUI always has priority over data in source json files, which itself has priority over dcm2niix-generated json data.
 - ``multiraid``: The mapVBVD argument for selecting the multiraid Twix file to load (default = 2, i.e. 2nd file)
 

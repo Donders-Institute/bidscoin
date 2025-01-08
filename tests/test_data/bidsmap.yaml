@@ -17,10 +17,7 @@
 
 $schema: schema.json
 
-Options:
-# --------------------------------------------------------------------------------
-# General options and plugins
-# --------------------------------------------------------------------------------
+Options:                            # =============================== General options and plugins =====================================
   bidscoin:
     version: 4.5.0                  # BIDScoin version (should correspond with the version in pyproject.toml)
     bidsignore: extra_data/         # Semicolon-separated list of entries that are added to the .bidsignore file (for more info, see BIDS specifications), e.g. extra_data/;pet/;myfile.txt;yourfile.csv
@@ -28,28 +25,29 @@ Options:
     sesprefix: ses-                 # The session prefix of the source data
     unknowntypes: [mrs, extra_data] # A list of datatypes that are converted to BIDS-like datatype folders
     ignoretypes: [exclude]          # A list of datatypes that are excluded/not converted to BIDS
+    anon: y                         # Set this anonymization flag to 'y' to round off age and discard acquisition date from the meta data
     unzip:                          # Wildcard pattern to select tarballed/zip-files in the sourcefolders that need to be unzipped (in a tempdir) to expose the data, e.g. '*.tar.gz'
   plugins:                          # List of plugins with plugin-specific key-value pairs (that can be used by the plugin)
     dcm2niix2bids:                  # See dcm2niix -h and https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage#General_Usage for more info
       command: dcm2niix             # Command to run dcm2niix, e.g. "module add dcm2niix/1.0.20180622; dcm2niix" or "PATH=/opt/dcm2niix/bin:$PATH; dcm2niix" or /opt/dcm2niix/bin/dcm2niix or 'C:\"Program Files"\dcm2niix\dcm2niix.exe' (use quotes to deal with whitespaces in the path)
       args: -b y -z y -i n -l n     # Argument string that is passed to dcm2niix. Tip: SPM users may want to use '-z n' (which produces unzipped nifti's, see dcm2niix -h for more information)
-      anon: y                       # Set this anonymization flag to 'y' to round off age and discard acquisition date from the meta data
       meta: [.json, .tsv, .tsv.gz]  # The file extensions of the equally named metadata sourcefiles that are copied over to the BIDS sidecar files
       fallback: y                   # Appends unhandled dcm2niix suffixes to the `acq` label if 'y' (recommended, else the suffix data is discarded)
     spec2nii2bids:                  # The settings for the spec2nii2bids plugin
       command: spec2nii             # Command to run spec2nii, e.g. "module add spec2nii; spec2nii" or "PATH=/opt/spec2nii/bin:$PATH; spec2nii" or /opt/spec2nii/bin/spec2nii or 'C:\"Program Files"\spec2nii\spec2nii.exe' (note the quotes to deal with the whitespace)
       args:                         # Argument string that is passed to spec2nii (see spec2nii -h for more information)
-      anon: y                       # Set this anonymization flag to 'y' to round off age and discard acquisition date from the meta data
       meta: [.json, .tsv, .tsv.gz]  # The file extensions of the equally named metadata sourcefiles that are copied over to the BIDS sidecar files
       multiraid: 2                  # The mapVBVD argument for selecting the multiraid Twix file to load (default = 2, i.e. 2nd file)
 
 
-DICOM:
-# --------------------------------------------------------------------------------
-# DICOM key-value heuristics (DICOM fields that are mapped to the BIDS labels)
-# --------------------------------------------------------------------------------
-  subject: <<filepath:.*/raw/sub-(.*?)/>> # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
-  session: <<filepath:.*/raw/sub-.*?/ses-(.*?)/>> # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
+DICOM:                                                  # DICOM key-value heuristics (DICOM fields that are mapped to the BIDS labels)
+  participant:                                          # Attributes or properties to populate the participants table/tsv-file
+    participant_id: <<filepath:.*/raw/sub-(.*?)/>>      # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
+    session_id: <<filepath:.*/raw/sub-.*?/ses-(.*?)/>>  # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
+    age: <<PatientAge>>
+    sex: <<PatientSex>>
+    height: <<PatientSize>>
+    weight: <<PatientWeight>>
 
   anat:       # ----------------------- All anatomical runs --------------------
   - provenance: /Users/galassiae/Projects/bidscoin/bidscointutorial/raw/sub-001/ses-01/007-t1_mprage_sag_ipat2_1p0iso/00001_1.3.12.2.1107.5.2.43.66068.2020042808523182387402502.IMA
@@ -411,12 +409,10 @@ DICOM:
       mod: 3D
       suffix: GR
     meta: {}
-PAR:
-# --------------------------------------------------------------------------------
-# PAR key-value heuristics (Philips PAR fields that are mapped to the BIDS labels)
-# --------------------------------------------------------------------------------
-  subject: <<filepath:.*/raw/sub-(.*?)/>> # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
-  session: <<filepath:.*/raw/sub-.*?/ses-(.*?)/>> # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
+PAR:                                                    # PAR key-value heuristics (Philips PAR fields that are mapped to the BIDS labels)
+  participant:                                          # Attributes or properties to populate the participants table/tsv-file
+    participant_id: <<filepath:.*/raw/sub-(.*?)/>>      # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
+    session_id: <<filepath:.*/raw/sub-.*?/ses-(.*?)/>>  # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
 
   anat: []     # ----------------------- All anatomical runs --------------------
   func: []     # ----------------------- All functional runs --------------------
@@ -425,42 +421,38 @@ PAR:
   fmap: []     # ----------------------- All fieldmap runs ----------------------
   extra_data: []     # ----------------------- All extra data -------------------------
   exclude: []     # ----------------------- Data that will be left out -------------
-SPAR:
-# ---------------------------------------------------------------------------------
-# SPAR key-value heuristics (Philips MRS fields that are mapped to the BIDS labels)
-# ---------------------------------------------------------------------------------
-  subject: <<filepath:.*/raw/sub-(.*?)/>> # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
-  session: <<filepath:.*/raw/sub-.*?/ses-(.*?)/>> # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
+SPAR:  # SPAR key-value heuristics (Philips MRS fields that are mapped to the BIDS labels)
+  participant:                                          # Attributes or properties to populate the participants table/tsv-file
+    participant_id: <<filepath:.*/raw/sub-(.*?)/>>      # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
+    session_id: <<filepath:.*/raw/sub-.*?/ses-(.*?)/>>  # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
 
   mrs: []     # ---------------------- All spectroscopy runs ------------------
   extra_data: []     # ----------------------- All extra data -------------------------
   exclude: []     # ----------------------- Data that will be left out -------------
-Twix:
-# ---------------------------------------------------------------------------------
-# SPAR key-value heuristics (Philips MRS fields that are mapped to the BIDS labels)
-# ---------------------------------------------------------------------------------
-  subject: <<filepath:.*/raw/sub-(.*?)/>> # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
-  session: <<filepath:.*/raw/sub-.*?/ses-(.*?)/>> # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
+Twix:   # SPAR key-value heuristics (Philips MRS fields that are mapped to the BIDS labels)
+  participant:                                          # Attributes or properties to populate the participants table/tsv-file
+    participant_id: <<filepath:.*/raw/sub-(.*?)/>>      # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
+    session_id: <<filepath:.*/raw/sub-.*?/ses-(.*?)/>>  # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
+    age: <<PatientAge>>
+    sex: <<PatientSex>>
+    height: <<PatientSize>>
+    weight: <<PatientWeight>>
 
   mrs: []     # ---------------------- All spectroscopy runs ------------------
   extra_data: []     # ----------------------- All extra data -------------------------
   exclude: []     # ----------------------- Data that will be left out -------------
-Pfile:
-# ------------------------------------------------------------------------------
-# P-file key-value heuristics (GE MRS fields that are mapped to the BIDS labels)
-# ------------------------------------------------------------------------------
-  subject: <<filepath:.*/raw/sub-(.*?)/>> # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
-  session: <<filepath:.*/raw/sub-.*?/ses-(.*?)/>> # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
+Pfile: # P-file key-value heuristics (GE MRS fields that are mapped to the BIDS labels)
+  participant:                                          # Attributes or properties to populate the participants table/tsv-file
+    participant_id: <<filepath:.*/raw/sub-(.*?)/>>      # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
+    session_id: <<filepath:.*/raw/sub-.*?/ses-(.*?)/>>  # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
 
   mrs: []     # ---------------------- All spectroscopy runs ------------------
   extra_data: []     # ----------------------- All extra data -------------------------
   exclude: []     # ----------------------- Data that will be left out -------------
-Nibabel:
-# --------------------------------------------------------------------------------
-# Nibabel key-value heuristics (header fields that are mapped to the BIDS labels)
-# --------------------------------------------------------------------------------
-  subject: <<filepath:.*/raw/sub-(.*?)/>> # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
-  session: <<filepath:.*/raw/sub-.*?/ses-(.*?)/>> # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
+Nibabel: # Nibabel key-value heuristics (header fields that are mapped to the BIDS labels)
+  participant:                                          # Attributes or properties to populate the participants table/tsv-file
+    participant_id: <<filepath:.*/raw/sub-(.*?)/>>      # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
+    session_id: <<filepath:.*/raw/sub-.*?/ses-(.*?)/>>  # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
 
   anat: []     # ----------------------- All anatomical runs --------------------
   func: []     # ----------------------- All functional runs --------------------

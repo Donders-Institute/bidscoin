@@ -54,6 +54,7 @@ bidsignore: List of data types that are added to the .bidsignore file,
             e.g. extra_data/;myfile.txt;yourfile.csv
 subprefix:  The subject prefix used in the source data folders (e.g. "Pt" is the subprefix if subject folders are named "Pt018", "Pt019", ...)
 sesprefix:  The session prefix used in the source data folders (e.g. "M_" is the subprefix if session folders are named "M_pre", "M_post", ...)
+anon:       Set this anonymization flag to 'y' to round off age and to discard acquisition date from the meta data
 For more information see: {MAIN_HELP_URL}/options.html"""
 
 TOOLTIP_DCM2NIIX = """dcm2niix2bids
@@ -67,8 +68,6 @@ command: Command to run dcm2niix from the terminal, such as:
 args: Argument string that is passed to dcm2niix. Click [Test] and see the terminal output for usage
     Tip: SPM users may want to use '-z n', which produces unzipped NIfTI's
     
-anon: Set this anonymization flag to 'y' to round off age and to discard acquisition date from the meta data
-
 meta: The file extensions of the associated / equally named (meta)data sourcefiles that are copied over as
     BIDS (sidecar) files, such as ['.json', '.tsv', '.tsv.gz']. You can use this to enrich json sidecar files,
     or add data that is not supported by this plugin
@@ -958,8 +957,8 @@ class MainWindow(QMainWindow):
 
         datafile = Path(self.filesystem.fileInfo(index).absoluteFilePath())
         if datafile.is_file():
-            ext = ''.join(datafile.suffixes).lower()
-            if is_dicomfile(datafile) or is_parfile(datafile) or ext in sum((klass.valid_exts for klass in nib.imageclasses.all_image_classes), ('.nii.gz',)):
+            ext = datafile.suffix.lower()
+            if is_dicomfile(datafile) or is_parfile(datafile) or ext in sum((klass.valid_exts for klass in nib.imageclasses.all_image_classes), ('.7','.spar')) or datafile.name.endswith('.nii.gz'):
                 self.popup = InspectWindow(datafile)
                 self.popup.show()
                 self.popup.scrollbar.setValue(0)  # This can only be done after self.popup.show()
@@ -1006,7 +1005,7 @@ class EditWindow(QDialog):
         """The data format of the run-item being edited (bidsmap[dataformat][datatype][run-item])"""
         self.unknowndatatypes: list[str] = [datatype for datatype in bidsmap.options['unknowntypes'] if datatype in template_bidsmap.dataformat(self.dataformat).datatypes]
         self.ignoredatatypes: list[str]  = [datatype for datatype in bidsmap.options['ignoretypes']  if datatype in template_bidsmap.dataformat(self.dataformat).datatypes]
-        self.bidsdatatypes     = [str(datatype) for datatype in template_bidsmap.dataformat(self.dataformat).datatypes if datatype not in self.unknowndatatypes + self.ignoredatatypes + ['subject', 'session']]
+        self.bidsdatatypes     = [str(datatype) for datatype in template_bidsmap.dataformat(self.dataformat).datatypes if datatype not in self.unknowndatatypes + self.ignoredatatypes]
         self.bidsignore        = bidsmap.options['bidsignore']
         self.output_bidsmap    = bidsmap
         """The bidsmap at the start of the edit = output_bidsmap in the MainWindow"""
@@ -2041,14 +2040,13 @@ class InspectWindow(QDialog):
     def __init__(self, filename: Path):
         super().__init__()
 
-        ext = ''.join(filename.suffixes).lower()
         if is_dicomfile(filename):
             if filename.name == 'DICOMDIR':
                 LOGGER.bcdebug(f"Getting DICOM fields from {filename} will raise dcmread error below if pydicom => v3.0")
             text = str(dcmread(filename, force=True))
-        elif is_parfile(filename) or ext in ('.spar', '.txt', '.text', '.log'):
+        elif is_parfile(filename) or filename.suffix.lower() in ('.spar', '.txt', '.text', '.log'):
             text = filename.read_text()
-        elif ext == '.7':
+        elif filename.suffix.lower() == '.7':
             try:
                 from spec2nii.GE.ge_read_pfile import Pfile
                 text = ''
@@ -2062,7 +2060,7 @@ class InspectWindow(QDialog):
             except ImportError as perror:
                 text = f"Could not inspect: {filename}"
                 LOGGER.verbose(f"Could not import spec2nii to read {filename}\n{perror}")
-        elif filename.is_file() and ext in sum((klass.valid_exts for klass in nib.imageclasses.all_image_classes), ('.nii.gz',)):
+        elif filename.is_file() and filename.suffix.lower() in sum((klass.valid_exts for klass in nib.imageclasses.all_image_classes), ('.nii',)) or filename.name.endswith('.nii.gz'):
             text = str(nib.load(filename).header)
         else:
             text = f"Could not inspect: {filename}"

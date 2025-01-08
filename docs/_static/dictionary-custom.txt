@@ -86,6 +86,7 @@ PULS
 PyQt5
 Pydeface
 Pydicom
+PyPi
 Pytest
 Qt5
 Qt6
