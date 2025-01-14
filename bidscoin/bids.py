@@ -13,6 +13,7 @@ import shutil
 import pandas as pd
 import ast
 import datetime
+import yaml
 import jsonschema
 import bidsschematools.schema as bst
 import dateutil.parser
@@ -25,9 +26,6 @@ if find_spec('bidscoin') is None:
     sys.path.append(str(Path(__file__).parents[1]))
 from bidscoin import bcoin, schemafolder, templatefolder, is_hidden, __version__
 from bidscoin.plugins import EventsParser
-from ruamel.yaml import YAML
-yaml = YAML()
-yaml.representer.ignore_aliases = lambda *data: True    # Expand aliases (https://stackoverflow.com/questions/58091449/disabling-alias-for-yaml-file-in-python)
 
 # Define custom data types (replace with proper classes or TypeAlias of Python >= 3.10)
 Plugin     = NewType('Plugin',     dict[str, Any])
@@ -51,6 +49,11 @@ entities    = bidsschema.objects.entities
 """The descriptions of the entities present in BIDS filenames"""
 extensions  = [ext.value for _,ext in bidsschema.objects.extensions.items() if ext.value not in ('.json', '.tsv', '.bval', '.bvec') and '/' not in ext.value]
 """The possible extensions of BIDS data files"""
+
+
+class NoAliasDumper(yaml.SafeDumper):
+    def ignore_aliases(self, data):
+        return True
 
 
 class DataSource:
@@ -920,7 +923,7 @@ class BidsMap:
         if any(checks):
             LOGGER.info(f"Reading: {yamlfile}")
         with yamlfile.open('r') as stream:
-            bidsmap_data = yaml.load(stream)
+            bidsmap_data = yaml.safe_load(stream)
         self._data = bidsmap_data
         """The raw YAML data"""
 
@@ -1082,7 +1085,7 @@ class BidsMap:
         filename.parent.mkdir(parents=True, exist_ok=True)
         LOGGER.info(f"Saving bidsmap in: {filename}")
         with filename.open('w') as stream:
-            yaml.dump(self._data, stream)
+            yaml.dump(self._data, stream, NoAliasDumper, sort_keys=False)
 
     def validate(self, level: int=1) -> bool:
         """

@@ -96,6 +96,7 @@ RDP
 README
 Radboud
 Refactored
+RunItem
 SBREF
 SDAT
 SPM
@@ -280,9 +281,9 @@ rawmapper
 rebranded
 refactoring
 regex
+ruamel
 runindex
 runitem
-RunItem
 runtime
 sbatch
 screenshot

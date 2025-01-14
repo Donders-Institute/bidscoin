@@ -20,16 +20,12 @@ from importlib.metadata import entry_points
 from importlib.util import spec_from_file_location, module_from_spec
 from pathlib import Path
 from typing import Union
-from ruamel.yaml import YAML
 from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     sys.path.append(str(Path(__file__).parents[1]))
 from bidscoin import templatefolder, pluginfolder, bidsmap_template, tutorialurl, trackusage, tracking, configdir, configfile, config, DEBUG
-
-yaml = YAML()
-yaml.representer.ignore_aliases = lambda *data: True                         # Expand aliases (https://stackoverflow.com/questions/58091449/disabling-alias-for-yaml-file-in-python)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -266,7 +262,7 @@ def list_plugins(show: bool=False) -> tuple[list[Path], list[Path]]:
 
 def install_plugins(filenames: list[str]=()) -> None:
     """
-    Installs template bidsmaps and plugins and adds the plugin Options and data format section to the default template bidsmap
+    Installs template bidsmaps and plugins
 
     :param filenames:   Fullpath filenames of the and template bidsmaps plugins that need to be installed
     :return:            Nothing
@@ -276,12 +272,14 @@ def install_plugins(filenames: list[str]=()) -> None:
 
     files = [Path(file) for file in filenames if file.endswith('.yaml') or file.endswith('.py')]
 
-    # Load the default template bidsmap
-    with open(bidsmap_template, 'r') as stream:
-        template = yaml.load(stream)
-
     # Install the template bidsmaps and plugins in their targetfolder
     for file in files:
+
+        # Check if we can import the plugin
+        module = import_plugin(file.resolve())
+        if not module:
+            LOGGER.error(f"Plugin failure, please re-install a valid version of '{file.name}'")
+            continue
 
         # Copy the file to their target folder
         targetfolder = templatefolder if file.suffix == '.yaml' else pluginfolder
@@ -295,30 +293,12 @@ def install_plugins(filenames: list[str]=()) -> None:
             LOGGER.success(f"The '{file.name}' template bidsmap was successfully installed")
             continue
 
-        # Check if we can import the plugin
-        module = import_plugin(file)
-        if not module:
-            LOGGER.error(f"Plugin failure, please re-install a valid version of '{file.name}'")
-            continue
-
-        # Add the Options and data format section of the plugin to the default template bidsmap
-        if hasattr(module, 'OPTIONS') or hasattr(module, 'BIDSMAP'):
-            if hasattr(module, 'OPTIONS'):
-                LOGGER.info(f"Adding default {file.name} bidsmap options to the {bidsmap_template.stem} template")
-                template['Options']['plugins'][file.stem] = module.OPTIONS
-            if hasattr(module, 'BIDSMAP'):
-                for key, value in module.BIDSMAP.items():
-                    LOGGER.info(f"Adding default {key} bidsmappings to the {bidsmap_template.stem} template")
-                    template[key] = value
-            with open(bidsmap_template, 'w') as stream:
-                yaml.dump(template, stream)
-
         LOGGER.success(f"The '{file.name}' plugin was successfully installed")
 
 
 def uninstall_plugins(filenames: list[str]=(), wipe: bool=False) -> None:
     """
-    Uninstalls template bidsmaps and plugins and removes the plugin Options and data format section from the default template bidsmap
+    Uninstalls template bidsmaps and plugins
 
     :param filenames:   Fullpath filenames of the and template bidsmaps plugins that need to be uninstalled
     :param wipe:        Removes the plugin bidsmapping section if True
@@ -329,18 +309,8 @@ def uninstall_plugins(filenames: list[str]=(), wipe: bool=False) -> None:
 
     files = [Path(file) for file in filenames if file.endswith('.yaml') or file.endswith('.py')]
 
-    # Load the default template bidsmap
-    with open(bidsmap_template, 'r') as stream:
-        template = yaml.load(stream)
-
     # Uninstall the plugins
     for file in files:
-
-        # First check if we can import the plugin
-        if file.suffix == '.py':
-            module = import_plugin(pluginfolder/file.name)
-        else:
-            module = None
 
         # Remove the file from the target folder
         LOGGER.info(f"Uninstalling: '{file}'")
@@ -353,22 +323,6 @@ def uninstall_plugins(filenames: list[str]=(), wipe: bool=False) -> None:
         if file.suffix == '.yaml':
             LOGGER.success(f"The '{file.name}' template bidsmap was successfully uninstalled")
             continue
-
-        # Remove the Options and data format section from the default template bidsmap
-        if not module:
-            LOGGER.warning(f"Cannot remove any {file.stem} bidsmap options from the {bidsmap_template.stem} template")
-            continue
-        if removed := hasattr(module, 'OPTIONS'):
-            LOGGER.info(f"Removing default {file.stem} bidsmap options from the {bidsmap_template.stem} template")
-            template['Options']['plugins'].pop(file.stem, None)
-        if wipe and hasattr(module, 'BIDSMAP'):
-            removed = True
-            for key, value in module.BIDSMAP.items():
-                LOGGER.info(f"Removing default {key} bidsmappings from the {bidsmap_template.stem} template")
-                template.pop(key, None)
-        if removed:
-            with open(bidsmap_template, 'w') as stream:
-                yaml.dump(template, stream)
 
         LOGGER.success(f"The '{file.stem}' plugin was successfully uninstalled")
 

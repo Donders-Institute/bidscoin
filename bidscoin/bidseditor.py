@@ -933,11 +933,11 @@ class MainWindow(QMainWindow):
         if yamlfile:
             LOGGER.info(f"Saving bidsmap options in: {yamlfile}")
             with open(yamlfile, 'r') as stream:
-                bidsmap = bids.yaml.load(stream)
+                bidsmap = bids.yaml.safe_load(stream)
             bidsmap.options = self.output_bidsmap.options
             bidsmap.plugins = self.output_bidsmap.plugins
             with open(yamlfile, 'w') as stream:
-                bids.yaml.dump(bidsmap, stream)
+                bids.yaml.safe_dump(bidsmap, stream, sort_keys=False)
 
     def sample_doubleclicked(self, item):
         """When source file is double-clicked in the samples_table, show the inspect- or edit-window"""
@@ -1346,7 +1346,7 @@ class EditWindow(QDialog):
                         if Path(metafile).suffix == '.json':
                             metadata = json.load(meta_fid)
                         elif Path(metafile).suffix in ('.yaml', '.yml'):
-                            metadata = bids.yaml.load(meta_fid)
+                            metadata = bids.yaml.safe_load(meta_fid)
                         else:
                             dialect = csv.Sniffer().sniff(meta_fid.read())
                             meta_fid.seek(0)
