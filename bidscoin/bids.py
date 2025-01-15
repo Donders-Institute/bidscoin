@@ -1085,7 +1085,7 @@ class BidsMap:
         filename.parent.mkdir(parents=True, exist_ok=True)
         LOGGER.info(f"Saving bidsmap in: {filename}")
         with filename.open('w') as stream:
-            yaml.dump(self._data, stream, NoAliasDumper, sort_keys=False)
+            yaml.dump(self._data, stream, NoAliasDumper, sort_keys=False, allow_unicode=True)
 
     def validate(self, level: int=1) -> bool:
         """

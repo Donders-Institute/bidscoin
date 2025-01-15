@@ -937,7 +937,7 @@ class MainWindow(QMainWindow):
             bidsmap.options = self.output_bidsmap.options
             bidsmap.plugins = self.output_bidsmap.plugins
             with open(yamlfile, 'w') as stream:
-                bids.yaml.safe_dump(bidsmap, stream, sort_keys=False)
+                bids.yaml.safe_dump(bidsmap, stream, sort_keys=False, allow_unicode=True)
 
     def sample_doubleclicked(self, item):
         """When source file is double-clicked in the samples_table, show the inspect- or edit-window"""

@@ -13,9 +13,9 @@
 ### Changed
 - The plugin programming interface is now implemented with an abstract base class 
 - Drop saving data in the derivatives folder (i.e. this was not required by BIDS after all)
-- Comments in the study bidsmap are removed due to recurrent issues with invalid (ruamel) yaml-files
+- Comments in the study bidsmap are now removed due to recurrent issues with invalid (ruamel) yaml-files
 - `anon` is now a bidscoin option instead of a plugin option
- 
+
 ## [4.4.0] - 2024-10-02
 
 ### Added
