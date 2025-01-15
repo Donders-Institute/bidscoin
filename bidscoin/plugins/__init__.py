@@ -62,7 +62,7 @@ class PluginInterface(ABC):
         """
 
         personals = {}
-        for key, value in bidsmap.dataformat(datasource.dataformat).participant:
+        for key, value in bidsmap.dataformat(datasource.dataformat).participant.items():
             if key in ('participant_id', 'session_id'):
                 continue
             else:
