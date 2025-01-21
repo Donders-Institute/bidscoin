@@ -826,22 +826,22 @@ class DataFormat:
     def subject(self) -> str:
         """The regular expression for extracting the subject identifier"""
 
-        return self._data['participant']['participant_id']
+        return self._data['participant']['participant_id']['value']
 
     @subject.setter
     def subject(self, value: str):
 
-        self._data['participant']['participant_id'] = value
+        self._data['participant']['participant_id']['value'] = value
 
     @property
     def session(self) -> str:
         """The regular expression for extracting the session identifier"""
 
-        return self._data['participant']['session_id']
+        return self._data['participant']['session_id']['value']
 
     @session.setter
     def session(self, value: str):
-        self._data['participant']['session_id'] = value
+        self._data['participant']['session_id']['value'] = value
 
     @property
     def datatypes(self) -> list[DataType]:
@@ -2076,7 +2076,7 @@ def poolmetadata(datasource: DataSource, targetmeta: Path, usermeta: Meta, metae
     return Meta(metapool)
 
 
-def addparticipant(participants_tsv: Path, subid: str='', sesid: str='', data: dict=None, dryrun: bool=False) -> tuple[pd.DataFrame, dict]:
+def addparticipant(participants_tsv: Path, subid: str='', sesid: str='', data: dict=None, dryrun: bool=False) -> pd.DataFrame:
     """
     Read/create and/or add (if it's not there yet) a participant to the participants.tsv/.json file
 
@@ -2100,14 +2100,6 @@ def addparticipant(participants_tsv: Path, subid: str='', sesid: str='', data: d
         table = pd.DataFrame()
         table.index.name = 'participant_id'
 
-    # Read the participants json sidecar
-    participants_json = participants_tsv.with_suffix('.json')
-    if participants_json.is_file():
-        with participants_json.open('r') as json_fid:
-            meta = json.load(json_fid)
-    else:
-        meta = {}
-
     # Add the participant row
     data_added = False
     if subid:
@@ -2126,30 +2118,40 @@ def addparticipant(participants_tsv: Path, subid: str='', sesid: str='', data: d
             if not dryrun:
                 table.mask(table == '').to_csv(participants_tsv, sep='\t', encoding='utf-8', na_rep='n/a')
 
-            # Create/write to the json participants table sidecar file
-            key_added = False
-            if not meta.get('participant_id'):
-                meta['participant_id'] = {'Description': 'Unique participant identifier'}
-                key_added              = True
-            if not meta.get('session_id') and 'session_id' in table.columns:
-                meta['session_id'] = {'Description': 'Session identifier'}
-                key_added          = True
-            for col in table.columns:
-                if col not in meta:
-                    key_added = True
-                    meta[col] = dict(LongName    = 'Long (unabbreviated) name of the column',
-                                     Description = 'Description of the the column',
-                                     Levels      = dict(Key='Value (This is for categorical variables: a dictionary of possible values (keys) and their descriptions (values))'),
-                                     Units       = 'Measurement units. [<prefix symbol>]<unit symbol> format following the SI standard is RECOMMENDED')
+    return table
 
-            # Write the data to the participant sidecar file
-            if key_added:
-                LOGGER.verbose(f"Writing subject meta data to: {participants_json}")
-                if not dryrun:
-                    with participants_json.open('w') as json_fid:
-                        json.dump(meta, json_fid, indent=4)
 
-    return table, meta
+def participantmeta(participants_json: Path, bidsmap: BidsMap=None) -> dict:
+    """
+    Read and/or write a participant sidecar file
+
+    :param participants_json:   The participants.json sidecar file
+    :param bidsmap:             The bidsmap with participants meta data. Leave empty to just read the sidecar meta data (write nothing)
+    :return:                    The sidecar meta data
+    """
+
+    # Read the participants json sidecar
+    if participants_json.is_file():
+        with participants_json.open('r') as json_fid:
+            metadata = json.load(json_fid)
+    else:
+        metadata = {}
+
+    # Populate the metadata using the bidsmap
+    if bidsmap:
+
+        # If we miss metadata then use any participant "meta" field in the bidsmap
+        participants_df = addparticipant(participants_json.with_suffix('.tsv'))
+        for column in participants_df.columns:
+            for dataformat in bidsmap.dataformats:
+                if not metadata.get(column) and column in dataformat.participant:
+                    metadata[column] = dataformat.participant[column].get('meta', {})
+
+        # Save the data
+        with participants_json.open('w') as json_fid:
+            metadata = json.dump(metadata, json_fid, indent=4)
+
+    return metadata
 
 
 def bidsprov(bidsfolder: Path, source: Path=Path(), runitem: RunItem=None, targets: Iterable[Path]=()) -> pd.DataFrame:

@@ -92,8 +92,8 @@ def bidsparticipants(sourcefolder: str, bidsfolder: str, keys: list, bidsmap: st
     sesprefix = bidsmap.options['sesprefix']
 
     # Get the table & dictionary of the subjects that have been processed
-    participants_tsv                      = bidsfolder/'participants.tsv'
-    participants_table, participants_dict = bids.addparticipant(participants_tsv)
+    participants_tsv   = bidsfolder/'participants.tsv'
+    participants_table = bids.addparticipant(participants_tsv)
 
     # Get the list of subjects
     subjects = lsdirs(bidsfolder, 'sub-*')
@@ -141,7 +141,7 @@ def bidsparticipants(sourcefolder: str, bidsfolder: str, keys: list, bidsmap: st
 
             # Store the collected personals in the participant_table. TODO: Check that only values that are consistent over sessions go in the participants.tsv file, otherwise put them in a sessions.tsv file
             if sessions:
-                participants_table,_ = bids.addparticipant(participants_tsv, subid, sesid, personals, dryrun)
+                participants_table = bids.addparticipant(participants_tsv, subid, sesid, personals, dryrun)
 
     LOGGER.info('-------------- FINISHED! ------------')
     LOGGER.info('')

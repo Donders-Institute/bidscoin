@@ -24,7 +24,7 @@ from bidscoin import bcoin, bids, lsdirs, bidsversion, trackusage, __version__, 
 from bidscoin.utilities import unpack
 
 
-def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: bool=False, bidsmap: str='bidsmap.yaml', cluster: str='') -> None:
+def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: bool=False, bidsmapname: str='bidsmap.yaml', cluster: str='') -> None:
     """
     Main function that processes all the subjects and session in the sourcefolder and uses the
     bidsmap.yaml file in bidsfolder/code/bidscoin to cast the data into the BIDS folder.
@@ -33,7 +33,7 @@ def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: 
     :param bidsfolder:   The name of the BIDS root folder
     :param participant:  List of selected subjects/participants (i.e. sub-# names/folders) to be processed (the sub-prefix can be omitted). Otherwise, all subjects in the sourcefolder will be processed
     :param force:        If True, participant will be processed, regardless of existing folders in the bidsfolder. Otherwise, existing folders will be skipped
-    :param bidsmap:      The name of the bidsmap YAML-file. If the bidsmap pathname is just the basename (i.e. no "/" in the name) then it is assumed to be located in the current directory or in bidsfolder/code/bidscoin
+    :param bidsmapname:  The name of the bidsmap YAML-file. If the bidsmap pathname is just the basename (i.e. no "/" in the name) then it is assumed to be located in the current directory or in bidsfolder/code/bidscoin
     :param cluster:      Use the DRMAA library to submit the bidscoiner jobs to a high-performance compute (HPC) cluster with DRMAA native specifications for submitting bidscoiner jobs to the HPC cluster. See cli/_bidscoiner() for default
     :return:             Nothing
     """
@@ -41,7 +41,7 @@ def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: 
     # Input checking & defaults
     rawfolder      = Path(sourcefolder).resolve()
     bidsfolder     = Path(bidsfolder).resolve()
-    bidsmapfile    = Path(bidsmap)
+    bidsmapfile    = Path(bidsmapname)
     bidscoinfolder = bidsfolder/'code'/'bidscoin'
     bidscoinfolder.mkdir(parents=True, exist_ok=True)
     if not rawfolder.is_dir():
@@ -51,7 +51,7 @@ def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: 
     bcoin.setup_logging(bidscoinfolder/'bidscoiner.log')
     LOGGER.info('')
     LOGGER.info(f"-------------- START BIDScoiner {__version__}: BIDS {bidsversion()} ------------")
-    LOGGER.info(f">>> bidscoiner sourcefolder={rawfolder} bidsfolder={bidsfolder} participant={participant} force={force} bidsmap={bidsmapfile}")
+    LOGGER.info(f">>> bidscoiner sourcefolder={rawfolder} bidsfolder={bidsfolder} participant={participant} force={force} bidsmapname={bidsmapfile}")
 
     # Create a dataset description file if it does not exist
     dataset_file = bidsfolder/'dataset_description.json'
@@ -175,9 +175,10 @@ def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: 
             bcoin.synchronize(pbatch, jobids)
 
         # Merge the bids subfolders
-        errors                                = ''
-        provdata                              = bids.bidsprov(bidsfolder)
-        participants_table, participants_dict = bids.addparticipant(bidsfolder/'participants.tsv')
+        errors             = ''
+        provdata           = bids.bidsprov(bidsfolder)
+        participants_table = bids.addparticipant(bidsfolder/'participants.tsv')
+        participants_meta  = bids.participantmeta(bidsfolder/'participants.json')
         for bidsfolder_tmp in sorted((bidsfolder/'HPC_work').glob('bids_*')):
 
             subid = bidsfolder_tmp.name[5:]         # Uses name = f"bids_{subid}" (as defined above)
@@ -217,15 +218,16 @@ def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: 
             # Update the participants table + dictionary
             if subid not in participants_table.index:
                 LOGGER.verbose(f"Merging: participants.tsv -> {bidsfolder/'participants.tsv'}")
-                participant_table, participant_dict = bids.addparticipant(bidsfolder_tmp/'participants.tsv')
-                participants_table                  = pd.concat([participants_table, participant_table])
-                participants_dict.update(participant_dict)
+                participant_table  = bids.addparticipant(bidsfolder_tmp/'participants.tsv')
+                participants_table = pd.concat([participants_table, participant_table])
+                participant_meta   = bids.participantmeta(bidsfolder_tmp/'participants.json')
+                participants_meta.update(participant_meta)
 
         # Save the provenance and participants data to disk
         provdata.sort_index().to_csv(bidscoinfolder/'bidscoiner.tsv', sep='\t')
         participants_table.replace('', 'n/a').to_csv(bidsfolder/'participants.tsv', sep='\t', encoding='utf-8', na_rep='n/a')
         with (bidsfolder/'participants.json').open('w') as fid:
-            json.dump(participants_dict, fid, indent=4)
+            json.dump(participants_meta, fid, indent=4)
 
         if not DEBUG:
             shutil.rmtree(bidsfolder/'HPC_work', ignore_errors=True)
@@ -291,6 +293,9 @@ def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: 
                     # Clean-up the temporary unpacked data
                     if unpacked:
                         shutil.rmtree(sesfolder)
+
+    # Add the participants sidecar file
+    bids.participantmeta(bidsfolder/'participants.json', bidsmap)
 
     LOGGER.info('-------------- FINISHED! ------------')
     LOGGER.info('')

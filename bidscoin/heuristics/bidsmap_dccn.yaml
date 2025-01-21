@@ -48,13 +48,38 @@ DICOM:
 # --------------------------------------------------------------------------------
 # DICOM key-value heuristics (DICOM fields that are mapped to the BIDS labels)
 # --------------------------------------------------------------------------------
-  participant:                                    # Attributes or properties to populate the participants table/tsv-file
-    participant_id: <<filepath:/sub-(.*?)/>>      # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
-    session_id: <<filepath:/sub-.*?/ses-(.*?)/>>  # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
-    age: <<PatientAge>>
-    sex: <<PatientSex>>
-    height: <<PatientSize>>
-    weight: <<PatientWeight>>
+  participant:                      # Attributes or properties to populate the participants table/tsv-file
+    participant_id: &participant_id
+      value: <<filepath:/sub-(.*?)/>>           # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
+      meta:
+        Description: The unique participant identifier of the form sub-<label>, matching a participant entity found in the dataset
+    session_id: &session_id
+      value: <<filepath:/sub-.*?/ses-(.*?)/>>   # This filesystem property extracts the session label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
+      meta:
+        Description: The session identifier of the form ses-<label>, matching a session found in the dataset
+    age: &age
+      value: <<PatientAge>>
+      meta:
+        Description: Age of the participant
+        Units: year
+    sex: &sex
+      value: <<PatientSex>>
+      meta:
+        Description: Sex of the participant
+        Levels:
+          M: male
+          F: female
+          O: other
+    height: &height
+      value: <<PatientSize>>
+      meta:
+        Description: Height of the participant
+        Units: meter
+    weight: &weight
+      value: <<PatientWeight>>
+      meta:
+        Description: Weight of the participant
+        Units: kilogram
 
   anat:       # ----------------------- All anatomical run-items --------------------
   - properties:                   # This is an optional (stub) entry of properties matching (could be added to any run-item)
@@ -1015,9 +1040,9 @@ Presentation:
 # --------------------------------------------------------------------------------
 # DICOM key-value heuristics (Neurobs Presentation logfiles hat are mapped to BIDS-compliant tsv files)
 # --------------------------------------------------------------------------------
-  participant:                                    # Attributes or properties to populate the participants table/tsv-file
-    participant_id: <<filepath:/sub-(.*?)/>>      # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
-    session_id: <<filepath:/sub-.*?/ses-(.*?)/>>  # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
+  participant:                          # Attributes or properties to populate the participants table/tsv-file
+    participant_id: *participant_id
+    session_id: *session_id
 
   beh:        # ----------------------- All behavioural run-items -------------------
   - attributes: &presentationent_attr
@@ -1111,9 +1136,9 @@ PAR:
 # --------------------------------------------------------------------------------
 # PAR key-value heuristics (Philips PAR fields that are mapped to the BIDS labels)
 # --------------------------------------------------------------------------------
-  participant:                                    # Attributes or properties to populate the participants table/tsv-file
-    participant_id: <<filepath:/sub-(.*?)/>>      # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
-    session_id: <<filepath:/sub-.*?/ses-(.*?)/>>  # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
+  participant:                          # Attributes or properties to populate the participants table/tsv-file
+    participant_id: *participant_id
+    session_id: *session_id
 
   anat:       # ----------------------- All anatomical run-items --------------------
   - attributes: &anat_parattr           # The fullpath name of the PAR file from which the attributes are read. Serves also as a look-up key to find a run-item in the bidsmap
@@ -1782,9 +1807,9 @@ SPAR:
 # ---------------------------------------------------------------------------------
 # SPAR key-value heuristics (Philips MRS fields that are mapped to the BIDS labels)
 # ---------------------------------------------------------------------------------
-  participant:                                    # Attributes or properties to populate the participants table/tsv-file
-    participant_id: <<filepath:/sub-(.*?)/>>      # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
-    session_id: <<filepath:/sub-.*?/ses-(.*?)/>>  # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
+  participant:                          # Attributes or properties to populate the participants table/tsv-file
+    participant_id: *participant_id
+    session_id: *session_id
 
   mrs:        # ---------------------- All spectroscopy run-items ------------------
   - attributes: &mrs_sparattr
@@ -1833,13 +1858,13 @@ Twix:
 # ---------------------------------------------------------------------------------
 # Twix key-value heuristics (Siemens MRS fields that are mapped to the BIDS labels)
 # ---------------------------------------------------------------------------------
-  participant:                                    # Attributes or properties to populate the participants table/tsv-file
-    participant_id: <<filepath:/sub-(.*?)/>>      # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
-    session_id: <<filepath:/sub-.*?/ses-(.*?)/>>  # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
-    age: <<PatientAge>>                           # A string of characters with one of the following formats: nnnD, nnnW, nnnM, nnnY
-    sex: <<PatientSex>>
-    height: <<PatientSize>>
-    weight: <<PatientWeight>>
+  participant:                          # Attributes or properties to populate the participants table/tsv-file
+    participant_id: *participant_id
+    session_id: *session_id
+    age: *age
+    sex: *sex
+    height: *height
+    weight: *weight
 
   mrs:        # ---------------------- All spectroscopy run-items ------------------
   - attributes: &mrs_twixattr
@@ -1894,11 +1919,15 @@ Pfile:
 # ------------------------------------------------------------------------------
 # P-file key-value heuristics (GE MRS fields that are mapped to the BIDS labels)
 # ------------------------------------------------------------------------------
-  participant:                                    # Attributes or properties to populate the participants table/tsv-file
-    participant_id: <<filepath:/sub-(.*?)/>>      # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
-    session_id: <<filepath:/sub-.*?/ses-(.*?)/>>  # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
-    age: <<rhr_rh_scan_date>>-<<rhe_dateofbirth>>
-    sex: <<rhe_patsex>>
+  participant:                          # Attributes or properties to populate the participants table/tsv-file
+    participant_id: *participant_id
+    session_id: *session_id
+    age:
+      <<: *age
+      value: <<rhr_rh_scan_date>>-<<rhe_dateofbirth>>
+    sex:
+      <<: *sex
+      value: <<rhe_patsex>>
 
   mrs:        # ---------------------- All spectroscopy run-items ------------------
   - attributes: &mrs_p7attr             # The matching (regex) criteria for spec2nii2bids go in here
@@ -1963,9 +1992,9 @@ Nibabel:
 # --------------------------------------------------------------------------------
 # Nibabel key-value heuristics (header fields that are mapped to the BIDS labels)
 # --------------------------------------------------------------------------------
-  participant:                                    # Attributes or properties to populate the participants table/tsv-file
-    participant_id: <<filepath:/sub-(.*?)/>>      # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
-    session_id: <<filepath:/sub-.*?/ses-(.*?)/>>  # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
+  participant:                          # Attributes or properties to populate the participants table/tsv-file
+    participant_id: *participant_id
+    session_id: *session_id
 
   anat:       # ----------------------- All anatomical run-items --------------------
   - attributes: &nibattr                # An empty / non-matching reference dictionary that can be dereferenced in other run-items of this data type

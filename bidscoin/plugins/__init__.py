@@ -54,7 +54,8 @@ class PluginInterface(ABC):
 
     def personals(self, bidsmap: 'BidsMap', datasource: 'DataSource') -> dict:
         """
-        Collects personal data from a datasource to populate the participants.tsv file. See code for ad hoc age/sex encoding corrections
+        Collects personal data from a datasource to populate the participants.tsv file. See code for ad hoc age/sex
+        encoding corrections
 
         :param bidsmap:     The full mapping heuristics from the bidsmap YAML-file
         :param datasource:  The data source from which (personal) dynamic values are read
@@ -62,11 +63,11 @@ class PluginInterface(ABC):
         """
 
         personals = {}
-        for key, value in bidsmap.dataformat(datasource.dataformat).participant.items():
+        for key, item in bidsmap.dataformat(datasource.dataformat).participant.items():
             if key in ('participant_id', 'session_id'):
                 continue
             else:
-                personals[key] = datasource.dynamicvalue(value, cleanup=False, runtime=True)
+                personals[key] = datasource.dynamicvalue(item.get('value'), cleanup=False, runtime=True)
 
             # Perform ad hoc age encoding corrections (-> DICOM/Twix PatientAge: nnnD, nnnW, nnnM or nnnY)
             if key == 'age' and personals['age'] and isinstance(personals['age'], str):

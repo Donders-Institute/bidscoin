@@ -53,18 +53,55 @@
 
       "properties": {
          "participant": {
-            "description": "The content of the participants table",
+            "description": "The data for the participants table",
             "type": "object",
             "required": ["participant_id", "session_id"],
             "properties": {
                "participant_id": {
-                  "type": "string",
-                  "description": "The participant label (typically a dynamic value)"
+                  "description": "The data for the participant label",
+                  "type": "object",
+                  "properties": {
+                     "value": {
+                        "description": "The participant label (typically a dynamic value)",
+                        "type": "string"
+                     },
+                     "meta": {
+                        "description": "The participant meta data for the sidecar file",
+                        "type": "object"
+                     }
+                  },
+                  "additionalProperties": false
                },
                "session_id": {
-                  "type": ["string", "integer", "null"],
-                  "description": "The session label (typically a dynamic value)"
+                  "description": "The data for the session label",
+                  "type": "object",
+                  "properties": {
+                     "value": {
+                        "description": "The session label (typically a dynamic value)",
+                        "type": "string"
+                     },
+                     "meta": {
+                        "description": "The session meta data for the sidecar file",
+                        "type": "object"
+                     }
+                  },
+                  "additionalProperties": false
                }
+            },
+            "additionalProperties": {
+               "description": "Additional data for the participants table",
+               "type": "object",
+               "properties": {
+                  "value": {
+                     "description": "The value of the property in the participants file",
+                     "type": "string"
+                  },
+                  "meta": {
+                     "description": "The meta data of the property in the participants sidecar file",
+                     "type": "object"
+                  }
+               },
+               "additionalProperties": false
             }
          }
       },
