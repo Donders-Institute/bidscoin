@@ -2121,13 +2121,13 @@ def addparticipant(participants_tsv: Path, subid: str='', sesid: str='', data: d
     return table
 
 
-def participantmeta(participants_json: Path, bidsmap: BidsMap=None) -> dict:
+def addparticipant_meta(participants_json: Path, bidsmap: BidsMap=None) -> dict:
     """
-    Read and/or write a participant sidecar file
+    Read and/or write a participant sidecar file using the participant "meta" fields in the bidsmap
 
     :param participants_json:   The participants.json sidecar file
-    :param bidsmap:             The bidsmap with participants meta data. Leave empty to just read the sidecar meta data (write nothing)
-    :return:                    The sidecar meta data
+    :param bidsmap:             The bidsmap with the participants' metadata. Leave empty to just read the sidecar metadata (write nothing)
+    :return:                    The sidecar metadata
     """
 
     # Read the participants json sidecar

@@ -1,10 +1,7 @@
 # --------------------------------------------------------------------------------
 # This is a template bidsmap with the key-value mappings for the different BIDS
 # datatypes (anat, func, dwi, etc). The datatype attributes are the keys that map
-# onto the BIDS labels. The bidsmap data-structure should be 5 levels deep:
-#
-# dict       : dict     : list     : dict        : dict
-# dataformat : datatype : run-item : bidsmapping : mapping-data
+# onto the BIDS labels.
 #
 # NB:
 # 1) This bidsmap is intended to be used by the bidsmapper for data discovery.
@@ -47,10 +44,10 @@ DICOM:
 # --------------------------------------------------------------------------------
 # DICOM key-value heuristics (DICOM fields that are mapped to the BIDS labels)
 # --------------------------------------------------------------------------------
-  participant:                      # Attributes or properties to populate the participants table/tsv-file
+  participant:                      # Attributes or properties to populate the participants tsv/json files
     participant_id: &participant_id
-      value: <<filepath:/sub-(.*?)/>>           # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
-      meta:
+      value: <<filepath:/sub-(.*?)/>>                 # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
+      meta:                                           # All data in "meta" is stored in the participants json sidecar-file
         Description: The unique participant identifier of the form sub-<label>, matching a participant entity found in the dataset
     session_id: &session_id
       value: <<filepath:/sub-.*?/ses-\.\.\.(.*?)/>>   # This filesystem property extracts the session label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
@@ -1042,7 +1039,7 @@ Presentation:
 # --------------------------------------------------------------------------------
 # DICOM key-value heuristics (Neurobs Presentation logfiles hat are mapped to BIDS-compliant tsv files)
 # --------------------------------------------------------------------------------
-  participant:                          # Attributes or properties to populate the participants table/tsv-file
+  participant:                          # Attributes or properties to populate the participants tsv/json files
     participant_id: *participant_id
     session_id: *session_id
 
@@ -1138,7 +1135,7 @@ PAR:
 # --------------------------------------------------------------------------------
 # PAR key-value heuristics (Philips PAR fields that are mapped to the BIDS labels)
 # --------------------------------------------------------------------------------
-  participant:                          # Attributes or properties to populate the participants table/tsv-file
+  participant:                          # Attributes or properties to populate the participants tsv/json files
     participant_id: *participant_id
     session_id: *session_id
 
@@ -1809,7 +1806,7 @@ SPAR:
 # ---------------------------------------------------------------------------------
 # SPAR key-value heuristics (Philips MRS fields that are mapped to the BIDS labels)
 # ---------------------------------------------------------------------------------
-  participant:                          # Attributes or properties to populate the participants table/tsv-file
+  participant:                          # Attributes or properties to populate the participants tsv/json files
     participant_id: *participant_id
     session_id: *session_id
 
@@ -1860,7 +1857,7 @@ Twix:
 # ---------------------------------------------------------------------------------
 # Twix key-value heuristics (Siemens MRS fields that are mapped to the BIDS labels)
 # ---------------------------------------------------------------------------------
-  participant:                          # Attributes or properties to populate the participants table/tsv-file
+  participant:                          # Attributes or properties to populate the participants tsv/json files
     participant_id: *participant_id
     session_id: *session_id
     age: *age
@@ -1921,7 +1918,7 @@ Pfile:
 # ------------------------------------------------------------------------------
 # P-file key-value heuristics (GE MRS fields that are mapped to the BIDS labels)
 # ------------------------------------------------------------------------------
-  participant:                          # Attributes or properties to populate the participants table/tsv-file
+  participant:                          # Attributes or properties to populate the participants tsv/json files
     participant_id: *participant_id
     session_id: *session_id
     age:
@@ -1994,7 +1991,7 @@ Nibabel:
 # --------------------------------------------------------------------------------
 # Nibabel key-value heuristics (header fields that are mapped to the BIDS labels)
 # --------------------------------------------------------------------------------
-  participant:                          # Attributes or properties to populate the participants table/tsv-file
+  participant:                          # Attributes or properties to populate the participants tsv/json files
     participant_id: *participant_id
     session_id: *session_id
 

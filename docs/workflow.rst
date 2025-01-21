@@ -32,7 +32,7 @@ Step 1a: Running the bidsmapper
     output data types is made and the run-item is added to the study bidsmap. You can check and
     edit these generated bids-mappings to your needs with the (automatically launched) bidseditor.
     Re-run the bidsmapper whenever something was changed in your data acquisition protocol and
-    edit the new data type to your needs (your existing bidsmap will be re-used).
+    edit the new data type to your needs (your existing bidsmap will be reused).
 
     The bidsmapper uses plugins, as stored in the bidsmap['Options'], to do the actual work
 

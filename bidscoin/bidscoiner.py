@@ -178,7 +178,7 @@ def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: 
         errors             = ''
         provdata           = bids.bidsprov(bidsfolder)
         participants_table = bids.addparticipant(bidsfolder/'participants.tsv')
-        participants_meta  = bids.participantmeta(bidsfolder/'participants.json')
+        participants_meta  = bids.addparticipant_meta(bidsfolder/'participants.json')
         for bidsfolder_tmp in sorted((bidsfolder/'HPC_work').glob('bids_*')):
 
             subid = bidsfolder_tmp.name[5:]         # Uses name = f"bids_{subid}" (as defined above)
@@ -220,7 +220,7 @@ def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: 
                 LOGGER.verbose(f"Merging: participants.tsv -> {bidsfolder/'participants.tsv'}")
                 participant_table  = bids.addparticipant(bidsfolder_tmp/'participants.tsv')
                 participants_table = pd.concat([participants_table, participant_table])
-                participant_meta   = bids.participantmeta(bidsfolder_tmp/'participants.json')
+                participant_meta   = bids.addparticipant_meta(bidsfolder_tmp/'participants.json')
                 participants_meta.update(participant_meta)
 
         # Save the provenance and participants data to disk
@@ -295,7 +295,7 @@ def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: 
                         shutil.rmtree(sesfolder)
 
     # Add the participants sidecar file
-    bids.participantmeta(bidsfolder/'participants.json', bidsmap)
+    bids.addparticipant_meta(bidsfolder/'participants.json', bidsmap)
 
     LOGGER.info('-------------- FINISHED! ------------')
     LOGGER.info('')

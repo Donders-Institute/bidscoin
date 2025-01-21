@@ -41,7 +41,7 @@ Options:                            # =============================== General op
 
 
 DICOM:                              # DICOM key-value heuristics (DICOM fields that are mapped to the BIDS labels)
-  participant:                      # Attributes or properties to populate the participants table/tsv-file
+  participant:                      # Attributes or properties to populate the participants tsv/json files
     participant_id: &participant_id
       value: <<filepath:/sub-(.*?)/>>           # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
       meta:
@@ -435,7 +435,7 @@ DICOM:                              # DICOM key-value heuristics (DICOM fields t
       suffix: GR
     meta: {}
 PAR:                                                    # PAR key-value heuristics (Philips PAR fields that are mapped to the BIDS labels)
-  participant:                          # Attributes or properties to populate the participants table/tsv-file
+  participant:                          # Attributes or properties to populate the participants tsv/json files
     participant_id: *participant_id
     session_id: *session_id
 
@@ -447,7 +447,7 @@ PAR:                                                    # PAR key-value heuristi
   extra_data: []     # ----------------------- All extra data -------------------------
   exclude: []     # ----------------------- Data that will be left out -------------
 SPAR:  # SPAR key-value heuristics (Philips MRS fields that are mapped to the BIDS labels)
-  participant:                          # Attributes or properties to populate the participants table/tsv-file
+  participant:                          # Attributes or properties to populate the participants tsv/json files
     participant_id: *participant_id
     session_id: *session_id
 
@@ -455,7 +455,7 @@ SPAR:  # SPAR key-value heuristics (Philips MRS fields that are mapped to the BI
   extra_data: []     # ----------------------- All extra data -------------------------
   exclude: []     # ----------------------- Data that will be left out -------------
 Twix:   # SPAR key-value heuristics (Philips MRS fields that are mapped to the BIDS labels)
-  participant:                          # Attributes or properties to populate the participants table/tsv-file
+  participant:                          # Attributes or properties to populate the participants tsv/json files
     participant_id: *participant_id
     session_id: *session_id
     age: *age
@@ -467,7 +467,7 @@ Twix:   # SPAR key-value heuristics (Philips MRS fields that are mapped to the B
   extra_data: []     # ----------------------- All extra data -------------------------
   exclude: []     # ----------------------- Data that will be left out -------------
 Pfile: # P-file key-value heuristics (GE MRS fields that are mapped to the BIDS labels)
-  participant:                          # Attributes or properties to populate the participants table/tsv-file
+  participant:                          # Attributes or properties to populate the participants tsv/json files
     participant_id: *participant_id
     session_id: *session_id
 
@@ -475,7 +475,7 @@ Pfile: # P-file key-value heuristics (GE MRS fields that are mapped to the BIDS 
   extra_data: []     # ----------------------- All extra data -------------------------
   exclude: []     # ----------------------- Data that will be left out -------------
 Nibabel: # Nibabel key-value heuristics (header fields that are mapped to the BIDS labels)
-  participant:                          # Attributes or properties to populate the participants table/tsv-file
+  participant:                          # Attributes or properties to populate the participants tsv/json files
     participant_id: *participant_id
     session_id: *session_id
 

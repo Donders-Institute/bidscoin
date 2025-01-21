@@ -143,6 +143,9 @@ def bidsparticipants(sourcefolder: str, bidsfolder: str, keys: list, bidsmap: st
             if sessions:
                 participants_table = bids.addparticipant(participants_tsv, subid, sesid, personals, dryrun)
 
+    # Add the participants sidecar file
+    bids.addparticipant_meta(bidsfolder/'participants.json', bidsmap)
+
     LOGGER.info('-------------- FINISHED! ------------')
     LOGGER.info('')
 

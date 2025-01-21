@@ -426,8 +426,8 @@ class MainWindow(QMainWindow):
     def set_tab_bidsmap(self, dataformat: str):
         """Set the SOURCE file sample listing tab"""
 
-        # Set the Participant labels table
-        subses_label = QLabel('Participant label')
+        # Set the Participant table
+        subses_label = QLabel('Participant data')
         subses_label.setToolTip('Subject/session mappings')
 
         subses_table = MyQTable(ncols=2, nrows=2)
@@ -600,7 +600,7 @@ class MainWindow(QMainWindow):
                 samples_table.setItem(idx, 0, MyQTableItem(f"{row_index + 1:03d}", editable=False))
                 samples_table.setItem(idx, 1, MyQTableItem(provenance.name))
                 samples_table.setItem(idx, 2, MyQTableItem(dtype))                          # Hidden column
-                samples_table.setItem(idx, 3, MyQTableItem(Path(dtype) / (bidsname + '.*')))
+                samples_table.setItem(idx, 3, MyQTableItem(Path(dtype)/(bidsname + '.*')))
                 samples_table.setItem(idx, 5, MyQTableItem(provenance))                     # Hidden column
 
                 samples_table.item(idx, 0).setFlags(QtCore.Qt.ItemFlag.NoItemFlags)
