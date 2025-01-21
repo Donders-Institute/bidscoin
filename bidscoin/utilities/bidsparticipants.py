@@ -15,45 +15,6 @@ from bidscoin.bids import BidsMap
 from bidscoin.utilities import unpack
 
 
-def scanpersonals(bidsmap: BidsMap, session: Path, personals: dict, keys: list) -> bool:
-    """
-    Converts the session source-files into BIDS-valid NIfTI-files in the corresponding bidsfolder and
-    extracts personals (e.g. Age, Sex) from the source header
-
-    :param bidsmap:     The study bidsmap with the mapping heuristics
-    :param session:     The full-path name of the subject/session source file/folder
-    :param personals:   The dictionary with the personal information
-    :param keys:        The keys that are extracted from the source data when populating the participants.tsv file
-    :return:            True if successful
-    """
-
-    # Get valid BIDS subject/session identifiers from the (first) DICOM- or PAR/XML source file
-    datasource = bids.get_datasource(session, bidsmap.plugins)
-    dataformat = datasource.dataformat
-    if not datasource.dataformat:
-        LOGGER.info(f"No supported datasource found in '{session}'")
-        return False
-
-    # Collect personal data from a source header (PAR/XML does not contain personal info)
-    if dataformat not in ('DICOM', 'Twix'): return False
-
-    if 'sex'    in keys: personals['sex']    = datasource.attributes('PatientSex')
-    if 'size'   in keys: personals['size']   = datasource.attributes('PatientSize')
-    if 'weight' in keys: personals['weight'] = datasource.attributes('PatientWeight')
-    if 'age' in keys:
-        age = datasource.attributes('PatientAge')       # A string of characters with one of the following formats: nnnD, nnnW, nnnM, nnnY
-        if   age.endswith('D'): age = float(age.rstrip('D')) / 365.2524
-        elif age.endswith('W'): age = float(age.rstrip('W')) / 52.1775
-        elif age.endswith('M'): age = float(age.rstrip('M')) / 12
-        elif age.endswith('Y'): age = float(age.rstrip('Y'))
-        if age:
-            if bidsmap.options.get('anon','y') in ('y','yes'):
-                age = int(float(age))
-            personals['age'] = str(age)
-
-    return True
-
-
 def bidsparticipants(sourcefolder: str, bidsfolder: str, keys: list, bidsmap: str= 'bidsmap.yaml', dryrun: bool=False) -> None:
     """
     Main function that processes all the subjects and session in the sourcefolder to (re)generate the participants.tsv file in the BIDS folder.
@@ -105,6 +66,9 @@ def bidsparticipants(sourcefolder: str, bidsfolder: str, keys: list, bidsmap: st
         if participant not in [sub.name for sub in subjects]:
             participants_table.drop(participant, inplace=True)
 
+    # Import the plugins
+    plugins = [plugin for name in bidsmap.plugins if (plugin := bcoin.import_plugin(name))]
+
     # Loop over all subjects in the bids-folder and add them to the participants table
     with logging_redirect_tqdm():
         for n, subject in enumerate(tqdm(subjects, unit='subject', colour='green', leave=False), 1):
@@ -127,16 +91,28 @@ def bidsparticipants(sourcefolder: str, bidsfolder: str, keys: list, bidsmap: st
                 sesfolders, unpacked = unpack(session, bidsmap.options.get('unzip',''))
                 for sesfolder in sesfolders:
 
-                    # Update/append the personal source data
-                    LOGGER.info(f"Scanning session: {sesfolder}")
-                    success = scanpersonals(bidsmap, sesfolder, personals, keys)
+                    # Run the plugin.Interface().personals()
+                    for plugin in plugins:
 
-                    # Clean-up the temporary unpacked data
-                    if unpacked:
-                        shutil.rmtree(sesfolder)
+                        name       = Path(plugin.__file__).stem
+                        datasource = bids.get_datasource(sesfolder, {name: bidsmap.plugins[name]})
+                        if not datasource.dataformat:
+                            LOGGER.info(f">>> No {name} datasources found in '{sesfolder}'")
+                            continue
 
+                        # Update/append the personal source data
+                        LOGGER.info(f"Scanning session: {sesfolder}")
+                        personaldata = plugin.Interface().personals(bidsmap, datasource)
+                        if personaldata:
+                            personals.update(personaldata)
+                            success = True
+
+                        # Clean-up the temporary unpacked data
+                        if unpacked:
+                            shutil.rmtree(sesfolder)
+
+                        if success: break
                     if success: break
-
                 if success: break
 
             # Store the collected personals in the participant_table. TODO: Check that only values that are consistent over sessions go in the participants.tsv file, otherwise put them in a sessions.tsv file
