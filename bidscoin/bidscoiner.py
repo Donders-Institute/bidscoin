@@ -24,7 +24,7 @@ from bidscoin import bcoin, bids, lsdirs, bidsversion, trackusage, __version__, 
 from bidscoin.utilities import unpack
 
 
-def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: bool=False, bidsmapname: str='bidsmap.yaml', cluster: str='') -> None:
+def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: bool=False, bidsmap: str= 'bidsmap.yaml', cluster: str= '') -> None:
     """
     Main function that processes all the subjects and session in the sourcefolder and uses the
     bidsmap.yaml file in bidsfolder/code/bidscoin to cast the data into the BIDS folder.
@@ -33,7 +33,7 @@ def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: 
     :param bidsfolder:   The name of the BIDS root folder
     :param participant:  List of selected subjects/participants (i.e. sub-# names/folders) to be processed (the sub-prefix can be omitted). Otherwise, all subjects in the sourcefolder will be processed
     :param force:        If True, participant will be processed, regardless of existing folders in the bidsfolder. Otherwise, existing folders will be skipped
-    :param bidsmapname:  The name of the bidsmap YAML-file. If the bidsmap pathname is just the basename (i.e. no "/" in the name) then it is assumed to be located in the current directory or in bidsfolder/code/bidscoin
+    :param bidsmap:      The name of the bidsmap YAML-file. If the bidsmap pathname is just the basename (i.e. no "/" in the name) then it is assumed to be located in the current directory or in bidsfolder/code/bidscoin
     :param cluster:      Use the DRMAA library to submit the bidscoiner jobs to a high-performance compute (HPC) cluster with DRMAA native specifications for submitting bidscoiner jobs to the HPC cluster. See cli/_bidscoiner() for default
     :return:             Nothing
     """
@@ -41,7 +41,7 @@ def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: 
     # Input checking & defaults
     rawfolder      = Path(sourcefolder).resolve()
     bidsfolder     = Path(bidsfolder).resolve()
-    bidsmapfile    = Path(bidsmapname)
+    bidsmapfile    = Path(bidsmap)
     bidscoinfolder = bidsfolder/'code'/'bidscoin'
     bidscoinfolder.mkdir(parents=True, exist_ok=True)
     if not rawfolder.is_dir():
