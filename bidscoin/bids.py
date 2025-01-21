@@ -2142,7 +2142,7 @@ def participantmeta(participants_json: Path, bidsmap: BidsMap=None) -> dict:
 
         # If we miss metadata then use any participant "meta" field in the bidsmap
         participants_df = addparticipant(participants_json.with_suffix('.tsv'))
-        for column in participants_df.columns:
+        for column in ['participant_id'] + list(participants_df.columns):
             for dataformat in bidsmap.dataformats:
                 if not metadata.get(column) and column in dataformat.participant:
                     metadata[column] = dataformat.participant[column].get('meta', {})

@@ -51,7 +51,7 @@ def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: 
     bcoin.setup_logging(bidscoinfolder/'bidscoiner.log')
     LOGGER.info('')
     LOGGER.info(f"-------------- START BIDScoiner {__version__}: BIDS {bidsversion()} ------------")
-    LOGGER.info(f">>> bidscoiner sourcefolder={rawfolder} bidsfolder={bidsfolder} participant={participant} force={force} bidsmapname={bidsmapfile}")
+    LOGGER.info(f">>> bidscoiner sourcefolder={rawfolder} bidsfolder={bidsfolder} participant={participant} force={force} bidsmap={bidsmapfile}")
 
     # Create a dataset description file if it does not exist
     dataset_file = bidsfolder/'dataset_description.json'
