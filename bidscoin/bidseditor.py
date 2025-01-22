@@ -175,7 +175,7 @@ class MainWindow(QMainWindow):
         tabwidget.setTabPosition(QtWidgets.QTabWidget.TabPosition.North)
         tabwidget.setTabShape(QtWidgets.QTabWidget.TabShape.Rounded)
 
-        self.subses_table       = {}
+        self.participant_table  = {}
         self.samples_table      = {}
         self.options_label      = {}
         self.options_table      = {}
@@ -250,7 +250,7 @@ class MainWindow(QMainWindow):
         """Pops up a context-menu for deleting or editing the right-clicked sample in the samples_table"""
 
         # Get the activated row-data
-        dataformat = self.tabwidget.widget(self.tabwidget.currentIndex()).objectName()
+        dataformat = self.tabwidget.currentWidget().objectName()
         table      = self.samples_table[dataformat]
         colindex   = table.currentColumn()
         rowindexes = [index.row() for index in table.selectedIndexes() if index.column() == colindex]
@@ -303,7 +303,7 @@ class MainWindow(QMainWindow):
                             else:
                                 self.ordered_file_index[dataformat][datasource.path] = max(self.ordered_file_index[dataformat][fname] for fname in self.ordered_file_index[dataformat]) + 1
                     if runitem:
-                        self.update_subses_samples(dataformat)
+                        self.fill_samples_table(dataformat)
 
         elif action == delete:
             deleted = False
@@ -319,7 +319,7 @@ class MainWindow(QMainWindow):
                 self.output_bidsmap.delete_run(provenance, datatype, dataformat)
                 deleted = True
             if deleted:
-                self.update_subses_samples(dataformat)
+                self.fill_samples_table(dataformat)
 
         elif action == compare:
             CompareWindow(runitems, subids, sesids)
@@ -353,7 +353,7 @@ class MainWindow(QMainWindow):
                     self.output_bidsmap.update(datatype, templaterun)
                     LOGGER.verbose(f"User sets run-item {datatype} -> {templaterun}")
 
-                self.update_subses_samples(dataformat)
+                self.fill_samples_table(dataformat)
 
     def set_menu_statusbar(self):
         """Set up the menu and statusbar"""
@@ -427,25 +427,25 @@ class MainWindow(QMainWindow):
         """Set the SOURCE file sample listing tab"""
 
         # Set the Participant table
-        subses_label = QLabel('Participant data')
-        subses_label.setToolTip('Subject/session mappings')
+        participant_label = QLabel('Participant data')
+        participant_label.setToolTip('Data to parse the subject/session labels, and to populate the participants tsv- and json-files')
 
-        subses_table = MyQTable(ncols=2, nrows=2)
-        subses_table.setToolTip(f"Use e.g. '<<filepath:/sub-(.*?)/>>' to parse the subject and (optional) session label from the pathname. NB: the () parentheses indicate the part that is extracted as the subject/session label\n"
-                                f"Use a dynamic {dataformat} attribute (e.g. '<<PatientName>>') to extract the subject and (optional) session label from the {dataformat} header")
-        subses_table.setMouseTracking(True)
-        header = subses_table.horizontalHeader()
+        self.participant_table[dataformat] = participant_table = MyQTable(ncols=3)
+        participant_table.setToolTip(f"Use e.g. '<<filepath:/sub-(.*?)/>>' to parse the subject and (optional) session label from the pathname. NB: the () parentheses indicate the part that is extracted as the subject/session label\n"
+                                     f"Use a dynamic {dataformat} attribute (e.g. '<<PatientName>>') to extract the subject and (optional) session label from the {dataformat} header")
+        participant_table.cellChanged.connect(self.participant_table2bidsmap)
+        header = participant_table.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
         header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
-        subses_table.cellChanged.connect(self.subsescell2bidsmap)
-        self.subses_table[dataformat] = subses_table
+
+        self.fill_participant_table(dataformat)
 
         # Set the bidsmap table
-        label = QLabel('Data samples')
-        label.setToolTip('List of unique source-data samples')
+        label = QLabel('Representative samples')
+        label.setToolTip('List of unique source-data samples (datatypes)')
 
         self.samples_table[dataformat] = samples_table = MyQTable(minsize=False, ncols=6)
-        samples_table.setMouseTracking(True)
+        samples_table.setMouseTracking(True)                                # Needed for showing filepath in the statusbar
         samples_table.setShowGrid(True)
         samples_table.setHorizontalHeaderLabels(['', f'{dataformat} input', 'BIDS data type', 'BIDS output', 'Action', 'Provenance'])
         samples_table.setSortingEnabled(True)
@@ -462,8 +462,8 @@ class MainWindow(QMainWindow):
         header.setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch)
 
         layout = QVBoxLayout()
-        layout.addWidget(subses_label)
-        layout.addWidget(subses_table)
+        layout.addWidget(participant_label)
+        layout.addWidget(participant_table)
         layout.addWidget(label)
         layout.addWidget(samples_table)
         tab = QtWidgets.QWidget()
@@ -472,7 +472,7 @@ class MainWindow(QMainWindow):
         self.tabwidget.addTab(tab, f"{dataformat} mappings")
         self.tabwidget.setCurrentWidget(tab)
 
-        self.update_subses_samples(dataformat)
+        self.fill_samples_table(dataformat)
 
     def set_tab_options(self):
         """Set the options tab"""
@@ -556,24 +556,86 @@ class MainWindow(QMainWindow):
 
         self.tabwidget.addTab(tab, 'Data browser')
 
-    def update_subses_samples(self, dataformat: str):
-        """(Re)populates the sample list with bidsnames according to the bidsmap"""
+    def fill_participant_table(self, dataformat: str):
+        """(Re)populate the participant table with the new bidsmap data"""
+
+        # Populate the participant table
+        participant_table = self.participant_table[dataformat]
+        participant_table.blockSignals(True)
+        participant_table.hide()
+        participant_table.setRowCount(len(self.output_bidsmap.dataformat(dataformat).participant) + 1)
+        participant_table.clearContents()
+        for n, (key, item) in enumerate(self.output_bidsmap.dataformat(dataformat).participant.items()):
+            tableitem = MyQTableItem(key, editable=key not in ('participant_id','session_id'))
+            tableitem.setToolTip(get_columnhelp(key))
+            participant_table = self.participant_table[dataformat]
+            participant_table.setItem(n, 0, tableitem)
+            participant_table.setItem(n, 1, MyQTableItem(item['value']))
+            edit_button = QPushButton('Metadata')
+            edit_button.setToolTip('Data for participants json sidecar-file')
+            edit_button.clicked.connect(self.edit_metadata)
+            participant_table.setCellWidget(n, 2, edit_button)
+
+        participant_table.show()
+        participant_table.blockSignals(False)
+
+    def participant_table2bidsmap(self, rowindex: int, colindex: int):
+        """
+        A value has been changed in the participant table. If it is valid, save it to the bidsmap and update the
+        participant and samples table
+
+        :param rowindex:
+        :param colindex:
+        :return:
+        """
+
+        # Only if cell was actually clicked, update
+        if self.tabwidget.currentIndex() < 0:
+            return
+        dataformat = self.tabwidget.currentWidget().objectName()
+        if colindex == 1 and dataformat in self.dataformats:
+            key        = self.participant_table[dataformat].item(rowindex, 0).text().strip()
+            value      = self.participant_table[dataformat].item(rowindex, 1).text().strip()
+            oldvalue   = self.output_bidsmap.dataformat(dataformat).participant[key]['value']
+            if oldvalue is None:
+                oldvalue = ''
+
+            # Only if cell content was changed, update
+            if key and value != oldvalue:
+                LOGGER.verbose(f"User sets {dataformat}['{key}'] from '{oldvalue}' to '{value}'")
+                self.output_bidsmap.dataformat(dataformat).participant[key]['value'] = value
+                self.fill_participant_table(dataformat)
+                self.fill_samples_table(dataformat)
+                self.datachanged = True
+
+    def edit_metadata(self):
+        """Pop-up a text window to edit the sidecar metadata of participant item"""
+
+        dataformat        = self.tabwidget.currentWidget().objectName()
+        participant_table = self.participant_table[dataformat]
+        clicked           = self.focusWidget()
+        rowindex          = participant_table.indexAt(clicked.pos()).row()
+        key               = participant_table.item(rowindex, 0).text().strip()
+        meta              = self.output_bidsmap.dataformat(dataformat).participant[key]['meta']
+
+        text, ok = QtWidgets.QInputDialog.getMultiLineText(self, f"Edit sidecar metadata for {key}", 'json data', text=json.dumps(meta, indent=2))
+        if ok:
+            try:
+                meta_ = json.loads(text)
+                self.output_bidsmap.dataformat(dataformat).participant[key]['meta'] = meta_
+                if  meta_ != meta:
+                    self.datachanged = True
+            except json.decoder.JSONDecodeError as jsonerror:
+                QMessageBox.warning(self, f"Sidecar metadata parsing error", f"{text}\n\nPlease provide valid json metadata:\n{jsonerror}")
+                self.edit_metadata()
+
+    def fill_samples_table(self, dataformat: str):
+        """(Re)populate the sample table with bidsnames according to the new bidsmap data"""
 
         self.datachanged = True
         output_bidsmap   = self.output_bidsmap
 
-        # Update the subject/session table
-        subitem = MyQTableItem('subject', editable=False)
-        subitem.setToolTip(get_entityhelp('sub'))
-        sesitem = MyQTableItem('session', editable=False)
-        sesitem.setToolTip(get_entityhelp('ses'))
-        subses_table = self.subses_table[dataformat]
-        subses_table.setItem(0, 0, subitem)
-        subses_table.setItem(1, 0, sesitem)
-        subses_table.setItem(0, 1, MyQTableItem(output_bidsmap.dataformat(dataformat).subject))
-        subses_table.setItem(1, 1, MyQTableItem(output_bidsmap.dataformat(dataformat).session))
-
-        # Update the run samples table
+        # Add runs to the samples table
         idx           = 0
         num_files     = self.set_ordered_file_index(dataformat)
         samples_table = self.samples_table[dataformat]
@@ -662,28 +724,10 @@ class MainWindow(QMainWindow):
 
         return len(provenances)
 
-    def subsescell2bidsmap(self, rowindex: int, colindex: int):
-        """Subject or session value has been changed in subject-session table"""
-
-        # Only if cell was actually clicked, update
-        dataformat = self.tabwidget.widget(self.tabwidget.currentIndex()).objectName()
-        if colindex == 1 and dataformat in self.dataformats:
-            key        = self.subses_table[dataformat].item(rowindex, 0).text().strip()
-            value      = self.subses_table[dataformat].item(rowindex, 1).text().strip()
-            oldvalue   = getattr(self.output_bidsmap.dataformat(dataformat), key)
-            if oldvalue is None:
-                oldvalue = ''
-
-            # Only if cell content was changed, update
-            if key and value != oldvalue:
-                LOGGER.verbose(f"User sets {dataformat}['{key}'] from '{oldvalue}' to '{value}'")
-                setattr(self.output_bidsmap.dataformat(dataformat), key, value)
-                self.update_subses_samples(dataformat)
-
     def open_editwindow(self, provenance: Path=Path(), datatype: str=''):
         """Make sure that index map has been updated"""
 
-        dataformat = self.tabwidget.widget(self.tabwidget.currentIndex()).objectName()
+        dataformat = self.tabwidget.currentWidget().objectName()
         if not datatype:
             samples_table = self.samples_table[dataformat]
             clicked       = self.focusWidget()
@@ -702,7 +746,7 @@ class MainWindow(QMainWindow):
                     LOGGER.verbose(f'User is editing {provenance}')
                     self.editwindow        = EditWindow(runitem, self.output_bidsmap, self.template_bidsmap)
                     self.editwindow_opened = str(provenance)
-                    self.editwindow.done_edit.connect(self.update_subses_samples)
+                    self.editwindow.done_edit.connect(self.fill_samples_table)
                     self.editwindow.finished.connect(self.release_editwindow)
                     self.editwindow.show()
                     return
@@ -777,7 +821,7 @@ class MainWindow(QMainWindow):
                 self.ignoredatatypes   = newoptions.get('ignoretypes', [])
                 self.bidsignore        = newoptions.get('bidsignore', [])
                 for dataformat in self.dataformats:
-                    self.update_subses_samples(dataformat)
+                    self.fill_samples_table(dataformat)
             else:
                 self.output_bidsmap.plugins[plugin] = newoptions
 
@@ -942,7 +986,7 @@ class MainWindow(QMainWindow):
     def sample_doubleclicked(self, item):
         """When source file is double-clicked in the samples_table, show the inspect- or edit-window"""
 
-        dataformat = self.tabwidget.widget(self.tabwidget.currentIndex()).objectName()
+        dataformat = self.tabwidget.currentWidget().objectName()
         datatype   = self.samples_table[dataformat].item(item.row(), 2).text()
         sourcefile = self.samples_table[dataformat].item(item.row(), 5).text()
         if item.column() == 1:
@@ -1135,7 +1179,7 @@ class EditWindow(QDialog):
         layout1_.addWidget(inspect_button, alignment=QtCore.Qt.AlignmentFlag.AlignRight)
         layout1_.addWidget(log_table_label)
         layout1_.addWidget(log_table)
-        self.events_inbox = events_inbox = QGroupBox(f"{self.dataformat} input")
+        self.events_inbox = events_inbox = QGroupBox(f"{self.dataformat} input data")
         events_inbox.setSizePolicy(sizepolicy)
         events_inbox.setLayout(layout1_)
 
@@ -1167,7 +1211,7 @@ class EditWindow(QDialog):
         layout2_.addWidget(events_time_label)
         layout2_.addWidget(events_time)
         layout2_.addStretch()
-        self.events_editbox = events_editbox = QGroupBox(' ')
+        self.events_editbox = events_editbox = QGroupBox('Mapping')
         events_editbox.setSizePolicy(sizepolicy)
         events_editbox.setLayout(layout2_)
 
@@ -1176,7 +1220,7 @@ class EditWindow(QDialog):
         layout3.addWidget(done_button, alignment=QtCore.Qt.AlignmentFlag.AlignRight)
         layout3.addWidget(events_table_label)
         layout3.addWidget(events_table)
-        self.eventsbox = eventsbox = QGroupBox('BIDS output')
+        self.eventsbox = eventsbox = QGroupBox('BIDS output data')
         eventsbox.setSizePolicy(sizepolicy)
         eventsbox.setLayout(layout3)
 
@@ -1446,7 +1490,7 @@ class EditWindow(QDialog):
         return properties_data, attributes_data, bids_data, meta_data, events_data
 
     def properties2run(self, rowindex: int, colindex: int):
-        """Source attribute value has been changed"""
+        """Source attribute value has been changed. If OK, update the target run"""
 
         # Only if cell was actually clicked, update (i.e. not when BIDS datatype changes)
         if colindex == 1:
@@ -1470,7 +1514,7 @@ class EditWindow(QDialog):
                     self.properties_table.blockSignals(False)
 
     def attributes2run(self, rowindex: int, colindex: int):
-        """Source attribute value has been changed"""
+        """Source attribute value has been changed. If OK, update the target run"""
 
         # Only if cell was actually clicked, update (i.e. not when BIDS datatype changes)
         if colindex == 1:
@@ -1494,7 +1538,7 @@ class EditWindow(QDialog):
                     self.attributes_table.blockSignals(False)
 
     def bids2run(self, rowindex: int, colindex: int):
-        """BIDS attribute value has been changed"""
+        """BIDS attribute value has been changed. If OK, update the target run"""
 
         # Only if cell was actually clicked, update (i.e. not when BIDS datatype changes) and store the data in the target_run
         if colindex == 1:
@@ -1533,7 +1577,7 @@ class EditWindow(QDialog):
                 self.refresh_bidsname()
 
     def meta2run(self, rowindex: int, colindex: int):
-        """Meta value has been changed"""
+        """Meta value has been changed. If OK, update the target run"""
 
         key      = self.meta_table.item(rowindex, 0).text().strip()
         value    = self.meta_table.item(rowindex, 1).text().strip()
@@ -1566,7 +1610,7 @@ class EditWindow(QDialog):
         self.fill_table(self.meta_table, meta_data)
 
     def events_time2run(self, rowindex: int, colindex: int):
-        """Events value has been changed. Read the data from the event 'time' table"""
+        """Events value has been changed. Read the data from the event 'time' table and, if OK, update the target run"""
 
         # events_data['time'] = [['columns',   events.timecols],
         #                        ['units/sec', events.timeunit],
@@ -1599,7 +1643,7 @@ class EditWindow(QDialog):
         self.fill_table(self.events_table, events_data['table'])
 
     def events_rows2run(self, rowindex: int, colindex: int):
-        """Events value has been changed. Read the data from the event 'rows' table"""
+        """Events value has been changed. Read the data from the event 'rows' table and, if OK, update the target run"""
 
         # row: [[include, {column_in: regex}],
         #       [cast,    {column_out: newvalue}]]
@@ -1627,7 +1671,7 @@ class EditWindow(QDialog):
         self.fill_table(self.events_rows,  events_data['rows'])
 
     def events_columns2run(self, rowindex: int, colindex: int):
-        """Events value has been changed. Read the data from the event 'columns' table"""
+        """Events value has been changed. Read the data from the event 'columns' table and, if OK, update the target run"""
 
         # events_data['columns'] = [[{'source1': target1}],
         #                           [{'source2': target2}],
@@ -2170,6 +2214,25 @@ def get_suffixhelp(suffix: str) -> str:
         return f"{suffixes[suffix].display_name}\n{suffixes[suffix].description}"
 
     return f"{suffix}\nAn unknown/private suffix"
+
+
+def get_columnhelp(column: str) -> str:
+    """
+    Reads the description of a matching entity=entitykey in the bidsschema.objects.columns
+
+    :param column:   The column name for which the help text is obtained
+    :return:         The obtained help text
+    """
+
+    if not column:
+        return "Please provide a column-name"
+
+    # Return the description from the entities or a default text
+    for _, entity in bids.bidsschema.objects.columns.items():
+        if entity.name == column:
+            return f"{entity.display_name}\n{entity.description}"
+
+    return f"{column}\nAn unknown/private column name"
 
 
 def get_entityhelp(entitykey: str) -> str:
