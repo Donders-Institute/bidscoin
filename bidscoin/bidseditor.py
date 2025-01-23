@@ -612,7 +612,7 @@ class MainWindow(QMainWindow):
         if key:
             if key not in participant_data:
                 LOGGER.verbose(f"User adds {dataformat}['{key}']")
-                participant_data[key] = {'value': value, 'meta': {}}
+                participant_data[key] = {'value': value, 'meta': {'Description': ''}}
                 datachanged           = True
             else:
                 if value != (oldvalue := participant_data[key]['value']):
@@ -634,14 +634,14 @@ class MainWindow(QMainWindow):
         clicked           = self.focusWidget()
         rowindex          = participant_table.indexAt(clicked.pos()).row()
         key               = participant_table.item(rowindex, 0).text().strip()
-        meta              = self.output_bidsmap.dataformat(dataformat).participant[key]['meta']
+        meta              = self.output_bidsmap.dataformat(dataformat).participant[key].get('meta', {})
 
         text, ok = QtWidgets.QInputDialog.getMultiLineText(self, 'Edit sidecar metadata', f"json metadata for '{key}':", text=json.dumps(meta, indent=2))
         if ok:
             try:
                 meta_ = json.loads(text)
-                self.output_bidsmap.dataformat(dataformat).participant[key]['meta'] = meta_
-                if  meta_ != meta:
+                if meta_ != meta:
+                    self.output_bidsmap.dataformat(dataformat).participant[key]['meta'] = meta_
                     self.datachanged = True
             except json.decoder.JSONDecodeError as jsonerror:
                 QMessageBox.warning(self, f"Sidecar metadata parsing error", f"{text}\n\nPlease provide valid json metadata:\n{jsonerror}")
