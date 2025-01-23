@@ -575,6 +575,8 @@ class MainWindow(QMainWindow):
             edit_button.setToolTip('Data for participants json sidecar-file')
             edit_button.clicked.connect(self.edit_metadata)
             participant_table.setCellWidget(n, 2, edit_button)
+        participant_table.setItem(n+1, 0, MyQTableItem())
+        participant_table.setItem(n+1, 1, MyQTableItem())
 
         participant_table.show()
         participant_table.blockSignals(False)
@@ -592,21 +594,37 @@ class MainWindow(QMainWindow):
         # Only if cell was actually clicked, update
         if self.tabwidget.currentIndex() < 0:
             return
-        dataformat = self.tabwidget.currentWidget().objectName()
-        if colindex == 1 and dataformat in self.dataformats:
-            key        = self.participant_table[dataformat].item(rowindex, 0).text().strip()
-            value      = self.participant_table[dataformat].item(rowindex, 1).text().strip()
-            oldvalue   = self.output_bidsmap.dataformat(dataformat).participant[key]['value']
-            if oldvalue is None:
-                oldvalue = ''
+        dataformat        = self.tabwidget.currentWidget().objectName()
+        participant_data  = self.output_bidsmap.dataformat(dataformat).participant
+        participant_table = self.participant_table[dataformat]
+        key               = participant_table.item(rowindex, 0).text().strip()
+        value             = participant_table.item(rowindex, 1).text().strip()
 
-            # Only if cell content was changed, update
-            if key and value != oldvalue:
-                LOGGER.verbose(f"User sets {dataformat}['{key}'] from '{oldvalue}' to '{value}'")
-                self.output_bidsmap.dataformat(dataformat).participant[key]['value'] = value
-                self.fill_participant_table(dataformat)
-                self.fill_samples_table(dataformat)
-                self.datachanged = True
+        # Check if the participant keys are still present in the participant_table
+        datachanged = False
+        if colindex == 0:
+            for key_ in participant_data.copy():
+                if key_ not in [participant_table.item(row, 0).text().strip() for row in range(participant_table.rowCount()-1)]:
+                    participant_data.pop(key_, None)
+                    datachanged = True
+
+        # Add the key-value data to the participant data
+        if key:
+            if key not in participant_data:
+                LOGGER.verbose(f"User adds {dataformat}['{key}']")
+                participant_data[key] = {'value': value, 'meta': {}}
+                datachanged           = True
+            else:
+                if value != (oldvalue := participant_data[key]['value']):
+                    LOGGER.verbose(f"User sets {dataformat}['{key}'] from '{oldvalue}' to '{value}'")
+                    participant_data[key]['value'] = value
+                    datachanged                    = True
+
+        # Only if cell content was changed, update
+        if datachanged:
+            self.fill_participant_table(dataformat)
+            self.fill_samples_table(dataformat)
+            self.datachanged = True
 
     def edit_metadata(self):
         """Pop-up a text window to edit the sidecar metadata of participant item"""
@@ -618,7 +636,7 @@ class MainWindow(QMainWindow):
         key               = participant_table.item(rowindex, 0).text().strip()
         meta              = self.output_bidsmap.dataformat(dataformat).participant[key]['meta']
 
-        text, ok = QtWidgets.QInputDialog.getMultiLineText(self, f"Edit sidecar metadata for {key}", 'json data', text=json.dumps(meta, indent=2))
+        text, ok = QtWidgets.QInputDialog.getMultiLineText(self, 'Edit sidecar metadata', f"json metadata for '{key}':", text=json.dumps(meta, indent=2))
         if ok:
             try:
                 meta_ = json.loads(text)
