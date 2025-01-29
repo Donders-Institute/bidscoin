@@ -28,7 +28,7 @@ def echocombine(bidsfolder: str, pattern: str, participant: list, output: str, a
     :param bidsfolder:  The bids-directory with the (multi-echo) subject data
     :param pattern:     Globlike recursive search pattern (relative to the subject/session folder) to select the first echo of the images that need to be combined, e.g. '*task-*echo-1*'
     :param participant: List of sub-# identifiers to be processed (the sub-prefix can be left out). If not specified then all participants will be processed
-    :param output:      Determines where the output is saved. It can be the name of a BIDS datatype folder, such as 'func', or of the derivatives folder, i.e. 'derivatives'. If output = [the name of the input datatype folder] then the original echo images are replaced by one combined image. If output is left empty then the combined image is saved in the input datatype folder and the original echo images are moved to the {unknowndatatype} folder
+    :param output:      Determines where the output is saved. It can be the name of a BIDS datatype folder, such as 'func', or of the derivatives folder, i.e. 'derivatives'. If output is left empty then the combined image is saved in the input datatype folder and the original echo images are moved to the {unknowndatatype} folder
     :param algorithm:   Combination algorithm, either 'PAID', 'TE' or 'average'
     :param weights:     Weights for each echo
     :param force:       Boolean to overwrite existing ME target files
@@ -116,11 +116,6 @@ def echocombine(bidsfolder: str, pattern: str, participant: list, output: str, a
                             newecho.parent.mkdir(parents=True, exist_ok=True)
                             echo.replace(newecho)
                             echo.with_suffix('').with_suffix('.json').replace(newecho.with_suffix('').with_suffix('.json'))
-                    elif output == datatype:
-                        for echo in echos:
-                            LOGGER.info(f"Removing original echo image: {echo}")
-                            echo.unlink()
-                            echo.with_suffix('').with_suffix('.json').unlink()
 
                     # Construct the path names relative to the session folder (used for updating the IntendedFor list and scans.tsv file)
                     oldechos_rel = [echo.relative_to(session).as_posix() for echo in echos]
@@ -130,7 +125,7 @@ def echocombine(bidsfolder: str, pattern: str, participant: list, output: str, a
                     else:
                         cefile_rel = cefile.relative_to(session).as_posix()
 
-                    # Update the IntendedFor fields of the fieldmaps (i.e. remove the old echos, add the echo-combined image and, optionally, the new echos)
+                    # Update the IntendedFor fields of the field maps (i.e. remove the old echos, add the echo-combined image and, optionally, the new echos)
                     if output != 'derivatives' and (session/'fmap').is_dir():
                         for fmap in (session/'fmap').glob('*.json'):
 
