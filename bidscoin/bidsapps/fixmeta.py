@@ -24,9 +24,9 @@ def fixmeta(bidsfolder: str, pattern: str, metadata: dict, participant: list, bi
     """
     :param bidsfolder:  The bids-directory with the subject data
     :param pattern:     Globlike search pattern to select the targets in bidsfolder to be fixed, e.g. 'anat/*_T1w*'
-    :param metadata:    Dictionary with key-value pairs of meta data that need to be fixed. If value is a string, then it is taken as is, but if it is a list of `old`/`new` strings, i.e. `[old1, new1, old2, new2, etc]`, the existing meta data is used, with all occurrences of substring `old` replaced by `new`
+    :param metadata:    Dictionary with key-value pairs of metadata that need to be fixed. If value is a string, then it is taken as is, but if it is a list of `old`/`new` strings, i.e. `[old1, new1, old2, new2, etc]`, the existing metadata is used, with all occurrences of substring `old` replaced by `new`
     :param participant: Space separated list of sub-# identifiers to be processed (the sub-prefix can be left out). If not specified then all participants will be processed
-    :param bidsmap:     The name of the bidsmap YAML-file. If the bidsmap pathname is just the basename (i.e. no "/" in the name) then it is assumed to be located in the current directory or in bidsfolder/code/bidscoin. Default: 'bidsmap.yaml' or the template bidsmap
+    :param bidsmap:     The name of the bidsmap YAML-file. If the bidsmap pathname is just the base name (i.e. no "/" in the name) then it is assumed to be located in the current directory or in bidsfolder/code/bidscoin. Default: 'bidsmap.yaml' or the template bidsmap
     :return:
     """
 
@@ -68,7 +68,7 @@ def fixmeta(bidsfolder: str, pattern: str, metadata: dict, participant: list, bi
             for session in sessions:
 
                 # Search for the image(s) to fix
-                LOGGER.info(f"Fixing meta data in: {session.relative_to(bidsdir)}")
+                LOGGER.info(f"Fixing metadata in: {session.relative_to(bidsdir)}")
                 targets = sorted([match for match in session.rglob(pattern) if match.suffixes[0] in ('.tsv','.nii')])
                 if not targets:
                     LOGGER.warning(f"Could not find data files using: {session.relative_to(bidsdir)}/{pattern}")
@@ -85,7 +85,7 @@ def fixmeta(bidsfolder: str, pattern: str, metadata: dict, participant: list, bi
                     datasource = bids.get_datasource(Path(sourcedir), plugins)
                     LOGGER.bcdebug(f"Datasource provenance: '{target.name}' -> '{datasource}'")
 
-                    # Load/copy over the source meta-data
+                    # Load/copy over the source metadata
                     jsonfile = target.with_suffix('').with_suffix('.json')
                     jsondata = bids.poolmetadata(datasource, jsonfile, bids.Meta({}), ['.json'])
                     for key, value in metadata.items():
@@ -97,12 +97,12 @@ def fixmeta(bidsfolder: str, pattern: str, metadata: dict, participant: list, bi
                             jsondata[key] = value
                         LOGGER.verbose(f"Writing '{key}: {jsondata.get(key)}' to: {jsonfile}")
 
-                    # Save the meta-data to the json sidecar-file
+                    # Save the metadata to the json sidecar-file
                     if jsondata:
                         with jsonfile.open('w') as json_fid:
                             json.dump(jsondata, json_fid, indent=4)
 
-                # Add the special fieldmap metadata (IntendedFor, TE, etc)
+                # Add the special field map metadata (IntendedFor, TE, etc)
                 bids.addmetadata(session)
 
 

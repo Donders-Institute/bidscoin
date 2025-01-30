@@ -132,7 +132,7 @@ def medeface(bidsfolder: str, pattern: str, maskpattern: str, participant: list,
             bcoin.synchronize(pbatch, jobids)
             pbatch.deleteJobTemplate(jt)
 
-    # Loop again over bids subject/session-directories to apply the deface-masks and write meta-data
+    # Loop again over bids subject/session-directories to apply the deface-masks and write metadata
     with logging_redirect_tqdm():
         for n, subject in enumerate(tqdm(subjects, unit='subject', colour='green', leave=False), 1):
 

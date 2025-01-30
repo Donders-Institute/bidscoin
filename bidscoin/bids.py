@@ -269,7 +269,7 @@ class DataSource:
             with jsonfile.open('r') as json_fid:
                 attributes = json.load(json_fid)
             if not isinstance(attributes, dict):
-                LOGGER.warning(f"Skipping unexpectedly formatted meta-data in: {jsonfile}")
+                LOGGER.warning(f"Skipping unexpectedly formatted metadata in: {jsonfile}")
                 return Attributes({})
             self._cache.update(attributes)
 
@@ -370,7 +370,7 @@ class RunItem:
         self.dataformat = dataformat
         """The name of the dataformat"""
         self.datatype   = datatype
-        """The name of the datatype"""
+        """The name of the data type"""
         self.options    = options
         """The dictionary with the BIDScoin options"""
         self.plugins    = plugins
@@ -391,7 +391,7 @@ class RunItem:
         self.meta       = Meta(data['meta'])
         """The meta output dictionary (will be appended to the json sidecar file)"""
         self.events     = data['events']
-        """The options to parse the stimulus presentation logfile (if any) to BIDS compliant events"""
+        """The options to parse the stimulus presentation log file (if any) to BIDS compliant events"""
 
     def __getattr__(self, name: str):
 
@@ -463,7 +463,7 @@ class RunItem:
         if all(checks) and not provenance:
             LOGGER.info(f"No provenance info found for {datatype}/*_{bids['suffix']}")
 
-        # Check if we have a suffix and datatype rules
+        # Check if we have a suffix and data type rules
         if 'suffix' not in bids:
             if checks[1]: LOGGER.warning(f'Invalid bidsmap: The {datatype} "suffix" key is missing ({datatype} -> {provenance})')
             return run_keysok, False, run_valsok                # The suffix is not BIDS-valid, we cannot check the keys and values
@@ -665,7 +665,7 @@ class RunItem:
         return bidsname + bidsext
 
     def eventsparser(self) -> EventsParser:
-        """Returns a plugin EventsParser instance to parse the stimulus presentation logfile (if any)"""
+        """Returns a plugin EventsParser instance to parse the stimulus presentation log file (if any)"""
 
         for name in self.plugins:
             if plugin := bcoin.import_plugin(name, (f"{self.dataformat}Events",)):
@@ -677,11 +677,11 @@ class DataType:
 
     def __init__(self, dataformat: str, datatype: str, data: list, options: Options, plugins: Plugins):
         """
-        Reads from a YAML datatype dictionary
+        Reads from a YAML data type dictionary
 
         :param dataformat: The name of the dataformat (= section in the bidsmap)
         :param datatype:   The name of the datatype (= section in a dataformat)
-        :param data:       The YAML datatype dictionary, i.e. a list of runitems
+        :param data:       The YAML data type dictionary, i.e. a list of runitems
         :param options:    The dictionary with the BIDScoin options
         :param plugins:    The plugin dictionaries with their options
         """
@@ -895,8 +895,8 @@ class BidsMap:
         searched before the default 'heuristics'. If yamfile is empty, then first 'bidsmap.yaml' is searched for, then 'bidsmap_template'. So fullpath
         has precedence over folder and bidsmap.yaml has precedence over the bidsmap_template.
 
-        :param yamlfile:    The full pathname or basename of the bidsmap yaml-file
-        :param folder:      Used when yamlfile=basename and not in the pwd: yamlfile is then assumed to be in the (bids/code/bidscoin)folder. A bidsignore file in folder will be added to the bidsmap bidsignore items
+        :param yamlfile:    The full path or base name of the bidsmap yaml-file
+        :param folder:      Used when yamlfile=base name and not in the pwd: yamlfile is then assumed to be in the (bids/code/bidscoin)folder. A bidsignore file in folder will be added to the bidsmap bidsignore items
         :param plugins:     List of plugins to be used (with default options, overrules the plugin list in the study/template bidsmaps). Leave empty to use all plugins in the bidsmap
         :param checks:      Booleans to check if all (bidskeys, bids-suffixes, bids-values) in the run are present according to the BIDS schema specifications
         """
@@ -1351,7 +1351,7 @@ class BidsMap:
                     else:
                         rundata['bids'][bidskey] = datasource.dynamicvalue(bidsvalue, runtime=runtime)
 
-                # Try to fill the meta-data
+                # Try to fill the metadata
                 for metakey, metavalue in runitem.meta.items():
 
                     # Replace the dynamic meta values, except the IntendedFor value (e.g. <<task>>)
@@ -1381,7 +1381,7 @@ class BidsMap:
         # We don't have a match (all tests failed, so datatype should be the *last* one, e.g. unknowndatatype)
         LOGGER.bcdebug(f"Found no bidsmap match for: {sourcefile}")
         if datatype not in unknowndatatypes:
-            LOGGER.warning(f"Datatype was expected to be in {unknowndatatypes}, instead it is '{datatype}' -> {sourcefile}")
+            LOGGER.warning(f"Data type was expected to be in {unknowndatatypes}, instead it is '{datatype}' -> {sourcefile}")
 
         runitem = RunItem(dataformat, datatype, copy.deepcopy(rundata), self.options, self.plugins)
         runitem.strip_suffix()
@@ -1812,11 +1812,11 @@ def check_runindices(session: Path) -> bool:
 
 def limitmatches(fmap: str, matches: list[str], limits: str, niifiles: set[str], scans_table: pd.DataFrame):
     """
-    Helper function for addmetadata() to check if there are multiple fieldmap runs and get the lower- and upperbound from
+    Helper function for addmetadata() to check if there are multiple field map runs and get the lower- and upperbound from
     the AcquisitionTime to bound the grand list of matches to adjacent runs. The resulting list is appended to niifiles
 
-    :param fmap:        The fieldmap (relative to the session folder)
-    :param matches:     The images (relative to the session folder) associated with the fieldmap
+    :param fmap:        The field map (relative to the session folder)
+    :param matches:     The images (relative to the session folder) associated with the field map
     :param limits:      The bounding limits from the dynamic value: '[lowerlimit:upperlimit]'
     :param niifiles:    The list to which the bounded results are appended
     :param scans_table: The scans table with the acquisition times
@@ -1832,16 +1832,16 @@ def limitmatches(fmap: str, matches: list[str], limits: str, niifiles: set[str],
     lowerbound = fmaptime.replace(year=1900)            # Use an ultra-wide lower limit for the search
     upperbound = fmaptime.replace(year=2100)            # Idem for the upper limit
 
-    # There may be more fieldmaps, hence try to limit down the matches to the adjacent acquisitions
+    # There may be more field maps, hence try to limit down the matches to the adjacent acquisitions
     try:
         fmaptime = dateutil.parser.parse(scans_table.loc[fmap, 'acq_time'])
         runindex = get_bidsvalue(fmap, 'run')
         prevfmap = get_bidsvalue(fmap, 'run', str(int(runindex) - 1))
         nextfmap = get_bidsvalue(fmap, 'run', str(int(runindex) + 1))
         if prevfmap in scans_table.index:
-            lowerbound = dateutil.parser.parse(scans_table.loc[prevfmap, 'acq_time'])  # Narrow the lower search limit down to the preceding fieldmap
+            lowerbound = dateutil.parser.parse(scans_table.loc[prevfmap, 'acq_time'])  # Narrow the lower search limit down to the preceding field map
         if nextfmap in scans_table.index:
-            upperbound = dateutil.parser.parse(scans_table.loc[nextfmap, 'acq_time'])  # Narrow the upper search limit down to the succeeding fieldmap
+            upperbound = dateutil.parser.parse(scans_table.loc[nextfmap, 'acq_time'])  # Narrow the upper search limit down to the succeeding field map
     except (TypeError, ValueError, KeyError, dateutil.parser.ParserError) as acqtimeerror:
         pass  # Raise this only if there are limits and matches, i.e. below
 
@@ -1860,7 +1860,7 @@ def limitmatches(fmap: str, matches: list[str], limits: str, niifiles: set[str],
                 if (lowerbound < acqtime[0] < upperbound) and (lowerlimit <= nr-offset <= upperlimit):
                     niifiles.add(acqtime[1])
         except Exception as matcherror:
-            LOGGER.error(f"Could not bound the fieldmaps using <*:{limits}> as it requires a *_scans.tsv file with acq_time values for: {fmap}\n{matcherror}")
+            LOGGER.error(f"Could not bound the field maps using <*:{limits}> as it requires a *_scans.tsv file with acq_time values for: {fmap}\n{matcherror}")
             niifiles.update(matches)
     else:
         niifiles.update(matches)
@@ -1868,7 +1868,7 @@ def limitmatches(fmap: str, matches: list[str], limits: str, niifiles: set[str],
 
 def addmetadata(bidsses: Path):
     """
-    Adds the special fieldmap metadata (IntendedFor, TE, etc.)
+    Adds the special field map metadata (IntendedFor, TE, etc.)
 
     :param bidsses: The session folder with the BIDS session data
     """
@@ -1876,7 +1876,7 @@ def addmetadata(bidsses: Path):
     subid = bidsses.name if bidsses.name.startswith('sub-') else bidsses.parent.name
     sesid = bidsses.name if bidsses.name.startswith('ses-') else ''
 
-    # Add IntendedFor search results and TE1+TE2 meta-data to the fieldmap json-files. This has been postponed until all datatypes have been processed (i.e. so that all target images are indeed on disk)
+    # Add IntendedFor search results and TE1+TE2 metadata to the field map json-files. This has been postponed until all datatypes have been processed (i.e. so that all target images are indeed on disk)
     if (bidsses/'fmap').is_dir():
 
         scans_tsv = bidsses/f"{subid}{'_'+sesid if sesid else ''}_scans.tsv"
@@ -1887,7 +1887,7 @@ def addmetadata(bidsses: Path):
 
         for fmap in [fmap.relative_to(bidsses).as_posix() for fmap in sorted((bidsses/'fmap').glob('sub-*.nii*'))]:
 
-            # Load the existing meta-data
+            # Load the existing metadata
             jsondata = {}
             jsonfile = (bidsses/fmap).with_suffix('').with_suffix('.json')
             if jsonfile.is_file():
@@ -1915,11 +1915,11 @@ def addmetadata(bidsses: Path):
                     LOGGER.verbose(f"Adding IntendedFor to: {jsonfile}")
                     jsondata['IntendedFor'] = [f"bids::{(Path(subid)/sesid/niifile).as_posix()}" for niifile in niifiles]
                 else:
-                    LOGGER.warning(f"Empty 'IntendedFor' fieldmap value in {jsonfile}: the search for {intendedfor} gave no results")
+                    LOGGER.warning(f"Empty 'IntendedFor' field map value in {jsonfile}: the search for {intendedfor} gave no results")
                     jsondata['IntendedFor'] = None
 
             elif not (intendedfor or jsondata.get('B0FieldSource') or jsondata.get('B0FieldIdentifier')):
-                LOGGER.warning(f"Empty IntendedFor/B0FieldSource/B0FieldIdentifier fieldmap values in {jsonfile} (i.e. the fieldmap may not be used)")
+                LOGGER.warning(f"Empty IntendedFor/B0FieldSource/B0FieldIdentifier field map values in {jsonfile} (i.e. the field map may not be used)")
 
             # Work-around because the bids-validator (v1.8) cannot handle `null` values / unused IntendedFor fields
             if not jsondata.get('IntendedFor'):
@@ -1944,7 +1944,7 @@ def addmetadata(bidsses: Path):
                                 matches.append(match.relative_to(bidsses).as_posix())
                 limitmatches(fmap, matches, limits, niifiles, scans_table)
 
-                # In the b0fieldtags, replace the limits with fieldmap runindex
+                # In the b0fieldtags, replace the limits with field map runindex
                 runindex      = get_bidsvalue(fmap, 'run')
                 newb0fieldtag = b0fieldtag.replace(':'+limits, '_'+runindex if runindex else '')
                 for niifile in niifiles:
@@ -1988,7 +1988,7 @@ def addmetadata(bidsses: Path):
                 else:
                     LOGGER.verbose(f"Adding EchoTime1: {jsondata['EchoTime1']} and EchoTime2: {jsondata['EchoTime2']} to {jsonfile}")
 
-            # Save the collected meta-data to disk
+            # Save the collected metadata to disk
             if jsondata:
                 with jsonfile.open('w') as sidecar:
                     json.dump(jsondata, sidecar, indent=4)
@@ -2003,10 +2003,10 @@ def poolmetadata(datasource: DataSource, targetmeta: Path, usermeta: Meta, metae
     NB: In future versions this function could also support more source metadata formats, e.g. yaml, csv- or Excel-files
 
     :param datasource:  The data source from which dynamic values are read
-    :param targetmeta:  The filepath of the target data file with meta-data
+    :param targetmeta:  The filepath of the target data file with metadata
     :param usermeta:    A user metadata dict, e.g. the meta table from a run-item
     :param metaext:     A list of file extensions of the source metadata files, e.g. as specified in bidsmap.plugins['plugin']['meta']
-    :param sourcemeta:  The filepath of the source data file with associated/equally named meta-data files (name may include wildcards). Leave empty to use datasource.path
+    :param sourcemeta:  The filepath of the source data file with associated/equally named metadata files (name may include wildcards). Leave empty to use datasource.path
     :return:            The combined target + source + user metadata
     """
 
@@ -2029,7 +2029,7 @@ def poolmetadata(datasource: DataSource, targetmeta: Path, usermeta: Meta, metae
                 with sourcefile.open('r') as json_fid:
                     metadata = json.load(json_fid)
                 if not isinstance(metadata, dict):
-                    LOGGER.error(f"Skipping unexpectedly formatted meta-data in: {sourcefile}")
+                    LOGGER.error(f"Skipping unexpectedly formatted metadata in: {sourcefile}")
                     continue
                 for metakey, metaval in metadata.items():
                     if metapool.get(metakey) and metapool.get(metakey) != metaval:

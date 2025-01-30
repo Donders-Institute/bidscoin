@@ -26,7 +26,7 @@ Options:
     bidsignore: [extra_data/, sub-*_ct.*]    # List of entries that are added to the .bidsignore file (for more info, see BIDS specifications), e.g. [extra_data/, pet/, myfile.txt, yourfile.csv]
     unknowntypes: [extra_data]      # A list of datatypes that are converted to BIDS-like datatype folders
     ignoretypes: [exclude]          # A list of datatypes that are excluded / not converted to BIDS
-    anon: y                         # Set this anonymization flag to 'y' to round off age and discard acquisition date from the meta data
+    anon: y                         # Set this anonymization flag to 'y' to round off age and discard acquisition date from the metadata
     unzip:                          # Wildcard pattern to select tarball/zip-files in the source folders that need to be unzipped (in a tempdir) to expose the data, e.g. '*.tar.gz'
   plugins:                          # List of plugins with plugin-specific key-value pairs (that can be used by the plugin)
     dcm2niix2bids:                  # See dcm2niix -h and https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage#General_Usage for more info
@@ -111,7 +111,7 @@ DICOM:
       part: ['', mag, phase, real, imag, 0]   # This BIDS value list will be shown as a dropdown menu in the bidseditor with the first (empty) item selected (as indicated by the last item, i.e. 0)
       chunk:
       suffix: T1w
-    meta: {}                      # This is an optional entry for meta-data that will be appended to the json sidecar files produced by the plugin
+    meta: {}                      # This is an optional entry for metadata that will be appended to the json sidecar files produced by the plugin
   - attributes:
       <<: *anat_dicomattr
       ProtocolName: (?i).*(MPRAGE|T1w).*
@@ -1058,21 +1058,21 @@ Presentation:
       Scenario: <<Scenario>>
       LogfileWritten: <<Logfile written>>
     events: &presentation_events
-      columns:
+      columns:                          # Columns that are included in the output table, i.e. {output column: input column}
       - onset: Time                     # The mapping for the first required column 'onset'
       - duration: Duration              # The mapping for the second required column 'duration'
       - code: Code
       - trial_type: Event Type
       - trial_nr: Trial
-      rows:                             # Groups of rows that are included in the events output table
-      - include:                        # Dict(s): key = column name of the log input table, value = fullmatch regular expression to select the rows of interest
+      rows:                             # Rows that are included in the output table
+      - condition:                        # Dict(s): key = column name of the log input table, value = fullmatch regular expression to select the rows of interest
           Event Type: .*
-        cast:                           # Dict(s): column name + value(s) of the included rows in the events output table
+        cast:                           # Dict(s): column name + value(s) of the condition in the output table
       time:
         cols: ['Time', 'TTime', 'Uncertainty', 'Duration', 'ReqTime', 'ReqDur']
         unit: 10000
         start:
-          Code: 10                      # Code with which the first (or any) pulse is logged
+          Code: 10                      # The column name and event-code used to log the first (or any) scanner pulse
 
   eeg:        # ----------------------- All EEG run-items ---------------------------
   - attributes: *presentationent_attr

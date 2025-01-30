@@ -193,7 +193,7 @@ The bidsparticipants tool is useful for (re-)generating a participants.tsv file 
       -d, --dryrun          Do not save anything, only print the participants info on screen
       -b NAME, --bidsmap NAME
                             The study bidsmap file with the mapping heuristics. If the bidsmap filename
-                            is just the basename (i.e. no "/" in the name) then it is assumed to be
+                            is just the base name (i.e. no "/" in the name) then it is assumed to be
                             located in the current directory or in bidsfolder/code/bidscoin. Default:
                             bidsmap.yaml
 

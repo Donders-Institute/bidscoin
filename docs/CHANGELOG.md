@@ -11,10 +11,11 @@
 - The content of the participants.tsv/json files are now configurable in the template bidsmap
 
 ### Changed
-- The plugin programming interface is now implemented with an abstract base class
-- Drop saving data in the derivatives folder (i.e. this was not required by BIDS after all)
+- The plugin programming interface is now implemented with abstract base classes
+- Stop saving data in the derivatives folder (i.e. this was not required by BIDS after all)
 - Comments in the study bidsmap are now removed due to recurrent issues with invalid (ruamel) yaml-files
 - `anon` is now a bidscoin option instead of a plugin option
+- Original images are no longer removed in echocombine (when the input folder was also the output folder) 
 
 ## [4.4.0] - 2024-10-02
 
@@ -55,7 +56,7 @@
 
 ### Added
 - Support for BIDS 1.9.0
-- A new special `<<session>>` dynamic meta-data value (most notably useful for creating session specific B0FieldIdentifier/Source tags)
+- A new special `<<session>>` dynamic metadata value (most notably useful for creating session specific B0FieldIdentifier/Source tags)
 - DICOM tags from the Siemens CSA header can now also be used
 - The `dir` entity value can now be parsed from the DICOM header using `<PhaseEncodingDirection>` (Siemens and GE)
 - The bidsmapper now automatically sets the `part` entity value (e.g. `part-phase`) for non-magnitude images (Siemens)
@@ -150,7 +151,7 @@
 ### Added
 - Added support for the ABCD GE pepolar pulse sequence
 - Use an orange bidsname font in the bidseditor for `.bidsignore` datatypes
-- A (right-click) context menu in the bidseditor to import meta-data from disk into the meta-table
+- A (right-click) context menu in the bidseditor to import metadata from disk into the meta-table
  
 ### Changed
 - Remove the DCCN specific dcm2niix module usage in the bidsmap template
@@ -253,7 +254,7 @@ The bidscoiner no longer sometimes crashes when dcm2niix produces custom suffixe
 - Support for BIDS v1.6.0 (-> PET)
 - Separate tabs for DICOM and PAR to edit all the mappings of mixed datasets in a single bidseditor session
 - Run-item matching on filesystem properties, i.e. on the pathname, filename and filesize and nr of files in the folder. This can be used in conjunction with the (DICOM/PAR) attributes
-- A meta-data dictionary that can be edited with the bidseditor and that will be added to the json sidecar files by the bidscoiner
+- A metadata dictionary that can be edited with the bidseditor and that will be added to the json sidecar files by the bidscoiner
 - More user feedback in the GUI for new BIDS-compliancy checks on missing or invalid bids data
 - A right-click menu option to remove a run-item from the bidsmap (advanced usage)
 - The option to load a new bidsmap in the bidseditor
@@ -265,7 +266,7 @@ The bidscoiner no longer sometimes crashes when dcm2niix produces custom suffixe
 - Using regular expressions instead of fnmatch to match (template bidsmap) attribute values. This makes the templates more powerful and flexible
 - Moved the bidsmapping and bidscoining functionality to stand-alone plugins (changed API), making plugins a first-class BIDScoin citizen
 - The plugins have moved to the bidsmap['Options'], where they have their own key-value options dictionary (changed API)
-- Move IntendedFor field over to the new meta-data dictionary
+- Move IntendedFor field over to the new metadata dictionary
 - Renamed the `leave_out` datatype to `exclude`
 - Re-introduced skipping hidden folders (hidden files are also skipped)
 - Moved the 'pulltutorial' function over to the new 'bidscoin' function
@@ -310,7 +311,7 @@ A significant rewrite and evolution of BIDScoin!
 - Use the DCCN template bidsmap as the default
 
 ### Fixed
-- Simplified and improved (hopefully) handling of fieldmaps
+- Simplified and improved (hopefully) handling of field maps
     
 ## [3.0.8] - 2020-09-28
 

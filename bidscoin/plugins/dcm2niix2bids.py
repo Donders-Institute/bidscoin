@@ -323,7 +323,7 @@ class Interface(PluginInterface):
                 # Handle the ABCD GE pepolar sequence
                 extrafile = next(outfolder.glob(f"{bidsname}a.nii*"), None)
                 if extrafile:
-                    # Load the json meta-data to see if it's a pepolar sequence
+                    # Load the json metadata to see if it's a pepolar sequence
                     with extrafile.with_suffix('').with_suffix('.json').open('r') as json_fid:
                         jsondata = json.load(json_fid)
                     if 'PhaseEncodingPolarityGE' in jsondata:
@@ -447,7 +447,7 @@ class Interface(PluginInterface):
             # Loop over all targets (i.e. the produced output files) and edit the json sidecar data
             for target in sorted(targets):
 
-                # Load/copy over the source meta-data
+                # Load/copy over the source metadata
                 jsonfile = target.with_suffix('').with_suffix('.json')
                 if not jsonfile.is_file():
                     LOGGER.warning(f"Unexpected conversion result, could not find: {jsonfile}")
@@ -467,7 +467,7 @@ class Interface(PluginInterface):
                             metadata[ext[1:]] = bdata.values.tolist()
                             bfile.unlink()
 
-                # Save the meta-data to the json sidecar-file
+                # Save the metadata to the json sidecar-file
                 if metadata:
                     with jsonfile.open('w') as json_fid:
                         json.dump(metadata, json_fid, indent=4)

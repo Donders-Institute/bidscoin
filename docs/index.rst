@@ -15,7 +15,8 @@
    :caption: Usage
 
    workflow
-   bidsmap
+   bidsmap_features
+   bidsmap_indepth
    options
    plugins
    bidsapps

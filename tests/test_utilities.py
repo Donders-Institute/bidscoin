@@ -33,7 +33,7 @@ def par_file():
 
 
 def test_unpack(dicomdir, tmp_path):
-    sessions, unpacked = utilities.unpack(dicomdir.parent, '', tmp_path, None)   # None -> simulate commandline usage of dicomsort()
+    sessions, unpacked = utilities.unpack(dicomdir.parent, '', tmp_path, None)   # None -> simulate command-line usage of dicomsort()
     assert unpacked
     assert len(sessions) == 6
     for session in sessions:

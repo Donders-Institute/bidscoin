@@ -140,7 +140,7 @@ class Interface(PluginInterface):
                 LOGGER.error(f"Output file not found: {target}")
                 continue
 
-            # Load/copy over the source meta-data
+            # Load/copy over the source metadata
             sidecar  = target.with_suffix('.json')
             metadata = bids.poolmetadata(run.datasource, sidecar, run.meta, options.get('meta', []))
             if metadata:
@@ -163,16 +163,16 @@ class PresentationEvents(EventsParser):
 
     def __init__(self, sourcefile: Path, _data: dict, options: dict):
         """
-        Reads the event table from the Presentation logfile
+        Reads the event table from the Presentation log file
 
-        :param sourcefile:  The full filepath of the logfile
+        :param sourcefile:  The full filepath of the log file
         :param data:        The run['events'] data (from a bidsmap)
         :param options:     The plugin options
         """
 
         super().__init__(sourcefile, _data, options)
 
-        # Read the log-tables from the Presentation logfile
+        # Read the log-tables from the Presentation log file
         self._sourcetable = pd.read_csv(self.sourcefile, sep='\t', skiprows=options.get('skiprows',3), skip_blank_lines=True)
         """The Presentation log-tables (https://www.neurobs.com/pres_docs/html/03_presentation/07_data_reporting/01_logfiles/index.html)"""
         self._sourcecols  = self._sourcetable.columns

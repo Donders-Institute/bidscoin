@@ -40,7 +40,7 @@ def bidsmapper(sourcefolder: str, bidsfolder: str, bidsmap: str, template: str, 
     :param unzip:        Wildcard pattern to select tar/zip-files in the session folder. Leave empty to use the bidsmap value
     :param store:        If True, the provenance samples will be stored
     :param automated:    The bidseditor will not be launched if True
-    :param no_update:    Do not update any sub/sesprefixes in or prepend the sourcefolder name to the <<filepath:regex>> expression
+    :param no_update:    Do not update any sub-/ses-prefixes in or prepend the sourcefolder name to the <<filepath:regex>> expression
     :param force:        If True, the previous bidsmap and logfiles will be deleted
     :return:             The new bidsmap
     """

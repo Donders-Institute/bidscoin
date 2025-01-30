@@ -27,17 +27,17 @@ The nibabel2bids plugin wraps around the versatile `nibabel <https://nipy.org/ni
 Events2bids: a plugin for NeuroBS Presentation log data
 -------------------------------------------------------
 
-The events2bids plugin parses `NeuroBS <https://www.neurobs.com/>`__ stimulus Presentation log files to BIDS task events files.
+The events2bids plugin parses `NeuroBS <https://www.neurobs.com/>`__ stimulus Presentation log files to BIDS task events files. See the `workflow page <./workflow.html#stimulus-events>`__ for usage.
 
 .. note::
-   Out of the box, BIDScoin plugins typically produce sidecar files that contain metadata from the source headers. However, when such meta-data is missing (e.g. as for nibabel2bids), or when it needs to be appended or overruled, then users can add sidecar files to the source data (as explained `here <./bidsmap.html>`__) or add that meta-data using the bidseditor (the latter takes precedence).
+   Out of the box, BIDScoin plugins typically produce sidecar files that contain metadata from the source headers. However, when such metadata is missing (e.g. as for nibabel2bids), or when it needs to be appended or overruled, then users can add sidecar files to the source data (as explained `here <./bidsmap_indepth.html#run-items>`__) or add that metadata using the bidseditor (the latter takes precedence).
 
 The plugin programming interface
 --------------------------------
 
 This paragraph describes the requirements and structure of plugins in order to allow users and developers to write their own plugin and extent or customize BIDScoin to their needs.
 
-The main task of a plugin is to perform the actual conversion of the source data into a format that is part of the BIDS standard. BIDScoin offers the Python library module named ``bids`` to interact with bidsmaps and to provide the intended output names and meta data. Notably, the bids library contains a class named ``BidsMap()`` that provides various methods and other useful classes for building and interacting with bidsmap data. Bidsmap objects provide consecutive access to ``DataFormat()``, ``Datatype()``, ``RunItem()`` and ``DataSource()`` objects, each of which comes with methods to interact with the corresponding sections of the bidsmap data. The RunItem objects can be used to obtain the mapping to the BIDS output names, and the DataSource object can read the source data attributes and properties. The DataSource object transparently handles dynamic values (including regular expressions) as well as the extended source data attributes.
+The main task of a plugin is to perform the actual conversion of the source data into a format that is part of the BIDS standard. BIDScoin offers the Python library module named ``bids`` to interact with bidsmaps and to provide the intended output names and metadata. Notably, the bids library contains a class named ``BidsMap()`` that provides various methods and other useful classes for building and interacting with bidsmap data. Bidsmap objects provide consecutive access to ``DataFormat()``, ``Datatype()``, ``RunItem()`` and ``DataSource()`` objects, each of which comes with methods to interact with the corresponding sections of the bidsmap data. The RunItem objects can be used to obtain the mapping to the BIDS output names, and the DataSource object can read the source data attributes and properties. The DataSource object transparently handles dynamic values (including regular expressions) as well as the extended source data attributes.
 
 In short, the purpose of the plugin is to interact with the data, by providing methods from the abstract base class ``bidscoin.plugins.PluginInterface``. Most notably, plugins can implement the following methods:
 
@@ -133,7 +133,7 @@ The above API is illustrated in more detail in the placeholder Python code below
                 # Write out provenance logging data (= useful but not strictly necessary)
                 bids.bidsprov(bidsses, sourcefile, run, targetfile)
 
-                # Pool all sources of meta-data and save it as a json sidecar file
+                # Pool all sources of metadata and save it as a json sidecar file
                 sidecar = targetfile.with_suffix('.json')
                 ext_meta = bidsmap.plugins[__name__]['meta']
                 metadata = bids.poolmetadata(run.datasource, sidecar, run.meta, ext_meta)
@@ -145,15 +145,15 @@ The above API is illustrated in more detail in the placeholder Python code below
 
         def __init__(self, sourcefile: Path, _data):
             """
-            Reads the event table from a logfile
+            Reads the event table from a log file
 
-            :param sourcefile:  The full filepath of the logfile
+            :param sourcefile:  The full filepath of the log file
             :param data:        The run['events'] data (from a bidsmap)
             """
 
             super().__init__(sourcefile, _data)
 
-            # Parse an initial table from the Presentation logfile
+            # Parse an initial table from the Presentation log file
             self.sourcetable = pd.read_csv(self.sourcefile, sep='\t', skiprows=3, skip_blank_lines=True)
 
         @property

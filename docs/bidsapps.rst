@@ -18,22 +18,22 @@ See the `installation instructions <https://bidscoin.readthedocs.io/en/stable/in
 
 Metadata editing
 ----------------
-If you have a previously converted BIDS data repository and you would like to retrospectively change or replace one or more metadata fields in the json sidecar files you can use ``fixmeta``. Fixmeta is more powerful than conventional find-and-replace tools in that fixmeta can leverage BIDScoin's `special bidsmap features <./bidsmap.html#special-bidsmap-features>`__::
+If you have a previously converted BIDS data repository and you would like to retrospectively change or replace one or more metadata fields in the json sidecar files you can use ``fixmeta``. Fixmeta is more powerful than conventional find-and-replace tools in that fixmeta can leverage BIDScoin's `special bidsmap features <./bidsmap_features.html>`__::
 
     usage: fixmeta [-h] [-p LABEL [LABEL ...]] [-b NAME] bidsfolder pattern metadata
 
-    A bidsapp that can change or add meta data in BIDS data repositories. The fixmeta app supports the use
+    A bidsapp that can change or add metadata in BIDS data repositories. The fixmeta app supports the use
     of special bidsmap features, such as dynamic values to use source data attributes or properties, or to
-    populate `IntendedFor` and `B0FieldIdentifier`/`B0FieldSource` values
+    populate `IntendedFor` and `B0FieldIdentifier` metadata values
 
     positional arguments:
       bidsfolder            The BIDS root directory that needs fixing (in place)
       pattern               Globlike recursive search pattern (relative to the subject/session folder) to
                             select the json sidecar targets that need to be fixed, e.g. '*task-*echo-1*'
-      metadata              Dictionary with key-value pairs of meta data that need to be fixed. If value
-                            is a string, then this meta data is written to the sidecars as is, but if it
+      metadata              Dictionary with key-value pairs of metadata that need to be fixed. If value
+                            is a string, then this metadata is written to the sidecars as is, but if it
                             is a list of `old`/`new` strings, i.e. `[old1, new1, old2, new2, ..]`, then
-                            the existing meta data is re-written, with all occurrences of substring `old`
+                            the existing metadata is re-written, with all occurrences of substring `old`
                             replaced by `new`
 
     options:
@@ -43,7 +43,7 @@ If you have a previously converted BIDS data repository and you would like to re
                             be left out). If not specified then all participants will be processed
       -b NAME, --bidsmap NAME
                             Selects a custom study bidsmap file for extracting source data properties and
-                            attributes. If the bidsmap filename is just the basename (i.e. no "/" in the
+                            attributes. If the bidsmap filename is just the base name (i.e. no "/" in the
                             name) then it is assumed to be located in the current directory or in
                             bidsfolder/code/bidscoin. Default: bidsmap.yaml or else the template bidsmap
 
@@ -82,10 +82,9 @@ Before sharing or pre-processing their images, you may want to combine the separ
       -o DESTINATION, --output DESTINATION
                             A string that determines where the output is saved. It can be the name of a
                             BIDS datatype folder, such as 'func', or of the derivatives folder, i.e.
-                            'derivatives'. If output = [the name of the input datatype folder] then the
-                            original echo images are replaced by one combined image. If output is left
-                            empty then the combined image is saved in the input datatype folder and the
-                            original echo images are moved to the 'extra_data' folder (default: )
+                            'derivatives'. If output is left empty then the combined image is saved in
+                            the input datatype folder and the original echo images are moved to the
+                            'extra_data' folder (default: )
       -a {PAID,TE,average}, --algorithm {PAID,TE,average}
                             Combination algorithm (default: TE)
       -w [WEIGHT ...], --weights [WEIGHT ...]

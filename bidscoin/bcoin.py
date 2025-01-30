@@ -111,13 +111,13 @@ def setup_logging(logfile: Path=Path()):
     Set up the logging framework:
     1) Extend the Logger class with custom 'bcdebug', 'verbose' and 'success' logging levels / methods
     2) Add a console streamhandler
-    3) If given a logfile, then add a regular log + a warning/error filehandler
+    3) If given a log file, then add a regular log + a warning/error filehandler
 
     NB: Defining a `CustomLogger(logging.Logger)` class + setting `logging.setLoggerClass(CustomLogger)`
     (as in https://github.com/xolox/python-verboselogs/blob/master/verboselogs/__init__.py)
     does not seem to work / is ignored by the plugins. Extending `logging.getLoggerClass()` works robustly
 
-    :param logfile:     Name of the logfile
+    :param logfile:     Name of the log file
     :return:
     """
 
@@ -184,7 +184,7 @@ def setup_logging(logfile: Path=Path()):
 
 def reporterrors() -> str:
     """
-    Summarized the warning and errors from the logfile
+    Summarized the warning and errors from the log file
 
     :return:    The errorlog
     """
@@ -409,7 +409,7 @@ def test_bidsmap(bidsmapfile: str):
     """
     Tests the bidsmaps run-items and their bidsname using BIDScoin's check and the bids-validator
 
-    :param bidsmapfile: The bidsmap or the full pathname/basename of the bidsmap yaml-file
+    :param bidsmapfile: The bidsmap or the full path/base name of the bidsmap yaml-file
     :return:
     """
 
@@ -433,7 +433,7 @@ def test_bidscoin(bidsmapfile, options: dict=None, testplugins: bool=True, testg
     """
     Performs a bidscoin installation test
 
-    :param bidsmapfile: The full pathname/basename of the bidsmap yaml-file or the bidsmap object itself
+    :param bidsmapfile: The full path/base name of the bidsmap yaml-file or the bidsmap object itself
     :param options:     The bidscoin options. If empty, the default options are used
     :return:            0 if the test was successful, otherwise 1
     """

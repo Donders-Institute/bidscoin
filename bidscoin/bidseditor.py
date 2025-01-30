@@ -54,7 +54,7 @@ bidsignore: List of data types that are added to the .bidsignore file,
             e.g. extra_data/;myfile.txt;yourfile.csv
 subprefix:  The subject prefix used in the source data folders (e.g. "Pt" is the subprefix if subject folders are named "Pt018", "Pt019", ...)
 sesprefix:  The session prefix used in the source data folders (e.g. "M_" is the subprefix if session folders are named "M_pre", "M_post", ...)
-anon:       Set this anonymization flag to 'y' to round off age and to discard acquisition date from the meta data
+anon:       Set this anonymization flag to 'y' to round off age and to discard acquisition date from the metadata
 For more information see: {MAIN_HELP_URL}/options.html"""
 
 TOOLTIP_DCM2NIIX = """dcm2niix2bids
@@ -334,7 +334,7 @@ class MainWindow(QMainWindow):
                 if not (newdatatype and ok):
                     return
 
-                # Change the datatype for the selected run-items
+                # Change the data type for the selected run-items
                 for index in rowindexes:
                     datatype   = table.item(index, 2).text()
                     provenance = table.item(index, 5).text()
@@ -978,7 +978,7 @@ class MainWindow(QMainWindow):
             if 'fmap' in self.output_bidsmap.dataformat(dataformat).datatypes:
                 for runitem in self.output_bidsmap.dataformat(dataformat).datatype('fmap').runitems:
                     if not (runitem.meta.get('B0FieldSource') or runitem.meta.get('B0FieldIdentifier') or runitem.meta.get('IntendedFor')):
-                        LOGGER.warning(f"B0FieldIdentifier/IntendedFor fieldmap value is empty for {dataformat} run-item: {runitem}")
+                        LOGGER.warning(f"B0FieldIdentifier/IntendedFor field map value is empty for {dataformat} run-item: {runitem}")
 
         filename,_ = QFileDialog.getSaveFileName(self, 'Save File',  str(self.bidsfolder/'code'/'bidscoin'/'bidsmap.yaml'), 'YAML Files (*.yaml *.yml);;All Files (*)')
         if filename:
@@ -1124,7 +1124,7 @@ class EditWindow(QDialog):
         bids_table.cellChanged.connect(self.bids2run)
 
         # Set-up non-editable BIDS output name section
-        bidsname_label = QLabel('Data filename')
+        bidsname_label = QLabel('Filename')
         bidsname_label.setToolTip(f"Preview of the BIDS output name for this data type")
         self.bidsname_textbox = bidsname_textbox = QTextBrowser()
         bidsname_textbox.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
@@ -1133,7 +1133,7 @@ class EditWindow(QDialog):
         self.refresh_bidsname()
 
         # Set up the meta table
-        meta_label = QLabel('Meta data')
+        meta_label = QLabel('Metadata')
         meta_label.setToolTip(f"Key-value pairs that will be appended to the (e.g. dcm2niix-produced) json sidecar file")
         self.meta_table = meta_table = self.setup_table(meta_data, 'meta', minsize=False)
         meta_table.setShowGrid(True)
@@ -1174,7 +1174,7 @@ class EditWindow(QDialog):
         log_table = self.setup_table(events_data.get('log_table',[]), 'log_table', minsize=False)
         log_table.setShowGrid(True)
         log_table.horizontalHeader().setVisible(True)
-        log_table.setToolTip(f"The raw stimulus presentation data that is parsed from the logfile")
+        log_table.setToolTip(f"The raw stimulus presentation data that is parsed from the log file")
         events_table_label = QLabel('Events data')
         self.events_table = events_table = self.setup_table(events_data.get('table',[]), 'events_table', minsize=False)
         events_table.setShowGrid(True)
@@ -1387,22 +1387,22 @@ class EditWindow(QDialog):
         """Pops up a context-menu for importing data in the meta_table"""
 
         menu        = QtWidgets.QMenu(self)
-        import_data = menu.addAction('Import meta data')
+        import_data = menu.addAction('Import metadata')
         clear_table = menu.addAction('Clear table')
         action      = menu.exec(self.meta_table.viewport().mapToGlobal(pos))
 
         if action == import_data:
 
-            # Read all the meta-data from disk and store it in the target_run
-            metafile, _ = QFileDialog.getOpenFileName(self, 'Import meta data from file', str(self.source_run.provenance),
+            # Read all the metadata from disk and store it in the target_run
+            metafile, _ = QFileDialog.getOpenFileName(self, 'Import metadata from file', str(self.source_run.provenance),
                                                       'JSON/YAML/CSV/TSV Files (*.json *.yaml *.yml *.txt *.csv *.tsv);;All Files (*)')
             if metafile:
 
-                # Get the existing meta-data from the table
+                # Get the existing metadata from the table
                 _,_,_,meta_data,_ = self.run2data()
 
-                # Read the new meta-data from disk
-                LOGGER.info(f"Importing meta data from: '{metafile}''")
+                # Read the new metadata from disk
+                LOGGER.info(f"Importing metadata from: '{metafile}''")
                 try:
                     with open(metafile, 'r') as meta_fid:
                         if Path(metafile).suffix == '.json':
@@ -1418,10 +1418,10 @@ class EditWindow(QDialog):
                     if not isinstance(metadata, dict):
                         raise ValueError('Unknown dataformat')
                 except Exception as readerror:
-                    LOGGER.info(f"Failed to import meta-data from: {metafile}\n{readerror}")
+                    LOGGER.info(f"Failed to import metadata from: {metafile}\n{readerror}")
                     return
 
-                # Write all the meta-data to the target_run
+                # Write all the metadata to the target_run
                 self.target_run.meta.update(metadata)
 
                 # Refresh the meta-table using the target_run
@@ -1480,9 +1480,9 @@ class EditWindow(QDialog):
                                    [{'value': 'start',     'editable': False}, {'value': runitem.events['time']['start'], 'editable': True}]]
 
         # Set up the data for the events conditions / row groups
-        events_data['rows'] = [[{'value': 'condition', 'editable': False}, {'value': 'cast output', 'editable': False}]]
+        events_data['rows'] = [[{'value': 'condition', 'editable': False}, {'value': 'output column', 'editable': False}]]
         for condition in runitem.events.get('rows') or []:
-            events_data['rows'].append([{'value': f"{dict(condition['include'])}", 'editable': True}, {'value': f"{dict(condition.get('cast') or {})}", 'editable': True}])
+            events_data['rows'].append([{'value': f"{dict(condition['condition'])}", 'editable': True}, {'value': f"{dict(condition.get('cast') or {})}", 'editable': True}])
 
         # Set up the data for the events columns
         events_data['columns'] = [[{'value': 'input', 'editable': False}, {'value': 'output', 'editable': False}]]
@@ -1611,7 +1611,7 @@ class EditWindow(QDialog):
                 self.meta_table.blockSignals(False)
             LOGGER.verbose(f"User sets meta['{key}'] from '{oldvalue}' to '{value}' for {self.target_run}")
 
-        # Read all the meta-data from the table and store it in the target_run
+        # Read all the metadata from the table and store it in the target_run
         self.target_run.meta = {}
         for n in range(self.meta_table.rowCount()):
             key_   = self.meta_table.item(n, 0).text().strip()
@@ -1663,8 +1663,8 @@ class EditWindow(QDialog):
     def events_rows2run(self, rowindex: int, colindex: int):
         """Events value has been changed. Read the data from the event 'rows' table and, if OK, update the target run"""
 
-        # row: [[include, {column_in: regex}],
-        #       [cast,    {column_out: newvalue}]]
+        # row: [[condition, {column_in: regex}],
+        #       [cast,      {column_out: newvalue}]]
         mapping = self.events_rows.item(rowindex, colindex).text().strip() if self.events_rows.item(rowindex, colindex) else ''
         nrows   = self.events_rows.rowCount()
 
@@ -1673,9 +1673,9 @@ class EditWindow(QDialog):
                 mapping = ast.literal_eval(mapping)  # Convert stringified dict back to dict
                 LOGGER.verbose(f"User sets events['rows'][{rowindex}] to {mapping}' for {self.target_run}")
                 if rowindex == nrows - 1:
-                    self.target_run.events['rows'].append({'include' if colindex==0 else 'cast': mapping})
+                    self.target_run.events['rows'].append({'condition' if colindex==0 else 'cast': mapping})
                 else:
-                    self.target_run.events['rows'][rowindex]['include' if colindex==0 else 'cast'] = mapping
+                    self.target_run.events['rows'][rowindex]['condition' if colindex==0 else 'cast'] = mapping
             except (ValueError, SyntaxError):
                 QMessageBox.warning(self, 'Input error', f"Please enter a valid '{mapping}' dictionary")
         elif colindex == 0 and rowindex < nrows - 1:                # Remove the row
@@ -1880,7 +1880,7 @@ class EditWindow(QDialog):
         elif datatype=='fmap' and not (self.target_run.meta.get('B0FieldSource') or
                                        self.target_run.meta.get('B0FieldIdentifier') or
                                        self.target_run.meta.get('IntendedFor')):
-            message = f'The "B0FieldIdentifier/IntendedFor" meta-data is left empty for {bidsname} (not recommended)'
+            message = f'The "B0FieldIdentifier/IntendedFor" metadata is left empty for {bidsname} (not recommended)'
         if message:
             answer = QMessageBox.question(self, 'Edit BIDS mapping', f'WARNING:\n{message}\n\nDo you want to go back and edit the run?',
                                           QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
@@ -1993,7 +1993,7 @@ class CompareWindow(QDialog):
             bids_table.setToolTip('The BIDS entity that is used to construct the BIDS output filename')
 
             # Set up the meta table
-            meta_label = QLabel('Meta data')
+            meta_label = QLabel('Metadata')
             meta_label.setToolTip('Key-value pairs that will be appended to the (e.g. dcm2niix-produced) json sidecar file')
             meta_table = self.fill_table(meta_data, 'meta', minsize=False)
             meta_table.setToolTip('The key-value pair that will be appended to the (e.g. dcm2niix-produced) json sidecar file')

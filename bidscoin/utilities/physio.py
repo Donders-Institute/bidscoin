@@ -31,7 +31,7 @@ def readparsefile(fn: Union[bytes,Path], logdatatype: str, firsttime: int=0, exp
     """
     Read and parse physiological traces from the DICOM data or from individual logfiles
 
-    :param fn:              Physiological data from DICOM or the basename of the physiological logfiles
+    :param fn:              Physiological data from DICOM or the base name of the physiological logfiles
     :param logdatatype:     Datatype that is extracted, e.g. 'ECG', 'RESP', 'PULS' or 'EXT'. Additional metadata is extracted if 'ACQUISITION_INFO'
     :param firsttime:       Value from readparsefile('ACQUISITION_INFO', ..) that has to be passed for parsing other logdatatypes
     :param expectedsamples: Number of samples of the parsed traces
@@ -192,9 +192,9 @@ def readphysio(fn: Union[str,Path]) -> dict:
     physio['PULS']:     [length = nr of samples]   PULS signal on this channel
     physio['EXT1']:     [length = nr of samples]   True if EXT/EXT1 signal detected; False if not
     physio['EXT2']:     [length = nr of samples]   True if EXT2 signal detected; False if not
-    physio['Meta']:     Dictionary with additional meta-data from the DICOM header (e.g. 'SeriesNumber')
+    physio['Meta']:     Dictionary with additional metadata from the DICOM header (e.g. 'SeriesNumber')
 
-    :param fn:  Either the fullpath of the DICOM file or the basename of the PHYSIO logfiles (fullpath without suffix and file extension, e.g. 'foo/bar/Physio_DATE_TIME_UUID')
+    :param fn:  Either the fullpath of the DICOM file or the base name of the PHYSIO logfiles (fullpath without suffix and file extension, e.g. 'foo/bar/Physio_DATE_TIME_UUID')
     :return:    The active (non-zero) physio traces for ECG1, ECG2, ECG3, ECG4, RESP, PULS, EXT1 and EXT2 signals
     """
 
@@ -251,7 +251,7 @@ def readphysio(fn: Union[str,Path]) -> dict:
         else:
             LOGGER.error(f"{fn} is not a valid DICOM format file"); raise RuntimeError(f"Invalid DICOM: {fn}")
 
-        # Add some (BIDS) meta-data from the DICOM header
+        # Add some (BIDS) metadata from the DICOM header
         for key in ('Modality',
                     'Manufacturer',
                     'ManufacturerModelName',

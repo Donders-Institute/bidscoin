@@ -33,7 +33,7 @@ def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: 
     :param bidsfolder:   The name of the BIDS root folder
     :param participant:  List of selected subjects/participants (i.e. sub-# names/folders) to be processed (the sub-prefix can be omitted). Otherwise, all subjects in the sourcefolder will be processed
     :param force:        If True, participant will be processed, regardless of existing folders in the bidsfolder. Otherwise, existing folders will be skipped
-    :param bidsmap:      The name of the bidsmap YAML-file. If the bidsmap pathname is just the basename (i.e. no "/" in the name) then it is assumed to be located in the current directory or in bidsfolder/code/bidscoin
+    :param bidsmap:      The name of the bidsmap YAML-file. If the bidsmap pathname is just the base name (i.e. no "/" in the name) then it is assumed to be located in the current directory or in bidsfolder/code/bidscoin
     :param cluster:      Use the DRMAA library to submit the bidscoiner jobs to a high-performance compute (HPC) cluster with DRMAA native specifications for submitting bidscoiner jobs to the HPC cluster. See cli/_bidscoiner() for default
     :return:             Nothing
     """
@@ -284,7 +284,7 @@ def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: 
                         if next(bidssession.rglob('*.json'), None):
                             bids.addparticipant(bidsfolder/'participants.tsv', subid, sesid, personals)
 
-                    # Add the special fieldmap metadata (IntendedFor, TE, etc)
+                    # Add the special field map metadata (IntendedFor, TE, etc)
                     bids.addmetadata(bidssession)
 
                     # Check/repair the run-indices using acq_time info in the scans_table

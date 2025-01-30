@@ -183,7 +183,7 @@ class Interface(PluginInterface):
                 LOGGER.error(f"Output file not found: {target}")
                 continue
 
-            # Load/copy over the source meta-data
+            # Load/copy over the source metadata
             sidecar  = target.with_suffix('').with_suffix('.json')
             metadata = bids.poolmetadata(run.datasource, sidecar, run.meta, options.get('meta', []))
             if metadata:

@@ -26,6 +26,6 @@ def get_parser():
     parser.add_argument('bidsfolder',       help='The destination/output folder with the bids data')
     parser.add_argument('-k','--keys',      help="Space separated list of the participants.tsv columns. Default: 'session_id' 'age' 'sex' 'size' 'weight'", nargs='+', default=['age', 'sex', 'size', 'weight'], metavar='KEY')    # NB: session_id is default
     parser.add_argument('-d','--dryrun',    help='Do not save anything, only print the participants info on screen', action='store_true')
-    parser.add_argument('-b','--bidsmap',   help='The study bidsmap file with the mapping heuristics. If the bidsmap filename is just the basename (i.e. no "/" in the name) then it is assumed to be located in the current directory or in bidsfolder/code/bidscoin. Default: bidsmap.yaml', metavar='NAME', default='bidsmap.yaml')
+    parser.add_argument('-b','--bidsmap',   help='The study bidsmap file with the mapping heuristics. If the bidsmap filename is just the base name (i.e. no "/" in the name) then it is assumed to be located in the current directory or in bidsfolder/code/bidscoin. Default: bidsmap.yaml', metavar='NAME', default='bidsmap.yaml')
 
     return parser

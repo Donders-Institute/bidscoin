@@ -26,7 +26,7 @@ Options:
     bidsignore: [extra_data/, sub-*_ct.*]    # List of entries that are added to the .bidsignore file (for more info, see BIDS specifications), e.g. [extra_data/, pet/, myfile.txt, yourfile.csv]
     unknowntypes: [extra_data]      # A list of datatypes that are converted to BIDS-like datatype folders
     ignoretypes: [exclude]          # A list of datatypes that are excluded / not converted to BIDS
-    anon: y                         # Set this anonymization flag to 'y' to round off age and discard acquisition date from the meta data
+    anon: y                         # Set this anonymization flag to 'y' to round off age and discard acquisition date from the metadata
     unzip:                          # Wildcard pattern to select tarball/zip-files in the source folders that need to be unzipped (in a tempdir) to expose the data, e.g. '*.tar.gz'
   plugins:                          # List of plugins with plugin-specific key-value pairs (that can be used by the plugin)
     nibabel2bids:

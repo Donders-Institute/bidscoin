@@ -1,7 +1,7 @@
 Options
 =======
 
-BIDScoin has different options and settings (see below) that can be adjusted per study bidsmap or, when you want to customize the default, set as default in the `template bidsmap <./bidsmap.html>`__. There are separate settings for BIDScoin and for the individual plugins that can be edited by double clicking the corresponding fields. Installed plugins can be removed or added to extend BIDScoin's functionality.
+BIDScoin has different options and settings (see below) that can be adjusted per study bidsmap or, when you want to customize the default, set as default in the `template bidsmap <./bidsmap_indepth.html>`__. There are separate settings for BIDScoin and for the individual plugins that can be edited by double clicking the corresponding fields. Installed plugins can be removed or added to extend BIDScoin's functionality.
 
 .. figure:: ./_static/bidseditor_options.png
    :scale: 75%
@@ -23,7 +23,7 @@ These setting can be used by all the BIDScoin tools:
 - ``datatypes``: Datatypes that are converted to BIDS. This can be useful for ignoring/excluding specific data types (without changing their mappings)
 - ``unknowntypes``: Datatypes that are not part of BIDS but that are converted to a BIDS-like entries in the BIDS folder
 - ``ignoretypes``: Datatypes that are excluded/not converted"""
-- ``anon``: Set this anonymization flag to 'y' to round off age and to discard acquisition date from the meta data
+- ``anon``: Set this anonymization flag to 'y' to round off age and to discard acquisition date from the metadata
 - ``unzip``: Wildcard pattern to select tarball/zip-files in the source folders that need to be unzipped (in a tempdir) to expose the data. Use for instance '\*.tar.gz' if your source data looks like ``sub-01\01_MPRAGE\dcmfiles.tar.gz``, etc
 
 The core working of BIDScoin and its plugins can be tested by clicking the corresponding [Test] button and inspection of the terminal output.
@@ -69,4 +69,4 @@ The `nibabel2bids plugin <./plugins.html#nibabel2bids>`__ is an optional bidscoi
 - ``meta``: The file extensions of the associated / equally named (meta)data sourcefiles that are copied over as BIDS (sidecar) files, such as ``['.json', '.tsv', '.tsv.gz', '.bval', '.bvec']``. You can use this to enrich json sidecar files or add data that is not supported by this plugin. For instance, in this way you can still convert a NIfTI dataset that was previously created with dcm2niix to BIDS. NB: Data entered in the meta table of the bidseditor GUI always has priority over data in source json files, which itself has priority over dcm2niix-generated json data.
 
 .. note::
-   Typically, nibabel2bids does not produce any json sidecar files, so as a user you need to provide for that yourself. You can look up the fields required by the BIDS specification and enter that information in the meta data tables of the bidseditor or put it in json files next to your source data.
+   Typically, nibabel2bids does not produce any json sidecar files, so as a user you need to provide for that yourself. You can look up the fields required by the BIDS specification and enter that information in the metadata tables of the bidseditor or put it in json files next to your source data.

@@ -73,6 +73,8 @@ Nibabel2bids
 Oostenveld
 OpenMR
 P7
+Pt018
+Pt019
 PET2BIDS
 PatientName
 PatientSex
@@ -281,6 +283,7 @@ rawmapper
 rebranded
 refactoring
 regex
+regressor
 ruamel
 runindex
 runitem
@@ -291,6 +294,7 @@ selectable
 seriesfolder
 seriesfolders
 ses
+sesprefix
 sessionfolder
 shareable
 skullstrip

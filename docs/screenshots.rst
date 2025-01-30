@@ -26,7 +26,7 @@ The bidseditor
 
 .. figure:: ./_static/bidseditor_compare.png
 
-   The comparison window showing the properties, attributes, BIDS entities and meta data for two different magnitude1 fieldmap acquisitions. Comparing these parameters directly can be useful for tracking down small differences in the acquisition protocol. Comparison windows can be made by right-clicking selected BIDS output names in the main window (use shift- or control-click to select multiple items).
+   The comparison window showing the properties, attributes, BIDS entities and metadata for two different magnitude1 field map acquisitions. Comparing these parameters directly can be useful for tracking down small differences in the acquisition protocol. Comparison windows can be made by right-clicking selected BIDS output names in the main window (use shift- or control-click to select multiple items).
 
 The bidscoiner
 ~~~~~~~~~~~~~~

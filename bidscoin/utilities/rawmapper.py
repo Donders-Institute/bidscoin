@@ -45,7 +45,7 @@ def rawmapper(sourcefolder, outfolder: str='', sessions: tuple=(), rename: bool=
     else:
         sesprefix_ = sesprefix
 
-    # Write the header of the mapper logfile
+    # Write the header of the mapper log file
     mapperfile = outfolder/f"rawmapper_{'_'.join(field)}.tsv"
     if not dryrun:
         print(f"Saving rawmapper-data in: {mapperfile}")
@@ -111,7 +111,7 @@ def rawmapper(sourcefolder, outfolder: str='', sessions: tuple=(), rename: bool=
             newsubid = subprefix  + newsubid
             newsesid = sesprefix_ + (newsesid if newsesid else sesid)
 
-            # Save the dicomfield / sub-ses mapping in the mapper logfile and rename the session subfolder (but skip if it already exists)
+            # Save the dicomfield / sub-ses mapping in the mapper log file and rename the session subfolder (but skip if it already exists)
             newsession = rawfolder/newsubid/newsesid
             print(f"{session} -> {newsession}")
             if newsession == session:
@@ -128,7 +128,7 @@ def rawmapper(sourcefolder, outfolder: str='', sessions: tuple=(), rename: bool=
                 else:
                     shutil.move(session, newsession)
 
-        # Print & save the dicom values in the mapper logfile
+        # Print & save the dicom values in the mapper log file
         else:
             print('{}/{}/{}\t-> {}'.format(subprefix+subid, f"{sesprefix_}{sesid}", series.name, '\t'.join(dicomval)))
             if not dryrun:

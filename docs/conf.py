@@ -36,7 +36,7 @@ with open(Path(__file__).parents[1]/'pyproject.toml', 'rb') as fid:
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 nitpicky      = True
-extensions    = ['myst_parser']
+extensions    = ['myst_parser', 'sphinx_design']
 source_suffix = {'.rst': 'restructuredtext',
                  '.md': 'markdown'}
 

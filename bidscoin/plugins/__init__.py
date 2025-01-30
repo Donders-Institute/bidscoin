@@ -156,9 +156,9 @@ class EventsParser(ABC):
 
     def __init__(self, sourcefile: Path, eventsdata: dict, options: dict):
         """
-        Reads the events table from the events logfile
+        Reads the events table from the events log file
 
-        :param sourcefile:  The full filepath of the raw logfile
+        :param sourcefile:  The full filepath of the raw log file
         :param eventsdata:  The run['events'] data (from a bidsmap)
         :param options:     The plugin options
         """
@@ -216,7 +216,7 @@ class EventsParser(ABC):
         rows = pd.Series([len(self.rows) == 0] * len(df)).astype(bool)  # Boolean series with True values if no row expressions were specified
         for group in self.rows:
 
-            for column, regex in group['include'].items():
+            for column, regex in group['condition'].items():
 
                 # Get the rows that match the expression, i.e. make them True
                 rowgroup = self.logtable[column].astype(str).str.fullmatch(str(regex))
@@ -241,7 +241,7 @@ class EventsParser(ABC):
 
     @property
     def rows(self) -> list[dict]:
-        """List with fullmatch regular expression dictionaries that yield row sets in the eventstable"""
+        """List with fullmatch regular expression dictionaries that yield row sets (conditions) in the eventstable"""
         return self._data.get('rows') or []
 
     @rows.setter
@@ -290,7 +290,7 @@ class EventsParser(ABC):
 
         # Check if the logtable has existing and unique column names
         columns = self.logtable.columns
-        for name in set([name for item in self.columns for name in item.values()] + [name for item in self.rows for name in item['include'].keys()] +
+        for name in set([name for item in self.columns for name in item.values()] + [name for item in self.rows for name in item['condition'].keys()] +
                         [*self.time.get('start', {}).keys()] + self.time.get('cols', [])):
             if name and name not in columns:
                 LOGGER.warning(f"Column '{name}' not found in the event table of {self}")

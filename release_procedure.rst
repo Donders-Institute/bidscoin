@@ -15,7 +15,7 @@ This document describes how to prepare a new BIDScoin release from within the DC
     conda deactivate
     source activate /opt/bidscoin
     ~/python/bidscoin/bidscoin/bcoin.py -t
-    # Perform integration tests from the commandline and PyCharm
+    # Perform integration tests from the command line and PyCharm
 
 2. Build & test the apptainer container from GitHub in the Linux VM::
 

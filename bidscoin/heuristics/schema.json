@@ -66,7 +66,7 @@
                         "type": "string"
                      },
                      "meta": {
-                        "description": "The participant meta data for the sidecar file",
+                        "description": "The participant metadata for the sidecar file",
                         "type": "object"
                      }
                   },
@@ -81,7 +81,7 @@
                         "type": "string"
                      },
                      "meta": {
-                        "description": "The session meta data for the sidecar file",
+                        "description": "The session metadata for the sidecar file",
                         "type": "object"
                      }
                   },
@@ -97,7 +97,7 @@
                      "type": "string"
                   },
                   "meta": {
-                     "description": "The meta data of the property in the participants sidecar file",
+                     "description": "The metadata of the property in the participants sidecar file",
                      "type": "object"
                   }
                },
@@ -143,7 +143,7 @@
                   }
                },
                "meta": {
-                  "description": "The meta-data that will be appended to the json sidecar files produced by the plugin",
+                  "description": "The metadata that will be appended to the json sidecar files produced by the plugin",
                   "type": "object"
                },
                "events": {
@@ -165,9 +165,9 @@
                         "items": {
                            "description": "A group of rows with an (optional) mapping to the output table",
                            "type": "object",
-                           "required": ["include"],
+                           "required": ["condition"],
                            "properties": {
-                              "include": { "type": "object", "maxProperties": 1 },
+                              "condition": { "type": "object", "maxProperties": 1 },
                               "cast": { "type": ["object", "null"], "maxProperties": 1 }
                            },
                            "additionalProperties": false

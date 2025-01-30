@@ -1,6 +1,6 @@
 # --------------------------------------------------------------------------------
 # This is a bidsmap YAML file with the key-value mappings for the different BIDS
-# datatypes (anat, func, dwi, etc). The datatype attributes are the keys that map
+# datatypes (anat, func, dwi, etc). The data type attributes are the keys that map
 # onto the BIDS labels. The bidsmap data-structure should be 5 levels deep:
 #
 # dict       : dict     : list     : dict        : dict
@@ -23,9 +23,9 @@ Options:                            # =============================== General op
     bidsignore: extra_data/         # Semicolon-separated list of entries that are added to the .bidsignore file (for more info, see BIDS specifications), e.g. extra_data/;pet/;myfile.txt;yourfile.csv
     subprefix: sub-                 # The subject prefix of the source data
     sesprefix: ses-                 # The session prefix of the source data
-    unknowntypes: [mrs, extra_data] # A list of datatypes that are converted to BIDS-like datatype folders
+    unknowntypes: [mrs, extra_data] # A list of datatypes that are converted to BIDS-like data type folders
     ignoretypes: [exclude]          # A list of datatypes that are excluded/not converted to BIDS
-    anon: y                         # Set this anonymization flag to 'y' to round off age and discard acquisition date from the meta data
+    anon: y                         # Set this anonymization flag to 'y' to round off age and discard acquisition date from the metadata
     unzip:                          # Wildcard pattern to select tarballed/zip-files in the sourcefolders that need to be unzipped (in a tempdir) to expose the data, e.g. '*.tar.gz'
   plugins:                          # List of plugins with plugin-specific key-value pairs (that can be used by the plugin)
     dcm2niix2bids:                  # See dcm2niix -h and https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage#General_Usage for more info
