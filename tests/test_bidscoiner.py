@@ -1,5 +1,6 @@
 import os
 import json
+import csv
 from bidscoin import bcoin, bidsmapper, bidscoiner, bidsmap_template, __version__
 from bidscoin.bids import BidsMap
 from duecredit.io import load_due, DUECREDIT_FILE
@@ -7,8 +8,8 @@ from duecredit.io import load_due, DUECREDIT_FILE
 bcoin.setup_logging()
 
 
-def test_bidscoiner(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir):
-    return
+def test_bidscoiner_dicomdir(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir):
+
     if not bidsmap_dicomdir.is_file():
         bidsmapper.bidsmapper(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir, bidsmap_template, [], 'Doe^', '*', unzip='', automated=True, force=True)
         try:
@@ -47,6 +48,15 @@ def test_bidscoiner(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir):
                 assert path                 == 'bidscoin'
                 assert citation.cite_module is True
                 assert citation.version     == __version__
+
+    participantsfile = bids_dicomdir/'participants.tsv'
+    with open(participantsfile) as fid:
+        data = list(csv.reader(fid, delimiter='\t'))
+    # participant_id  session_id                      age     sex     height  weight
+    # sub-Archibald   ses-02CTHEADBRAINWOCONTRAST     42      n/a     n/a     n/a
+    # sub-Peter       ses-01                          43      M       n/a     81.632700
+    assert data[0] == ['participant_id', 'session_id', 'age', 'sex', 'height', 'weight']
+    assert data[2] == ['sub-Peter',      'ses-01',     '43',  'M',   'n/a',    '81.632700']
 
 
 # def test_addmetadata(bids_dicomdir, bidsmap_dicomdir):

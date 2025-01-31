@@ -1,5 +1,6 @@
 import pytest
 import re
+from pathlib import Path
 from bidscoin import bcoin, bidsmapper, bidsmap_template
 
 bcoin.setup_logging()
@@ -8,10 +9,10 @@ bcoin.setup_logging()
 @pytest.mark.parametrize('subprefix', ['Doe', 'Doe^', '*'])
 @pytest.mark.parametrize('sesprefix', ['0', '*'])
 @pytest.mark.parametrize('store', [False, True])
-def test_bidsmapper(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir, subprefix, sesprefix, store):
+def test_bidsmapper_dicomdir(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir, subprefix, sesprefix, store):
     resubprefix = '' if subprefix=='*' else re.escape(subprefix).replace(r'\-','-')
     resesprefix = '' if sesprefix=='*' else re.escape(sesprefix).replace(r'\-','-')
-    bidsmap     = bidsmapper.bidsmapper(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir, bidsmap_template, [], subprefix, sesprefix, unzip='', store=store, automated=True, force=True)
+    bidsmap     = bidsmapper.bidsmapper(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir, bidsmap_template, [], subprefix, sesprefix, '', store=store, automated=True, force=True)
     assert isinstance(bidsmap.dataformats[0]._data, dict)
     assert bidsmap.options['subprefix'] == subprefix
     assert bidsmap.options['sesprefix'] == sesprefix
@@ -29,3 +30,18 @@ def test_bidsmapper(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir, subprefix, se
         (bidsmap_dicomdir.parent/'bidsmapper.errors').unlink(missing_ok=True)
     except Exception:
         pass
+
+
+def test_bidsmapper_neurobs(tmp_path):
+
+    testdata = str(Path(__file__).parent/'test_data'/'neurobs')
+    bidsmap  = bidsmapper.bidsmapper(testdata, str(tmp_path/'bids'), 'bidsmap.yaml', bidsmap_template, ['events2bids'], 'sub-', 'ses-', '', automated=True)
+
+    assert isinstance(bidsmap.dataformat('Presentation')._data, dict)
+    assert len(bidsmap.dataformat('Presentation').datatype(   'exclude').runitems) == 0
+    assert len(bidsmap.dataformat('Presentation').datatype(      'func').runitems) == 1
+    assert len(bidsmap.dataformat('Presentation').datatype('extra_data').runitems) == 1
+    assert bidsmap.dataformat('Presentation').datatype('extra_data').runitems[0].attributes['Scenario'] == 'Flanker'
+    assert (tmp_path/'bids'/'code'/'bidscoin'/'bidsmap.yaml').is_file()
+    assert 'M059' in bidsmap.filepath.read_text()                       # Make sure we have discovered `M059` samples (-> provenance)
+    assert (bidsmap.filepath.parent/'bidsmapper.errors').stat().st_size == 0
