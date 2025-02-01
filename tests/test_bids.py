@@ -48,14 +48,14 @@ class TestDataSource:
         assert datasource.dataformat == 'DICOM'
 
     def test_properties(self, datasource):
-        assert datasource.properties( 'filepath:.*/(.*?)_files/.*') == 'test'   # path = [..]/pydicom/data/test_files/MR_small.dcm'
-        assert datasource.properties(r'filename:MR_(.*?)\.dcm')     == 'small'
-        assert datasource.properties( 'filesize')                   == '9.60 kB'
-        assert datasource.properties( 'nrfiles')                    in (75,76,86)  # Depends on the pydicom version
+        assert datasource.property('filepath:.*/(.*?)_files/.*') == 'test'   # path = [..]/pydicom/data/test_files/MR_small.dcm'
+        assert datasource.property(r'filename:MR_(.*?)\.dcm') == 'small'
+        assert datasource.property('filesize') == '9.60 kB'
+        assert datasource.property('nrfiles') in (75, 76, 86)  # Depends on the pydicom version
 
     def test_attributes(self, datasource, extdatasource):
-        assert datasource.attributes(r'PatientName:.*\^(.*?)1') == 'MR'         # PatientName = 'CompressedSamples^MR1'
-        assert extdatasource.attributes('PatientName')          == 'ExtendedAttributesTest'
+        assert datasource.attribute(r'PatientName:.*\^(.*?)1') == 'MR'         # PatientName = 'CompressedSamples^MR1'
+        assert extdatasource.attribute('PatientName') == 'ExtendedAttributesTest'
 
     @pytest.mark.parametrize('subid',  ['sub-001', 'pat^visit'])
     @pytest.mark.parametrize('sesid',  ['ses-01',  'visit^01', ''])

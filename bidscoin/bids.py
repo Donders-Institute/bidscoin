@@ -137,7 +137,7 @@ class DataSource:
 
         return ''
 
-    def properties(self, tagname: str, runitem=None) -> Union[str, int]:
+    def property(self, tagname: str, runitem=None) -> Union[str, int]:
         """
         Gets the 'filepath[:regex]', 'filename[:regex]', 'filesize' or 'nrfiles' filesystem property. The filepath (with trailing "/")
         and filename can be parsed using an optional regular expression re.findall(regex, filepath/filename). The last match is returned
@@ -178,9 +178,9 @@ class DataSource:
 
             if tagname == 'nrfiles' and self.path.is_file():
                 if runitem:                                         # Currently not used but keep the option open for future use
-                    def match(file): return ((match_runvalue(file.parent,         runitem.properties['filepath']) or not runitem.properties['filepath']) and
-                                             (match_runvalue(file.name,           runitem.properties['filename']) or not runitem.properties['filename']) and
-                                             (match_runvalue(file.stat().st_size, runitem.properties['filesize']) or not runitem.properties['filesize']))
+                    def match(file): return ((match_runvalue(file.parent,         runitem.property['filepath']) or not runitem.property['filepath']) and
+                                             (match_runvalue(file.name,           runitem.property['filename']) or not runitem.property['filename']) and
+                                             (match_runvalue(file.stat().st_size, runitem.property['filesize']) or not runitem.property['filesize']))
                     return len([file for file in self.path.parent.iterdir() if match(file)])
                 else:
                     return len([*self.path.parent.iterdir()])
@@ -193,7 +193,7 @@ class DataSource:
 
         return ''
 
-    def attributes(self, attributekey: str, validregexp: bool=False, cache: bool=True) -> str:
+    def attribute(self, attributekey: str, validregexp: bool=False, cache: bool=True) -> str:
         """
         Read the attribute value from the extended attributes, or else use the plugins to read it from the datasource
 
@@ -331,7 +331,7 @@ class DataSource:
             sourcevalue = ''
             for val in [val.split('>') for val in value.split('<')]:    # value = '123<abc>456' -> for val in [['123'], ['abc', '456']]
                 if len(val) == 2:           # The first element is the dynamic part in val
-                    sourcevalue += str(self.properties(val[0])) + str(self.attributes(val[0]))
+                    sourcevalue += str(self.property(val[0])) + str(self.attribute(val[0]))
                 sourcevalue += val[-1]      # The last element is always the non-dynamic part in val
             value = sourcevalue
             if cleanup:
@@ -1325,7 +1325,7 @@ class BidsMap:
 
                     # Check if the property value matches with the info from the sourcefile
                     if propvalue:
-                        sourcevalue = datasource.properties(propkey)
+                        sourcevalue = datasource.property(propkey)
                         match       = match and match_runvalue(sourcevalue, propvalue)
 
                     # Keep the matching expression
@@ -1335,7 +1335,7 @@ class BidsMap:
                 for attrkey, attrvalue in runitem.attributes.items():
 
                     # Check if the attribute value matches with the info from the sourcefile
-                    sourcevalue = datasource.attributes(attrkey, validregexp=True)
+                    sourcevalue = datasource.attribute(attrkey, validregexp=True)
                     if attrvalue or runtime:
                         match = match and match_runvalue(sourcevalue, attrvalue)
 
@@ -1414,7 +1414,7 @@ class BidsMap:
 
                 for attrkey, attrvalue in runitem.attributes.items():
                     if datasource.path.name:
-                        runitem.attributes[attrkey] = datasource.attributes(attrkey, validregexp=True)
+                        runitem.attributes[attrkey] = datasource.attribute(attrkey, validregexp=True)
                     else:
                         runitem.attributes[attrkey] = attrvalue
 

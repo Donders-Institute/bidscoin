@@ -292,12 +292,12 @@ class MainWindow(QMainWindow):
                         datasource = bids.DataSource(filename, self.output_bidsmap.plugins, dataformat, self.output_bidsmap.options)
                         if datasource.has_support():
                             runitem = self.template_bidsmap.get_run(datatype, 0, datasource)
-                            runitem.properties['filepath'] = datasource.properties('filepath')      # Make the added run a strict match (i.e. an exception)
-                            runitem.properties['filename'] = datasource.properties('filename')      # Make the added run a strict match (i.e. an exception)
+                            runitem.properties['filepath'] = datasource.property('filepath')    # Make the added run a strict match (i.e. an exception)
+                            runitem.properties['filename'] = datasource.property('filename')    # Make the added run a strict match (i.e. an exception)
                             LOGGER.verbose(f"Expert usage: User adds run-item {dataformat}[{datatype}]: {filename}")
                             if Path(filename) in self.output_bidsmap.dir(dataformat):
                                 LOGGER.warning(f"Added run-item {dataformat}[{datatype}]: {filename} already exists")
-                            self.output_bidsmap.insert_run(runitem, 0)                      # Put the run at the front (so it gets matching priority)
+                            self.output_bidsmap.insert_run(runitem, 0)                  # Put the run at the front (so it gets matching priority)
                             if dataformat not in self.ordered_file_index:
                                 self.ordered_file_index[dataformat] = {datasource.path: 0}
                             else:
@@ -1440,11 +1440,11 @@ class EditWindow(QDialog):
         runitem = self.target_run
 
         # Set up the data for the properties table
-        properties = self.datasource.properties
-        properties_data = [[{'value': 'filepath', 'editable': False}, {'value': runitem.properties['filepath'], 'editable': True}, {'value': properties('filepath'), 'editable': False}],
-                           [{'value': 'filename', 'editable': False}, {'value': runitem.properties['filename'], 'editable': True}, {'value': properties('filename'), 'editable': False}],
-                           [{'value': 'filesize', 'editable': False}, {'value': runitem.properties['filesize'], 'editable': True}, {'value': properties('filesize'), 'editable': False}],
-                           [{'value': 'nrfiles',  'editable': False}, {'value': runitem.properties['nrfiles'],  'editable': True}, {'value': properties('nrfiles'),  'editable': False}]]
+        property = self.datasource.property
+        properties_data = [[{'value': 'filepath', 'editable': False}, {'value': runitem.properties['filepath'], 'editable': True}, {'value': property('filepath'), 'editable': False}],
+                           [{'value': 'filename', 'editable': False}, {'value': runitem.properties['filename'], 'editable': True}, {'value': property('filename'), 'editable': False}],
+                           [{'value': 'filesize', 'editable': False}, {'value': runitem.properties['filesize'], 'editable': True}, {'value': property('filesize'), 'editable': False}],
+                           [{'value': 'nrfiles',  'editable': False}, {'value': runitem.properties['nrfiles'],  'editable': True}, {'value': property('nrfiles'),  'editable': False}]]
 
         # Set up the data for the attributes table
         attributes_data = []
@@ -2032,10 +2032,10 @@ class CompareWindow(QDialog):
         :return: (properties_data, attributes_data, bids_data, meta_data, events_data)
         """
 
-        properties_data = [['filepath', runitem.properties.get('filepath'), runitem.datasource.properties('filepath')],
-                           ['filename', runitem.properties.get('filename'), runitem.datasource.properties('filename')],
-                           ['filesize', runitem.properties.get('filesize'), runitem.datasource.properties('filesize')],
-                           ['nrfiles',  runitem.properties.get('nrfiles'),  runitem.datasource.properties('nrfiles')]]
+        properties_data = [['filepath', runitem.properties.get('filepath'), runitem.datasource.property('filepath')],
+                           ['filename', runitem.properties.get('filename'), runitem.datasource.property('filename')],
+                           ['filesize', runitem.properties.get('filesize'), runitem.datasource.property('filesize')],
+                           ['nrfiles',  runitem.properties.get('nrfiles'),  runitem.datasource.property('nrfiles')]]
 
         attributes_data = []
         for key in sorted(runitem.attributes.keys()):

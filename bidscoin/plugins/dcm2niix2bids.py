@@ -476,9 +476,9 @@ class Interface(PluginInterface):
                 if not ignore:
                     acq_time = ''
                     if dataformat == 'DICOM':
-                        acq_time = f"{run.datasource.attributes('AcquisitionDate')}T{run.datasource.attributes('AcquisitionTime')}"
+                        acq_time = f"{run.datasource.attribute('AcquisitionDate')}T{run.datasource.attribute('AcquisitionTime')}"
                     elif dataformat == 'PAR':
-                        acq_time = run.datasource.attributes('exam_date')
+                        acq_time = run.datasource.attribute('exam_date')
                     if not acq_time or acq_time == 'T':
                         acq_time = f"1925-01-01T{metadata.get('AcquisitionTime','')}"
                     try:

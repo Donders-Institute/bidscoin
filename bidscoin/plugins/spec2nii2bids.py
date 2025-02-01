@@ -204,14 +204,14 @@ class Interface(PluginInterface):
 
             # Parse the acquisition time from the source header or else from the json file (NB: assuming the source file represents the first acquisition)
             if not bidsignore:
-                acq_time   = ''
-                attributes = run.datasource.attributes
+                acq_time  = ''
+                attribute = run.datasource.attribute
                 if dataformat == 'SPAR':
-                    acq_time = attributes('scan_date')
+                    acq_time = attribute('scan_date')
                 elif dataformat == 'Twix':
-                    acq_time = f"{attributes('AcquisitionDate')}T{attributes('AcquisitionTime')}"
+                    acq_time = f"{attribute('AcquisitionDate')}T{attribute('AcquisitionTime')}"
                 elif dataformat == 'Pfile':
-                    acq_time = f"{attributes('rhr_rh_scan_date')}T{attributes('rhr_rh_scan_time')}"
+                    acq_time = f"{attribute('rhr_rh_scan_date')}T{attribute('rhr_rh_scan_time')}"
                 if not acq_time or acq_time == 'T':
                     acq_time = f"1925-01-01T{metadata.get('AcquisitionTime','')}"
                 try:
