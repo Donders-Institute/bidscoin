@@ -171,7 +171,7 @@ If the preview of the BIDS filename and metadata  look correct, click the [OK] b
 
    The edit window for customizing a bidsmap run item, featuring the DICOM attributes mapped onto BIDS values and (dynamic) metadata values (e.g. ``Comments``). BIDS values that are restricted to a limited set are presented with a drop-down menu.
 
-Finally, if all BIDS output names in the main window look correct, click the [Save] button and proceed to step 2 by running the bidscoiner tool. Keep in mind that re-running bidsmapper or bidseditor is always safe, as these tools simply reuse the existing BIDSmap YAML file without modifying or deleting any other files on disk.
+Finally, if all BIDS output names in the main window look correct, click the [Save] button and proceed to step 2 by running the bidscoiner tool. Keep in mind that re-running bidsmapper or bidseditor is always safe, as these tools simply reuse the existing bidsmap file without modifying or deleting any other files on disk.
 
 Stimulus events
 ```````````````
@@ -183,7 +183,7 @@ If your dataset contain (stimulus) events logfiles and you are using e.g. the `e
 
    * The **'Columns'** table specifies which input column names are included (left) and how they should be named in the output table (right). You can add, edit and remove column names as needed
    * The **'Rows'** table specifies which input rows are included in the output table. A ``condition`` (left) is a dictionary with columns names as keys and regular expression patterns as values. Rows are included if the pattern matches with the column value, e.g. when an experimental condition is met. The ``output column`` is optional and can be useful, e.g. to create a new output column or (contrast) regressor for your design matrix (see the screenshot below).
-   * The **'Timing'** table contains setttings for converting input time values to BIDS compliant output values:
+   * The **'Timing'** table contains settings for converting input time values to BIDS compliant output values:
 
      * **columns** -- A list of input column names that hold time values.
      * **units/sec** -- The number of source data time units per second (e.g., 10000 for clock times with a precision of 0.1 milliseconds).
