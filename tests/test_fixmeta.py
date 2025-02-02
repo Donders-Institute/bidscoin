@@ -7,10 +7,10 @@ from bidscoin.bidsapps.fixmeta import fixmeta
 bcoin.setup_logging()
 
 
-def test_fixmeta(tmp_path):
+def test_fixmeta(tmp_path, test_data):
 
     # Get the data
-    bidsdir  = shutil.copytree(Path(__file__).parent/'test_data'/'7t_trt', tmp_path/'7t_trt')
+    bidsdir  = shutil.copytree(test_data/'7t_trt', tmp_path/'7t_trt')
     jsonfile = Path(bidsdir)/'sub-01'/'ses-1'/'fmap'/'sub-01_ses-1_run-1_phasediff.json'
     jsondata = {'EchoTime1': 0.006,
                 'EchoTime2': 0.00702,

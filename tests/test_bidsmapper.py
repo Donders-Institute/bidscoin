@@ -32,16 +32,17 @@ def test_bidsmapper_dicomdir(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir, subp
         pass
 
 
-def test_bidsmapper_neurobs(tmp_path):
+def test_bidsmapper_neurobs(bids_neurobs, bidsmap_neurobs, test_data):
 
-    testdata = str(Path(__file__).parent/'test_data'/'neurobs')
-    bidsmap  = bidsmapper.bidsmapper(testdata, str(tmp_path/'bids'), 'bidsmap.yaml', bidsmap_template, ['events2bids'], 'sub-', 'ses-', '', automated=True)
+    testdata = str(test_data/'neurobs')
+    bidsmap  = bidsmapper.bidsmapper(testdata, bids_neurobs, 'bidsmap.yaml', bidsmap_template, ['events2bids'], 'sub-', 'ses-', '', automated=True)
 
+    assert bidsmap.filepath == bidsmap_neurobs
     assert isinstance(bidsmap.dataformat('Presentation')._data, dict)
     assert len(bidsmap.dataformat('Presentation').datatype(   'exclude').runitems) == 0
     assert len(bidsmap.dataformat('Presentation').datatype(      'func').runitems) == 1
     assert len(bidsmap.dataformat('Presentation').datatype('extra_data').runitems) == 1
     assert bidsmap.dataformat('Presentation').datatype('extra_data').runitems[0].attributes['Scenario'] == 'Flanker'
-    assert (tmp_path/'bids'/'code'/'bidscoin'/'bidsmap.yaml').is_file()
+    assert (bids_neurobs/'code'/'bidscoin'/'bidsmap.yaml').is_file()
     assert 'M059' in bidsmap.filepath.read_text()                       # Make sure we have discovered `M059` samples (-> provenance)
     assert (bidsmap.filepath.parent/'bidsmapper.errors').stat().st_size == 0

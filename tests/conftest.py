@@ -27,6 +27,12 @@ def raw_dicomdir(tmp_path_factory):
 
 
 @pytest.fixture(scope='session')
+def test_data():
+    """The path to BIDScoin's `test_data` folder"""
+    return Path(__file__).parent/'test_data'
+
+
+@pytest.fixture(scope='session')
 def bids_dicomdir(tmp_path_factory):
     """The bids directory created from 'raw_dicomdir'"""
     return tmp_path_factory.mktemp('bids_dicomdir')
@@ -36,3 +42,15 @@ def bids_dicomdir(tmp_path_factory):
 def bidsmap_dicomdir(bids_dicomdir):
     """The bidsmap file in 'bids_dicomdir' (created from 'raw_dicomdir')"""
     return bids_dicomdir/'code'/'bidscoin'/'bidsmap.yaml'
+
+
+@pytest.fixture(scope='session')
+def bids_neurobs(tmp_path_factory):
+    """The bids directory created from 'raw_neurobsdir'"""
+    return tmp_path_factory.mktemp('bids_neurobs')
+
+
+@pytest.fixture()
+def bidsmap_neurobs(bids_neurobs):
+    """The bidsmap file in 'bids_dicomdir' (created from 'raw_dicomdir')"""
+    return bids_neurobs/'code'/'bidscoin'/'bidsmap.yaml'

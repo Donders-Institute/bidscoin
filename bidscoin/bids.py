@@ -2106,7 +2106,10 @@ def addparticipant(participants_tsv: Path, subid: str='', sesid: str='', data: d
         if subid not in table.index:
             if sesid:
                 table.loc[subid, 'session_id'] = sesid
-            data_added                = True
+                data_added                     = True
+            elif not data:
+                table.loc[subid, 'dummy'] = None
+                data_added                = True
         for key in data:
             if key not in table or pd.isnull(table.loc[subid, key]) or table.loc[subid, key] == 'n/a':
                 table.loc[subid, key] = data[key]
@@ -2114,6 +2117,8 @@ def addparticipant(participants_tsv: Path, subid: str='', sesid: str='', data: d
 
         # Write the data to the participants tsv-file
         if data_added:
+            if 'dummy' in table.columns:
+                table.drop(['dummy'], axis=1, inplace=True)
             LOGGER.verbose(f"Writing {subid} subject data to: {participants_tsv}")
             if not dryrun:
                 table.mask(table == '').to_csv(participants_tsv, sep='\t', encoding='utf-8', na_rep='n/a')

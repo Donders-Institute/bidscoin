@@ -24,9 +24,9 @@ def dicomdir():
 
 
 @pytest.fixture(scope='module')
-def study_bidsmap():
+def study_bidsmap(test_data: Path):
     """The path to the study bidsmap `test_data/bidsmap.yaml`"""
-    return Path(__file__).parent/'test_data'/'bidsmap.yaml'
+    return test_data/'bidsmap.yaml'
 
 
 class TestDataSource:

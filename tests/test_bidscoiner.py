@@ -1,6 +1,7 @@
 import os
 import json
 import csv
+from pathlib import Path
 from bidscoin import bcoin, bidsmapper, bidscoiner, bidsmap_template, __version__
 from bidscoin.bids import BidsMap
 from duecredit.io import load_due, DUECREDIT_FILE
@@ -20,15 +21,14 @@ def test_bidscoiner_dicomdir(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir):
     logs    = (bidsmap_dicomdir.parent/'bidscoiner.errors').read_text()
     sidecar = sorted((bids_dicomdir/'sub-Peter'/'ses-03Brain').rglob('*TestExtAtrributes*.json'))[0]
     bidsmap = BidsMap(bidsmap_dicomdir)
-    assert bidsmap.options['unknowntypes'][-1]           == 'extra_data'
-    assert sidecar.relative_to(bids_dicomdir).as_posix() == 'sub-Peter/ses-03Brain/extra_data/sub-Peter_ses-03Brain_acq-TSCRFFASTPILOTi00001_mod-TestExtAtrributes_GR.json'
     try:
         (bidsmap_dicomdir.parent/'bidscoiner.errors').unlink(missing_ok=True)
     except Exception:
         pass
     assert 'ERROR' not in logs
     # assert 'WARNING' not in logs
-    # assert (bidsmap_dicomdir.parent/'bidscoiner.errors').stat().st_size == 0
+    assert bidsmap.options['unknowntypes'][-1]           == 'extra_data'
+    assert sidecar.relative_to(bids_dicomdir).as_posix() == 'sub-Peter/ses-03Brain/extra_data/sub-Peter_ses-03Brain_acq-TSCRFFASTPILOTi00001_mod-TestExtAtrributes_GR.json'
     assert (bids_dicomdir/'sub-Archibald'/'ses-02CTHEADBRAINWOCONTRAST').is_dir()
     assert (bids_dicomdir/'sub-Peter'/'ses-01').is_dir()
     assert (bids_dicomdir/'sub-Peter'/'ses-04BrainMRA').is_dir()
@@ -52,11 +52,62 @@ def test_bidscoiner_dicomdir(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir):
     participantsfile = bids_dicomdir/'participants.tsv'
     with open(participantsfile) as fid:
         data = list(csv.reader(fid, delimiter='\t'))
+    with open(participantsfile.with_suffix('.json')) as fid:
+        meta = json.load(fid)
     # participant_id  session_id                      age     sex     height  weight
     # sub-Archibald   ses-02CTHEADBRAINWOCONTRAST     42      n/a     n/a     n/a
     # sub-Peter       ses-01                          43      M       n/a     81.632700
+    assert data[0] == list(meta.keys())
     assert data[0] == ['participant_id', 'session_id', 'age', 'sex', 'height', 'weight']
     assert data[2] == ['sub-Peter',      'ses-01',     '43',  'M',   'n/a',    '81.632700']
+
+
+def test_bidscoiner_neurobs(bids_neurobs, bidsmap_neurobs, test_data):
+
+    testdata = str(test_data/'neurobs')
+    if not bidsmap_neurobs.is_file():
+        bidsmapper.bidsmapper(testdata, str(bids_neurobs), bidsmap_neurobs, bidsmap_template, ['events2bids'], 'sub-', 'ses-', '', automated=True)
+        try:
+            (bidsmap_neurobs.parent/'bidsmapper.errors').unlink(missing_ok=True)
+        except Exception:
+            pass
+    bidsmap = BidsMap(bidsmap_neurobs)
+    bidsmap.dataformat('Presentation').datatype('func').runitems[0].events['rows'][0]['condition'] = {'Event Type': 'Pict.*'}
+    bidsmap.dataformat('Presentation').datatype('func').runitems[0].events['rows'].append({})
+    bidsmap.dataformat('Presentation').datatype('func').runitems[0].events['rows'][1]['condition'] = {'Code': 'instr.*'}
+    bidsmap.dataformat('Presentation').datatype('func').runitems[0].events['rows'][1]['cast']      = {'xtra': 'test'}
+    bidsmap.save()
+    bidscoiner.bidscoiner(testdata, bids_neurobs)
+    logs = (bidsmap_neurobs.parent/'bidscoiner.errors').read_text()
+    try:
+        (bidsmap_neurobs.parent/'bidscoiner.errors').unlink(missing_ok=True)
+    except Exception:
+        pass
+    assert 'ERROR' not in logs
+    assert 'WARNING' not in logs
+    assert len(list(bids_neurobs.rglob('sub-*.json*'))) == 2
+
+    tsvfile1 = bids_neurobs/'sub-M059/func/sub-M059_events.tsv'
+    tsvfile2 = bids_neurobs/'sub-M059/extra_data/sub-M059_task-Flanker_events.tsv'
+    with open(tsvfile1) as fid:
+        data = list(csv.reader(fid, delimiter='\t'))
+    # onset     duration code         trial_type  trial_nr xtra
+    # 1.0167    5.523    instruction  Picture     1        test
+    # 6.5397    1.4517   instruction  Picture     2        test
+    # 7.9914    1.5184   instruction  Picture     3        test
+    # 147.0519  2.019    break        Picture     6
+    assert len(data) == 361
+    assert data[0]   == ['onset',    'duration', 'code',        'trial_type', 'trial_nr', 'xtra']
+    assert data[3]   == ['7.9914',   '1.5184',   'instruction', 'Picture',    '3',        'test']
+    assert data[4]   == ['147.0519', '2.019',    'break',       'Picture',    '6',        '']
+    assert tsvfile2.is_file()
+
+    participantsfile = bids_neurobs/'participants.tsv'
+    with open(participantsfile) as fid:
+        data = list(csv.reader(fid, delimiter='\t'))
+    assert len(data) == 2
+    assert data[0]   == ['participant_id']
+    assert data[1]   == ['sub-M059']
 
 
 # def test_addmetadata(bids_dicomdir, bidsmap_dicomdir):

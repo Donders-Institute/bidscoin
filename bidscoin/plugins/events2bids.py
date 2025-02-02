@@ -121,7 +121,7 @@ class Interface(PluginInterface):
             target     = (outfolder/bidsname).with_suffix('.tsv')
 
             # Check if the bidsname is valid
-            bidstest = (Path('/')/subid/sesid/run.datatype/bidsname).with_suffix('.nii').as_posix()
+            bidstest = (Path('/')/subid/sesid/run.datatype/bidsname).with_suffix('.tsv').as_posix()
             isbids   = BIDSValidator().is_bids(bidstest)
             if not isbids and not bidsignore:
                 LOGGER.warning(f"The '{bidstest}' output name did not pass the bids-validator test")
