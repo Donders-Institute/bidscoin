@@ -4,11 +4,11 @@
 
 ## [dev]
 
-## [4.5.0] - To be determined
+## [4.5.0] - 2025-02-03
 
 ### Added
 - An events2bids plugin for converting Presentation logfiles to events tsv-files
-- The content of the participants.tsv/json files are now configurable in the template bidsmap
+- The content of the participants.tsv/json files is now configurable in the template bidsmap and bidseditor
 
 ### Changed
 - The plugin programming interface is now implemented with abstract base classes

@@ -74,7 +74,9 @@ def medeface(bidsfolder: str, pattern: str, maskpattern: str, participant: list,
         jobids = []
         if cluster:
             jt                     = pbatch.createJobTemplate()
-            jt.jobEnvironment      = os.environ
+            environ                = os.environ.copy()
+            environ.update({'BIDSCOIN_JOB': 'TRUE'})
+            jt.jobEnvironment      = environ
             jt.remoteCommand       = shutil.which('pydeface')
             jt.nativeSpecification = drmaa_nativespec(cluster, pbatch)
             jt.joinFiles           = True

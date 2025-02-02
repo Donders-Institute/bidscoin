@@ -6,15 +6,17 @@ Run the plugin test routines
 
 import pytest
 import inspect
-from bidscoin import bcoin, bids, bidsmap_template
+import yaml
+from bidscoin import bcoin, bidsmap_template
 
 bcoin.setup_logging()
-template = bids.BidsMap(bidsmap_template, checks=(False, False, False))
+with open(bidsmap_template) as fid:
+    template = yaml.safe_load(fid)
 
 
 # Test all plugins using the template & default options
 @pytest.mark.parametrize('plugin', bcoin.list_plugins()[0])
-@pytest.mark.parametrize('options', [template.plugins, {}])
+@pytest.mark.parametrize('options', [template['Options']['plugins'], {}])
 def test_plugin(plugin, options):
 
     # First test to see if we can import the plugin

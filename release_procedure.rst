@@ -6,15 +6,15 @@ This document describes how to prepare a new BIDScoin release from within the DC
 
 1. Delete the ``.bidscoin`` config folder and manually run the tox, bidscoin, bidsmapper, bidscoiner, bids-validator and other integration tests::
 
+    rm -rf ~/.bidscoin
     cd ~/python/bidscoin
     git pull
-    module load bidscoin/dev
     source activate tox
-    rm -rf ~/.bidscoin
     tox
     conda deactivate
+    module load bidscoin/dev
     source activate /opt/bidscoin
-    ~/python/bidscoin/bidscoin/bcoin.py -t
+    bidscoin -t
     # Perform integration tests from the command line and PyCharm
 
 2. Build & test the apptainer container from GitHub in the Linux VM::

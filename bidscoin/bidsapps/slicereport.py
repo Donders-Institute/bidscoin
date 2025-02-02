@@ -119,7 +119,9 @@ def slicer_append(inputimage: Path, operations: str, outlineimage: Path, mainopt
 
         with drmaasession() as pbatch:
             jt                     = pbatch.createJobTemplate()
-            jt.jobEnvironment      = os.environ
+            environ                = os.environ.copy()
+            environ.update({'BIDSCOIN_JOB': 'TRUE'})
+            jt.jobEnvironment      = environ
             jt.remoteCommand       = '#!/bin/bash\n' + command
             jt.nativeSpecification = drmaa_nativespec(cluster, pbatch)
             jt.joinFiles           = True

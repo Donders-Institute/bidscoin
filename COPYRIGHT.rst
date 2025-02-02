@@ -14,4 +14,4 @@ If not, see `https://www.gnu.org/licenses <https://www.gnu.org/licenses/>`__
 
 SPDX-License-Identifier: GPL-3.0-or-later
 
-Copyright (c): 2018-2024, Marcel Zwiers
+Copyright (c): 2018-2025, Marcel Zwiers

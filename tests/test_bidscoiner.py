@@ -1,9 +1,8 @@
 import os
 import json
+import yaml
 import csv
-from pathlib import Path
 from bidscoin import bcoin, bidsmapper, bidscoiner, bidsmap_template, __version__
-from bidscoin.bids import BidsMap
 from duecredit.io import load_due, DUECREDIT_FILE
 
 bcoin.setup_logging()
@@ -20,15 +19,16 @@ def test_bidscoiner_dicomdir(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir):
     bidscoiner.bidscoiner(raw_dicomdir, bids_dicomdir)
     logs    = (bidsmap_dicomdir.parent/'bidscoiner.errors').read_text()
     sidecar = sorted((bids_dicomdir/'sub-Peter'/'ses-03Brain').rglob('*TestExtAtrributes*.json'))[0]
-    bidsmap = BidsMap(bidsmap_dicomdir)
+    with bidsmap_dicomdir.open('r') as fid:
+        bidsmap = yaml.safe_load(fid)
     try:
         (bidsmap_dicomdir.parent/'bidscoiner.errors').unlink(missing_ok=True)
     except Exception:
         pass
     assert 'ERROR' not in logs
     # assert 'WARNING' not in logs
-    assert bidsmap.options['unknowntypes'][-1]           == 'extra_data'
-    assert sidecar.relative_to(bids_dicomdir).as_posix() == 'sub-Peter/ses-03Brain/extra_data/sub-Peter_ses-03Brain_acq-TSCRFFASTPILOTi00001_mod-TestExtAtrributes_GR.json'
+    assert bidsmap['Options']['bidscoin']['unknowntypes'][-1] == 'extra_data'
+    assert sidecar.relative_to(bids_dicomdir).as_posix()      == 'sub-Peter/ses-03Brain/extra_data/sub-Peter_ses-03Brain_acq-TSCRFFASTPILOTi00001_mod-TestExtAtrributes_GR.json'
     assert (bids_dicomdir/'sub-Archibald'/'ses-02CTHEADBRAINWOCONTRAST').is_dir()
     assert (bids_dicomdir/'sub-Peter'/'ses-01').is_dir()
     assert (bids_dicomdir/'sub-Peter'/'ses-04BrainMRA').is_dir()
@@ -71,12 +71,14 @@ def test_bidscoiner_neurobs(bids_neurobs, bidsmap_neurobs, test_data):
             (bidsmap_neurobs.parent/'bidsmapper.errors').unlink(missing_ok=True)
         except Exception:
             pass
-    bidsmap = BidsMap(bidsmap_neurobs)
-    bidsmap.dataformat('Presentation').datatype('func').runitems[0].events['rows'][0]['condition'] = {'Event Type': 'Pict.*'}
-    bidsmap.dataformat('Presentation').datatype('func').runitems[0].events['rows'].append({})
-    bidsmap.dataformat('Presentation').datatype('func').runitems[0].events['rows'][1]['condition'] = {'Code': 'instr.*'}
-    bidsmap.dataformat('Presentation').datatype('func').runitems[0].events['rows'][1]['cast']      = {'xtra': 'test'}
-    bidsmap.save()
+    with bidsmap_neurobs.open('r') as fid:
+        bidsmap = yaml.safe_load(fid)
+    bidsmap['Presentation']['func'][0]['events']['rows'][0]['condition'] = {'Event Type': 'Pict.*'}
+    bidsmap['Presentation']['func'][0]['events']['rows'].append({})
+    bidsmap['Presentation']['func'][0]['events']['rows'][1]['condition'] = {'Code': 'instr.*'}
+    bidsmap['Presentation']['func'][0]['events']['rows'][1]['cast']      = {'xtra': 'test'}
+    with bidsmap_neurobs.open('w') as fid:
+        yaml.dump(bidsmap, fid)
     bidscoiner.bidscoiner(testdata, bids_neurobs)
     logs = (bidsmap_neurobs.parent/'bidscoiner.errors').read_text()
     try:
@@ -87,8 +89,8 @@ def test_bidscoiner_neurobs(bids_neurobs, bidsmap_neurobs, test_data):
     assert 'WARNING' not in logs
     assert len(list(bids_neurobs.rglob('sub-*.json*'))) == 2
 
-    tsvfile1 = bids_neurobs/'sub-M059/func/sub-M059_events.tsv'
-    tsvfile2 = bids_neurobs/'sub-M059/extra_data/sub-M059_task-Flanker_events.tsv'
+    tsvfile1 = bids_neurobs/'sub-M059'/'func'/'sub-M059_events.tsv'
+    tsvfile2 = bids_neurobs/'sub-M059'/'extra_data'/'sub-M059_task-Flanker_events.tsv'
     with open(tsvfile1) as fid:
         data = list(csv.reader(fid, delimiter='\t'))
     # onset     duration code         trial_type  trial_nr xtra
@@ -112,5 +114,6 @@ def test_bidscoiner_neurobs(bids_neurobs, bidsmap_neurobs, test_data):
 
 # def test_addmetadata(bids_dicomdir, bidsmap_dicomdir):
 #     """WIP"""
-#     bidsmap = BidsMap(bidsmap_dicomdir)
+#     with bidsmap_dicomdir.open('r')":
+#         bidsmap = yaml.safe_load(fid)
 #     bidscoiner.addmetadata(bids_dicomdir/'sub-something'/'ses-else', '*', '*')

@@ -47,19 +47,14 @@ In short, the purpose of the plugin is to interact with the data, by providing m
 - **bidsmapper()**: Optional. From a given session folder, identify the different runs (source datatypes) and, if they haven't been discovered yet, add them to the study bidsmap
 - **bidscoiner()**: From a given session folder, identify the different runs (source datatypes) and convert them to BIDS output files using the mapping data specified in the runitem
 
-In addition, a class named ``[DataFormat]Events()`` can be added to convert stimulus presentation log data to task events files. This class inherits from ``bidscoin.plugins.EventsParser``, and must implement code to make an initial parsing of the source data to a Pandas DataFrame (table).
+In addition, a plugin can implement a class named ``[DataFormat]Events()`` to convert stimulus presentation log data to task events files. This class inherits from the ``bidscoin.plugins.EventsParser`` abstract base class, and requires code to make an initial reading of the source data to a Pandas DataFrame (table).
 
-The above API is illustrated in more detail in the placeholder Python code below. For real world examples you best first take a look at the nibabel2bids plugin, which exemplifies a clean and fairly minimal implementation of the required functionality. A similar, but somewhat more elaborated implementation (supporting multiple dataformats) can be found in the spec2nii2bids plugin. Finally, the dcm2niix2bids plugin is the more complicated example, due to the logic needed to deal with special output files and various irregularities.
+The plugin programming interface is further illustrated in the placeholder Python code below. For real-world examples, it's best to start by exploring the ``nibabel2bids`` or ``events2bids`` plugins, which provide clean and minimal implementations of the required functionality. A more advanced implementation, supporting multiple data formats, can be found in the ``spec2nii2bids`` plugin. Finally, the ``dcm2niix2bids`` plugin serves as the most complex example due to the additional logic required to handle special output files and various irregularities.
 
 .. code-block:: python3
 
-    import logging
-    from pathlib import Path
-    from bidscoin.due import due, Doi
     from bidscoin.bids import BidsMap, EventsParser, is_hidden
     from bidscoin.plugins import PluginInterface
-
-    LOGGER = logging.getLogger(__name__)
 
     class Interface(PluginInterface):
 
@@ -73,13 +68,6 @@ The above API is illustrated in more detail in the placeholder Python code below
                                 correspond to the name of a dataformat in the bidsmap
             """
 
-            if file.is_file():
-
-                LOGGER.verbose(f'This has_support routine assesses whether "{file}" is of a known dataformat')
-                return 'dataformat_name' if file == 'of_a_supported_format' else ''
-
-            return ''
-
         def get_attribute(self, dataformat: str, sourcefile: Path, attribute: str, options: dict) -> str:
             """
             This plugin function reads attributes from the supported sourcefile
@@ -91,13 +79,6 @@ The above API is illustrated in more detail in the placeholder Python code below
             :return:            The retrieved attribute value
             """
 
-            if dataformat in ('DICOM','PAR'):
-                LOGGER.verbose(f'This is a demo-plugin get_attribute routine, reading the {dataformat} "{attribute}" attribute value from "{sourcefile}"')
-                return read(sourcefile, attribute)
-
-            return ''
-
-        @due.dcite(Doi('put.your/doi.here'), description='This is an optional duecredit decorator for citing your paper(s)', tags=['implementation'])
         def bidscoiner(self, session: Path, bidsmap: BidsMap, bidsses: Path) -> Union[None, dict]:
             """
             The plugin to convert the runs in the source folder and save them in the bids folder. Each saved datafile should be

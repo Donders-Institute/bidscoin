@@ -16,6 +16,7 @@ For more documentation see: https://bidscoin.readthedocs.io
 import urllib.request, urllib.parse, urllib.error
 import json
 import getpass
+import re
 import os
 import platform
 import hashlib
@@ -188,9 +189,9 @@ def trackusage(event: str, dryrun: bool=False) -> dict:
             'userid':   hashlib.md5(getpass.getuser().encode('utf8')).hexdigest(),
             'hostid':   hashlib.md5(platform.node().encode('utf8')).hexdigest()}
 
-    # Check if the user allows tracking or if it is a dry/test run
-    if not (os.getenv('BIDSCOIN_TRACKUSAGE') or config['bidscoin'].get('trackusage','yes')).upper() in ('1', 'TRUE', 'Y', 'YES') \
-            or dryrun or "PYTEST_CURRENT_TEST" in os.environ:
+    # Check if the user allows tracking, if it is a dry/pytest run, a DRMAA run, or if this is not a stable (#.#.#) version
+    if not (os.getenv('BIDSCOIN_TRACKUSAGE') or config['bidscoin'].get('trackusage','yes')).upper() in ('1', 'TRUE', 'Y', 'YES') or dryrun \
+            or "PYTEST_CURRENT_TEST" in os.environ or 'BIDSCOIN_JOB' in os.environ or re.match(r"^\d+\.\d+\.\d+$", __version__) is None:
         return data
 
     # Check if we are not asleep

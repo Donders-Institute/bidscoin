@@ -1,6 +1,5 @@
 import pytest
 import re
-from pathlib import Path
 from bidscoin import bcoin, bidsmapper, bidsmap_template
 
 bcoin.setup_logging()
