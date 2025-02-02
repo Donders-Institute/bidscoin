@@ -151,7 +151,7 @@ def deface(bidsfolder: str, pattern: str, participant: list, force: bool, output
         if cluster and jobids:
             LOGGER.info('')
             LOGGER.info('Waiting for the deface jobs to finish...')
-            bcoin.synchronize(pbatch, jobids, wait=0)
+            bcoin.synchronize(pbatch, jobids, 'deface', wait=0)
             pbatch.deleteJobTemplate(jt)
 
     LOGGER.info('-------------- FINISHED! -------------')

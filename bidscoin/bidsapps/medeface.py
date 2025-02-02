@@ -131,7 +131,7 @@ def medeface(bidsfolder: str, pattern: str, maskpattern: str, participant: list,
         if cluster and jobids:
             LOGGER.info('')
             LOGGER.info('Waiting for the deface jobs to finish...')
-            bcoin.synchronize(pbatch, jobids)
+            bcoin.synchronize(pbatch, jobids, 'medeface')
             pbatch.deleteJobTemplate(jt)
 
     # Loop again over bids subject/session-directories to apply the deface-masks and write metadata

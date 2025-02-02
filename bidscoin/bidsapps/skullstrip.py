@@ -229,7 +229,7 @@ def skullstrip(bidsfolder: str, pattern: str, participant: list, masked: str, ou
         if cluster and jobids:
             LOGGER.info('')
             LOGGER.info('Waiting for the skullstrip jobs to finish...')
-            bcoin.synchronize(pbatch, jobids, wait=0)
+            bcoin.synchronize(pbatch, jobids,'skullstrip', wait=0)
             pbatch.deleteJobTemplate(jt)
 
     LOGGER.info('-------------- FINISHED! -------------')

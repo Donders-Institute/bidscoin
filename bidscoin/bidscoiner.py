@@ -174,7 +174,7 @@ def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: 
                 return
 
             LOGGER.info('Waiting for the bidscoiner jobs to finish...')
-            bcoin.synchronize(pbatch, jobids)
+            bcoin.synchronize(pbatch, jobids, 'bidscoiner')
 
         # Merge the bids subfolders
         errors             = ''

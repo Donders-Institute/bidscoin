@@ -318,7 +318,7 @@ def slicereport(bidsfolder: str, pattern: str, outlinepattern: str, outlineimage
     if cluster:
         from drmaa import Session as drmaasession   # Lazy import to avoid import error on non-HPC systems
         with drmaasession() as pbatch:
-            bcoin.synchronize(pbatch, JOBIDS, 0)
+            bcoin.synchronize(pbatch, JOBIDS, 'slicereport', 0)
 
 
 def main():

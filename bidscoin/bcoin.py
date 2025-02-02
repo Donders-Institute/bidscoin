@@ -14,6 +14,7 @@ import sys
 import urllib.request
 import time
 import argparse
+import re
 from duecredit.cmdline import cmd_summary
 from functools import lru_cache
 from importlib.metadata import entry_points
@@ -72,16 +73,23 @@ def drmaa_nativespec(specs: str, session) -> str:
     return specs.strip()
 
 
-def synchronize(pbatch, jobids: list, wait: int=15):
+def synchronize(pbatch, jobids: list, event: str, wait: int=15):
     """
     Shows tqdm progress bars for queued and running DRMAA jobs. Waits until all jobs have finished +
     some extra wait time to give NAS systems the opportunity to fully synchronize
 
     :param pbatch: The DRMAA session
     :param jobids: The job ids
+    :param event:  The event that is passed to trackusage()
     :param wait:   The extra wait time for the NAS
     :return:
     """
+
+    if jobids:
+        match = re.search(r"(slurm|pbs|torque|sge|lsf|condor|uge)", pbatch.drmaaImplementation.lower())
+        trackusage(f"{event}_{match.group(1) if match else 'drmaa'}")
+    else:
+        return
 
     with logging_redirect_tqdm():
 
