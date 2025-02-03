@@ -65,8 +65,10 @@ The plugin programming interface is further illustrated in the placeholder Pytho
             :param file:        The sourcefile that is assessed
             :param dataformat:  The requested dataformat (optional requirement)
             :return:            The name of the supported dataformat of the sourcefile. This name should
-                                correspond to the name of a dataformat in the bidsmap
+                                correspond to the name of a dataformat section in the bidsmap
             """
+
+            return 'dataformat_name' if file.suffix == 'a_supported_suffix' else ''
 
         def get_attribute(self, dataformat: str, sourcefile: Path, attribute: str, options: dict) -> str:
             """
@@ -79,6 +81,9 @@ The plugin programming interface is further illustrated in the placeholder Pytho
             :return:            The retrieved attribute value
             """
 
+            return read_header(sourcefile, attribute) if dataformat in ('dataformat_name', 'another_dataformat_name') else ''
+
+        @due.dcite(Doi('put.your/doi.here'), description='This is an optional duecredit decorator for citing your paper(s)', tags=['implementation'])
         def bidscoiner(self, session: Path, bidsmap: BidsMap, bidsses: Path) -> Union[None, dict]:
             """
             The plugin to convert the runs in the source folder and save them in the bids folder. Each saved datafile should be

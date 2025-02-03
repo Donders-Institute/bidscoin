@@ -37,7 +37,8 @@ class PluginInterface(ABC):
 
         :param file:        The sourcefile that is assessed
         :param dataformat:  The requested dataformat (optional requirement)
-        :return:            The valid/supported dataformat of the sourcefile
+        :return:            The name of the supported dataformat of the sourcefile. This name should
+                            correspond to the name of a dataformat section in the bidsmap
         """
 
     @abstractmethod
@@ -47,7 +48,7 @@ class PluginInterface(ABC):
 
         :param dataformat:  The bidsmap-dataformat of the sourcefile, e.g. DICOM of PAR
         :param sourcefile:  The sourcefile from which the attribute value should be read
-        :param attribute:   The attribute key for which the value should be read
+        :param attribute:   The attribute key for which the value needs to be retrieved
         :param options:     A dictionary with the plugin options, e.g. taken from the bidsmap.plugins['nibabel2bids']
         :return:            The retrieved attribute value
         """

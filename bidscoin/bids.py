@@ -1182,6 +1182,7 @@ class BidsMap:
             return False
 
         # Check all the datatypes in the bidsmap
+        valid       = True
         ignoretypes = self.options.get('ignoretypes', [])
         bidsignore  = self.options.get('bidsignore', [])
         LOGGER.verbose('Checking the template bidsmap datatypes:')
@@ -1199,7 +1200,7 @@ class BidsMap:
                             re.compile(str(val))
                         except re.error:
                             LOGGER.warning(f"Invalid regex pattern in the {key} value '{val}' in: {runitem}\nThis may cause run-matching errors unless '{val}' is a literal attribute value")
-                if datatypesuffixes == ['events']:                  # Ugly work-around for sparse events2bids Presentation mappings
+                if datatypesuffixes == {'events'}:                  # A dirty work-around for sparse events2bids Presentation mappings
                     continue
                 for typegroup in filerules.get(datatype.datatype, {}):
                     for suffix in filerules[datatype.datatype][typegroup].suffixes:
