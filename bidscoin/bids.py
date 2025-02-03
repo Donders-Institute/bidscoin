@@ -2123,7 +2123,7 @@ def addparticipant(participants_tsv: Path, subid: str='', sesid: str='', data: d
                 table.loc[subid, 'dummy'] = None
                 data_added                = True
         for key in data:
-            if key not in table or pd.isnull(table.loc[subid, key]) or table.loc[subid, key] == 'n/a':
+            if key not in table or subid not in table.index or pd.isnull(table.loc[subid, key]) or table.loc[subid, key] == 'n/a':
                 table.loc[subid, key] = data[key]
                 data_added            = True
 
