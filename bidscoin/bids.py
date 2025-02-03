@@ -1030,7 +1030,7 @@ class BidsMap:
     def plugins(self) -> Plugins:
         """The plugin dictionaries with their options"""
 
-        return self._data['Options']['plugins']
+        return self._data['Options'].get('plugins', [])
 
     @plugins.setter
     def plugins(self, plugins: Plugins):
@@ -1170,11 +1170,20 @@ class BidsMap:
         :return:            True if the template bidsmap is valid, otherwise False
         """
 
-        valid       = True
-        ignoretypes = self.options.get('ignoretypes', [])
-        bidsignore  = self.options.get('bidsignore', [])
+        # Check the presence of the bidsmap Options
+        if 'Options' not in self._data:
+            LOGGER.error('The template bidsmap has no "Options" section')
+            return False
+        if 'bidscoin' not in self._data['Options']:
+            LOGGER.error('The template bidsmap has no "bidscoin" options')
+            return False
+        if 'plugins' not in self._data['Options']:
+            LOGGER.error('The template bidsmap contains no "plugins"')
+            return False
 
         # Check all the datatypes in the bidsmap
+        ignoretypes = self.options.get('ignoretypes', [])
+        bidsignore  = self.options.get('bidsignore', [])
         LOGGER.verbose('Checking the template bidsmap datatypes:')
         for dataformat in self.dataformats:
             for datatype in dataformat.datatypes:
@@ -1190,6 +1199,8 @@ class BidsMap:
                             re.compile(str(val))
                         except re.error:
                             LOGGER.warning(f"Invalid regex pattern in the {key} value '{val}' in: {runitem}\nThis may cause run-matching errors unless '{val}' is a literal attribute value")
+                if datatypesuffixes == ['events']:                  # Ugly work-around for sparse events2bids Presentation mappings
+                    continue
                 for typegroup in filerules.get(datatype.datatype, {}):
                     for suffix in filerules[datatype.datatype][typegroup].suffixes:
                         if not (suffix in datatypesuffixes or suffix in str(bidsignore) or
@@ -1197,7 +1208,7 @@ class BidsMap:
                                 '**Change:** Removed from' in bidsschema.objects.suffixes[suffix].description or
                                 '**Change:** Replaced by'  in bidsschema.objects.suffixes[suffix].description):
                             LOGGER.info(f"Missing '{suffix}' run-item in: bidsmap[{dataformat}][{datatype}] (NB: this may perhaps be fine / a deprecated item)")
-                            # valid = False # TODO: Fix this for sparse events2bids mappings
+                            valid = False
 
         # Validate against the json schema
         with (templatefolder/'schema.json').open('r') as stream:

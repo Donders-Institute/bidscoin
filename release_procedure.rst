@@ -9,6 +9,7 @@ This document describes how to prepare a new BIDScoin release from within the DC
     rm -rf ~/.bidscoin
     cd ~/python/bidscoin
     git pull
+    module load anaconda3
     source activate tox
     tox
     conda deactivate
@@ -21,14 +22,14 @@ This document describes how to prepare a new BIDScoin release from within the DC
 
     rm -rf ~/.bidscoin
     cd ~/PycharmProjects/bidscoin
-    vi apptainer.def    # -> pip install github
+    vi apptainer.def    # -> Use `pip install github`
     sudo apptainer build bidscoin.sif apptainer.def
     xhost +
     apptainer exec --cleanenv --env DISPLAY=:0 bidscoin.sif bidscoin -t
     apptainer exec --cleanenv bidscoin.sif bidscoin -v
     apptainer exec --cleanenv bidscoin.sif pngappend
     apptainer cache clean
-    vi apptainer.def    # Restore pip install pypi
+    vi apptainer.def    # Restore `pip install pypi`
 
 3. Inspect the git history and update the CHANGELOG (including the links)
 4. Update the cli help texts and RTD files
