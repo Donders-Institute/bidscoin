@@ -13,6 +13,7 @@ from importlib.util import find_spec
 from bidscoin import is_hidden, lsdirs, DEBUG
 
 config.INVALID_KEY_BEHAVIOR = 'IGNORE'
+config.IGNORE = 1
 
 LOGGER = logging.getLogger(__name__)
 

@@ -25,7 +25,9 @@ if find_spec('bidscoin') is None:
 from bidscoin import bcoin, bids, bidsversion, check_version, trackusage, bidsmap_template, __version__
 from bidscoin.bids import BidsMap, RunItem, DataType
 from bidscoin.utilities import is_dicomfile, is_parfile
+
 config.INVALID_KEY_BEHAVIOR = 'IGNORE'
+config.IGNORE = 1
 
 ROW_HEIGHT       = 22
 BIDSCOIN_LOGO    = Path(__file__).parent/'bidscoin_logo.png'
