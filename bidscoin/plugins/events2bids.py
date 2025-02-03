@@ -32,7 +32,13 @@ class Interface(PluginInterface):
             return ''
 
         if file.suffix.lower() in ('.log',):
-            return 'Presentation'
+            try:
+                with file.open('r') as fid:
+                    for n in (1,2,3):
+                        line = fid.readline()
+                        if line.startswith('Scenario -'):
+                            return 'Presentation'
+            except Exception: pass
 
         return ''
 
@@ -50,7 +56,7 @@ class Interface(PluginInterface):
         if dataformat == 'Presentation':
 
             try:
-                with sourcefile.open() as fid:
+                with sourcefile.open('r') as fid:
                     while '-' in (line := fid.readline()):
                         key, value = line.split('-', 1)
                         if attribute == key.strip():
