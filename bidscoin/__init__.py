@@ -165,7 +165,7 @@ def run_command(command: str, success: tuple=(0,None)) -> int:
 
     LOGGER.verbose(f"Command:\n{command}")
     process = subprocess.run(command, shell=True, capture_output=True, text=True)
-    if process.stderr or process.returncode not in success:
+    if (process.stderr and 'spec2nii' not in command) or process.returncode not in success:
         LOGGER.error(f"Failed to run:\n{command}\nErrorcode {process.returncode}:\n{process.stdout}\n{process.stderr}")
     else:
         LOGGER.verbose(f"Output:\n{process.stdout}")
