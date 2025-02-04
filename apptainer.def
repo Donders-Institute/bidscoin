@@ -81,7 +81,7 @@ Stage: final
     apt -y --no-install-recommends install python3-pyqt6 build-essential libgl1 libxcb-cursor0 dbus qt6-wayland && apt clean     # Add build-essential for newer python:3-slim base images (pip needs gcc and wayland support is not yet provided for)
 
     # Install BIDScoin
-    # pip install /opt/bidscoin[spec2nii2bids,deface]
+    # pip install /opt/bidscoin[spec2nii2bids,deface]   # Also uncomment in xfiles from builder: `/opt/bidscoin /opt/bidscoin`
     # pip install bidscoin[spec2nii2bids,deface]==VERSION
     pip install bidscoin[spec2nii2bids,deface]
 

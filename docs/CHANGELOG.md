@@ -4,7 +4,7 @@
 
 ## [dev]
 
-## [4.5.0] - 2025-02-03
+## [4.5.0] - 2025-02-05
 
 ### Added
 - An events2bids plugin for converting Presentation logfiles to events tsv-files

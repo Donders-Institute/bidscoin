@@ -45,6 +45,8 @@ The bidscoin command-line utility serves as a central starting point to test and
                             Show duecredit citations for your BIDS repository. You can also add duecredit
                             summary arguments (without dashes), e.g. `style {apa,harvard1}` or `format
                             {text,bibtex}`.
+      -r, --reset           Restore the settings, plugins and template bidsmaps in your home directory to
+                            their default values
       --tracking {yes,no,show}
                             Show the usage tracking info {show}, or set usage tracking to {yes} or {no}
       -v, --version         Show the installed version and check for updates
