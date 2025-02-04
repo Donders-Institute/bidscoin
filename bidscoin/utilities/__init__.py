@@ -13,8 +13,9 @@ from importlib.util import find_spec
 from bidscoin import is_hidden, lsdirs, DEBUG
 
 # Ignore pydicom warnings, such as "The value length (68) exceeds the maximum length of 64 allowed for VR LO" and "Invalid value for VR UI: [..]"
-config.INVALID_KEY_BEHAVIOR = 'IGNORE'
-config.IGNORE = 1
+if not DEBUG:
+    config.INVALID_KEY_BEHAVIOR = 'IGNORE'
+    config.IGNORE = 1
 
 LOGGER = logging.getLogger(__name__)
 
