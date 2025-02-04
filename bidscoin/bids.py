@@ -1919,7 +1919,7 @@ def addmetadata(bidsses: Path):
                 for part in intendedfor:
                     pattern = part.split(':',1)[0].strip()          # part = 'pattern: [lowerlimit:upperlimit]'
                     limits  = part.split(':',1)[1].strip() if ':' in part else ''
-                    matches = [niifile.relative_to(bidsses).as_posix() for niifile in sorted(bidsses.rglob(f"*{pattern}*")) if pattern and '.nii' in niifile.suffixes]
+                    matches = [niifile.relative_to(bidsses).as_posix() for niifile in sorted(bidsses.rglob(f"*{pattern.strip('*')}*")) if pattern and '.nii' in niifile.suffixes]
                     limitmatches(fmap, matches, limits, niifiles, scans_table)
 
                 # Add the IntendedFor data. NB: The BIDS URI paths need to use forward slashes and be relative to the bids root folder

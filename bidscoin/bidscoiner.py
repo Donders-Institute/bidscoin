@@ -278,7 +278,7 @@ def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: 
                             has_run = False
                             for datatype in lsdirs(bidssession):                               # See what datatypes we already have in the bids session-folder
                                 if next(datatype.iterdir(), None) and datatype.name in bidsmap.dataformat(datasource.dataformat).datatypes:  # See if the plugin may add data for this datatype
-                                    LOGGER.info(f">>> Skipping processed session: {bidssession} already has {datatype.name} data (you can carefully use the -f option to overrule)")
+                                    LOGGER.info(f">>> Skipping {name} processing: {bidssession} already has {datatype.name} data (you can carefully use the -f option to overrule)")
                                     has_run = True
                             if has_run:
                                 continue

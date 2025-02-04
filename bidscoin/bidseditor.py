@@ -1070,7 +1070,7 @@ class EditWindow(QDialog):
         self.dataformat        = runitem.dataformat
         """The data format of the run-item being edited (bidsmap[dataformat][datatype][run-item])"""
         self.unknowndatatypes: list[str] = [datatype for datatype in bidsmap.options['unknowntypes'] if datatype in template_bidsmap.dataformat(self.dataformat).datatypes]
-        self.ignoredatatypes: list[str]  = [datatype for datatype in bidsmap.options['ignoretypes']  if datatype in template_bidsmap.dataformat(self.dataformat).datatypes]
+        self.ignoredatatypes:  list[str] = [datatype for datatype in bidsmap.options['ignoretypes']  if datatype in template_bidsmap.dataformat(self.dataformat).datatypes]
         self.bidsdatatypes     = [str(datatype) for datatype in template_bidsmap.dataformat(self.dataformat).datatypes if datatype not in self.unknowndatatypes + self.ignoredatatypes]
         self.bidsignore        = bidsmap.options['bidsignore']
         self.output_bidsmap    = bidsmap
@@ -1997,10 +1997,11 @@ class CompareWindow(QDialog):
             bids_table.setToolTip('The BIDS entity that is used to construct the BIDS output filename')
 
             # Set up the meta table
-            meta_label = QLabel('Metadata')
-            meta_label.setToolTip('Key-value pairs that will be appended to the (e.g. dcm2niix-produced) json sidecar file')
-            meta_table = self.fill_table(meta_data, 'meta', minsize=False)
-            meta_table.setToolTip('The key-value pair that will be appended to the (e.g. dcm2niix-produced) json sidecar file')
+            if meta_data:
+                meta_label = QLabel('Metadata')
+                meta_label.setToolTip('Key-value pairs that will be appended to the (e.g. dcm2niix-produced) json sidecar file')
+                meta_table = self.fill_table(meta_data, 'meta', minsize=False)
+                meta_table.setToolTip('The key-value pair that will be appended to the (e.g. dcm2niix-produced) json sidecar file')
 
             # Set up the events table
             if events_data:
@@ -2018,8 +2019,9 @@ class CompareWindow(QDialog):
             layout.addWidget(attributes_table)
             layout.addWidget(bids_label)
             layout.addWidget(bids_table)
-            layout.addWidget(meta_label)
-            layout.addWidget(meta_table)
+            if meta_data:
+                layout.addWidget(meta_label)
+                layout.addWidget(meta_table)
             if events_data:
                 layout.addWidget(events_label)
                 layout.addWidget(events_table)

@@ -454,9 +454,6 @@ def test_bidscoin(bidsmapfile, options: dict=None, testplugins: bool=True, testg
     success = True
     if isinstance(bidsmapfile, (str, Path)):
         bidsmapfile = Path(bidsmapfile)
-        if not bidsmapfile.is_file():
-            LOGGER.info(f"Cannot find bidsmap-file: {bidsmapfile}")
-            return 1
         LOGGER.info(f"Running bidsmap checks:")
         try:            # Moving the import to the top of this module will cause circular import issues
             from bidscoin import bids
