@@ -149,10 +149,10 @@ def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: 
             # Run individual subject jobs in temporary bids subfolders
             for subject in subjects:
 
-                # Check if we should skip the session-folder
+                # Check if we should skip the subject-folder
                 datasource = bids.get_datasource(subject, bidsmap.plugins)
                 subid,_    = datasource.subid_sesid(bidsmap.dataformat(datasource.dataformat).subject, bidsmap.dataformat(datasource.dataformat).session)
-                if (bidsfolder/subid).is_dir() and not force:
+                if not force and (bidsfolder/subid).is_dir() and next((bidsfolder/subid).iterdir(), None):
                     LOGGER.info(f">>> Skipping already processed subject: {bidsfolder/subid} (you can use the -f option to overrule)")
                     continue
 
@@ -270,14 +270,21 @@ def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: 
                         if not datasource.dataformat:
                             LOGGER.info(f">>> No {name} datasources found in '{sesfolder}'")
                             continue
-                        LOGGER.info(f">>> Coining {name} datasources in: {sesfolder}")
                         subid        = bidsmap.dataformat(datasource.dataformat).subject
                         sesid        = bidsmap.dataformat(datasource.dataformat).session
                         subid, sesid = datasource.subid_sesid(subid, sesid or '')
                         bidssession  = bidsfolder/subid/sesid       # TODO: Support DICOMDIR with multiple subjects (as in PYDICOMDIR)
-                        bidssession.mkdir(parents=True, exist_ok=True)
+                        if not force and bidssession.is_dir():
+                            has_run = False
+                            for datatype in lsdirs(bidssession):                               # See what datatypes we already have in the bids session-folder
+                                if next(datatype.iterdir(), None) and datatype.name in bidsmap.dataformat(datasource.dataformat).datatypes:  # See if the plugin may add data for this datatype
+                                    LOGGER.info(f">>> Skipping processed session: {bidssession} already has {datatype.name} data (you can carefully use the -f option to overrule)")
+                                    has_run = True
+                            if has_run:
+                                continue
 
-                        LOGGER.verbose(f"Executing plugin: {name}")
+                        LOGGER.info(f">>> Coining {name} datasources in: {sesfolder}")
+                        bidssession.mkdir(parents=True, exist_ok=True)
                         trackusage(name)
                         plugin.Interface().bidscoiner(sesfolder, bidsmap, bidssession)
                         personals = plugin.Interface().personals(bidsmap, datasource)
