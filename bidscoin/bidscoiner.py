@@ -275,12 +275,12 @@ def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: 
                         subid, sesid = datasource.subid_sesid(subid, sesid or '')
                         bidssession  = bidsfolder/subid/sesid       # TODO: Support DICOMDIR with multiple subjects (as in PYDICOMDIR)
                         if not force and bidssession.is_dir():
-                            has_run = False
-                            for datatype in lsdirs(bidssession):                               # See what datatypes we already have in the bids session-folder
-                                if next(datatype.iterdir(), None) and datatype.name in bidsmap.dataformat(datasource.dataformat).datatypes:  # See if the plugin may add data for this datatype
-                                    LOGGER.info(f">>> Skipping {name} processing: {bidssession} already has {datatype.name} data (you can carefully use the -f option to overrule)")
-                                    has_run = True
-                            if has_run:
+                            datatypes = set()
+                            for datatype in [dtype for dtype in lsdirs(bidssession) if next(dtype.iterdir(), None)]:    # See what non-empty datatypes we already have in the bids session-folder
+                                if datatype.name in bidsmap.dataformat(datasource.dataformat).datatypes:                # See if the plugin may add data for this datatype
+                                    datatypes.add(datatype.name)
+                            if datatypes:
+                                LOGGER.info(f">>> Skipping {name} processing: {bidssession} already has {datatypes} data (you can carefully use the -f option to overrule)")
                                 continue
 
                         LOGGER.info(f">>> Coining {name} datasources in: {sesfolder}")
