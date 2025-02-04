@@ -111,6 +111,11 @@ def test_bidscoiner_neurobs(bids_neurobs, bidsmap_neurobs, test_data):
     assert data[0]   == ['participant_id']
     assert data[1]   == ['sub-M059']
 
+    (bidsmap_neurobs.parent/'bidscoiner.log').unlink(missing_ok=True)
+    bidscoiner.bidscoiner(testdata, bids_neurobs)
+    logs = (bidsmap_neurobs.parent/'bidscoiner.log').read_text()
+    assert '>>> Coining' not in logs
+    assert '>>> Skipping' in logs
 
 # def test_addmetadata(bids_dicomdir, bidsmap_dicomdir):
 #     """WIP"""
