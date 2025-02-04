@@ -150,7 +150,7 @@ As shown below, the main window of the bidseditor opens with separate tabs for e
 
 .. figure:: ./_static/bidseditor_main.png
 
-   The main window with the ``DICOM mappings`` tab, an ``Options`` tab and a ``Data browser`` tab. The selected ``DICOM mappings`` tab shows an overview of how DICOM source data types (left) are mapped to BIDS output data (right). The BIDScoin settings used for this study can be adjusted in the `Options <./options.html>`__ tab and the ``Data browser`` tab can be used to inspect the source data structure.
+   The main window with a ``DICOM mappings`` tab, a ``Presentation mappings`` tab, an ``Options`` tab and a ``Data browser`` tab. The selected ``DICOM mappings`` tab shows an overview of how DICOM source data types (left) are mapped to BIDS output data (right). Note the use of colors of the output names and the associated pop-up help window that emerges when hoovering the mouse. The BIDScoin settings used for this study can be adjusted in the `Options <./options.html>`__ tab and the ``Data browser`` tab can be used to inspect the source data structure.
 
 .. tip::
    If your participant_id/session_id filepath regular expression fails to parse the subject or session label, try prepending (a part of) the sourcefolder path, e.g. if your data is in ``/project/sourcedata/s001/..`` and your subject prefix is ``s``, try ``<<filepath:/sourcedata/s(.*?)/>>`` for extracting the ``001`` subject label. This is especially important if your subject folders have no or a very short prefix.
