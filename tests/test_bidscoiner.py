@@ -2,6 +2,7 @@ import os
 import json
 import yaml
 import csv
+import logging
 from bidscoin import bcoin, bidsmapper, bidscoiner, bidsmap_template, __version__
 from duecredit.io import load_due, DUECREDIT_FILE
 
@@ -111,6 +112,9 @@ def test_bidscoiner_neurobs(bids_neurobs, bidsmap_neurobs, test_data):
     assert data[0]   == ['participant_id']
     assert data[1]   == ['sub-M059']
 
+    for handler in logging.getLogger().handlers:
+        handler.close()
+    bcoin.setup_logging()
     (bidsmap_neurobs.parent/'bidscoiner.log').unlink(missing_ok=True)
     bidscoiner.bidscoiner(testdata, bids_neurobs)
     logs = (bidsmap_neurobs.parent/'bidscoiner.log').read_text()
