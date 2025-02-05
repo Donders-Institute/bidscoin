@@ -76,8 +76,8 @@ Here is how to run the bidsmapper command:
                             Wildcard pattern to unpack tarball/zip-files in the sub/ses sourcefolder that
                             need to be unzipped (in a tempdir) to make the data readable. Default: the
                             value of the study/template bidsmap
-      -s, --store           Store provenance data samples in the bidsfolder/code/provenance folder
-                            (useful for inspecting e.g. zipped or transferred datasets)
+      -s, --store           Store newly discovered data samples in the bidsfolder/code/provenance folder
+                            (useful for editing e.g. zipped or transferred datasets)
       -a, --automated       Save the automatically generated bidsmap to disk and without interactively
                             tweaking it with the bidseditor
       -f, --force           Discard the previously saved bidsmap and log file

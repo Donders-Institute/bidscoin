@@ -341,7 +341,7 @@ class MainWindow(QMainWindow):
                     datatype   = table.item(index, 2).text()
                     provenance = table.item(index, 5).text()
                     if not Path(provenance).is_file():
-                        QMessageBox.warning(self, 'Edit BIDS mapping', f"Cannot reliably change the data type and/or suffix because the source file '{provenance}' can no longer be found.\n\nPlease restore the source data or use the `bidsmapper -s` option to solve this issue")
+                        QMessageBox.warning(self, 'Edit BIDS mapping', f"Cannot reliably change the data type and/or suffix because the source file '{provenance}' can no longer be found.\n\nPlease restore the source data or use the `bidsmapper -s -f` options to solve this issue")
                         continue
 
                     # Get the new run from the template
