@@ -26,10 +26,8 @@ from bidscoin import bcoin, bids, bidsversion, check_version, trackusage, bidsma
 from bidscoin.bids import BidsMap, RunItem, DataType
 from bidscoin.utilities import is_dicomfile, is_parfile
 
-# Ignore pydicom warnings, such as "The value length (68) exceeds the maximum length of 64 allowed for VR LO" and "Invalid value for VR UI: [..]"
-if not DEBUG:
-    config.INVALID_KEY_BEHAVIOR = 'IGNORE'
-    config.IGNORE = 1
+config.INVALID_KEY_BEHAVIOR = 'IGNORE'              # Ignores warnings such as "UserWarning: Invalid value 'filepath' used with the 'in' operator: must be an element tag as a 2-tuple or int, or an element"
+config.IGNORE               = 0 if DEBUG else 1     # Ignores warnings such as "The value length (68) exceeds the maximum length of 64 allowed for VR LO" and "Invalid value for VR UI: [..]"
 
 ROW_HEIGHT       = 22
 BIDSCOIN_LOGO    = Path(__file__).parent/'bidscoin_logo.png'

@@ -12,10 +12,8 @@ from functools import lru_cache
 from importlib.util import find_spec
 from bidscoin import is_hidden, lsdirs, DEBUG
 
-# Ignore pydicom warnings, such as "The value length (68) exceeds the maximum length of 64 allowed for VR LO" and "Invalid value for VR UI: [..]"
-if not DEBUG:
-    config.INVALID_KEY_BEHAVIOR = 'IGNORE'
-    config.IGNORE = 1
+config.INVALID_KEY_BEHAVIOR = 'IGNORE'              # Ignores warnings such as "UserWarning: Invalid value 'filepath' used with the 'in' operator: must be an element tag as a 2-tuple or int, or an element"
+config.IGNORE               = 0 if DEBUG else 1     # Ignores warnings such as "The value length (68) exceeds the maximum length of 64 allowed for VR LO" and "Invalid value for VR UI: [..]"
 
 LOGGER = logging.getLogger(__name__)
 
