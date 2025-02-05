@@ -207,10 +207,12 @@ def trackusage(event: str, dryrun: bool=False) -> dict:
 
     except Exception as shelveerror:
         warnings.warn(f"Please report the following error to the developers:\n{shelveerror}: {trackfile}", RuntimeWarning)
-        for corruptfile in trackfile.parent.glob(trackfile.name + '.*'):
+        for corruptfile in shelvefiles := list(trackfile.parent.glob(trackfile.name + '.*')):
             print(f"Deleting corrupt file: {corruptfile}")
             corruptfile.unlink()
         data['event'] = 'trackusage_exception'
+        if not shelvefiles:         # Return without uploading (no shelve files means no sleep)
+            return data
 
     # Upload the usage data
     try:

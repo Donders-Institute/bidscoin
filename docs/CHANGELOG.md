@@ -255,7 +255,7 @@ The bidscoiner no longer sometimes crashes when dcm2niix produces custom suffixe
 - Separate tabs for DICOM and PAR to edit all the mappings of mixed datasets in a single bidseditor session
 - Run-item matching on filesystem properties, i.e. on the pathname, filename and filesize and nr of files in the folder. This can be used in conjunction with the (DICOM/PAR) attributes
 - A metadata dictionary that can be edited with the bidseditor and that will be added to the json sidecar files by the bidscoiner
-- More user feedback in the GUI for new BIDS-compliancy checks on missing or invalid bids data
+- More user feedback in the GUI for new BIDS-compliance checks on missing or invalid BIDS data
 - A right-click menu option to remove a run-item from the bidsmap (advanced usage)
 - The option to load a new bidsmap in the bidseditor
 - Enable the user to edit json, yaml, tsv and other non-DICOM/non-PAR files with double-clicks in the data browser

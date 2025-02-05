@@ -80,7 +80,8 @@ Here is how to run the bidsmapper command:
                             (useful for editing e.g. zipped or transferred datasets)
       -a, --automated       Save the automatically generated bidsmap to disk and without interactively
                             tweaking it with the bidseditor
-      -f, --force           Discard the previously saved bidsmap and log file
+      -f, --force           Discard the previously saved bidsmap and log file, instead of re-using them
+                            (use this option for a fresh start)
       --no-update           Do not update any sub-/ses-prefixes in or prepend the sourcefolder name to the
                             <<filepath:regex>> expression that extracts the subject/session labels. This
                             is normally done to make the extraction more robust, but could cause problems

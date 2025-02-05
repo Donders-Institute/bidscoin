@@ -163,7 +163,6 @@ bugfixes
 bval
 bvec
 cli
-compliancy
 conda
 config
 copymetadata

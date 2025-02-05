@@ -53,7 +53,7 @@ DCCN deployment
     source activate /opt/bidscoin
     bidscoin -v
     bidscoin -t
-    conda deactivate bidscoin
+    conda deactivate
 
 4. Post a release message on the MM data management channel
 
@@ -92,13 +92,12 @@ Dockerhub
     sudo docker run --rm marcelzwiers/bidscoin:$VERSION pngappend
     sudo docker run --rm -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix marcelzwiers/bidscoin:$VERSION bidscoin -t
     sudo docker push marcelzwiers/bidscoin:$VERSION
-    sudo docker system prune -a
 
 Neurodesk
 ---------
 
 1. Pull and edit the bidscoin neurocontainer in a separate release branch
-2. Build and test a neurodocker image::
+2. In the VM, build and test a neurodocker image::
 
     VERSION="4.5.0"
     cd ~/PycharmProjects/neurocontainers/recipes/bidscoin
@@ -106,6 +105,7 @@ Neurodesk
     ./build.sh -ds
     sudo docker image list         # Checkout the TAG
     sudo docker run --rm -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix bidscoin_${VERSION}:TAG bidscoin -t
+    sudo docker system prune -a
 
 3. Create a neurocontainers PR from the release branch
 
