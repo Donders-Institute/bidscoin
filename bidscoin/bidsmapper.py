@@ -237,7 +237,7 @@ def main():
         bidsmapper(**vars(args))
 
     except Exception as error:
-        trackusage('bidsmapper_exception')
+        trackusage('bidsmapper_exception', error)
         raise error
 
 

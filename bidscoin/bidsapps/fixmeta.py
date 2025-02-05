@@ -118,7 +118,7 @@ def main():
         fixmeta(**vars(args))
 
     except Exception as error:
-        trackusage('fixmeta_exception')
+        trackusage('fixmeta_exception', error)
         raise error
 
 

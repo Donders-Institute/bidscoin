@@ -215,7 +215,7 @@ def main():
         sortsessions(**vars(args))
 
     except Exception as error:
-        trackusage('dicomsort_exception')
+        trackusage('dicomsort_exception', error)
         raise error
 
 

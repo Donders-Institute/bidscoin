@@ -142,7 +142,7 @@ def main():
         bidsparticipants(**vars(args))
 
     except Exception as error:
-        trackusage('bidsparticipants_exception')
+        trackusage('bidsparticipants_exception', error)
         raise error
 
 

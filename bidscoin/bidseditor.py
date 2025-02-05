@@ -2378,7 +2378,7 @@ def main():
         bidseditor(**vars(args))
 
     except Exception as error:
-        trackusage('bidseditor_exception')
+        trackusage('bidseditor_exception', error)
         raise error
 
 

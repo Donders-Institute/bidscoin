@@ -325,7 +325,7 @@ def main():
         bidscoiner(**vars(args))
 
     except Exception as error:
-        trackusage('bidscoiner_exception')
+        trackusage('bidscoiner_exception', error)
         raise error
 
 

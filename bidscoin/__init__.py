@@ -173,14 +173,16 @@ def run_command(command: str, success: tuple=(0,None)) -> int:
     return process.returncode
 
 
-def trackusage(event: str, dryrun: bool=False) -> dict:
+def trackusage(event: str, message='', dryrun: bool=False) -> dict:
     """Sends a url GET request with usage data parameters (if tracking is allowed and we are not asleep)
 
-    :param event:  A label that describes the tracking event
-    :param dryrun: Collect the usage data but don't actually send anything
-    :return:       The usage data
+    :param event:   A label that describes the tracking event
+    :param message: An (error) message that is added to the usage data
+    :param dryrun:  Collect the usage data but don't actually send anything
+    :return:        The usage data
     """
 
+    # Collect the usage data
     data = {'event':    event,
             'bidscoin': __version__,
             'python':   platform.python_version(),
@@ -188,13 +190,15 @@ def trackusage(event: str, dryrun: bool=False) -> dict:
             'release':  platform.release(),
             'userid':   hashlib.md5(getpass.getuser().encode('utf8')).hexdigest(),
             'hostid':   hashlib.md5(platform.node().encode('utf8')).hexdigest()}
+    if message:
+        data['message'] = str(message)
 
-    # Check if the user allows tracking, if it is a dry/pytest run, a DRMAA run, or if this is not a stable (#.#.#) version
+    # Return if the user disallows tracking, if it is a dry-, pytest-, or a DRMAA-run, or if this is not a stable (#.#.#) version
     if not (os.getenv('BIDSCOIN_TRACKUSAGE') or config['bidscoin'].get('trackusage','yes')).upper() in ('1', 'TRUE', 'Y', 'YES') or dryrun \
             or "PYTEST_CURRENT_TEST" in os.environ or 'BIDSCOIN_JOB' in os.environ or re.match(r"^\d+\.\d+\.\d+$", __version__) is None:
         return data
 
-    # Check if we are not asleep
+    # Return if we are asleep
     trackfile = configdir/'usage'/f"bidscoin_{data['userid']}"
     try:
         trackfile.parent.mkdir(parents=True, exist_ok=True)
@@ -205,13 +209,15 @@ def trackusage(event: str, dryrun: bool=False) -> dict:
                 return data
             tracked[event] = now
 
+    # If something goes wrong, add an error message, clear the shelf and return
     except Exception as shelveerror:
-        warnings.warn(f"Please report the following error to the developers:\n{shelveerror}: {trackfile}", RuntimeWarning)
-        for corruptfile in shelvefiles := list(trackfile.parent.glob(trackfile.name + '.*')):
+        data['event']   = 'trackusage_exception'
+        data['message'] = f"({event}){shelveerror}"
+        for corruptfile in (shelvefiles := list(trackfile.parent.glob(trackfile.name + '.*'))):
             print(f"Deleting corrupt file: {corruptfile}")
             corruptfile.unlink()
-        data['event'] = 'trackusage_exception'
-        if not shelvefiles:         # Return without uploading (no shelve files means no sleep)
+        if not shelvefiles:                         # Return without uploading (no shelve files means no sleep)
+            warnings.warn(f"Please report the following error to the developers:\n{shelveerror}: {trackfile}", RuntimeWarning)
             return data
 
     # Upload the usage data

@@ -170,7 +170,7 @@ def main():
         deface(**vars(args))
 
     except Exception as error:
-        trackusage('deface_exception')
+        trackusage('deface_exception', error)
         raise error
 
 

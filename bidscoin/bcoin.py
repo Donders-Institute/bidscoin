@@ -655,7 +655,7 @@ def main():
         reportcredits(args=args.credits)
 
     except Exception as error:
-        trackusage('bidscoin_exception')
+        trackusage('bidscoin_exception', error)
         raise error
 
 

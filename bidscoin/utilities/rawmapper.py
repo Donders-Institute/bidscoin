@@ -148,7 +148,7 @@ def main():
         rawmapper(**vars(args))
 
     except Exception as error:
-        trackusage('rawmapper_exception')
+        trackusage('rawmapper_exception', error)
         raise error
 
 

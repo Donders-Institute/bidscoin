@@ -209,7 +209,7 @@ def main():
         echocombine(**vars(args))
 
     except Exception as error:
-        trackusage('echocombine_exception')
+        trackusage('echocombine_exception', error)
         raise error
 
 

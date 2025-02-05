@@ -218,7 +218,7 @@ def main():
         medeface(**vars(args))
 
     except Exception as error:
-        trackusage('medeface_exception')
+        trackusage('medeface_exception', error)
         raise error
 
 

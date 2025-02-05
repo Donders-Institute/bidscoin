@@ -333,7 +333,7 @@ def main():
         slicereport(**vars(args))
 
     except Exception as error:
-        trackusage('slicereport_exception')
+        trackusage('slicereport_exception', error)
         raise error
 
 

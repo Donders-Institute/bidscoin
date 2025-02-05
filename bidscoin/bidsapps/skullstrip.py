@@ -248,7 +248,7 @@ def main():
         skullstrip(**vars(args))
 
     except Exception as error:
-        trackusage('skullstrip_exception')
+        trackusage('skullstrip_exception', error)
         raise error
 
 
