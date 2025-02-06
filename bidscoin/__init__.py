@@ -26,6 +26,7 @@ import shutil
 import warnings
 import tempfile
 import subprocess
+import traceback
 from pathlib import Path
 from importlib import metadata
 from typing import Union
@@ -191,6 +192,9 @@ def trackusage(event: str, message='', dryrun: bool=False) -> dict:
             'userid':   hashlib.md5(getpass.getuser().encode('utf8')).hexdigest(),
             'hostid':   hashlib.md5(platform.node().encode('utf8')).hexdigest()}
     if message:
+        if isinstance(message, Exception):
+            trace   = traceback.extract_tb(traceback.sys.exc_info()[2])[-1]     # Get the last traceback entry
+            message = f"({trace.filename},{trace.lineno}){message}"             # Prepend the traceback info
         data['message'] = str(message)
     if container := os.getenv('CONTAINER'):
         data['container'] = container
@@ -211,7 +215,7 @@ def trackusage(event: str, message='', dryrun: bool=False) -> dict:
                 return data
             tracked[event] = now
 
-    # If something goes wrong, add an error message, clear the shelf and return
+    # If something goes wrong, add an error message, clear the shelf and return if we can't sleep
     except Exception as shelveerror:
         data['event']   = 'trackusage_exception'
         data['message'] = f"({event}){shelveerror}"
