@@ -192,6 +192,8 @@ def trackusage(event: str, message='', dryrun: bool=False) -> dict:
             'hostid':   hashlib.md5(platform.node().encode('utf8')).hexdigest()}
     if message:
         data['message'] = str(message)
+    if container := os.getenv('CONTAINER'):
+        data['container'] = container
 
     # Return if the user disallows tracking, if it is a dry-, pytest-, or a DRMAA-run, or if this is not a stable (#.#.#) version
     if not (os.getenv('BIDSCOIN_TRACKUSAGE') or config['bidscoin'].get('trackusage','yes')).upper() in ('1', 'TRUE', 'Y', 'YES') or dryrun \

@@ -24,7 +24,7 @@ Stage: builder
     . /root/.bashrc
 
     # Create a conda env and install FSL tools needed for (me)deface and slicereport. NB: Keep the version the same as the Docker base image
-    conda create -n fsl python=3.10
+    conda create -n fsl python=3.12
     conda install -n fsl -c https://fsl.fmrib.ox.ac.uk/fsldownloads/fslconda/public/ -c conda-forge fsl-libvis fsl-avwutils fsl-flirt
 
     # Pack the fsl environment into fsl.tar.gz and unpack it in /opt/fsl
@@ -63,14 +63,15 @@ Stage: final
         3) The current image does not include the Freesurfer/synthstrip software (needed for `skullstrip`)
 
 %files from builder
-    # /opt/bidscoin /opt/bidscoin     # Only needed for pip install from github
     /usr/local/bin/dcm2niix /usr/local/bin/dcm2niix
     /opt/fsl /opt/fsl
+    # /opt/bidscoin /opt/bidscoin     # Only needed for pip install from GitHub
 
 %environment
     export FSLDIR=/opt/fsl FSLOUTPUTTYPE=NIFTI_GZ
     export PATH=$PATH:/opt/fsl/bin
     export PIP_NO_CACHE_DIR=off
+    export CONTAINER=Apptainer
 
 %post
     # Install curl (sometimes needed by dcm2niix) and pigz (to speed up dcm2niix)
@@ -81,9 +82,9 @@ Stage: final
     apt -y --no-install-recommends install python3-pyqt6 build-essential libgl1 libxcb-cursor0 dbus qt6-wayland && apt clean     # Add build-essential for newer python:3-slim base images (pip needs gcc and wayland support is not yet provided for)
 
     # Install BIDScoin
-    # pip install /opt/bidscoin[spec2nii2bids,deface]   # Also uncomment in xfiles from builder: `/opt/bidscoin /opt/bidscoin`
-    # pip install bidscoin[spec2nii2bids,deface]==VERSION
     pip install bidscoin[spec2nii2bids,deface]
+    # pip install bidscoin[spec2nii2bids,deface]==VERSION
+    # pip install /opt/bidscoin[spec2nii2bids,deface]   # = GitHub. NB: Also uncomment in xfiles from builder: `/opt/bidscoin /opt/bidscoin`
 
     # Uncomment the line below if you get errors like: ImportError: libQt5Core.so.5: cannot open shared object file: No such file or directory
     # strip --remove-section=.note.ABI-tag /usr/lib/x86_64-linux-gnu/libQt5Core.so.5
