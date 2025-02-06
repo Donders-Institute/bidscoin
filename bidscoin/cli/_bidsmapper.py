@@ -42,7 +42,7 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument('-u','--unzip',       help='Wildcard pattern to unpack tarball/zip-files in the sub/ses sourcefolder that need to be unzipped (in a tempdir) to make the data readable. Default: the value of the study/template bidsmap', metavar='PATTERN')
     parser.add_argument('-s','--store',       help='Store newly discovered data samples in the bidsfolder/code/provenance folder (useful for editing e.g. zipped or transferred datasets)', action='store_true')
     parser.add_argument('-a','--automated',   help='Save the automatically generated bidsmap to disk and without interactively tweaking it with the bidseditor', action='store_true')
-    parser.add_argument('-f','--force',       help='Discard the previously saved bidsmap and log file, instead of re-using them (use this option for a fresh start)', action='store_true')
+    parser.add_argument('-f','--force',       help='Discard the previously saved bidsmap and log file, instead of reusing them (use this option for a fresh start)', action='store_true')
     parser.add_argument('--no-update',        help="Do not update any sub-/ses-prefixes in or prepend the sourcefolder name to the <<filepath:regex>> expression that extracts the subject/session labels. This is normally done to make the extraction more robust, but could cause problems for certain use cases", action='store_true')
 
     return parser
