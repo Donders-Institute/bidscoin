@@ -931,7 +931,7 @@ class BidsMap:
         options        = self.options
         bidsmapversion = options.get('version', 'Unknown')
         if bidsmapversion.rsplit('.', 1)[0] != __version__.rsplit('.', 1)[0] and any(checks):
-            LOGGER.warning(f'BIDScoiner version conflict: {yamlfile} was created with version {bidsmapversion}, but this is version {__version__}')
+            LOGGER.warning(f'BIDScoiner version conflict: {yamlfile} was created with version {bidsmapversion}, but this is version {__version__}. This may well create issues/errors...')
         elif bidsmapversion != __version__ and any(checks):
             LOGGER.info(f'BIDScoiner version difference: {yamlfile} was created with version {bidsmapversion}, but this is version {__version__}. This is normally OK but check the https://bidscoin.readthedocs.io/en/latest/CHANGELOG.html')
 

@@ -31,7 +31,7 @@ The core working of BIDScoin and its plugins can be tested by clicking the corre
 dcm2niix2bids - plugin
 ----------------------
 
-The `dcm2niix2bids plugin <./plugins.html#dcm2niix2bids>`__ is the default bidscoiner plugin that converts DICOM and PAR/REC data to BIDS. It relies on `dcm2niix <https://github.com/rordenlab/dcm2niix>`__, for which you can set the following options:
+The `dcm2niix2bids plugin <./plugins.html#dcm2niix2bids>`__ is a default plugin that converts DICOM and PAR/REC data to BIDS. It relies on `dcm2niix <https://github.com/rordenlab/dcm2niix>`__, for which you can set the following options:
 
 - ``command``: Command to run dcm2niix from the terminal, such as:
 
@@ -49,6 +49,15 @@ The `dcm2niix2bids plugin <./plugins.html#dcm2niix2bids>`__ is the default bidsc
    - Use the [Set as default] button to put your custom dcm2niix command in your template bidsmap so that you don't have to adjust it anymore for every new study
    - SPM users may want to use '-z n', which produces unzipped NIfTI's
    - Install ``pigz`` to speed-up dm2niix (search the web for more help)
+
+events2bids - plugin
+--------------------
+
+The `events2bids plugin <./plugins.html#events2bids>`__ is a default plugin that converts NeuroBS Presentation log files to BIDS events tsv-files. The settings for this plugin are:
+
+- ``table``: The `name of the Presentation table <https://www.neurobs.com/pres_docs/html/03_presentation/07_data_reporting/01_logfiles/index.html>`__ that is parsed to generate the output table, i.e. one out of "events", "stimulus", "video" or "survey". The "events" table has a standardized format and is therefore set as default.
+- ``skiprows``: The number of (header) rows that precede the table data
+- ``meta``: The file extensions of the associated / equally named (meta)data sourcefiles that are copied over as BIDS (sidecar) files. See the dcm2niix2bids plugin item above for more info
 
 spec2nii2bids - plugin
 ----------------------

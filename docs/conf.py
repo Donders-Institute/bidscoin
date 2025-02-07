@@ -57,6 +57,15 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 html_theme         = 'sphinx_rtd_theme'
 highlight_language = "none"
 
+# Replace the "View page source" link with "Edit on GitHub"
+html_context = {
+  'display_github': True,
+  'github_repo': 'bidscoin',
+  'github_user': 'Donders-Institute',
+  'github_version': 'master',
+  'conf_py_path': '/doc/',          # Needs leading and trailing slashes
+}
+
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
