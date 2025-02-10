@@ -6,6 +6,7 @@ import logging
 import copy
 import webbrowser
 import ast
+import re
 import json
 import csv
 import nibabel as nib
@@ -1673,13 +1674,17 @@ class EditWindow(QDialog):
         if mapping:
             try:
                 mapping = ast.literal_eval(mapping)  # Convert stringified dict back to dict
+                for key, pattern in mapping.items():
+                    re.compile(pattern)
                 LOGGER.verbose(f"User sets events['rows'][{rowindex}] to {mapping}' for {self.target_run}")
                 if rowindex == nrows - 1:
                     self.target_run.events['rows'].append({'condition' if colindex==0 else 'cast': mapping})
                 else:
                     self.target_run.events['rows'][rowindex]['condition' if colindex==0 else 'cast'] = mapping
-            except (ValueError, SyntaxError):
-                QMessageBox.warning(self, 'Input error', f"Please enter a valid '{mapping}' dictionary")
+            except (ValueError, SyntaxError) as dict_error:
+                QMessageBox.warning(self, 'Input error', f"Please enter a valid '{mapping}' dictionary\n\n{dict_error}")
+            except re.error as pattern_error:
+                QMessageBox.warning(self, 'Input error', f"Please enter a valid '{mapping}' pattern:\n\n{pattern_error}")
         elif colindex == 0 and rowindex < nrows - 1:                # Remove the row
             del self.target_run.events['rows'][rowindex]
         else:
@@ -1700,7 +1705,7 @@ class EditWindow(QDialog):
         output = self.events_columns.item(rowindex, 1).text().strip() if self.events_columns.item(rowindex, 1) else ''
         nrows  = self.events_columns.rowCount()
 
-        if input and not output:
+        if colindex == 0 and input and not output:
             output = input
 
         if not input or input in self.target_run.eventsparser().logtable:

@@ -193,22 +193,24 @@ class EventsParser(ABC):
 
         # Check the parser's data structure
         if not self.isvalid:
-            return pd.DataFrame()
+            pass
 
         df = copy.deepcopy(self.logtable)
 
         # Convert the timing values to seconds (with maximally 4 digits after the decimal point)
-        df[self.time['cols']] = (df[self.time['cols']].apply(pd.to_numeric, errors='coerce') / self.time['unit']).round(4)
+        timecols     = [col for col in self.time.get('cols',[]) if col in df.columns]
+        df[timecols] = (df[timecols].apply(pd.to_numeric, errors='coerce') / self.time['unit']).round(4)
 
         # Take the logtable columns of interest and from now on use the BIDS column names
-        df         = df.loc[:, [sourcecol for item in self.columns for sourcecol in item.values() if sourcecol]]
-        df.columns = [eventscol for item in self.columns for eventscol, sourcecol in item.items() if sourcecol]
+        df         = df.loc[:, [sourcecol for item in self.columns for sourcecol in item.values() if sourcecol in df.columns]]
+        df.columns = [eventscol for item in self.columns for eventscol, sourcecol in item.items() if sourcecol in df.columns]
 
         # Set the clock at zero at the start of the experiment
         if self.time.get('start'):
             start = pd.Series([True] * len(df))
             for column, value in self.time['start'].items():
-                start &= (self.logtable[column].astype(str) == str(value)).values
+                if column in self.logtable.columns:
+                    start &= (self.logtable[column].astype(str) == str(value)).values
             if start.any():
                 LOGGER.bcdebug(f"Resetting clock offset: {df['onset'][start.values].iloc[0]}")
                 df['onset'] -= df['onset'][start.values].iloc[0]  # Take the time of the first occurrence as zero
@@ -218,6 +220,9 @@ class EventsParser(ABC):
         for group in self.rows:
 
             for column, regex in group['condition'].items():
+
+                if column not in self.logtable.columns:
+                    continue
 
                 # Get the rows that match the expression, i.e. make them True
                 rowgroup = self.logtable[column].astype(str).str.fullmatch(str(regex))
@@ -294,7 +299,7 @@ class EventsParser(ABC):
         for name in set([name for item in self.columns for name in item.values()] + [name for item in self.rows for name in item['condition'].keys()] +
                         [*self.time.get('start', {}).keys()] + self.time.get('cols', [])):
             if name and name not in columns:
-                LOGGER.warning(f"Column '{name}' not found in the event table of {self}")
+                LOGGER.warning(f"Column '{name}' not found in the input table parsed from {self}")
                 valid = False
         if columns.duplicated().any():
             LOGGER.warning(f"Duplicate columns found: {columns}\n{self}")

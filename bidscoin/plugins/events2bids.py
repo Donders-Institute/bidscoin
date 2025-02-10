@@ -196,18 +196,18 @@ class PresentationEvents(EventsParser):
 
         # Get the row indices to slice the event, stimulus, video or survey table
         df.columns = self._sourcecols
-        if self.options['table'] == 'event':
+        if self.options['table'].lower() == 'event':
             begin = 0
             end   = min(stimulus_header, video_header, survey_header)
-        elif self.options['table'] == 'stimulus':
+        elif self.options['table'].lower() == 'stimulus':
             df.columns = df.iloc[stimulus_header]
             begin = stimulus_header + 1
             end   = min(video_header, survey_header)
-        elif self.options['table'] == 'video':
+        elif self.options['table'].lower() == 'video':
             df.columns = df.iloc[video_header]
             begin = video_header + 1
             end   = survey_header
-        elif self.options['table'] == 'survey':
+        elif self.options['table'].lower() == 'survey':
             df.columns = df.iloc[survey_header]
             begin = survey_header + 1
             end   = nrows
@@ -222,11 +222,11 @@ class PresentationEvents(EventsParser):
         for i, col in enumerate(df.columns):
             if pd.isna(col) or col == '':       # Check if the column name is NaN or an empty string
                 cols.append(new_col := f"unknown_{i}")
-                LOGGER.info(f"Renaming empty column name at index {i}: {col} -> {new_col}")
+                LOGGER.bcdebug(f"Renaming empty column name at index {i}: {col} -> {new_col}")
             elif col in dupl:                   # If duplicate, append the index number
                 dupl[col] += 1
                 cols.append(new_col := f"{col}_{dupl[col]}")
-                LOGGER.info(f"Renaming duplicate column name: {col} -> {new_col}")
+                LOGGER.bcdebug(f"Renaming duplicate column name: {col} -> {new_col}")
             else:                               # First occurrence of the column name, add it to dupl
                 dupl[col] = 0
                 cols.append(col)
