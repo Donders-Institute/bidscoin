@@ -1053,7 +1053,7 @@ Presentation:
       TaskName:
       TaskDescription:
       Instructions:
-      Scenario: <<Scenario>>
+      Scenario: <Scenario>
       LogfileWritten: <<Logfile written>>
     events: &presentation_events
       columns:                          # Columns that are included in the output table, i.e. {output column: input column}
