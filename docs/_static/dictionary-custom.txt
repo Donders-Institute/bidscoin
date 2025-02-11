@@ -1,5 +1,7 @@
 1a
 1b
+2p4iso
+2p5iso
 3D
 4D
 4gb
@@ -202,6 +204,8 @@ filesystem
 findall
 fixmeta
 fmap
+fmap1
+fmap2
 fmriprep
 fninf
 fnmatch
@@ -215,6 +219,7 @@ gz
 hardcoded
 hoc
 importlib
+incongruent
 inputimage
 iso
 imagetype
