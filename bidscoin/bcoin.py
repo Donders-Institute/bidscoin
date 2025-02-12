@@ -373,8 +373,8 @@ def import_plugin(plugin: Union[Path,str], classes: tuple=('Interface',)) -> Uni
             else:
                 classesfound.append(klass)
 
-        if classes and not classesfound:
-            LOGGER.bcdebug(f"Plugin '{plugin}' does not contain {classes} classes")
+        if classes and len(classes) != len(classesfound):
+            LOGGER.bcdebug(f"Plugin '{plugin}' does not contain all {classes} classes, found only: {classesfound}")
         else:
             return module
 

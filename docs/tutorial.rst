@@ -87,7 +87,7 @@ In the second tab of the bidseditor window, you see a similar participant table 
 
 .. dropdown:: Otherwise, click on the Presentation tab and continue as follows:
 
-   - In the samples table you can see a "Flanker" run-item. Open it and change the data type to "func". In the meta table, write something meaningful in the ``TaskName`` field.
+   - In the samples table you can see a "Flanker" run-item. Open it and change the data type to ``func``. In the meta table, write something meaningful in the ``TaskName`` field.
    - Click on the ``Edit`` button to tweak the events output data. You now get to see parsed input data on the left. Click on the ``Source`` button to inspect the raw text file. Scroll down and note that there are two tables in there -- the first one, which is the "events" table, is used as input (see the plugin `Options <./options.html#events2bids-plugin>`__). Close the inspection window.
    - In the middle panel, remove the ``trial_nr`` output column. Note that the column disappeared from the ``Events data`` table on the right. Click on the ``Reset`` button to undo any edits.
    - In ``Rows`` table of the middle panel, change the row condition ``Event_Type`` to include only "Picture" and "Response" rows, i.e. filter out the "Pulses": ``{'Event Type': '.*'}`` -> ``{'Event Type': 'Picture|Response'}``.

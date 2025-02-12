@@ -312,4 +312,5 @@ class EventsParser(ABC):
     def write(self, targetfile: Path):
         """Write the eventstable to a BIDS events.tsv file"""
 
+        LOGGER.verbose(f"Saving events to: {targetfile}")
         self.eventstable.to_csv(targetfile, sep='\t', index=False)
