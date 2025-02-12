@@ -1,4 +1,4 @@
-FROM python:3.12-slim AS builder
+FROM python:3.13-slim AS builder
 
 # Install the latest dcm2niix from sources
 # Or install the latest dcm2niix release from the base repository (= typically outdated)
@@ -34,7 +34,7 @@ RUN mkdir -p /opt/miniconda3; \
     rm -rf docs tests .git
 
 
-FROM python:3.12-slim
+FROM python:3.13-slim
 
 # Install the dcm2niix build. NB: Obsolete with the new `pip install bidscoin[dcm2niix2bids]` extras option
 COPY --from=builder /usr/local/bin/dcm2niix /usr/local/bin/dcm2niix
