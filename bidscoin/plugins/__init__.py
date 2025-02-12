@@ -164,7 +164,7 @@ class EventsParser(ABC):
         :param options:     The plugin options
         """
 
-        self.sourcefile = sourcefile
+        self.sourcefile = Path(sourcefile)
         self._data      = eventsdata
         self.options    = options
 
@@ -192,6 +192,8 @@ class EventsParser(ABC):
         """Returns the target events.tsv data"""
 
         # Check the parser's data structure
+        if not len(self.logtable):
+            return pd.DataFrame(columns=['onset', 'duration'])
         if not self.isvalid:
             pass
 

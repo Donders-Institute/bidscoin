@@ -179,7 +179,7 @@ class PresentationEvents(EventsParser):
         super().__init__(sourcefile, _data, options)
 
         # Read the log-tables from the Presentation log file
-        self._sourcetable = pd.read_csv(self.sourcefile, sep='\t', skiprows=options.get('skiprows',3), skip_blank_lines=True)
+        self._sourcetable = pd.read_csv(self.sourcefile, sep='\t', skiprows=options.get('skiprows',3), skip_blank_lines=True) if self.sourcefile.is_file() else pd.DataFrame()
         """The Presentation log-tables (https://www.neurobs.com/pres_docs/html/03_presentation/07_data_reporting/01_logfiles/index.html)"""
         self._sourcecols  = self._sourcetable.columns
         """Store the original column names"""
@@ -188,13 +188,16 @@ class PresentationEvents(EventsParser):
     def logtable(self) -> pd.DataFrame:
         """Returns a Presentation log-table"""
 
-        df              = self._sourcetable
-        nrows           = len(df)
+        df = self._sourcetable
+        if not (nrows := len(df)):
+            return df
+
+        # Get the row indices to slice the event, stimulus, video or survey table
         stimulus_header = (df.iloc[:, 0] == 'Event Type').idxmax() or nrows
         video_header    = (df.iloc[:, 0] == 'filename').idxmax() or nrows
         survey_header   = (df.iloc[:, 0] == 'Time').idxmax() or nrows
 
-        # Get the row indices to slice the event, stimulus, video or survey table
+        # Get the first and last row index of the table of interest
         df.columns = self._sourcecols
         if self.options['table'].lower() == 'event':
             begin = 0
