@@ -3,20 +3,15 @@ import json
 import yaml
 import csv
 import logging
-from bidscoin import bcoin, bidsmapper, bidscoiner, bidsmap_template, __version__
+from bidscoin import bidsmapper, bidscoiner, bidsmap_template, __version__
 from duecredit.io import load_due, DUECREDIT_FILE
 
-bcoin.setup_logging()
-
+# TODO: fix clearing/deleting logging files
 
 def test_bidscoiner_dicomdir(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir):
 
     if not bidsmap_dicomdir.is_file():
         bidsmapper.bidsmapper(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir, bidsmap_template, [], 'Doe^', '*', unzip='', automated=True, force=True)
-        try:
-            (bidsmap_dicomdir.parent/'bidsmapper.errors').unlink(missing_ok=True)
-        except Exception:
-            pass
     bidscoiner.bidscoiner(raw_dicomdir, bids_dicomdir)
     logs    = (bidsmap_dicomdir.parent/'bidscoiner.errors').read_text()
     sidecar = sorted((bids_dicomdir/'sub-Peter'/'ses-03Brain').rglob('*TestExtAtrributes*.json'))[0]
@@ -28,6 +23,7 @@ def test_bidscoiner_dicomdir(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir):
         pass
     assert 'ERROR' not in logs
     # assert 'WARNING' not in logs
+    assert '>>> Skipping' not in logs
     assert bidsmap['Options']['bidscoin']['unknowntypes'][-1] == 'extra_data'
     assert sidecar.relative_to(bids_dicomdir).as_posix()      == 'sub-Peter/ses-03Brain/extra_data/sub-Peter_ses-03Brain_acq-TSCRFFASTPILOTi00001_mod-TestExtAtrributes_GR.json'
     assert (bids_dicomdir/'sub-Archibald'/'ses-02CTHEADBRAINWOCONTRAST').is_dir()
@@ -63,15 +59,24 @@ def test_bidscoiner_dicomdir(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir):
     assert data[2] == ['sub-Peter',      'ses-01',     '43',  'M',   'n/a',    '81.632700']
 
 
+def test_bidscoiner_dicomdir_skip(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir):
+
+    # Make sure that re-running bidscoiner skips already processed data
+    for handler in logging.getLogger().handlers:
+        handler.close()
+    (bidsmap_dicomdir.parent/'bidscoiner.log').unlink(missing_ok=True)
+    (bidsmap_dicomdir.parent/'bidscoiner.errors').unlink(missing_ok=True)
+    bidscoiner.bidscoiner(raw_dicomdir, bids_dicomdir)
+    logs = (bidsmap_dicomdir.parent/'bidscoiner.log').read_text()
+    # assert '>>> Coining' not in logs
+    assert '>>> Skipping' in logs
+
+
 def test_bidscoiner_neurobs(bids_neurobs, bidsmap_neurobs, test_data):
 
     testdata = str(test_data/'neurobs')
     if not bidsmap_neurobs.is_file():
         bidsmapper.bidsmapper(testdata, str(bids_neurobs), bidsmap_neurobs, bidsmap_template, ['events2bids'], 'sub-', 'ses-', '', automated=True)
-        try:
-            (bidsmap_neurobs.parent/'bidsmapper.errors').unlink(missing_ok=True)
-        except Exception:
-            pass
     with bidsmap_neurobs.open('r') as fid:
         bidsmap = yaml.safe_load(fid)
     bidsmap['Presentation']['func'][0]['events']['rows'][0]['condition'] = {'Event Type': 'Pict.*'}
@@ -80,12 +85,12 @@ def test_bidscoiner_neurobs(bids_neurobs, bidsmap_neurobs, test_data):
     bidsmap['Presentation']['func'][0]['events']['rows'][1]['cast']      = {'xtra': 'test'}
     with bidsmap_neurobs.open('w') as fid:
         yaml.dump(bidsmap, fid)
+    for handler in logging.getLogger().handlers:
+        handler.close()
+    (bidsmap_neurobs.parent/'bidscoiner.log').unlink(missing_ok=True)
+    (bidsmap_neurobs.parent/'bidscoiner.errors').unlink(missing_ok=True)
     bidscoiner.bidscoiner(testdata, bids_neurobs)
     logs = (bidsmap_neurobs.parent/'bidscoiner.errors').read_text()
-    try:
-        (bidsmap_neurobs.parent/'bidscoiner.errors').unlink(missing_ok=True)
-    except Exception:
-        pass
     assert 'ERROR' not in logs
     assert 'WARNING' not in logs
     assert len(list(bids_neurobs.rglob('sub-*.json*'))) == 2
@@ -112,13 +117,16 @@ def test_bidscoiner_neurobs(bids_neurobs, bidsmap_neurobs, test_data):
     assert data[0]   == ['participant_id']
     assert data[1]   == ['sub-M059']
 
+    # Make sure that re-running bidscoiner does not skip already processed events data
     for handler in logging.getLogger().handlers:
         handler.close()
     (bidsmap_neurobs.parent/'bidscoiner.log').unlink(missing_ok=True)
+    (bidsmap_neurobs.parent/'bidscoiner.errors').unlink(missing_ok=True)
     bidscoiner.bidscoiner(testdata, bids_neurobs)
     logs = (bidsmap_neurobs.parent/'bidscoiner.log').read_text()
-    assert '>>> Coining' not in logs
-    assert '>>> Skipping' in logs
+    assert '>>> Coining events2bids' in logs
+    assert '>>> Skipping events2bids' not in logs
+
 
 # def test_addmetadata(bids_dicomdir, bidsmap_dicomdir):
 #     """WIP"""

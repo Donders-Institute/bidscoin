@@ -17,11 +17,13 @@ import urllib.request, urllib.error
 from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 from pathlib import Path
+import inspect
 from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     sys.path.append(str(Path(__file__).parents[1]))
 from bidscoin import bcoin, bids, lsdirs, bidsversion, trackusage, __version__, DEBUG
 from bidscoin.utilities import unpack
+from bidscoin.plugins import EventsParser
 
 
 def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: bool=False, bidsmap: str= 'bidsmap.yaml', cluster: str= '') -> None:
@@ -279,7 +281,7 @@ def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: 
                             for datatype in [dtype for dtype in lsdirs(bidssession) if next(dtype.iterdir(), None)]:    # See what non-empty datatypes we already have in the bids session-folder
                                 if datatype.name in bidsmap.dataformat(datasource.dataformat).datatypes:                # See if the plugin may add data for this datatype
                                     datatypes.add(datatype.name)
-                            if datatypes:
+                            if datatypes and not any(issubclass(cls, EventsParser) for _,cls in inspect.getmembers(plugin, inspect.isclass)):  # Always allow events plugins to add data
                                 LOGGER.warning(f">>> Skipping {name} processing: {bidssession} already has {datatypes} data (you can carefully use the -f option to overrule)")
                                 continue
 
