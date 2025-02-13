@@ -282,7 +282,7 @@ def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: 
                                 if datatype.name in bidsmap.dataformat(datasource.dataformat).datatypes:                # See if the plugin may add data for this datatype
                                     datatypes.add(datatype.name)
                             if datatypes and not any(issubclass(cls, EventsParser) for _,cls in inspect.getmembers(plugin, inspect.isclass)):  # Always allow events plugins to add data
-                                LOGGER.warning(f">>> Skipping {name} processing: {bidssession} already has {datatypes} data (you can carefully use the -f option to overrule)")
+                                LOGGER.info(f">>> Skipping {name} processing: {bidssession} already contains {datatypes} data. Use the -f option to force processing if needed.")
                                 continue
 
                         LOGGER.info(f">>> Coining {name} datasources in: {sesfolder}")

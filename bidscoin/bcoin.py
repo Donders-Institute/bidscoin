@@ -367,7 +367,7 @@ def import_plugin(plugin: Union[Path,str], classes: tuple=('Interface',)) -> Uni
         classesfound = []
         for klass in classes:
             if not hasattr(module, klass):
-                LOGGER.verbose(f"Could not find '{klass}' in the '{plugin}' plugin")
+                LOGGER.bcdebug(f"The '{plugin}' plugin does not contain an implementation for '{klass}'")
             elif not callable(getattr(module, klass)):
                 LOGGER.error(f"'The {klass}' attribute in the '{plugin}' plugin is not callable")
             else:

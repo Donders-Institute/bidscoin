@@ -117,12 +117,15 @@ def test_bidscoiner_neurobs(bids_neurobs, bidsmap_neurobs, test_data):
     assert data[0]   == ['participant_id']
     assert data[1]   == ['sub-M059']
 
+
+def test_bidscoiner_neurobs_noskip(bids_neurobs, bidsmap_neurobs, test_data):
+
     # Make sure that re-running bidscoiner does not skip already processed events data
     for handler in logging.getLogger().handlers:
         handler.close()
     (bidsmap_neurobs.parent/'bidscoiner.log').unlink(missing_ok=True)
     (bidsmap_neurobs.parent/'bidscoiner.errors').unlink(missing_ok=True)
-    bidscoiner.bidscoiner(testdata, bids_neurobs)
+    bidscoiner.bidscoiner(str(test_data/'neurobs'), bids_neurobs)
     logs = (bidsmap_neurobs.parent/'bidscoiner.log').read_text()
     assert '>>> Coining events2bids' in logs
     assert '>>> Skipping events2bids' not in logs
