@@ -13,16 +13,16 @@ def test_bidsmapper_dicomdir(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir, subp
     resesprefix = '' if sesprefix=='*' else re.escape(sesprefix).replace(r'\-','-')
     bidsmap     = bidsmapper.bidsmapper(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir, bidsmap_template, [], subprefix, sesprefix, '', store=store, automated=True, force=True)
     assert isinstance(bidsmap.dataformats[0]._data, dict)
-    assert bidsmap.options['subprefix'] == subprefix
-    assert bidsmap.options['sesprefix'] == sesprefix
-    assert bidsmap.dataformat('DICOM').subject                           == f"<<filepath:/{raw_dicomdir.name}/{resubprefix}(.*?)/>>"
-    assert bidsmap.dataformat('DICOM').session                           == f"<<filepath:/{raw_dicomdir.name}/{resubprefix}.*?/{resesprefix}(.*?)/>>"
+    assert bidsmap.options['subprefix']         == subprefix
+    assert bidsmap.options['sesprefix']         == sesprefix
+    assert bidsmap.dataformat('DICOM').subject  == f"<<filepath:/{raw_dicomdir.name}/{resubprefix}(.*?)/>>"
+    assert bidsmap.dataformat('DICOM').session  == f"<<filepath:/{raw_dicomdir.name}/{resubprefix}.*?/{resesprefix}(.*?)/>>"
     assert len(bidsmap.dataformat('DICOM').datatype('exclude').runitems) > 1
     for run in bidsmap.dataformat('DICOM').datatype('exclude').runitems:
         assert 'LOCALIZER' in run.attributes['SeriesDescription'] or 'DERIVED' in run.attributes['ImageType']
     assert bidsmap_dicomdir.is_file()
-    assert 'Doe^Archibald' in bidsmap_dicomdir.read_text()                                      # Make sure we have discovered `Archibald` samples (-> provenance)
-    assert 'Doe^Peter' in bidsmap_dicomdir.read_text()                                          # Make sure we have discovered `Peter` samples (-> provenance)
+    assert 'Doe^Archibald' in bidsmap_dicomdir.read_text()                      # Make sure we have discovered `Archibald` samples (-> provenance)
+    assert 'Doe^Peter' in bidsmap_dicomdir.read_text()                          # Make sure we have discovered `Peter` samples (-> provenance)
     assert (bidsmap_dicomdir.parent/'bidsmapper.errors').stat().st_size == 0
     assert (bidsmap_dicomdir.parent/'provenance').is_dir()              == store
     try:

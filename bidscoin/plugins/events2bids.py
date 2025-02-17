@@ -2,51 +2,61 @@
 
 import logging
 import json
+import dateutil.parser
 import pandas as pd
 from typing import Union
+from importlib.util import find_spec
 from bids_validator import BIDSValidator
 from pathlib import Path
 from bidscoin import bids, is_hidden
 from bidscoin.plugins import PluginInterface, EventsParser
 from bidscoin.bids import BidsMap, DataFormat, Plugin
 # TODO: from convert_eprime.utils import ..
+if find_spec('psychopy'):
+    import psychopy
+    from psychopy.misc import fromFile
 
 LOGGER = logging.getLogger(__name__)
 
 # The default/fallback options that are set when installing/using the plugin
-OPTIONS = Plugin({'table': 'event', 'skiprows': 3, 'meta': ['.json', '.tsv']})  # The file extensions of the equally named metadata sourcefiles that are copied over as BIDS sidecar files
+OPTIONS = Plugin({'meta': ['.json']})  # The file extensions of the equally named metadata source files that are copied over as BIDS sidecar files
 
 
 class Interface(PluginInterface):
 
-    def has_support(self, file: Path, dataformat: Union[DataFormat, str]='') -> str:
+    def has_support(self, sourcefile: Path, dataformat: Union[DataFormat, str]= '') -> str:
         """
         This plugin function assesses whether a sourcefile is of a supported dataformat
 
-        :param file:        The sourcefile that is assessed
+        :param sourcefile:  The sourcefile that is assessed
         :param dataformat:  The requested dataformat (optional requirement)
         :return:            The valid/supported dataformat of the sourcefile
         """
 
-        if dataformat and dataformat != 'Presentation':
+        if dataformat and dataformat not in ('Presentation', 'Psychopy'):
             return ''
 
-        if file.suffix.lower() in ('.log',):
+        if sourcefile.suffix.lower() in ('.log',):
             try:
-                with file.open('r') as fid:
+                with sourcefile.open('r') as fid:
                     for n in (1,2,3):
                         line = fid.readline()
                         if line.startswith('Scenario -'):
                             return 'Presentation'
             except Exception: pass
 
+        if sourcefile.suffix.lower() in ('.tsv', '.csv'):           # '.psydat' = WIP
+            with sourcefile.open('r', encoding='utf-8-sig') as fid:
+                header = fid.readline()
+            return 'Psychopy' if 'psychopyVersion' in header else ''
+
         return ''
 
     def get_attribute(self, dataformat: Union[DataFormat, str], sourcefile: Path, attribute: str, options) -> Union[str, int, float, list]:
         """
-        This plugin supports reading attributes from DICOM and PAR dataformats
+        This plugin supports reading header attributes from Presentation files and `extraInfo` attributes from PsychoPy files
 
-        :param dataformat:  The bidsmap-dataformat of the sourcefile, e.g. DICOM of PAR
+        :param dataformat:  The bidsmap-dataformat of the sourcefile, e.g. "Presentation" of "Psychopy"
         :param sourcefile:  The sourcefile from which the attribute value should be read
         :param attribute:   The attribute key for which the value should be read
         :param options:     A dictionary with the plugin options, e.g. taken from the bidsmap.plugins['events2bids']
@@ -64,6 +74,19 @@ class Interface(PluginInterface):
 
             except (IOError, OSError) as ioerror:
                 LOGGER.exception(f"Could not get the Presentation '{attribute}' attribute from {sourcefile}\n{ioerror}")
+
+        elif dataformat == 'Psychopy':
+            if sourcefile.suffix.lower() in ('.psydat',):
+                if find_spec('psychopy'):
+                    psydat = fromFile(sourcefile)
+                    return psydat.extraInfo.get(attribute) or ''
+                else:
+                    LOGGER.warning(f"Could not read the PsychoPy '{sourcefile}', please install `psychopy`")
+
+            if sourcefile.suffix.lower() in ('.tsv', '.csv'):
+                df = pd.read_csv(sourcefile, nrows=1, sep=None, engine='python', skip_blank_lines=True, encoding='utf-8-sig')
+                if attribute in df.columns[-(options.get('extraInfo',7) + 1):]:     # The `extraInfo` columns (7?) are always last + a separator
+                    return df.loc[0, attribute]
 
         return ''
 
@@ -153,8 +176,17 @@ class Interface(PluginInterface):
                 with sidecar.open('w') as json_fid:
                     json.dump(metadata, json_fid, indent=4)
 
-            # Add an entry to the scans_table (we typically don't have useful data to put there)
-            scans_table.loc[target.relative_to(bidsses).as_posix(), 'acq_time'] = 'n/a'
+            # Add an entry to the scans_table
+            try:
+                acq_time = dateutil.parser.parse(run.datasource.attribute('Logfile written') or run.datasource.attribute('date'))
+                if bidsmap.options.get('anon', 'y') in ('y', 'yes'):
+                    acq_time = acq_time.replace(year=1925, month=1, day=1)  # Privacy protection (see BIDS specification)
+                acq_time = acq_time.isoformat()
+            except Exception as date_error:
+                LOGGER.warning(f"Could not parse the acquisition time from: {sourcefile}\n{date_error}")
+                acq_time = 'n/a'
+            scans_table.loc[target.relative_to(bidsses).as_posix(), 'acq_time'] = acq_time
+
         if not runid:
             LOGGER.info(f"--> No {__name__} sourcedata found in: {session}")
             return
@@ -172,7 +204,7 @@ class PresentationEvents(EventsParser):
         Reads the event table from the Presentation log file
 
         :param sourcefile:  The full filepath of the log file
-        :param data:        The run['events'] data (from a bidsmap)
+        :param _data:       The run['events'] data (from a bidsmap)
         :param options:     The plugin options
         """
 
@@ -198,43 +230,83 @@ class PresentationEvents(EventsParser):
         survey_header   = (df.iloc[:, 0] == 'Time').idxmax() or nrows
 
         # Get the first and last row index of the table of interest
-        df.columns = self._sourcecols
-        if self.options['table'].lower() == 'event':
-            begin = 0
-            end   = min(stimulus_header, video_header, survey_header)
-        elif self.options['table'].lower() == 'stimulus':
-            df.columns = df.iloc[stimulus_header]
-            begin = stimulus_header + 1
-            end   = min(video_header, survey_header)
-        elif self.options['table'].lower() == 'video':
-            df.columns = df.iloc[video_header]
-            begin = video_header + 1
-            end   = survey_header
-        elif self.options['table'].lower() == 'survey':
-            df.columns = df.iloc[survey_header]
-            begin = survey_header + 1
-            end   = nrows
-        else:
-            begin = 0
-            end   = nrows
-            LOGGER.error(f"NOT IMPLEMENTED TABLE: {self.options['table']}")
+        name = self.settings.get('name', ['event', 'stimulus', 'video', 'survey', 0])
+        try:
+            df.columns = self._sourcecols
+            if name[name[-1]] == 'event':
+                begin = 0
+                end   = min(stimulus_header, video_header, survey_header)
+            elif name[name[-1]] == 'stimulus':
+                df.columns = df.iloc[stimulus_header]
+                begin = stimulus_header + 1
+                end   = min(video_header, survey_header)
+            elif name[name[-1]] == 'video':
+                df.columns = df.iloc[video_header]
+                begin = video_header + 1
+                end   = survey_header
+            elif name[name[-1]] == 'survey':
+                df.columns = df.iloc[survey_header]
+                begin = survey_header + 1
+                end   = nrows
+            else:
+                begin = 0
+                end   = nrows
+                LOGGER.error(f"NOT IMPLEMENTED TABLE: {name[name[-1]]}")
+        except IndexError as parseerror:
+            LOGGER.warning(f"Could not parse the {name[name[-1]]} table from: {self.sourcefile}\n{parseerror}")
+            return pd.DataFrame()
 
-        # Ensure unique column names by renaming columns with NaN or empty names, and by appending suffixes to duplicate names
-        cols = []                               # The new column names
-        dupl = {}                               # The duplicate index number
-        for i, col in enumerate(df.columns):
-            if pd.isna(col) or col == '':       # Check if the column name is NaN or an empty string
-                cols.append(new_col := f"unknown_{i}")
-                LOGGER.bcdebug(f"Renaming empty column name at index {i}: {col} -> {new_col}")
-            elif col in dupl:                   # If duplicate, append the index number
-                dupl[col] += 1
-                cols.append(new_col := f"{col}_{dupl[col]}")
-                LOGGER.bcdebug(f"Renaming duplicate column name: {col} -> {new_col}")
-            else:                               # First occurrence of the column name, add it to dupl
-                dupl[col] = 0
-                cols.append(col)
-        df.columns = cols
+        # Ensure unique column names by appending suffixes to duplicate names
+        df.columns = self.rename_duplicates(df.columns)
 
         # Return the sliced the table
-        LOGGER.bcdebug(f"Slicing '{self.options['table']}{df.shape}' sourcetable[{begin}:{end}]")
+        LOGGER.bcdebug(f"Slicing '{name[name[-1]]}{df.shape}' sourcetable[{begin}:{end}]")
         return df.iloc[begin:end]
+
+
+class PsychopyEvents(EventsParser):
+    """Parser for Psychopy logfiles"""
+
+    def __init__(self, sourcefile: Path, _data: dict, options: dict):
+        """
+        Reads the event table from the Psychopy log file
+
+        :param sourcefile:  The full filepath of the log file
+        :param _data:       The run['events'] data (from a bidsmap)
+        :param options:     The plugin options
+        """
+
+        super().__init__(sourcefile, _data, options)
+        sourcefile = self.sourcefile
+
+        # Read log-tables from Psychopy psydat files. = WIP
+        if sourcefile.suffix in ('.psydat',) and find_spec('psychopy'):
+            try:
+                psydat = fromFile(sourcefile)
+                if psydat.extraInfo.get('psychopyVersion') != psychopy.getVersion():
+                    LOGGER.warning(f"Incompatible PsychoPy versions may cause errors. You have installed version {psychopy.getVersion()}, but the data has version {psydat.extraInfo.get('psychopyVersion')}")
+                psydat.saveAsWideText(widetext := Path(f"{sourcefile.name}_tmp.tsv"))
+                self._sourcetable = pd.read_csv(widetext, sep=None, engine='python', skip_blank_lines=True, encoding='utf-8-sig') if self.sourcefile.is_file() else pd.DataFrame()
+                widetext.unlink()
+            except Exception as error:
+                LOGGER.error(f"Could not parse the input table from: {sourcefile}\n{error}")
+                self._sourcetable = pd.DataFrame()
+
+        elif sourcefile.suffix in ('.csv', '.tsv'):
+            self._sourcetable = pd.read_csv(self.sourcefile, sep=None, engine='python', skip_blank_lines=True, encoding='utf-8-sig') if self.sourcefile.is_file() else pd.DataFrame()
+
+        else:
+            LOGGER.debug(f"Cannot read/parse {sourcefile}")
+            self._sourcetable = pd.DataFrame()
+
+        # Ensure unique column names by appending suffixes to duplicate names
+        self._sourcetable.columns = self.rename_duplicates(self._sourcetable.columns)
+
+    @property
+    def logtable(self) -> pd.DataFrame:
+        """Returns the Psychopy log-table"""
+
+        # TODO: make some sort of pivot table
+        df = self._sourcetable  #.pivot_table(values='event', columns='filename', index='time', aggfunc='count')
+
+        return df

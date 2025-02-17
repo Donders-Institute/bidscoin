@@ -7,7 +7,7 @@ build-backend    = 'setuptools.build_meta'
 [project]
 name             = 'bidscoin'
 description      = 'Converts and organises raw MRI data-sets according to the Brain Imaging Data Structure (BIDS)'
-version          = '4.5.0'
+version          = '4.5.1-dev'
 readme           = 'README.rst'
 requires-python  = '>= 3.9'
 license          = {file = 'LICENSE.txt'}
@@ -42,8 +42,9 @@ deface           = ['pydeface']
 siemens          = ['dicom-parser']
 # pet2bids         = ['pypet2bids >= 1.0.12']
 # phys2bidscoin    = ['bioread >= 1.0.5', 'pymatreader >= 0.0.24', 'phys2bids >= 2.0.0, < 3.0.0']
-all              = ['bidscoin[dcm2niix2bids,spec2nii2bids,deface]']    # + siemens + pet2bids + phys2bidscoin
-dev              = ['bidscoin[spec2nii2bids,deface,siemens]', 'tox', 'pytest', 'sphinx-rtd-theme', 'myst-parser', 'sphinx_design'] # + pet2bids + phys2bidscoin
+all              = ['bidscoin[dcm2niix2bids,spec2nii2bids,deface]']    # + psychopy + siemens + pet2bids + phys2bidscoin
+dev              = ['bidscoin[spec2nii2bids,deface,siemens]', 'tox', 'pytest', 'sphinx-rtd-theme', 'myst-parser', 'sphinx_design']
+extras           = ['psychopy']
 
 [project.urls]
 documentation    = 'https://bidscoin.readthedocs.io'

@@ -45,11 +45,11 @@ class Interface(PluginInterface):
         # Test the spec2nii installation
         return run_command(f"{options.get('command',OPTIONS['command'])} -v")
 
-    def has_support(self, file: Path, dataformat: Union[DataFormat, str]='') -> str:
+    def has_support(self, sourcefile: Path, dataformat: Union[DataFormat, str]= '') -> str:
         """
         This plugin function assesses whether a sourcefile is of a supported dataformat
 
-        :param file:        The sourcefile that is assessed
+        :param sourcefile:  The sourcefile that is assessed
         :param dataformat:  The requested dataformat (optional requirement)
         :return:            The valid/supported dataformat of the sourcefile
         """
@@ -57,12 +57,12 @@ class Interface(PluginInterface):
         if dataformat and dataformat not in ('Twix', 'SPAR', 'Pfile'):
             return ''
 
-        suffix = file.suffix.lower()
+        suffix = sourcefile.suffix.lower()
         if suffix == '.dat':
             return 'Twix'
         elif suffix == '.spar':
             return 'SPAR'
-        elif suffix == '.7' and not is_dicomfile(file):
+        elif suffix == '.7' and not is_dicomfile(sourcefile):
             return 'Pfile'
 
         return ''

@@ -306,7 +306,6 @@ skullstripped
 slicereport
 slicesdir
 sourcedata
-sourcefiles
 sourcefolder
 sourcefolders
 spec2nii

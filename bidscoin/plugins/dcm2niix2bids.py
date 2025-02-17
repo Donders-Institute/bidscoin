@@ -32,7 +32,7 @@ LOGGER = logging.getLogger(__name__)
 # The default options that are set when installing the plugin
 OPTIONS = Plugin({'command': 'dcm2niix',                    # Command to run dcm2niix, e.g. "module add dcm2niix/1.0.20180622; dcm2niix" or "PATH=/opt/dcm2niix/bin:$PATH; dcm2niix" or /opt/dcm2niix/bin/dcm2niix or 'C:\"Program Files"\dcm2niix\dcm2niix.exe' (use quotes to deal with whitespaces in the path)
                   'args': '-b y -z y -i n',                 # Argument string that is passed to dcm2niix. Tip: SPM users may want to use '-z n' (which produces unzipped NIfTI's, see dcm2niix -h for more information)
-                  'meta': ['.json', '.tsv', '.tsv.gz'],     # The file extensions of the equally named metadata sourcefiles that are copied over as BIDS sidecar files
+                  'meta': ['.json', '.tsv', '.tsv.gz'],     # The file extensions of the equally named metadata source files that are copied over as BIDS sidecar files
                   'fallback': 'y'})                         # Appends unhandled dcm2niix suffixes to the `acq` label if 'y' (recommended, else the suffix data is discarding)
 
 
@@ -71,11 +71,11 @@ class Interface(PluginInterface):
 
         return errorcode if errorcode != 3 else 0
 
-    def has_support(self, file: Path, dataformat: Union[DataFormat, str]='') -> str:
+    def has_support(self, sourcefile: Path, dataformat: Union[DataFormat, str]= '') -> str:
         """
         This plugin function assesses whether a sourcefile is of a supported dataformat
 
-        :param file:        The sourcefile that is assessed
+        :param sourcefile:  The sourcefile that is assessed
         :param dataformat:  The requested dataformat (optional requirement)
         :return:            The valid/supported dataformat of the sourcefile
         """
@@ -83,10 +83,10 @@ class Interface(PluginInterface):
         if dataformat and dataformat not in ('DICOM', 'PAR'):
             return ''
 
-        if is_dicomfile(file):     # To support pet2bids add: and get_dicomfield('Modality', file) != 'PT'
+        if is_dicomfile(sourcefile):     # To support pet2bids add: and get_dicomfield('Modality', file) != 'PT'
             return 'DICOM'
 
-        if is_parfile(file):
+        if is_parfile(sourcefile):
             return 'PAR'
 
         return ''
@@ -158,8 +158,8 @@ class Interface(PluginInterface):
                 LOGGER.bcdebug('No match found in the study bidsmap, now trying the template bidsmap')
                 run, _ = template.get_matching_run(sourcefile, dataformat)
 
-            # See if we have already put the run somewhere in our new bidsmap
-            if not bidsmap_new.exist_run(run):
+            # See if we have a proper matching run and if we already put it in the new bidsmap
+            if run.dataformat and not bidsmap_new.exist_run(run):
 
                 # Communicate with the user if the run was not present in bidsmap_old or in template, i.e. that we found a new sample
                 if not oldmatch:

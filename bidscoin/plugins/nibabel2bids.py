@@ -24,7 +24,7 @@ LOGGER = logging.getLogger(__name__)
 
 # The default/fallback options that are set when installing/using the plugin
 OPTIONS = Plugin({'ext': '.nii.gz',                                         # The (nibabel) file extension of the output data, i.e. ``.nii.gz`` or ``.nii``
-                  'meta': ['.json', '.tsv', '.tsv.gz', '.bval', '.bvec']})  # The file extensions of the equally named metadata sourcefiles that are copied over as BIDS sidecar files
+                  'meta': ['.json', '.tsv', '.tsv.gz', '.bval', '.bvec']})  # The file extensions of the equally named metadata source files that are copied over as BIDS sidecar files
 
 
 class Interface(PluginInterface):
@@ -62,11 +62,11 @@ class Interface(PluginInterface):
 
         return 0
 
-    def has_support(self, file: Path, dataformat: Union[DataFormat, str]='') -> str:
+    def has_support(self, sourcefile: Path, dataformat: Union[DataFormat, str]= '') -> str:
         """
         This plugin function assesses whether a sourcefile is of a supported dataformat
 
-        :param file:        The sourcefile that is assessed
+        :param sourcefile:  The sourcefile that is assessed
         :param dataformat:  The requested dataformat (optional requirement)
         :return:            The valid/supported dataformat of the sourcefile
         """
@@ -74,7 +74,7 @@ class Interface(PluginInterface):
         if dataformat and dataformat != 'Nibabel':
             return ''
 
-        if file.is_file() and file.suffix.lower() in sum((klass.valid_exts for klass in nib.imageclasses.all_image_classes), ('.nii',)) or file.name.endswith('.nii.gz'):
+        if sourcefile.is_file() and sourcefile.suffix.lower() in sum((klass.valid_exts for klass in nib.imageclasses.all_image_classes), ('.nii',)) or sourcefile.name.endswith('.nii.gz'):
             return 'Nibabel'
 
         return ''

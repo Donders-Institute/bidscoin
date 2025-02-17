@@ -26,7 +26,7 @@ The preferred way to contribute to the BIDScoin code base or documentation is to
 
 1. Set up a clone of the repository on your local machine and connect it to both the “official” and your copy of the repository on GitHub::
 
-    git clone git://github.com/Donders-Institute/bidscoin
+    git clone https://github.com/Donders-Institute/bidscoin.git
     cd bidscoin
     git remote rename origin official
     git remote add origin git://github.com/[YOUR_GITHUB_USERNAME]/bidscoin
@@ -35,15 +35,14 @@ The preferred way to contribute to the BIDScoin code base or documentation is to
 
     python -m venv venv         # Or use any other tool (such as conda)
     source venv/bin/activate    # On Linux, see the documentation for other operating systems
-    pip install bidscoin[dev]   # Unfortunately pyproject.toml has no way to install BIDScoin's dependencies only
-    pip uninstall bidscoin      # Hence we need to retrospectively remove BIDScoin from site-packages
+    pip install -e .[dev]
     # NB: Install dcm2niix yourself (see the online installation instructions)
 
-3. When you wish to start a new contribution, create a new branch::
+3. When you wish to start working on your contribution, create a new branch::
 
     git checkout -b [topic_of_your_contribution]
 
-4. When you are done making the changes you wish to contribute, test, commit and push them to GitHub::
+4. When you are done with coding, you should then test, commit and push your work to GitHub::
 
     tox                                                  # Run this command from the bidscoin directory (make sure the venv is activated)
     git commit -am "A SHORT DESCRIPTION OF THE CHANGES"  # Run this command every time you have made a set of changes that belong together

@@ -19,7 +19,7 @@ $schema: schema.json
 
 Options:                            # =============================== General options and plugins =====================================
   bidscoin:
-    version: 4.5.0                  # BIDScoin version (should correspond with the version in pyproject.toml)
+    version: 4.5.1-dev                  # BIDScoin version (should correspond with the version in pyproject.toml)
     bidsignore: extra_data/         # Semicolon-separated list of entries that are added to the .bidsignore file (for more info, see BIDS specifications), e.g. extra_data/;pet/;myfile.txt;yourfile.csv
     subprefix: sub-                 # The subject prefix of the source data
     sesprefix: ses-                 # The session prefix of the source data
@@ -31,12 +31,12 @@ Options:                            # =============================== General op
     dcm2niix2bids:                  # See dcm2niix -h and https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage#General_Usage for more info
       command: dcm2niix             # Command to run dcm2niix, e.g. "module add dcm2niix/1.0.20180622; dcm2niix" or "PATH=/opt/dcm2niix/bin:$PATH; dcm2niix" or /opt/dcm2niix/bin/dcm2niix or 'C:\"Program Files"\dcm2niix\dcm2niix.exe' (use quotes to deal with whitespaces in the path)
       args: -b y -z y -i n -l n     # Argument string that is passed to dcm2niix. Tip: SPM users may want to use '-z n' (which produces unzipped nifti's, see dcm2niix -h for more information)
-      meta: [.json, .tsv, .tsv.gz]  # The file extensions of the equally named metadata sourcefiles that are copied over to the BIDS sidecar files
+      meta: [.json, .tsv, .tsv.gz]  # The file extensions of the equally named metadata source files that are copied over to the BIDS sidecar files
       fallback: y                   # Appends unhandled dcm2niix suffixes to the `acq` label if 'y' (recommended, else the suffix data is discarded)
     spec2nii2bids:                  # The settings for the spec2nii2bids plugin
       command: spec2nii             # Command to run spec2nii, e.g. "module add spec2nii; spec2nii" or "PATH=/opt/spec2nii/bin:$PATH; spec2nii" or /opt/spec2nii/bin/spec2nii or 'C:\"Program Files"\spec2nii\spec2nii.exe' (note the quotes to deal with the whitespace)
       args:                         # Argument string that is passed to spec2nii (see spec2nii -h for more information)
-      meta: [.json, .tsv, .tsv.gz]  # The file extensions of the equally named metadata sourcefiles that are copied over to the BIDS sidecar files
+      meta: [.json, .tsv, .tsv.gz]  # The file extensions of the equally named metadata source files that are copied over to the BIDS sidecar files
       multiraid: 2                  # The mapVBVD argument for selecting the multiraid Twix file to load (default = 2, i.e. 2nd file)
 
 

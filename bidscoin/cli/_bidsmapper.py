@@ -31,7 +31,7 @@ def get_parser() -> argparse.ArgumentParser:
                                             '  bidsmapper myproject/raw myproject/bids\n'
                                             '  bidsmapper myproject/raw myproject/bids -t bidsmap_custom  # Uses a template bidsmap of choice\n'
                                             '  bidsmapper myproject/raw myproject/bids -p nibabel2bids    # Uses a plugin of choice\n'
-                                            "  bidsmapper myproject/raw myproject/bids -u '*.tar.gz'      # Unzip tarball sourcefiles\n ")
+                                            "  bidsmapper myproject/raw myproject/bids -u '*.tar.gz'      # Unzip tarball source files\n ")
     parser.add_argument('sourcefolder',       help='The study root folder containing the raw source data folders')
     parser.add_argument('bidsfolder',         help='The destination folder with the (future) bids data and the bidsfolder/code/bidscoin/bidsmap.yaml output file')
     parser.add_argument('-b','--bidsmap',     help="The study bidsmap file with the mapping heuristics. If the bidsmap filename is just the base name (i.e. no '/' in the name) then it is assumed to be located in the current directory or in bidsfolder/code/bidscoin. Default: bidsmap.yaml", metavar='NAME', default='bidsmap.yaml')
