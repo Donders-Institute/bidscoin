@@ -38,7 +38,8 @@ class Interface(PluginInterface):
                         line = fid.readline()
                         if line.startswith('Scenario -'):
                             return 'Presentation'
-            except Exception: pass
+            except Exception:
+                pass
 
         return ''
 
@@ -88,8 +89,7 @@ class Interface(PluginInterface):
         if scans_tsv.is_file():
             scans_table = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
         else:
-            scans_table = pd.DataFrame(columns=['acq_time'], dtype='str')
-            scans_table.index.name = 'filename'
+            scans_table = pd.DataFrame(columns=['acq_time'], dtype='str').rename_axis('filename')
 
         # Collect the different Presentation source files for all files in the session
         for sourcefile in session.rglob('*'):
@@ -154,7 +154,8 @@ class Interface(PluginInterface):
                     json.dump(metadata, json_fid, indent=4)
 
             # Add an entry to the scans_table (we typically don't have useful data to put there)
-            scans_table.loc[target.relative_to(bidsses).as_posix(), 'acq_time'] = 'n/a'
+            scans_table.loc[target.relative_to(bidsses).as_posix(), 'acq_time'] = pd.NA
+
         if not runid:
             LOGGER.info(f"--> No {__name__} sourcedata found in: {session}")
             return
@@ -165,7 +166,7 @@ class Interface(PluginInterface):
 
 
 class PresentationEvents(EventsParser):
-    """Parser for Presentation (Neurobs) logfiles"""
+    """Parser for NeuroBS Presentation logfiles"""
 
     def __init__(self, sourcefile: Path, _data: dict, options: dict):
         """

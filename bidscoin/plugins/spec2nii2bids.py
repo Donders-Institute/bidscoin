@@ -123,8 +123,7 @@ class Interface(PluginInterface):
         if scans_tsv.is_file():
             scans_table = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
         else:
-            scans_table = pd.DataFrame(columns=['acq_time'], dtype='str')
-            scans_table.index.name = 'filename'
+            scans_table = pd.DataFrame(columns=['acq_time'], dtype='str').rename_axis('filename')
 
         # Loop over all MRS source data files and convert them to BIDS
         for sourcefile in session.rglob('*'):

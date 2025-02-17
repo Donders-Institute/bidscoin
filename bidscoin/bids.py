@@ -2109,8 +2109,7 @@ def addparticipant(participants_tsv: Path, subid: str='', sesid: str='', data: d
     if participants_tsv.is_file():
         table = pd.read_csv(participants_tsv, sep='\t', dtype=str, index_col='participant_id')
     else:
-        table = pd.DataFrame()
-        table.index.name = 'participant_id'
+        table = pd.DataFrame().rename_axis('participant_id')
 
     # Add the participant row
     data_added = False
@@ -2197,8 +2196,7 @@ def bidsprov(bidsfolder: Path, source: Path=Path(), runitem: RunItem=None, targe
     if provfile.is_file():
         provdata = pd.read_csv(provfile, sep='\t', index_col='source')
     else:
-        provdata = pd.DataFrame(columns=['runid', 'datatype', 'targets'])
-        provdata.index.name = 'source'
+        provdata = pd.DataFrame(columns=['runid', 'datatype', 'targets']).rename_axis('source')
 
     # Write the provenance data
     if source.name:
