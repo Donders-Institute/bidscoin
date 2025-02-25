@@ -57,7 +57,7 @@ class NoAliasDumper(yaml.SafeDumper):
 
 
 class DataSource:
-    """Reads properties, attributes and BIDS-related features to sourcefiles of a supported dataformat (e.g. DICOM or PAR)"""
+    """Reads properties, attributes and BIDS-related features to source files of a supported dataformat (e.g. DICOM or PAR)"""
 
     def __init__(self, sourcefile: Union[str, Path]='', plugins: Plugins=None, dataformat: str='', options: Options=None):
         """
@@ -669,7 +669,7 @@ class RunItem:
 
         for name in self.plugins:
             if plugin := bcoin.import_plugin(name, (f"{self.dataformat}Events",)):
-                return getattr(plugin, f"{self.dataformat}Events")(self.provenance, self.events, self.plugins[name])
+                return getattr(plugin, f"{self.dataformat}Events")(Path(self.provenance), self.events, self.plugins[name])
 
 
 class DataType:
@@ -815,7 +815,7 @@ class DataFormat:
     def participant(self) -> dict:
         """The data to populate the participants.tsv table"""
 
-        return self._data['participant']
+        return self._data.get('participant', {})
 
     @participant.setter
     def participant(self, value: dict):
@@ -1040,14 +1040,14 @@ class BidsMap:
 
     @property
     def dataformats(self):
-        """Gets a list of the DataFormat objects in the bidsmap (e.g. DICOM)"""
+        """Gets a list of the non-empty DataFormat objects in the bidsmap (e.g. DICOM)"""
 
         return [DataFormat(dataformat, self._data[dataformat], self.options, self.plugins) for dataformat in self._data if dataformat not in ('$schema', 'Options')]
 
     def dataformat(self, dataformat: str) -> DataFormat:
         """Gets the DataFormat object from the bidsmap"""
 
-        return DataFormat(dataformat, self._data[dataformat], self.options, self.plugins)
+        return DataFormat(dataformat, self._data.get(dataformat,''), self.options, self.plugins)
 
     def add_dataformat(self, dataformat: Union[str, DataFormat]):
         """Adds a DataFormat to the bidsmap"""
@@ -1310,6 +1310,11 @@ class BidsMap:
                 runitem, provenance = self.get_matching_run(sourcefile, dformat.dataformat, runtime)
                 if provenance: break
             return runitem, provenance
+
+        # Check if the dataformat is present
+        if dataformat not in self.dataformats:
+            LOGGER.error(f"Cannot find a matching run-item for {sourcefile} due to a missing '{dataformat}' section in {self}")
+            return RunItem(), ''
 
         # Defaults
         datasource       = DataSource(sourcefile, self.plugins, dataformat, options=self.options)

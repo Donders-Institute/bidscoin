@@ -71,7 +71,7 @@ command: Command to run dcm2niix from the terminal, such as:
 args: Argument string that is passed to dcm2niix. Click [Test] and see the terminal output for usage
     Tip: SPM users may want to use '-z n', which produces unzipped NIfTI's
     
-meta: The file extensions of the associated / equally named (meta)data sourcefiles that are copied over as
+meta: The file extensions of the associated / equally named (meta)data source files that are copied over as
     BIDS (sidecar) files, such as ['.json', '.tsv', '.tsv.gz']. You can use this to enrich json sidecar files,
     or add data that is not supported by this plugin
 
@@ -91,7 +91,6 @@ class MyQTable(QTableWidget):
         self.horizontalHeader().setVisible(False)
         self.verticalHeader().setVisible(False)
         self.verticalHeader().setDefaultSectionSize(ROW_HEIGHT)
-        self.setMinimumHeight(2 * (ROW_HEIGHT + 8))
         self.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
         if minsize:
             self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum)
@@ -101,6 +100,7 @@ class MyQTable(QTableWidget):
             self.setColumnCount(ncols)
         if nrows:
             self.setRowCount(nrows)
+        self.resizeRowsToContents()
 
 
 class MyQTableItem(QTableWidgetItem):
@@ -168,7 +168,7 @@ class MainWindow(QMainWindow):
         """The bidsmap from which new data type run-items are taken"""
         self.datasaved                   = datasaved
         """True if data has been saved on disk"""
-        self.dataformats                 = [dataformat.dataformat for dataformat in input_bidsmap.dataformats if input_bidsmap.dir(dataformat)]
+        self.dataformats                 = [dataformat.dataformat for dataformat in input_bidsmap.dataformats if input_bidsmap.dir(dataformat) and dataformat.dataformat]
         self.bidsignore: list[str]       = input_bidsmap.options['bidsignore']
         self.unknowndatatypes: list[str] = input_bidsmap.options['unknowntypes']
         self.ignoredatatypes: list[str]  = input_bidsmap.options['ignoretypes']
@@ -1146,6 +1146,10 @@ class EditWindow(QDialog):
         meta_table.setToolTip(f"The key-value pair that will be appended to the (e.g. dcm2niix-produced) json sidecar file")
 
         # Set up the events tables
+        self.events_settings = events_settings = self.setup_table(events_data.get('settings', []), 'events_settings')
+        events_settings.cellChanged.connect(self.events_settings2run)
+        events_settings.setToolTip(f"Settings for parsing the input table from the source file")
+        events_settings.setStyleSheet('QTableView::item {border-right: 1px solid #d6d9dc;}')
         inspect_button = QPushButton('Source')
         inspect_button.setToolTip('TODO')
         inspect_button.clicked.connect(self.inspect_sourcefile)
@@ -1174,7 +1178,7 @@ class EditWindow(QDialog):
         events_columns.horizontalHeader().setVisible(True)
         events_columns.setStyleSheet('QTableView::item {border-right: 1px solid #d6d9dc;}')
         log_table_label = QLabel('Log data')
-        log_table = self.setup_table(events_data.get('log_table',[]), 'log_table', minsize=False)
+        self.log_table = log_table = self.setup_table(events_data.get('log_table',[]), 'log_table', minsize=False)
         log_table.setShowGrid(True)
         log_table.horizontalHeader().setVisible(True)
         log_table.setToolTip(f"The raw stimulus presentation data that is parsed from the log file")
@@ -1197,12 +1201,16 @@ class EditWindow(QDialog):
         sourcebox.setLayout(layout1)
 
         layout1_ = QVBoxLayout()
-        layout1_.addWidget(inspect_button, alignment=QtCore.Qt.AlignmentFlag.AlignRight)
+        layout1_header = QHBoxLayout()
+        layout1_header.addWidget(events_settings)
+        layout1_header.addStretch()
+        layout1_header.addWidget(inspect_button)
+        layout1_.addLayout(layout1_header)
         layout1_.addWidget(log_table_label)
         layout1_.addWidget(log_table)
-        self.events_inbox = events_inbox = QGroupBox(f"{self.dataformat} input data")
-        events_inbox.setSizePolicy(sizepolicy)
-        events_inbox.setLayout(layout1_)
+        self.events_inputbox = events_inputbox = QGroupBox(f"{self.dataformat} input data")
+        events_inputbox.setSizePolicy(sizepolicy)
+        events_inputbox.setLayout(layout1_)
 
         self.arrow = arrow = QLabel()
         arrow.setPixmap(QtGui.QPixmap(str(RIGHTARROW)).scaled(30, 30, QtCore.Qt.AspectRatioMode.KeepAspectRatio, QtCore.Qt.TransformationMode.SmoothTransformation))
@@ -1251,10 +1259,10 @@ class EditWindow(QDialog):
         layout_tables.addWidget(arrow)
         layout_tables.addWidget(bidsbox)
         if events_data:
-            layout_tables.addWidget(events_inbox)
+            layout_tables.addWidget(events_inputbox)
             layout_tables.addWidget(events_editbox)
             layout_tables.addWidget(eventsbox)
-            events_inbox.hide()
+            events_inputbox.hide()
             events_editbox.hide()
 
         # Set-up buttons
@@ -1354,12 +1362,12 @@ class EditWindow(QDialog):
             for j, item in enumerate(row):
                 itemvalue = item['value']
 
-                if tablename == 'bids' and isinstance(itemvalue, list):
+                if tablename in ('bids', 'events_settings') and isinstance(itemvalue, list):
                     dropdown = QComboBox()
                     dropdown.addItems(itemvalue[0:-1])
                     dropdown.setCurrentIndex(itemvalue[-1])
-                    dropdown.currentIndexChanged.connect(partial(self.bids2run, i, j))
-                    if j == 0:
+                    dropdown.currentIndexChanged.connect(partial(self.bids2run if tablename=='bids' else self.events_settings2run, i, j))
+                    if tablename=='bids' and j == 0:
                         dropdown.setToolTip(get_entityhelp(key))
                     table.setCellWidget(i, j, self.spacedwidget(dropdown))
 
@@ -1482,6 +1490,11 @@ class EditWindow(QDialog):
                                    [{'value': 'units/sec', 'editable': False}, {'value': runitem.events['time']['unit'],  'editable': True}],
                                    [{'value': 'start',     'editable': False}, {'value': runitem.events['time']['start'], 'editable': True}]]
 
+        # Set up the data for the events settings
+        events_data['settings'] = []
+        for key, value in runitem.events.get('settings', {}).items():
+            events_data['settings'].append([{'value': key, 'editable': True}, {'value': value, 'editable': True}])
+
         # Set up the data for the events conditions / row groups
         events_data['rows'] = [[{'value': 'condition', 'editable': False}, {'value': 'output column', 'editable': False}]]
         for condition in runitem.events.get('rows') or []:
@@ -1517,8 +1530,7 @@ class EditWindow(QDialog):
         if colindex == 1:
             key      = self.properties_table.item(rowindex, 0).text().strip()
             value    = self.properties_table.item(rowindex, 1).text().strip()
-            oldvalue = self.target_run.properties.get(key)
-            if oldvalue is None:
+            if (oldvalue := self.target_run.properties.get(key)) is None:
                 oldvalue = ''
 
             # Only if cell was changed, update
@@ -1541,8 +1553,7 @@ class EditWindow(QDialog):
         if colindex == 1:
             key      = self.attributes_table.item(rowindex, 0).text().strip()
             value    = self.attributes_table.item(rowindex, 1).text()
-            oldvalue = self.target_run.attributes.get(key)
-            if oldvalue is None:
+            if (oldvalue := self.target_run.attributes.get(key)) is None:
                 oldvalue = ''
 
             # Only if cell was changed, update
@@ -1567,11 +1578,9 @@ class EditWindow(QDialog):
             if hasattr(self.bids_table.cellWidget(rowindex, 1), 'spacedwidget'):
                 dropdown = self.bids_table.cellWidget(rowindex, 1).spacedwidget
                 value    = [dropdown.itemText(n) for n in range(len(dropdown))] + [dropdown.currentIndex()]
-                oldvalue = self.target_run.bids.get(key)
             else:
                 value    = self.bids_table.item(rowindex, 1).text().strip()
-                oldvalue = self.target_run.bids.get(key)
-            if oldvalue is None:
+            if (oldvalue := self.target_run.bids.get(key)) is None:
                 oldvalue = ''
 
             # Only if cell was changed, update
@@ -1602,10 +1611,7 @@ class EditWindow(QDialog):
 
         key      = self.meta_table.item(rowindex, 0).text().strip()
         value    = self.meta_table.item(rowindex, 1).text().strip()
-        oldvalue = self.target_run.meta.get(key)
-        if oldvalue is None:
-            oldvalue = ''
-        if value != oldvalue:
+        if value != (oldvalue := self.target_run.meta.get(key)):
             # Replace the (dynamic) value
             if '<<' not in value or '>>' not in value:
                 value = self.datasource.dynamicvalue(value, cleanup=False)
@@ -1663,6 +1669,34 @@ class EditWindow(QDialog):
         self.fill_table(self.events_time, events_data['time'])
         self.fill_table(self.events_table, events_data['table'])
 
+    def events_settings2run(self, rowindex: int, colindex: int):
+        """Events settings table has been changed. Read the data from the event 'settings' table and, if OK, update the target run"""
+
+        key = self.events_settings.item(rowindex, 0).text().strip()
+        if hasattr(self.events_settings.cellWidget(rowindex, 1), 'spacedwidget'):
+            dropdown = self.events_settings.cellWidget(rowindex, 1).spacedwidget
+            value    = [dropdown.itemText(n) for n in range(len(dropdown))] + [dropdown.currentIndex()]
+        else:
+            value    = self.events_settings.item(rowindex, 1).text().strip()
+        if (oldvalue := self.target_run.events['settings'].get(key)) is None:
+            oldvalue = ''
+
+        # Only if cell was changed, update
+        if key and value != oldvalue:
+            # Validate user input against BIDS or replace the (dynamic) bids-value if it is a run attribute
+            if isinstance(value, str) and ('<<' not in value or '>>' not in value):
+                value = bids.sanitize(self.datasource.dynamicvalue(value))
+                self.events_settings.blockSignals(True)
+                self.events_settings.item(rowindex, 1).setText(value)
+                self.events_settings.blockSignals(False)
+            LOGGER.verbose(f"User sets events['settings']['{key}'] from '{oldvalue}' to '{value}' for {self.target_run}")
+            self.target_run.events['settings'][key] = value
+
+        # Refresh the log and events tables
+        _,_,_,_,events_data = self.run2data()
+        self.fill_table(self.log_table, events_data['log_table'])
+        self.fill_table(self.events_table, events_data['table'])
+
     def events_rows2run(self, rowindex: int, colindex: int):
         """Events value has been changed. Read the data from the event 'rows' table and, if OK, update the target run"""
 
@@ -1693,7 +1727,7 @@ class EditWindow(QDialog):
         # Refresh the events tables, i.e. delete empty rows or add a new row if a key is defined on the last row
         _,_,_,_,events_data = self.run2data()
         self.fill_table(self.events_table, events_data['table'])
-        self.fill_table(self.events_rows,  events_data['rows'])
+        self.fill_table(self.events_rows, events_data['rows'])
 
     def events_columns2run(self, rowindex: int, colindex: int):
         """Events value has been changed. Read the data from the event 'columns' table and, if OK, update the target run"""
@@ -1732,7 +1766,7 @@ class EditWindow(QDialog):
         self.sourcebox.hide()
         self.arrow.hide()
         self.bidsbox.hide()
-        self.events_inbox.show()
+        self.events_inputbox.show()
         self.events_editbox.show()
         self.edit_button.hide()
         self.done_button.show()
@@ -1743,7 +1777,7 @@ class EditWindow(QDialog):
         self.sourcebox.show()
         self.arrow.show()
         self.bidsbox.show()
-        self.events_inbox.hide()
+        self.events_inputbox.hide()
         self.events_editbox.hide()
         self.edit_button.show()
         self.done_button.hide()
@@ -1856,6 +1890,7 @@ class EditWindow(QDialog):
         self.fill_table(self.bids_table, bids_data)
         self.fill_table(self.meta_table, meta_data)
         if events_data:
+            self.fill_table(self.events_settings, events_data['settings'])
             self.fill_table(self.events_time, events_data['time'])
             self.fill_table(self.events_rows, events_data['rows'])
             self.fill_table(self.events_columns, events_data['columns'])
@@ -1940,20 +1975,20 @@ class EditWindow(QDialog):
                 QtGui.QDesktopServices.openUrl(QtCore.QUrl.fromLocalFile(str(Path(self.target_run.provenance).parent)))
 
     @staticmethod
-    def spacedwidget(alignedwidget, align='left'):
+    def spacedwidget(childwidget, align='left'):
         """Place the widget in a QHBoxLayout and add a stretcher next to it. Return the widget as widget.spacedwidget"""
 
         widget = QtWidgets.QWidget()
         layout = QHBoxLayout()
         if align != 'left':
             layout.addStretch()
-            layout.addWidget(alignedwidget)
+            layout.addWidget(childwidget)
         else:
-            layout.addWidget(alignedwidget)
+            layout.addWidget(childwidget)
             layout.addStretch()
         layout.setContentsMargins(0, 0, 0, 0)
         widget.setLayout(layout)
-        widget.spacedwidget = alignedwidget
+        widget.spacedwidget = childwidget
         return widget
 
     def get_help(self):
@@ -2115,7 +2150,7 @@ class InspectWindow(QDialog):
             if filename.name == 'DICOMDIR':
                 LOGGER.bcdebug(f"Getting DICOM fields from {filename} will raise dcmread error below if pydicom => v3.0")
             text = str(dcmread(filename, force=True))
-        elif is_parfile(filename) or filename.suffix.lower() in ('.spar', '.txt', '.text', '.log'):
+        elif is_parfile(filename) or filename.suffix.lower() in ('.spar', '.txt', '.text', '.log', '.csv', '.tsv'):
             text = filename.read_text()
         elif filename.suffix.lower() == '.7':
             try:

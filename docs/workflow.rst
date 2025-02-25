@@ -93,7 +93,7 @@ Here is how to run the bidsmapper command:
           bidsmapper myproject/raw myproject/bids
           bidsmapper myproject/raw myproject/bids -t bidsmap_custom  # Uses a template bidsmap of choice
           bidsmapper myproject/raw myproject/bids -p nibabel2bids    # Uses a plugin of choice
-          bidsmapper myproject/raw myproject/bids -u '*.tar.gz'      # Unzip tarball sourcefiles
+          bidsmapper myproject/raw myproject/bids -u '*.tar.gz'      # Unzip tarball source files
 
 After the source data has been scanned, the bidsmapper will automatically launch `step 1b <#step-1b-running-the-bidseditor>`__ to let the user check and edit the automatically generated study bidsmap. For a fully automated workflow users can skip this interactive step using the ``-i`` option (see above).
 

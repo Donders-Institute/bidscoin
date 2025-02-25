@@ -42,7 +42,7 @@ The `dcm2niix2bids plugin <./plugins.html#dcm2niix2bids>`__ is a default plugin 
   - ``C:\"Program Files"\dcm2niix\dcm2niix.exe`` (use quotes to deal with whitespaces in your fullpath)
 
 - ``args``: Argument string that is passed as input to dcm2niix to customize its behavior, e.g. ``-z n -i y`` for ignoring derived data and having uncompressed output data.
-- ``meta``: The file extensions of the associated / equally named (meta)data sourcefiles that are copied over as BIDS (sidecar) files, such as ``['.json', '.tsv', '.tsv.gz']``. You can use this to enrich json sidecar files or add data that is not supported by this plugin. For instance, with each PET DICOM image you can put a small json file with key-value pairs that are not contained in the DICOM header (such as ``{InjectedRadioactivity: 400, InjectedMass: 10}``). NB: Data entered in the meta table of the bidseditor GUI always has priority over data in source json files, which itself has priority over dcm2niix-generated json data.
+- ``meta``: The file extensions of the associated / equally named (meta)data source files that are copied over as BIDS (sidecar) files, such as ``['.json', '.tsv', '.tsv.gz']``. You can use this to enrich json sidecar files or add data that is not supported by this plugin. For instance, with each PET DICOM image you can put a small json file with key-value pairs that are not contained in the DICOM header (such as ``{InjectedRadioactivity: 400, InjectedMass: 10}``). NB: Data entered in the meta table of the bidseditor GUI always has priority over data in source json files, which itself has priority over dcm2niix-generated json data.
 - ``fallback``: Appends unhandled dcm2niix suffixes to the `acq` label if 'y' (recommended, else the suffix data is discarded)
 
 .. tip::
@@ -57,7 +57,7 @@ The `events2bids plugin <./plugins.html#events2bids>`__ is a default plugin that
 
 - ``table``: The `name of the Presentation table <https://www.neurobs.com/pres_docs/html/03_presentation/07_data_reporting/01_logfiles/index.html>`__ that is parsed to generate the output table, i.e. one out of "events", "stimulus", "video" or "survey". The "events" table has a standardized format and is therefore set as default.
 - ``skiprows``: The number of (header) rows that precede the table data
-- ``meta``: The file extensions of the associated / equally named (meta)data sourcefiles that are copied over as BIDS (sidecar) files. See the dcm2niix2bids plugin item above for more info
+- ``meta``: The file extensions of the associated / equally named (meta)data source files that are copied over as BIDS (sidecar) files. See the dcm2niix2bids plugin item above for more info
 
 spec2nii2bids - plugin
 ----------------------
@@ -66,7 +66,7 @@ The `spec2nii2bids plugin <./plugins.html#spec2nii2bids>`__ is an optional bidsc
 
 - ``command``: Command to run spec2nii, such as ``spec2nii`` (see the dcm2niix plugin for more examples to set the path)
 - ``args``: Argument string that is passed as input to spec2nii to customize its behavior
-- ``meta``: The file extensions of the associated / equally named (meta)data sourcefiles that are copied over as BIDS (sidecar) files, such as ``['.json', '.tsv', '.tsv.gz']``. You can use this to enrich json sidecar files or add data that is not supported by this plugin. NB: Data entered in the meta table of the bidseditor GUI always has priority over data in source json files, which itself has priority over dcm2niix-generated json data.
+- ``meta``: The file extensions of the associated / equally named (meta)data source files that are copied over as BIDS (sidecar) files, such as ``['.json', '.tsv', '.tsv.gz']``. You can use this to enrich json sidecar files or add data that is not supported by this plugin. NB: Data entered in the meta table of the bidseditor GUI always has priority over data in source json files, which itself has priority over dcm2niix-generated json data.
 - ``multiraid``: The mapVBVD argument for selecting the multiraid Twix file to load (default = 2, i.e. 2nd file)
 
 nibabel2bids - plugin
@@ -75,7 +75,7 @@ nibabel2bids - plugin
 The `nibabel2bids plugin <./plugins.html#nibabel2bids>`__ is an optional bidscoiner plugin that converts the wide variety of `nibabel <https://nipy.org/nibabel>`__ datatypes to BIDS. The following options can be set:
 
 - ``ext``: The (nibabel) file extension of the output data, i.e. ``.nii.gz`` or ``.nii``
-- ``meta``: The file extensions of the associated / equally named (meta)data sourcefiles that are copied over as BIDS (sidecar) files, such as ``['.json', '.tsv', '.tsv.gz', '.bval', '.bvec']``. You can use this to enrich json sidecar files or add data that is not supported by this plugin. For instance, in this way you can still convert a NIfTI dataset that was previously created with dcm2niix to BIDS. NB: Data entered in the meta table of the bidseditor GUI always has priority over data in source json files, which itself has priority over dcm2niix-generated json data.
+- ``meta``: The file extensions of the associated / equally named (meta)data source files that are copied over as BIDS (sidecar) files, such as ``['.json', '.tsv', '.tsv.gz', '.bval', '.bvec']``. You can use this to enrich json sidecar files or add data that is not supported by this plugin. For instance, in this way you can still convert a NIfTI dataset that was previously created with dcm2niix to BIDS. NB: Data entered in the meta table of the bidseditor GUI always has priority over data in source json files, which itself has priority over dcm2niix-generated json data.
 
 .. note::
    Typically, nibabel2bids does not produce any json sidecar files, so as a user you need to provide for that yourself. You can look up the fields required by the BIDS specification and enter that information in the metadata tables of the bidseditor or put it in json files next to your source data.

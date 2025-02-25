@@ -6,7 +6,7 @@ import pandas as pd
 import dateutil.parser
 from pathlib import Path
 from abc import ABC, abstractmethod
-from typing import Union
+from typing import Union, Iterable, List
 from bidscoin import is_hidden
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -31,11 +31,11 @@ class PluginInterface(ABC):
         return 0
 
     @abstractmethod
-    def has_support(self, file: Path, dataformat: str) -> str:
+    def has_support(self, sourcefile: Path, dataformat: str) -> str:
         """
         This plugin function assesses whether a sourcefile is of a supported dataformat
 
-        :param file:        The sourcefile that is assessed
+        :param sourcefile:  The sourcefile that is assessed
         :param dataformat:  The requested dataformat (optional requirement)
         :return:            The name of the supported dataformat of the sourcefile. This name should
                             correspond to the name of a dataformat section in the bidsmap
@@ -124,8 +124,8 @@ class PluginInterface(ABC):
             if not oldmatch:
                 run, _ = template.get_matching_run(sourcefile, dataformat)
 
-            # See if we have already put the run somewhere in our new bidsmap
-            if not bidsmap_new.exist_run(run):
+            # See if we have a proper matching run and if we already put it in the new bidsmap
+            if run.dataformat and not bidsmap_new.exist_run(run):
 
                 # Communicate with the user if the run was not present in bidsmap_old or in template, i.e. that we found a new sample
                 if not oldmatch:
@@ -155,17 +155,17 @@ class PluginInterface(ABC):
 class EventsParser(ABC):
     """Base parser for stimulus presentation logfiles"""
 
-    def __init__(self, sourcefile: Path, eventsdata: dict, options: dict):
+    def __init__(self, sourcefile: Path, _data: dict, options: dict):
         """
         Reads the events table from the events log file
 
         :param sourcefile:  The full filepath of the raw log file
-        :param eventsdata:  The run['events'] data (from a bidsmap)
+        :param _data:       The run['events'] data (from a bidsmap)
         :param options:     The plugin options
         """
 
         self.sourcefile = Path(sourcefile)
-        self._data      = eventsdata
+        self._data      = _data
         self.options    = options
 
     def __repr__(self):
@@ -206,6 +206,8 @@ class EventsParser(ABC):
         # Take the logtable columns of interest and from now on use the BIDS column names
         df         = df.loc[:, [sourcecol for item in self.columns for sourcecol in item.values() if sourcecol in df.columns]]
         df.columns = [eventscol for item in self.columns for eventscol, sourcecol in item.items() if sourcecol in df.columns]
+        if 'onset'    not in df.columns: df.insert(0, 'onset',    None)
+        if 'duration' not in df.columns: df.insert(1, 'duration', None)
 
         # Set the clock at zero at the start of the experiment
         if self.time.get('start'):
@@ -237,6 +239,15 @@ class EventsParser(ABC):
                     df.loc[rowgroup, colname] = values
 
         return df.loc[rows.values].sort_values(by='onset')
+
+    @property
+    def settings(self) -> dict:
+        """A dictionary with settings, e.g. to parse the source table from the log file"""
+        return self._data.get('settings') or {}
+
+    @settings.setter
+    def settings(self, value: dict):
+        self._data['settings'] = value
 
     @property
     def columns(self) -> list[dict]:
@@ -314,3 +325,27 @@ class EventsParser(ABC):
 
         LOGGER.verbose(f"Saving events to: {targetfile}")
         self.eventstable.to_csv(targetfile, sep='\t', index=False)
+
+    def rename_duplicates(self, columns: Iterable[str]) -> List[str]:
+        """
+        Ensure unique column names by renaming columns with NaN or empty names, and by appending suffixes to duplicate names
+
+        :param columns: The columns with potential duplicates to rename
+        :return:        The renamed columns
+        """
+
+        newcols = []                                # The new column names
+        dup_idx = {}                                # The duplicate index number
+        for i, column in enumerate(columns):
+            if pd.isna(column) or column == '':     # Check if the column name is NaN or an empty string
+                newcols.append(new_col := f"unknown_{i}")
+                LOGGER.bcdebug(f"Renaming empty column name at index {i}: {column} -> {new_col}")
+            elif column in dup_idx:                 # If duplicate, append the index number
+                dup_idx[column] += 1
+                newcols.append(new_col := f"{column}_{dup_idx[column]}")
+                LOGGER.bcdebug(f"Renaming duplicate column name: {column} -> {new_col}")
+            else:                                   # First occurrence of the column name, add it to dup_idx
+                dup_idx[column] = 0
+                newcols.append(column)
+
+        return newcols
