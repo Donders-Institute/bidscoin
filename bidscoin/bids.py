@@ -942,8 +942,7 @@ class BidsMap:
         # Append the existing .bidsignore data from the bidsfolder and make sure bidsignore, unknowntypes and ignoretypes are lists
         if isinstance(options.get('bidsignore'), str):
             options['bidsignore'] = options['bidsignore'].split(';')
-        bidsignorefile = folder.parents[1]/'.bidsignore'
-        if bidsignorefile.is_file():
+        if (bidsignorefile := folder.parents[1]/'.bidsignore').is_file():
             options['bidsignore'] = [*set([*options['bidsignore']] + bidsignorefile.read_text().splitlines())]
         options['bidsignore']     = sorted(set(options.get('bidsignore'))) or []
         options['unknowntypes']   = options.get('unknowntypes')  or []
