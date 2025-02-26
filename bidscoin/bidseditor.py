@@ -556,6 +556,7 @@ class MainWindow(QMainWindow):
         participant_table.hide()
         participant_table.setRowCount(len(self.output_bidsmap.dataformat(dataformat).participant) + 1)
         participant_table.clearContents()
+        n = 0
         for n, (key, item) in enumerate(self.output_bidsmap.dataformat(dataformat).participant.items()):
             tableitem = MyQTableItem(key, editable=key not in ('participant_id','session_id'))
             tableitem.setToolTip(get_columnhelp(key))
@@ -1122,7 +1123,6 @@ class EditWindow(QDialog):
         self.bidsname_textbox = bidsname_textbox = QTextBrowser()
         bidsname_textbox.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
         bidsname_textbox.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum)
-        bidsname_textbox.setMinimumHeight(ROW_HEIGHT + 2)
         self.refresh_bidsname()
 
         # Set up the meta table
@@ -1136,12 +1136,12 @@ class EditWindow(QDialog):
         meta_table.setToolTip(f"The key-value pair that will be appended to the (e.g. dcm2niix-produced) json sidecar file")
 
         # Set up the events tables
-        events_settings_label = QLabel('Settings')
-        self.events_settings = events_settings = self.setup_table(events_data.get('settings', []), 'events_settings')
-        events_settings.cellChanged.connect(self.events_settings2run)
-        events_settings.setToolTip(f"Settings for parsing the input table from the source file")
-        events_settings.setStyleSheet('QTableView::item {border-right: 1px solid #d6d9dc;}')
-        events_settings.setMinimumSize(events_settings.sizeHint())
+        events_parsing_label = QLabel('Parsing')
+        self.events_parsing = events_parsing = self.setup_table(events_data.get('parsing', []), 'events_parsing')
+        events_parsing.cellChanged.connect(self.events_parsing2run)
+        events_parsing.setToolTip(f"Settings for parsing the input table from the source file")
+        events_parsing.setStyleSheet('QTableView::item {border-right: 1px solid #d6d9dc;}')
+        events_parsing.setMinimumSize(events_parsing.sizeHint())
         inspect_button = QPushButton('Source')
         inspect_button.setToolTip('TODO')
         inspect_button.clicked.connect(self.inspect_sourcefile)
@@ -1194,9 +1194,9 @@ class EditWindow(QDialog):
 
         layout1_ = QVBoxLayout()
         layout1_.addWidget(inspect_button, alignment=QtCore.Qt.AlignmentFlag.AlignRight)
-        if events_data.get('settings'):
-            layout1_.addWidget(events_settings_label)
-            layout1_.addWidget(events_settings)
+        if events_data.get('parsing'):
+            layout1_.addWidget(events_parsing_label)
+            layout1_.addWidget(events_parsing)
         layout1_.addWidget(log_table_label)
         layout1_.addWidget(log_table)
         self.events_inputbox = events_inputbox = QGroupBox(f"{self.dataformat} input data")
@@ -1352,11 +1352,11 @@ class EditWindow(QDialog):
             for j, item in enumerate(row):
                 itemvalue = item['value']
 
-                if tablename in ('bids', 'events_settings') and isinstance(itemvalue, list):
+                if tablename in ('bids', 'events_parsing') and isinstance(itemvalue, list):
                     dropdown = QComboBox()
                     dropdown.addItems(itemvalue[0:-1])
                     dropdown.setCurrentIndex(itemvalue[-1])
-                    dropdown.currentIndexChanged.connect(partial(self.bids2run if tablename=='bids' else self.events_settings2run, i, j))
+                    dropdown.currentIndexChanged.connect(partial(self.bids2run if tablename=='bids' else self.events_parsing2run, i, j))
                     if tablename=='bids' and j == 0:
                         dropdown.setToolTip(get_entityhelp(key))
                     table.setCellWidget(i, j, self.spacedwidget(dropdown))
@@ -1480,10 +1480,10 @@ class EditWindow(QDialog):
                                    [{'value': 'units/sec', 'editable': False}, {'value': runitem.events['time']['unit'],  'editable': True}],
                                    [{'value': 'start',     'editable': False}, {'value': runitem.events['time']['start'], 'editable': True}]]
 
-        # Set up the data for the events settings
-        events_data['settings'] = []
-        for key, value in runitem.events.get('settings', {}).items():
-            events_data['settings'].append([{'value': key, 'editable': False}, {'value': value, 'editable': True}])
+        # Set up the data for the events parsing
+        events_data['parsing'] = []
+        for key, value in runitem.events.get('parsing', {}).items():
+            events_data['parsing'].append([{'value': key, 'editable': False}, {'value': value, 'editable': True}])
 
         # Set up the data for the events conditions / row groups
         events_data['rows'] = [[{'value': 'condition', 'editable': False}, {'value': 'output column', 'editable': False}]]
@@ -1659,16 +1659,16 @@ class EditWindow(QDialog):
         self.fill_table(self.events_time, events_data['time'])
         self.fill_table(self.events_table, events_data['table'])
 
-    def events_settings2run(self, rowindex: int, colindex: int):
-        """Events settings table has been changed. Read the data from the event 'settings' table and, if OK, update the target run"""
+    def events_parsing2run(self, rowindex: int, colindex: int):
+        """Events parsing table has been changed. Read the data from the event 'parsing' table and, if OK, update the target run"""
 
-        key = self.events_settings.item(rowindex, 0).text().strip()
-        if hasattr(self.events_settings.cellWidget(rowindex, 1), 'spacedwidget'):
-            dropdown = self.events_settings.cellWidget(rowindex, 1).spacedwidget
+        key = self.events_parsing.item(rowindex, 0).text().strip()
+        if hasattr(self.events_parsing.cellWidget(rowindex, 1), 'spacedwidget'):
+            dropdown = self.events_parsing.cellWidget(rowindex, 1).spacedwidget
             value    = [dropdown.itemText(n) for n in range(len(dropdown))] + [dropdown.currentIndex()]
         else:
-            value    = self.events_settings.item(rowindex, 1).text().strip()
-        if (oldvalue := self.target_run.events['settings'].get(key)) is None:
+            value    = self.events_parsing.item(rowindex, 1).text().strip()
+        if (oldvalue := self.target_run.events['parsing'].get(key)) is None:
             oldvalue = ''
 
         # Only if cell was changed, update
@@ -1676,11 +1676,11 @@ class EditWindow(QDialog):
             # Validate user input against BIDS or replace the (dynamic) bids-value if it is a run attribute
             if isinstance(value, str) and ('<<' not in value or '>>' not in value):
                 value = bids.sanitize(self.datasource.dynamicvalue(value))
-                self.events_settings.blockSignals(True)
-                self.events_settings.item(rowindex, 1).setText(value)
-                self.events_settings.blockSignals(False)
-            LOGGER.verbose(f"User sets events['settings']['{key}'] from '{oldvalue}' to '{value}' for {self.target_run}")
-            self.target_run.events['settings'][key] = value
+                self.events_parsing.blockSignals(True)
+                self.events_parsing.item(rowindex, 1).setText(value)
+                self.events_parsing.blockSignals(False)
+            LOGGER.verbose(f"User sets events['parsing']['{key}'] from '{oldvalue}' to '{value}' for {self.target_run}")
+            self.target_run.events['parsing'][key] = value
 
         # Refresh the log and events tables
         _,_,_,_,events_data = self.run2data()
@@ -1880,20 +1880,18 @@ class EditWindow(QDialog):
         self.fill_table(self.bids_table, bids_data)
         self.fill_table(self.meta_table, meta_data)
         if events_data:
-            self.fill_table(self.events_settings, events_data['settings'])
+            self.fill_table(self.events_parsing, events_data['parsing'])
             self.fill_table(self.events_time, events_data['time'])
             self.fill_table(self.events_rows, events_data['rows'])
             self.fill_table(self.events_columns, events_data['columns'])
             self.fill_table(self.events_table, events_data['table'])
-
-        # Refresh the BIDS output name
-        self.refresh_bidsname()
-
         self.attributes_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         self.attributes_table.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         self.properties_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         self.properties_table.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
 
+        # Refresh the BIDS output name
+        self.refresh_bidsname()
 
     def accept_run(self):
         """Save the changes to the target_bidsmap and send it back to the main window: Finished!"""

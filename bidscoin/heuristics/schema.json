@@ -150,7 +150,7 @@
                   "description": "The settings for the events parser",
                   "type": "object",
                   "properties": {
-                     "settings": {
+                     "parsing": {
                         "description": "Optional settings, e.g. to parse the source table from the log file",
                         "type": "object"
                      },

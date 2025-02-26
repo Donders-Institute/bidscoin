@@ -230,7 +230,7 @@ class PresentationEvents(EventsParser):
         survey_header   = (df.iloc[:, 0] == 'Time').idxmax() or nrows
 
         # Get the first and last row index of the table of interest
-        name = self.settings.get('name', ['event', 'stimulus', 'video', 'survey', 0])
+        name = self.parsing.get('name', ['event', 'stimulus', 'video', 'survey', 0])
         try:
             df.columns = self._sourcecols
             if name[name[-1]] == 'event':

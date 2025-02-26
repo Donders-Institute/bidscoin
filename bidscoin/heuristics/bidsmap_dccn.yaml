@@ -1056,7 +1056,7 @@ Presentation:
       Scenario: <Scenario>
       LogfileWritten: <<Logfile written>>
     events: &presentation_events
-      settings:                         # The settings to parse the source table from the log file
+      parsing:                          # The settings to parse the source table from the log file
         name: [event, stimulus, video, survey, 0]   # The Presentation table that is used to generate the output table (https://www.neurobs.com/pres_docs/html/03_presentation/07_data_reporting/01_logfiles/index.html)
       columns:                          # Columns that are included in the output table, i.e. {output column: input column}
       - onset: Time                     # The mapping for the first required column 'onset'

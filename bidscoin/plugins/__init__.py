@@ -241,13 +241,13 @@ class EventsParser(ABC):
         return df.loc[rows.values].sort_values(by='onset')
 
     @property
-    def settings(self) -> dict:
+    def parsing(self) -> dict:
         """A dictionary with settings, e.g. to parse the source table from the log file"""
-        return self._data.get('settings') or {}
+        return self._data.get('parsing') or {}
 
-    @settings.setter
-    def settings(self, value: dict):
-        self._data['settings'] = value
+    @parsing.setter
+    def parsing(self, value: dict):
+        self._data['parsing'] = value
 
     @property
     def columns(self) -> list[dict]:
