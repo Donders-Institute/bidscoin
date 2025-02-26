@@ -19,7 +19,7 @@ $schema: schema.json
 
 Options:                            # =============================== General options and plugins =====================================
   bidscoin:
-    version: 4.5.1-dev                  # BIDScoin version (should correspond with the version in pyproject.toml)
+    version: 4.5.1.dev                  # BIDScoin version (should correspond with the version in pyproject.toml)
     bidsignore: extra_data/         # Semicolon-separated list of entries that are added to the .bidsignore file (for more info, see BIDS specifications), e.g. extra_data/;pet/;myfile.txt;yourfile.csv
     subprefix: sub-                 # The subject prefix of the source data
     sesprefix: ses-                 # The session prefix of the source data

@@ -184,7 +184,7 @@ class Interface(PluginInterface):
                 acq_time = acq_time.isoformat()
             except Exception as date_error:
                 LOGGER.warning(f"Could not parse the acquisition time from: {sourcefile}\n{date_error}")
-                acq_time = 'n/a'
+                acq_time = pd.NA
             scans_table.loc[target.relative_to(bidsses).as_posix(), 'acq_time'] = acq_time
 
         if not runid:
