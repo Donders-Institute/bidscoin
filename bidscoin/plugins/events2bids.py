@@ -260,7 +260,7 @@ class PresentationEvents(EventsParser):
         df.columns = self.rename_duplicates(df.columns)
 
         # Return the sliced the table
-        LOGGER.bcdebug(f"Slicing '{name[name[-1]]}{df.shape}' sourcetable[{begin}:{end}]")
+        LOGGER.bcdebug(f"Slicing '{name[name[-1]]}' table {df.shape} -> sourcetable[{begin}:{end}]")
         return df.iloc[begin:end]
 
 
@@ -299,14 +299,14 @@ class PsychopyEvents(EventsParser):
             LOGGER.debug(f"Cannot read/parse {sourcefile}")
             self._sourcetable = pd.DataFrame()
 
-        # Ensure unique column names by appending suffixes to duplicate names
-        self._sourcetable.columns = self.rename_duplicates(self._sourcetable.columns)
-
     @property
     def logtable(self) -> pd.DataFrame:
         """Returns the Psychopy log-table"""
 
         # TODO: make some sort of pivot table
         df = self._sourcetable  #.pivot_table(values='event', columns='filename', index='time', aggfunc='count')
+
+        # Ensure unique column names by appending suffixes to duplicate names
+        df.columns = self.rename_duplicates(df.columns)
 
         return df

@@ -2,6 +2,7 @@
 
 import logging
 import copy
+import re
 import pandas as pd
 import dateutil.parser
 from pathlib import Path
@@ -200,7 +201,7 @@ class EventsParser(ABC):
         df = copy.deepcopy(self.logtable)
 
         # Convert the timing values to seconds (with maximally 4 digits after the decimal point)
-        timecols     = [col for col in self.time.get('cols',[]) if col in df.columns]
+        timecols     = list(set([col for col in df.columns for pattern in self.time.get('cols',[]) if re.fullmatch(pattern, col)]))
         df[timecols] = (df[timecols].apply(pd.to_numeric, errors='coerce') / self.time['unit']).round(4)
 
         # Take the logtable columns of interest and from now on use the BIDS column names
@@ -310,7 +311,7 @@ class EventsParser(ABC):
         # Check if the logtable has existing and unique column names
         columns = self.logtable.columns
         for name in set([name for item in self.columns for name in item.values()] + [name for item in self.rows for name in item['condition'].keys()] +
-                        [*self.time.get('start', {}).keys()] + self.time.get('cols', [])):
+                        [*self.time.get('start', {}).keys()]):
             if name and name not in columns:
                 LOGGER.warning(f"Column '{name}' not found in the input table parsed from {self}")
                 valid = False
@@ -338,14 +339,19 @@ class EventsParser(ABC):
         dup_idx = {}                                # The duplicate index number
         for i, column in enumerate(columns):
             if pd.isna(column) or column == '':     # Check if the column name is NaN or an empty string
-                newcols.append(new_col := f"unknown_{i}")
+                newcols.append(new_col := f"Unnamed: {i}")
                 LOGGER.bcdebug(f"Renaming empty column name at index {i}: {column} -> {new_col}")
             elif column in dup_idx:                 # If duplicate, append the index number
                 dup_idx[column] += 1
-                newcols.append(new_col := f"{column}_{dup_idx[column]}")
+                newcols.append(new_col := f"{column}.{dup_idx[column]}")
                 LOGGER.bcdebug(f"Renaming duplicate column name: {column} -> {new_col}")
             else:                                   # First occurrence of the column name, add it to dup_idx
                 dup_idx[column] = 0
                 newcols.append(column)
+
+        # Just make sure we don't have duplicates anymore
+        if len(newcols) != len(set(newcols)):
+            LOGGER.bcdebug(f"--> Renaming de-duplicated columns: {newcols}")
+            newcols = self.rename_duplicates(newcols)
 
         return newcols

@@ -1069,7 +1069,7 @@ Presentation:
           Event Type: .*
         cast:                           # Dict(s): column name + value(s) of the condition in the output table
       time:
-        cols: ['Time', 'TTime', 'Uncertainty', 'Duration', 'ReqTime', 'ReqDur']
+        cols: ['(?i).*Time.*', '(?i).*Duration.*', Uncertainty, ReqDur]
         unit: 10000                     # The precision of Presentation clock times is 0.1 milliseconds
         start:
           Code: 10                      # The column name and event-code used to log the first (or any) scanner pulse
@@ -1156,7 +1156,7 @@ Psychopy:
       participant: <<participant>>
       visit: <<visit>>
       fMRIsess: <<fMRIsess>>
-      time: <<date:_(\d{2}h\d{2}\.\d{2})\.>>  # date: '2025-02-14_10h29.17.971'
+      time: '<<date:_(\d{2}h\d{2}\.\d{2})\.>>'  # date: '2025-02-14_10h29.17.971'
       psychopyVersion: <psychopyVersion>
       frameRate: <<frameRate>>
     events: &psychopy_events
@@ -1169,7 +1169,7 @@ Psychopy:
           trial_num: .*
         cast:                           # Dict(s): column name + value(s) of the condition in the output table
       time:
-        cols: []
+        cols: ['(?i).*time.*', '(?i).*duration.*', '(?i).*onset.*', '(?i).*start.*', '(?i).*stop.*', '.*\.rt']
         unit: 1                         # The precision of PsychoPy clock times is in seconds
         start:
           trial_num: 1                  # The column name and event-code used to log the first (or any) scanner pulse
