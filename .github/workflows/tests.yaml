@@ -1,4 +1,4 @@
-name: CI
+name: Pytests
 on:
   push:
     paths-ignore:

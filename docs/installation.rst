@@ -100,25 +100,20 @@ The current Apptainer image includes:
 
 This image does not include FreeSurfer/synthstrip (needed for ``skullstrip``)
 
-Downloading the container image
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Getting the container image
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-You can download Apptainer images `directly from GiHub packages <https://github.com/orgs/Donders-Institute/packages?repo_name=bidscoin>`__
-
-Building the container image
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-If you want to build the BIDScoin container image yourself, you can download the Apptainer `definition file <https://github.com/Donders-Institute/bidscoin/blob/master/apptainer.def>`__ and execute the following command:
+You can download a pre-build Apptainer image `directly from the GiHub Container Registry <https://github.com/orgs/Donders-Institute/packages?repo_name=bidscoin>`__, or pull a BIDScoin Docker image and convert it into an Apptainer image using:
 
 .. code-block:: console
 
-   $ sudo apptainer build bidscoin.sif apptainer.def
+   $ sudo apptainer build bidscoin.sif docker://marcelzwiers/bidscoin:<version>     # NB: This requires root permission
 
-Alternatively, you can pull a BIDScoin Docker image and convert it into an Apptainer image using:
+Alternatively, if you want to build the BIDScoin container image yourself, you can download the Apptainer `definition file <https://github.com/Donders-Institute/bidscoin/blob/master/apptainer.def>`__ and execute the following command:
 
 .. code-block:: console
 
-   $ sudo apptainer build bidscoin.sif docker://marcelzwiers/bidscoin:<version>
+   $ sudo apptainer build bidscoin.sif apptainer.def    # NB: This requires root permission
 
 Run BIDScoin tools in the container
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -127,7 +122,8 @@ You can use the following command syntax to execute BIDScoin tools in the contai
 
 .. code-block:: console
 
-   $ apptainer exec bidscoin.sif <bidscoin_tool> <bidscoin_tool_args>
+   $ apptainer exec bidscoin.sif <bidscoin_tool> <bidscoin_tool_args>                                           # Use this if you downloaded or built the image yourself
+   $ apptainer exec oras://ghcr.io/Donders-Institute/bidscoin:<version> <bidscoin_tool> <bidscoin_tool_args>    # This will pull the image from the GitHub registry if needed
 
 Where ``<bidscoin_tool>`` is a BIDScoin tool (e.g., ``bidsmapper``, ``bidscoiner``, ``dicomsort``) and ``<bidscoin_tool_args>`` are the tool's arguments. So for instance, if you have source data in ``myhome/data/raw``, instead of running ``bidsmapper data/raw data/bids`` and then ``bidsmapper data/raw data/bids`` from your home directory, you now execute:
 
@@ -161,8 +157,8 @@ The current Docker image includes the same as the Apptainer image:
 
 Likewise, the current image does not include FreeSurfer/synthstrip (needed for ``skullstrip``)
 
-Building the container image
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Getting the container image
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Download the `Dockerfile <https://github.com/Donders-Institute/bidscoin/blob/master/Dockerfile>`__ and execute the following command to build a BIDScoin container image:
 
@@ -183,8 +179,8 @@ Executing BIDScoin commands via Docker is less simple than via Apptainer (and su
 
 .. code-block:: console
 
-   $ docker run --rm -v <bind_mount> bidscoin <bidscoin_tool> <bidscoin_tool_args>                          # If you built the image from the Dockerfile
-   $ docker run --rm -v <bind_mount> marcelzwiers/bidscoin:<version> <bidscoin_tool> <bidscoin_tool_args>   # If you pulled the image from Docker Hub
+   $ docker run --rm -v <bind_mount> bidscoin <bidscoin_tool> <bidscoin_tool_args>                          # Use this if you built the image from the Dockerfile
+   $ docker run --rm -v <bind_mount> marcelzwiers/bidscoin:<version> <bidscoin_tool> <bidscoin_tool_args>   # This pulls the image from Docker Hub if needed
 
 If you have source data in ``/my/data/raw``, instead of running ``bidsmapper /my/data/raw /my/data/bids`` and then ``bidsmapper /my/data/raw /my/data/bids``, you now execute for instance:
 
