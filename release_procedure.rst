@@ -60,38 +60,7 @@ DCCN deployment
 GitHub
 ------
 
-1. Publish a new release
-
-Pypi
-----
-
-1. Temporarily remove the raw html logo markup
-2. Build and upload the new release::
-
-    conda deactivate
-    source activate tox
-    cd ~/python/bidscoin
-    git checkout master
-    rm dist/*
-    python3 -m pip install --upgrade build twine
-    python3 -m build
-    python3 -m twine upload --repository testpypi dist/*
-    python3 -m twine upload dist/*
-
-3. Restore raw html logo markup
-
-Dockerhub
----------
-
-1. In the VM, build, test and push a Docker image::
-
-    VERSION="4.5.0"
-    cd ~/PycharmProjects/bidscoin
-    sudo docker build -t marcelzwiers/bidscoin:$VERSION .
-    sudo docker run --rm marcelzwiers/bidscoin:$VERSION bidscoin -v
-    sudo docker run --rm marcelzwiers/bidscoin:$VERSION pngappend
-    sudo docker run --rm -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix marcelzwiers/bidscoin:$VERSION bidscoin -t
-    sudo docker push marcelzwiers/bidscoin:$VERSION
+Publish a new release. This will trigger GitHub Actions for publishing on PyPI, GHCR and DockerHub
 
 Neurodesk
 ---------
