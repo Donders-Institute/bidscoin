@@ -1,0 +1,33 @@
+name: build-apptainer.yml
+on:
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'           # Push events to regular version tags only
+    branches:
+      - master
+
+jobs:
+  build-test-container:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    container:
+        image: kaczmarj/apptainer:latest
+        options: --privileged
+
+    name: Build Apptainer
+    steps:
+
+      - name: Check out code for the container builds
+        uses: actions/checkout@v4
+
+      - name: Build SIF image
+        run: |
+           apptainer build bidscoin.sif apptainer.def
+
+      - name: Login and Deploy Container
+        run: |
+           echo ${{ secrets.GITHUB_TOKEN }} | apptainer remote login -u ${{ secrets.GHCR_USERNAME }} --password-stdin oras://ghcr.io
+           apptainer push bidscoin.sif oras://ghcr.io/${GITHUB_REPOSITORY}:${tag}

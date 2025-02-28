@@ -100,10 +100,15 @@ The current Apptainer image includes:
 
 This image does not include FreeSurfer/synthstrip (needed for ``skullstrip``)
 
+Downloading the container image
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You can download Apptainer images `directly from GiHub packages <https://github.com/orgs/Donders-Institute/packages?repo_name=bidscoin>`__
+
 Building the container image
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Download the Apptainer `definition file <https://github.com/Donders-Institute/bidscoin/blob/master/apptainer.def>`__ and execute the following command to build a BIDScoin container image:
+If you want to build the BIDScoin container image yourself, you can download the Apptainer `definition file <https://github.com/Donders-Institute/bidscoin/blob/master/apptainer.def>`__ and execute the following command:
 
 .. code-block:: console
 
