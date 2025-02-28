@@ -30,4 +30,4 @@ jobs:
       - name: Login and Deploy Container
         run: |
            echo ${{ secrets.GITHUB_TOKEN }} | apptainer remote login -u ${{ secrets.GHCR_USERNAME }} --password-stdin oras://ghcr.io
-           apptainer push bidscoin.sif oras://ghcr.io/${GITHUB_REPOSITORY}:${tag}
+           apptainer push bidscoin.sif oras://ghcr.io/${GITHUB_REPOSITORY}:${GITHUB_REF_NAME}
