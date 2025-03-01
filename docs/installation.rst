@@ -33,8 +33,8 @@ These install commands can be run independently and will give you the latest sta
 
 .. code-block:: console
 
-   $ pip install git+https://github.com/Donders-Institute/bidscoin                          # The BIDScoin-framework only
-   $ pip install bidscoin[dcm2niix2bids]@git+https://github.com/Donders-Institute/bidscoin  # The BIDScoin-framework + dcm2niix2bids plugin
+   $ pip install "git+https://github.com/Donders-Institute/bidscoin"                          # The BIDScoin-framework only
+   $ pip install "bidscoin[dcm2niix2bids]@git+https://github.com/Donders-Institute/bidscoin"  # The BIDScoin-framework + dcm2niix2bids plugin
 
 If you do not have git (or any other version control system) installed you can `download <https://github.com/Donders-Institute/bidscoin>`__ and unzip the code yourself in a folder named e.g. 'bidscoin' and run:
 
@@ -46,7 +46,7 @@ If you are installing BIDScoin on an older system and you are getting Qt6 errors
 
 .. code-block:: console
 
-   $ pip install bidscoin[dcm2niix2bids]@git+https://github.com/Donders-Institute/bidscoin@v4.3.3+qt5
+   $ pip install "bidscoin[dcm2niix2bids]@git+https://github.com/Donders-Institute/bidscoin@v4.3.3+qt5"
 
 Updating BIDScoin
 ^^^^^^^^^^^^^^^^^
@@ -56,7 +56,7 @@ Run your pip install command as before with the additional ``--upgrade`` or ``--
 .. code-block:: console
 
    $ pip install --upgrade bidscoin                                                     # The latest stable release
-   $ pip install --force-reinstall git+https://github.com/Donders-Institute/bidscoin    # The latest code (add ``--no-deps`` to only upgrade the bidscoin package)
+   $ pip install --force-reinstall "git+https://github.com/Donders-Institute/bidscoin"  # The latest code (add ``--no-deps`` to only upgrade the bidscoin package)
 
 .. caution::
    - The bidsmaps are not guaranteed to be compatible between different BIDScoin versions
@@ -103,7 +103,7 @@ This image does not include FreeSurfer/synthstrip (needed for ``skullstrip``)
 Getting the container image
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-You can download a pre-build Apptainer image `directly from the GiHub Container Registry <https://github.com/orgs/Donders-Institute/packages?repo_name=bidscoin>`__, or pull a BIDScoin Docker image and convert it into an Apptainer image using:
+You can download a pre-build Apptainer image `directly from the GitHub Container Registry <https://github.com/orgs/Donders-Institute/packages?repo_name=bidscoin>`__, or pull a BIDScoin Docker image and convert it into an Apptainer image using:
 
 .. code-block:: console
 

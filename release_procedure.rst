@@ -60,7 +60,7 @@ DCCN deployment
 GitHub
 ------
 
-Publish a new release. This will trigger GitHub Actions for publishing on PyPI, GHCR and DockerHub
+Publish a new release. This will trigger a RTD build and run GitHub Actions for publishing on PyPI, GHCR and DockerHub
 
 Neurodesk
 ---------
