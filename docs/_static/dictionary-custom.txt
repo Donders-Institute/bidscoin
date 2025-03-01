@@ -86,6 +86,7 @@ PerformedProcedureStepDescription
 Pet2bids
 Prepend
 ProtocolName
+PsychoPy
 PULS
 PyQt5
 Pydeface
