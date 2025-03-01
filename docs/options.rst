@@ -56,7 +56,7 @@ events2bids - plugin
 The `events2bids plugin <./plugins.html#events2bids>`__ is a default plugin that converts NeuroBS Presentation log files to BIDS events tsv-files. The settings for this plugin are:
 
 - ``table``: The `name of the Presentation table <https://www.neurobs.com/pres_docs/html/03_presentation/07_data_reporting/01_logfiles/index.html>`__ that is parsed to generate the output table, i.e. one out of "events", "stimulus", "video" or "survey". The "events" table has a standardized format and is therefore set as default.
-- ``skiprows``: The number of (header) rows that precede the table data
+- ``extraInfo``: The number of "extraInfo" attribute items in PsychoPy output data
 - ``meta``: The file extensions of the associated / equally named (meta)data source files that are copied over as BIDS (sidecar) files. See the dcm2niix2bids plugin item above for more info
 
 spec2nii2bids - plugin

@@ -40,8 +40,7 @@ class Interface(PluginInterface):
             try:
                 with sourcefile.open('r') as fid:
                     for n in (1,2,3):
-                        line = fid.readline()
-                        if line.startswith('Scenario -'):
+                        if fid.readline().startswith('Scenario -'):
                             return 'Presentation'
             except Exception:
                 pass
@@ -210,8 +209,16 @@ class PresentationEvents(EventsParser):
 
         super().__init__(sourcefile, _data, options)
 
+        # Count the number of header lines, i.e. until the line starts with "Subject"
+        header = 0
+        with sourcefile.open('r') as fid:
+            for header, line in enumerate(fid):
+                if line.startswith('Subject'): break
+        if not header:
+            LOGGER.warning(f"No 'event' table found in: {sourcefile}")
+
         # Read the log-tables from the Presentation log file
-        self._sourcetable = pd.read_csv(self.sourcefile, sep='\t', skiprows=options.get('skiprows',3), skip_blank_lines=True) if self.sourcefile.is_file() else pd.DataFrame()
+        self._sourcetable = pd.read_csv(self.sourcefile, sep='\t', skiprows=header, skip_blank_lines=True) if self.sourcefile.is_file() else pd.DataFrame()
         """The Presentation log-tables (https://www.neurobs.com/pres_docs/html/03_presentation/07_data_reporting/01_logfiles/index.html)"""
         self._sourcecols  = self._sourcetable.columns
         """Store the original column names"""
