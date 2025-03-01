@@ -1043,12 +1043,6 @@ Presentation:
   beh:        # ----------------------- All behavioural run-items -------------------
   - attributes: &presentation_attr      # See: https://www.neurobs.com/pres_docs/html/04_reference/02_header_parameters.htm
       Scenario:
-      scenario_type:
-      active_buttons:
-      button_codes:
-      pulse_code:
-      pulses_per_scan:
-      randomize_trials:
     bids: &presentationent_beh          # See: schema/rules/files/raw/task.yaml
       task: <Scenario>
       acq:

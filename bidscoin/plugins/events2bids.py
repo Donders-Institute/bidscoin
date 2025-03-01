@@ -60,17 +60,19 @@ class Interface(PluginInterface):
         :param sourcefile:  The sourcefile from which the attribute value should be read
         :param attribute:   The attribute key for which the value should be read
         :param options:     A dictionary with the plugin options, e.g. taken from the bidsmap.plugins['events2bids']
-        :return:            The retrieved attribute value
+        :return:            The retrieved attribute value or 'Unspecified' if a Presentation attribute is empty. This
+                            prevents data discovery failures, as the header typically contains only one attribute field,
+                            'Scenario', which is often left empty by the Presentation programmer (and hence skipped
+                            during run-item matching)
         """
 
         if dataformat == 'Presentation':
-
             try:
                 with sourcefile.open('r') as fid:
                     while '-' in (line := fid.readline()):
                         key, value = line.split('-', 1)
                         if attribute == key.strip():
-                            return value.strip()
+                            return value.strip() or 'Unspecified'   # Avoid empty values as they are skipped during run-matching
 
             except (IOError, OSError) as ioerror:
                 LOGGER.exception(f"Could not get the Presentation '{attribute}' attribute from {sourcefile}\n{ioerror}")
@@ -213,7 +215,7 @@ class PresentationEvents(EventsParser):
         header = 0
         with sourcefile.open('r') as fid:
             for header, line in enumerate(fid):
-                if line.startswith('Subject'): break
+                if line.startswith('Subject') or line.startswith('Trial'): break
         if not header:
             LOGGER.warning(f"No 'event' table found in: {sourcefile}")
 
