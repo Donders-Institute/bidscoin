@@ -20,7 +20,7 @@ jobs:
           python-version: "3.x"
       - name: Remove raw HTML block from README.rst
         run: |
-          run: sed -i '/^\.\. raw:: html/ {N;N;N;d;}' README.rst
+          sed -i '/^\.\. raw:: html/,+3d' README.rst
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip

@@ -11,8 +11,8 @@ jobs:
       packages: write
 
     container:
-        image: kaczmarj/apptainer:latest
-        options: --privileged
+      image: kaczmarj/apptainer:latest
+      options: --privileged
 
     name: Build and deploy container
     steps:
