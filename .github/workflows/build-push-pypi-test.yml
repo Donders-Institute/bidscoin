@@ -4,7 +4,7 @@ on:
 
 jobs:
   pypi-publish:
-    name: Publish release to PyPI
+    name: Publish release to PyPI -test
     runs-on: ubuntu-latest
     environment:
       name: test-pypi
