@@ -72,7 +72,7 @@ class Interface(PluginInterface):
                     while '-' in (line := fid.readline()):
                         key, value = line.split('-', 1)
                         if attribute == key.strip():
-                            return value.strip() or 'Unspecified'   # Avoid empty values as they are skipped during run-matching
+                            return value.strip() or ('Unspecified' if attribute=='Scenario' else '')   # Avoid empty values as they are skipped during run-matching
 
             except (IOError, OSError) as ioerror:
                 LOGGER.exception(f"Could not get the Presentation '{attribute}' attribute from {sourcefile}\n{ioerror}")

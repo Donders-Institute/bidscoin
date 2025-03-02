@@ -95,7 +95,7 @@ def test_bidscoiner_neurobs(bids_neurobs, bidsmap_neurobs, test_data):
     assert 'WARNING' not in logs
     assert len(list(bids_neurobs.rglob('sub-*.json*'))) == 2
 
-    tsvfile1 = bids_neurobs/'sub-M059'/'func'/'sub-M059_events.tsv'
+    tsvfile1 = bids_neurobs/'sub-M059'/'func'/'sub-M059_task-Unspecified_events.tsv'
     tsvfile2 = bids_neurobs/'sub-M059'/'extra_data'/'sub-M059_task-Flanker_events.tsv'
     with open(tsvfile1) as fid:
         data = list(csv.reader(fid, delimiter='\t'))
