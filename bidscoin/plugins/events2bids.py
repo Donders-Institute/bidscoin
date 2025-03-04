@@ -4,6 +4,7 @@ import logging
 import json
 import dateutil.parser
 import pandas as pd
+import re
 from typing import Union
 from importlib.util import find_spec
 from bids_validator import BIDSValidator
@@ -48,7 +49,7 @@ class Interface(PluginInterface):
         if sourcefile.suffix.lower() in ('.tsv', '.csv'):           # '.psydat' = WIP
             with sourcefile.open('r', encoding='utf-8-sig') as fid:
                 header = fid.readline()
-            return 'Psychopy' if 'psychopyVersion' in header else ''
+            return 'Psychopy' if 'psychopyVersion' in header else 'Logdata'
 
         return ''
 
@@ -162,7 +163,7 @@ class Interface(PluginInterface):
                 target.unlink()
 
             # Save the sourcefile as a BIDS NIfTI file and write out provenance logging data
-            run.eventsparser().write(target)
+            run.events().write(target)
             bids.bidsprov(bidsses, sourcefile, run, [target] if target.is_file() else [])
 
             # Check the output
@@ -179,7 +180,7 @@ class Interface(PluginInterface):
 
             # Add an entry to the scans_table
             try:
-                acq_time = dateutil.parser.parse(run.datasource.attribute('Logfile written') or run.datasource.attribute('date'))
+                acq_time = dateutil.parser.parse(run.datasource.attribute('Logfile written') or run.datasource.attribute('date') or '1925-01-01')
                 if bidsmap.options.get('anon', 'y') in ('y', 'yes'):
                     acq_time = acq_time.replace(year=1925, month=1, day=1)  # Privacy protection (see BIDS specification)
                 acq_time = acq_time.isoformat()
@@ -200,24 +201,24 @@ class Interface(PluginInterface):
 class PresentationEvents(EventsParser):
     """Parser for NeuroBS Presentation logfiles"""
 
-    def __init__(self, sourcefile: Path, _data: dict, options: dict):
+    def __init__(self, sourcefile: Path, data: dict, options: dict):
         """
         Reads the event table from the Presentation log file
 
         :param sourcefile:  The full filepath of the log file
-        :param _data:       The run['events'] data (from a bidsmap)
+        :param data:        The run['events'] data (from a bidsmap)
         :param options:     The plugin options
         """
 
-        super().__init__(sourcefile, _data, options)
+        super().__init__(sourcefile, data, options)
 
         # Count the number of header lines, i.e. until the line starts with "Subject"
         header = 0
-        with sourcefile.open('r') as fid:
+        with self.sourcefile.open('r') as fid:
             for header, line in enumerate(fid):
                 if line.startswith('Subject') or line.startswith('Trial'): break
         if not header:
-            LOGGER.warning(f"No 'event' table found in: {sourcefile}")
+            LOGGER.warning(f"No 'event' table found in: {self.sourcefile}")
 
         # Read the log-tables from the Presentation log file
         self._sourcetable = pd.read_csv(self.sourcefile, sep='\t', skiprows=header, skip_blank_lines=True) if self.sourcefile.is_file() else pd.DataFrame()
@@ -229,7 +230,9 @@ class PresentationEvents(EventsParser):
     def logtable(self) -> pd.DataFrame:
         """Returns a Presentation log-table"""
 
-        df = self._sourcetable
+        # Start with a fresh data frame
+        df         = self._sourcetable
+        df.columns = self._sourcecols
         if not (nrows := len(df)):
             return df
 
@@ -239,53 +242,53 @@ class PresentationEvents(EventsParser):
         survey_header   = (df.iloc[:, 0] == 'Time').idxmax() or nrows
 
         # Get the first and last row index of the table of interest
-        name = self.parsing.get('name', ['event', 'stimulus', 'video', 'survey', 0])
+        table = self.parsing.get('table', ['event', 'stimulus', 'video', 'survey', 0])
+        table = table[table[-1]]
         try:
-            df.columns = self._sourcecols
-            if name[name[-1]] == 'event':
+            if table == 'event':
                 begin = 0
                 end   = min(stimulus_header, video_header, survey_header)
-            elif name[name[-1]] == 'stimulus':
+            elif table == 'stimulus':
                 df.columns = df.iloc[stimulus_header]
                 begin = stimulus_header + 1
                 end   = min(video_header, survey_header)
-            elif name[name[-1]] == 'video':
+            elif table == 'video':
                 df.columns = df.iloc[video_header]
                 begin = video_header + 1
                 end   = survey_header
-            elif name[name[-1]] == 'survey':
+            elif table == 'survey':
                 df.columns = df.iloc[survey_header]
                 begin = survey_header + 1
                 end   = nrows
             else:
                 begin = 0
                 end   = nrows
-                LOGGER.error(f"NOT IMPLEMENTED TABLE: {name[name[-1]]}")
+                LOGGER.error(f"NOT IMPLEMENTED TABLE: {table}")
         except IndexError as parseerror:
-            LOGGER.warning(f"Could not parse the {name[name[-1]]} table from: {self.sourcefile}\n{parseerror}")
+            LOGGER.warning(f"Could not parse the {table} table from: {self.sourcefile}\n{parseerror}")
             return pd.DataFrame()
 
         # Ensure unique column names by appending suffixes to duplicate names
         df.columns = self.rename_duplicates(df.columns)
 
         # Return the sliced the table
-        LOGGER.bcdebug(f"Slicing '{name[name[-1]]}' table {df.shape} -> sourcetable[{begin}:{end}]")
-        return df.iloc[begin:end]
+        LOGGER.bcdebug(f"Slicing '{table}' table {df.shape} -> sourcetable[{begin}:{end}]")
+        return df.iloc[begin:end].dropna(axis=1, how='all').dropna(how='all')
 
 
 class PsychopyEvents(EventsParser):
     """Parser for Psychopy logfiles"""
 
-    def __init__(self, sourcefile: Path, _data: dict, options: dict):
+    def __init__(self, sourcefile: Path, data: dict, options: dict):
         """
         Reads the event table from the Psychopy log file
 
         :param sourcefile:  The full filepath of the log file
-        :param _data:       The run['events'] data (from a bidsmap)
+        :param data:        The run['events'] data (from a bidsmap)
         :param options:     The plugin options
         """
 
-        super().__init__(sourcefile, _data, options)
+        super().__init__(sourcefile, data, options)
         sourcefile = self.sourcefile
 
         # Read log-tables from Psychopy psydat files. = WIP
@@ -307,15 +310,87 @@ class PsychopyEvents(EventsParser):
         else:
             LOGGER.debug(f"Cannot read/parse {sourcefile}")
             self._sourcetable = pd.DataFrame()
+        self._sourcecols  = self._sourcetable.columns
+        """Store the original column names"""
 
     @property
     def logtable(self) -> pd.DataFrame:
         """Returns the Psychopy log-table"""
 
-        # TODO: make some sort of pivot table
-        df = self._sourcetable  #.pivot_table(values='event', columns='filename', index='time', aggfunc='count')
+        # Start with a fresh data frame
+        df         = self._sourcetable
+        df.columns = self._sourcecols
+        if not len(df):
+            return df
+
+        # Use the raw source data
+        table = self.parsing.get('table', ['long-wide', 'pivot', 1])
+        table = table[table[-1]]
+        if table == 'long-wide':
+            pass
+
+        # Create a pivoted dataframe with 'onset', 'duration' and 'event_type' columns
+        elif table == 'pivot':
+
+            df_piv = pd.DataFrame(columns=['onset', 'duration', 'event_type'])
+
+            # Extract event column names without '.started' suffixes
+            events = sorted(set(col.split('.')[0] for col in df.columns if '.started' in col))
+
+            # Create new DataFrame with 'onset', 'duration', and 'event_type'
+            for event in events:
+                onset = df[started := f"{event}.started"]           # Get the onset times
+                if (stopped := f"{event}.stopped") in df.columns:
+                    duration = df[stopped] - df[started]
+                else:
+                    duration = pd.Series([float('nan')] * len(df))  # Use NaN for missing `.stopped`
+                event_type = [event] * len(df)                      # Store the event name
+                timecols   = list(set([col for col in df.columns for pattern in self.time.cols if re.fullmatch(pattern, col)
+                                       and col not in df_piv.columns and not col.endswith(('.started', '.stopped'))]))
+                df_piv = pd.concat([df_piv.dropna(axis=1, how='all'),
+                                         pd.DataFrame({'onset': onset, 'duration': duration, 'event_type': event_type}).dropna(axis=1, how='all'),
+                                         df[timecols].dropna(axis=1, how='all')], ignore_index=True)
+            df = df_piv.sort_values(by='onset')
+
+        else:
+            LOGGER.error(f"NOT IMPLEMENTED TABLE: {table}")
+            return pd.DataFrame()
 
         # Ensure unique column names by appending suffixes to duplicate names
         df.columns = self.rename_duplicates(df.columns)
 
-        return df
+        return df.dropna(axis=1, how='all').dropna(how='all')
+
+
+class LogdataEvents(EventsParser):
+    """Parser for genericly formatted tabular logfiles"""
+
+    def __init__(self, sourcefile: Path, data: dict, options: dict):
+        """
+        Reads the event table from the log file
+
+        :param sourcefile:  The full filepath of the log file
+        :param data:        The run['events'] data (from a bidsmap)
+        :param options:     The plugin options
+        """
+
+        super().__init__(sourcefile, data, options)
+
+        self._sourcetable = pd.read_csv(self.sourcefile, sep=None, engine='python', skip_blank_lines=True, encoding='utf-8-sig') if self.sourcefile.is_file() else pd.DataFrame()
+        self._sourcecols  = self._sourcetable.columns
+        """Store the original column names"""
+
+    @property
+    def logtable(self) -> pd.DataFrame:
+        """Returns the log-table"""
+
+        # Start with a fresh data frame
+        df         = self._sourcetable
+        df.columns = self._sourcecols
+        if not len(df):
+            return df
+
+        # Ensure unique column names by appending suffixes to duplicate names
+        df.columns = self.rename_duplicates(df.columns)
+
+        return df.dropna(axis=1, how='all').dropna(how='all')

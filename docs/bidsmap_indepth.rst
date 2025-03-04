@@ -94,7 +94,7 @@ As mentioned, in a bidsmap, the run-items are the key units that define how sour
            - onset: Time          # The mapping for the first required column 'onset'
            - duration: Duration   # The mapping for the second required column 'duration'
            - code: Code
-           - trial_type: Event Type
+           - event_type: Event Type
            - trial_nr: Trial
            rows:                  # Rows that are included in the output table
            - condition:           # Dict(s): key = column name of the log input table, value = fullmatch regular expression to select the rows of interest

@@ -1035,9 +1035,9 @@ DICOM:
 
 
 Presentation:
-# -------------------------------------------------------------------------------------
-# Presentation heuristics (NeuroBS logfiles hat are mapped to BIDS-compliant tsv files)
-# -------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
+# Presentation heuristics (NeuroBS logfiles that are mapped to BIDS-compliant tsv files)
+# --------------------------------------------------------------------------------------
   participant:                          # Attributes or properties to populate the participants tsv/json files
     participant_id: *participant_id
     session_id: *session_id
@@ -1058,12 +1058,12 @@ Presentation:
       LogfileWritten: <<Logfile written>>
     events: &presentation_events
       parsing:                          # The settings to parse the source table from the log file
-        name: [event, stimulus, video, survey, 0]   # The Presentation table that is used to generate the output table (https://www.neurobs.com/pres_docs/html/03_presentation/07_data_reporting/01_logfiles/index.html)
+        table: [event, stimulus, video, survey, 0]   # The Presentation table that is used to generate the output table (https://www.neurobs.com/pres_docs/html/03_presentation/07_data_reporting/01_logfiles/index.html)
       columns:                          # Columns that are included in the output table, i.e. {output column: input column}
       - onset: Time                     # The mapping for the first required column 'onset'
       - duration: Duration              # The mapping for the second required column 'duration'
       - code: Code
-      - trial_type: Event Type
+      - event_type: Event Type
       - trial_nr: Trial
       rows:                             # Rows that are included in the output table
       - condition:                      # Dict(s): key = column name of the log input table, value = fullmatch regular expression to select the rows of interest
@@ -1073,7 +1073,7 @@ Presentation:
         cols: ['(?i).*Time.*', '(?i).*Duration.*', Uncertainty, ReqDur]
         unit: 10000                     # The precision of Presentation clock times is 0.1 milliseconds
         start:
-          Code: 10                      # The column name and event-code used to log the first (or any) scanner pulse
+          Code:                         # The column name and event-code used to log the first (or any) scanner pulse
 
   eeg:        # ----------------------- All EEG run-items ---------------------------
   - attributes: *presentation_attr
@@ -1133,9 +1133,9 @@ Presentation:
 
 
 Psychopy:
-# ---------------------------------------------------------------------------------------
-# PsychoPy heuristics (psydat or tsv logfiles hat are mapped to BIDS-compliant tsv files)
-# ---------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------
+# PsychoPy heuristics (psydat or tsv logfiles that are mapped to BIDS-compliant tsv files)
+# ----------------------------------------------------------------------------------------
   participant:                          # Attributes or properties to populate the participants tsv/json files
     participant_id: *participant_id
     session_id: *session_id
@@ -1161,19 +1161,17 @@ Psychopy:
       psychopyVersion: <psychopyVersion>
       frameRate: <<frameRate>>
     events: &psychopy_events
+      parsing:                          # The settings to parse the source table from the log file
+        table: [long-wide, pivot, 1]    # The raw source table or a pivoted 'onset', 'duration', 'event_type' version
       columns:                          # Columns that are included in the output table, i.e. {output column: input column}
-      - onset:                          # The mapping for the first required column 'onset'
-      - duration:                       # The mapping for the second required column 'duration'
-      - trial_nr: trial_num
-      rows:                             # Rows that are included in the output table
+      - onset: onset                    # The mapping for the first required column 'onset'
+      - duration: duration              # The mapping for the second required column 'duration'
+      - event_type: event_type
+      rows:
       - condition:                      # Dict(s): key = column name of the log input table, value = fullmatch regular expression to select the rows of interest
-          trial_num: .*
-        cast:                           # Dict(s): column name + value(s) of the condition in the output table
+          onset: '\d.*'                 # Select rows with numerical / non-empty onsets
       time:
         cols: ['(?i).*time.*', '(?i).*duration.*', '(?i).*onset.*', '(?i).*start.*', '(?i).*stop.*', '.*\.rt']
-        unit: 1                         # The precision of PsychoPy clock times is in seconds
-        start:
-          trial_num: 1                  # The column name and event-code used to log the first (or any) scanner pulse
 
   eeg:        # ----------------------- All EEG run-items ---------------------------
   - attributes: *psychopy_attr
@@ -1230,6 +1228,86 @@ Psychopy:
     bids: *psychopy_beh
     meta: *psychopy_func_meta
     events: *psychopy_events
+
+
+Logdata:
+# ----------------------------------------------------------------------------------------------
+# Generic logging data heuristics (tabular logfiles that are mapped to BIDS-compliant tsv files)
+# ----------------------------------------------------------------------------------------------
+  participant:                          # Attributes or properties to populate the participants tsv/json files
+    participant_id: *participant_id
+    session_id: *session_id
+
+  beh:        # ----------------------- All behavioural run-items -------------------
+  - properties: &free_prop
+      filename: .*
+    bids: &free_beh
+      task:
+      acq:
+      run: <<>>
+      suffix: events
+    meta: &free_func_meta
+      TaskName:
+    events: &free_events
+      rows:                             # Rows that are included in the output table
+      - condition:                      # Dict(s): key = column name of the log input table, value = fullmatch regular expression to select the rows of interest
+          onset: '\d.*'                 # Select rows with numerical / non-empty onsets
+      time:
+        cols: ['(?i).*time.*', '(?i).*duration.*', '(?i).*onset.*', '(?i).*start.*', '(?i).*stop.*']
+
+  eeg:        # ----------------------- All EEG run-items ---------------------------
+  - properties: *free_prop
+    bids: *free_beh
+    meta: *free_func_meta
+    events: *free_events
+
+  ieeg:       # ----------------------- All iEEG run-items --------------------------
+  - properties: *free_prop
+    bids: *free_beh
+    meta: *free_func_meta
+    events: *free_events
+
+  meg:        # ----------------------- All MEG run-items ---------------------------
+  - properties: *free_prop
+    bids: *free_beh
+    meta: *free_func_meta
+    events: *free_events
+
+  nirs:       # ----------------------- All NIRS run-items --------------------------
+  - properties: *free_prop
+    bids: *free_beh
+    meta: *free_func_meta
+    events: *free_events
+
+  func:       # ----------------------- All functional run-items --------------------
+  - properties: *free_prop
+    bids:
+      <<: *free_beh
+      ce:
+      dir:
+      rec:
+    meta: *free_func_meta
+    events: *free_events
+  - properties:
+      filename: (?i).*(f.?MRI|task|BOLD|func|rest|task|RSN|CMRR.*_TR).*
+    bids:
+      <<: *free_beh
+      ce:
+      dir:
+      rec:
+    meta: *free_func_meta
+    events: *free_events
+
+  extra_data: # ----------------------- All extra data -------------------------
+  - properties: *free_prop
+    bids: *free_beh
+    meta: *free_func_meta
+    events: *free_events
+
+  exclude:    # ----------------------- Data that will be left out -------------
+  - bids: *free_beh
+    meta: *free_func_meta
+    events: *free_events
 
 
 PAR:

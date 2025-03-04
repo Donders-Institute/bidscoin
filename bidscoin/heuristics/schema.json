@@ -180,7 +180,6 @@
                      "time": {
                         "description": "The mapping from the input time columns to the output time columns",
                         "type": "object",
-                        "required": ["cols", "unit", "start"],
                         "properties": {
                            "cols": { "type": "array" },
                            "unit": { "type": "number" },

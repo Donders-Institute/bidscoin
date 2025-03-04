@@ -331,14 +331,14 @@ class MainWindow(QMainWindow):
                     datatype   = table.item(index, 2).text()
                     provenance = table.item(index, 5).text()
                     if not Path(provenance).is_file():
-                        QMessageBox.warning(self, 'Edit BIDS mapping', f"Cannot reliably change the data type and/or suffix because the source file '{provenance}' can no longer be found.\n\nPlease restore the source data or use the `bidsmapper -s -f` options to solve this issue")
+                        QMessageBox.warning(self, 'Edit BIDS mappings', f"Cannot reliably change the data type and/or suffix because the source file '{provenance}' can no longer be found.\n\nPlease restore the source data or use the `bidsmapper -s -f` options to solve this issue")
                         continue
 
                     # Get the new run from the template
                     oldrun      = self.output_bidsmap.find_run(provenance, dataformat, datatype)
                     templaterun = self.template_bidsmap.get_run(newdatatype, 0, oldrun.datasource)
                     if not templaterun:
-                        QMessageBox.warning(self, 'Edit BIDS mapping', f"Cannot find the '{newdatatype}' data type in your template")
+                        QMessageBox.warning(self, 'Edit BIDS mappings', f"Cannot find the '{newdatatype}' data type in your template")
                         continue
 
                     # Insert the new run in our output bidsmap
@@ -820,7 +820,7 @@ class MainWindow(QMainWindow):
                 if key:
                     if not val.startswith('"') and not val.endswith('"'):           # E.g. convert string or int to list or int but avoid encoding strings such as "C:\tmp" (\t -> tab)
                         try: val = ast.literal_eval(val)
-                        except (ValueError, SyntaxError): pass
+                        except (ValueError, TypeError, SyntaxError): pass
                     newoptions[key] = val
                     if val != oldoptions.get(key):
                         LOGGER.verbose(f"User sets the '{plugin}' option from '{key}: {oldoptions.get(key)}' to '{key}: {val}'")
@@ -1053,6 +1053,9 @@ class EditWindow(QDialog):
     def __init__(self, runitem: RunItem, bidsmap: BidsMap, template_bidsmap: BidsMap):
         super().__init__()
 
+        # Add missing default events and events.time keys
+        runitem.events()
+
         # Set the data
         self.datasource        = runitem.datasource
         self.dataformat        = runitem.dataformat
@@ -1069,6 +1072,8 @@ class EditWindow(QDialog):
         """The original run-item from the source bidsmap"""
         self.target_run        = copy.deepcopy(runitem)
         """The edited run-item that is inserted in the target_bidsmap"""
+        self.events            = self.target_run.events()
+        """The EventsParser instance of the target run-item"""
         self.allowed_suffixes  = self.get_allowed_suffixes()
         """Set the possible suffixes the user can select for a given datatype"""
         self.subid, self.sesid = runitem.datasource.subid_sesid(bidsmap.dataformat(runitem.dataformat).subject, bidsmap.dataformat(runitem.dataformat).session or '')
@@ -1076,7 +1081,7 @@ class EditWindow(QDialog):
         # Set up the window
         self.setWindowIcon(QtGui.QIcon(str(BIDSCOIN_ICON)))
         self.setWindowFlags(self.windowFlags() & QtCore.Qt.WindowType.WindowTitleHint & QtCore.Qt.WindowType.WindowMinMaxButtonsHint & QtCore.Qt.WindowType.WindowCloseButtonHint)
-        self.setWindowTitle('Edit BIDS mapping')
+        self.setWindowTitle(f"Edit run-item [{self.dataformat}/{self.source_run.datatype}]")
         self.setWhatsThis(f"BIDScoin mapping of {self.dataformat} properties and attributes to BIDS output data")
 
         # Get data for the tables
@@ -1135,23 +1140,23 @@ class EditWindow(QDialog):
         meta_table.cellChanged.connect(self.meta2run)
         meta_table.setToolTip(f"The key-value pair that will be appended to the (e.g. dcm2niix-produced) json sidecar file")
 
-        # Set up the events tables
+        # Set up the event-input table
+        inspect_button = QPushButton('Source')
+        inspect_button.setToolTip('Show the raw source data')
+        inspect_button.clicked.connect(self.inspect_sourcefile)
         events_parsing_label = QLabel('Parsing')
-        self.events_parsing = events_parsing = self.setup_table(events_data.get('parsing', []), 'events_parsing')
+        self.events_parsing = events_parsing = self.setup_table(events_data.get('parsing',[]), 'events_parsing')
         events_parsing.cellChanged.connect(self.events_parsing2run)
         events_parsing.setToolTip(f"Settings for parsing the input table from the source file")
         events_parsing.setStyleSheet('QTableView::item {border-right: 1px solid #d6d9dc;}')
         events_parsing.setMinimumSize(events_parsing.sizeHint())
-        inspect_button = QPushButton('Source')
-        inspect_button.setToolTip('TODO')
-        inspect_button.clicked.connect(self.inspect_sourcefile)
-        self.edit_button = edit_button = QPushButton('Edit')
-        edit_button.setToolTip('TODO')
-        edit_button.clicked.connect(self.edit_events)
-        self.done_button = done_button = QPushButton('Done')
-        done_button.setToolTip('TODO')
-        done_button.clicked.connect(self.done_events)
-        done_button.hide()
+        log_table_label = QLabel('Log data')
+        self.log_table = log_table = self.setup_table(events_data.get('log_table',[]), 'log_table', min_vsize=False)
+        log_table.setShowGrid(True)
+        log_table.horizontalHeader().setVisible(True)
+        log_table.setToolTip(f"The raw stimulus presentation data that is parsed from the log file")
+
+        # Set up the event-mapping table
         events_time_label = QLabel('Timing')
         self.events_time = events_time = self.setup_table(events_data.get('time',[]), 'events_time')
         events_time.cellChanged.connect(self.events_time2run)
@@ -1169,11 +1174,15 @@ class EditWindow(QDialog):
         events_columns.setToolTip(f"The mappings of the included output columns. To add a new column, enter its mapping in the empty bottom row")
         events_columns.horizontalHeader().setVisible(True)
         events_columns.setStyleSheet('QTableView::item {border-right: 1px solid #d6d9dc;}')
-        log_table_label = QLabel('Log data')
-        self.log_table = log_table = self.setup_table(events_data.get('log_table',[]), 'log_table', min_vsize=False)
-        log_table.setShowGrid(True)
-        log_table.horizontalHeader().setVisible(True)
-        log_table.setToolTip(f"The raw stimulus presentation data that is parsed from the log file")
+
+        # Set up the event-output table
+        self.edit_button = edit_button = QPushButton('Edit')
+        edit_button.setToolTip('Edit the events table')
+        edit_button.clicked.connect(self.edit_events)
+        self.done_button = done_button = QPushButton('Done')
+        done_button.setToolTip('Approve the events table')
+        done_button.clicked.connect(self.done_events)
+        done_button.hide()
         events_table_label = QLabel('Events data')
         self.events_table = events_table = self.setup_table(events_data.get('table',[]), 'events_table', min_vsize=False)
         events_table.setShowGrid(True)
@@ -1281,7 +1290,7 @@ class EditWindow(QDialog):
 
         if confirm and self.target_run != self.source_run:
             self.raise_()
-            answer = QMessageBox.question(self, 'Edit BIDS mapping', 'Closing window, do you want to save the changes you made?',
+            answer = QMessageBox.question(self, 'Edit run-item', 'Closing window, do you want to save the changes you made?',
                                           QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No | QMessageBox.StandardButton.Cancel, QMessageBox.StandardButton.Yes)
             if answer == QMessageBox.StandardButton.Yes:
                 self.accept_run()
@@ -1475,41 +1484,37 @@ class EditWindow(QDialog):
 
         # Set up the data for the events timing
         events_data = {}
-        if 'time' in runitem.events:
-            events_data['time'] = [[{'value': 'columns',   'editable': False}, {'value': runitem.events['time']['cols'],  'editable': True}],
-                                   [{'value': 'units/sec', 'editable': False}, {'value': runitem.events['time']['unit'],  'editable': True}],
-                                   [{'value': 'start',     'editable': False}, {'value': runitem.events['time']['start'], 'editable': True}]]
+        if self.events:
+            events_data['time'] = [[{'value': 'columns',   'editable': False}, {'value': self.events.time.cols,  'editable': True}],
+                                   [{'value': 'units/sec', 'editable': False}, {'value': self.events.time.unit,  'editable': True}],
+                                   [{'value': 'start',     'editable': False}, {'value': self.events.time.start, 'editable': True}]]
 
-        # Set up the data for the events parsing
-        events_data['parsing'] = []
-        for key, value in runitem.events.get('parsing', {}).items():
-            events_data['parsing'].append([{'value': key, 'editable': False}, {'value': value, 'editable': True}])
+            # Set up the data for the events parsing
+            events_data['parsing'] = []
+            for key, value in self.events.parsing.items():
+                events_data['parsing'].append([{'value': key, 'editable': False}, {'value': value, 'editable': True}])
 
-        # Set up the data for the events conditions / row groups
-        events_data['rows'] = [[{'value': 'condition', 'editable': False}, {'value': 'output column', 'editable': False}]]
-        for condition in runitem.events.get('rows') or []:
-            events_data['rows'].append([{'value': f"{dict(condition['condition'])}", 'editable': True}, {'value': f"{dict(condition.get('cast') or {})}", 'editable': True}])
+            # Set up the data for the events conditions / row groups
+            events_data['rows'] = [[{'value': 'condition', 'editable': False}, {'value': 'output column', 'editable': False}]]
+            for condition in self.events.rows:
+                events_data['rows'].append([{'value': f"{dict(condition.get('condition') or {})}", 'editable': True}, {'value': f"{dict(condition.get('cast') or {})}", 'editable': True}])
 
-        # Set up the data for the events columns
-        events_data['columns'] = [[{'value': 'input', 'editable': False}, {'value': 'output', 'editable': False}]]
-        for mapping in runitem.events.get('columns') or []:
-            for key, value in mapping.items():
-                events_data['columns'].append([{'value': value, 'editable': True}, {'value': key, 'editable': key not in ('onset','duration')}])
+            # Set up the data for the events columns
+            events_data['columns'] = [[{'value': 'input', 'editable': False}, {'value': 'output', 'editable': False}]]
+            for mapping in self.events.columns:
+                for key, value in mapping.items():
+                    events_data['columns'].append([{'value': value, 'editable': True}, {'value': key, 'editable': key not in ('onset','duration')}])
 
-        # Set up the data for the events table
-        parser = runitem.eventsparser()
-        if parser:
-            df = parser.logtable
+            # Set up the data for the events table
+            df = self.events.logtable
             events_data['log_table'] = [[{'value': name, 'editable': False} for name in df.columns]] if len(df) else []
             for i in range(len(df)):
                 events_data['log_table'].append([{'value': value, 'editable': False} for value in df.iloc[i]])
 
-            df = parser.eventstable
+            df = self.events.eventstable
             events_data['table'] = [[{'value': name, 'editable': False} for name in df.columns]] if len(df) else []
             for i in range(len(df)):
                 events_data['table'].append([{'value': value, 'editable': False} for value in df.iloc[i]])
-        else:
-            events_data = {}
 
         return properties_data, attributes_data, bids_data, meta_data, events_data
 
@@ -1617,7 +1622,7 @@ class EditWindow(QDialog):
             value_ = self.meta_table.item(n, 1).text().strip()
             if key_:
                 try: value_ = ast.literal_eval(value_)      # E.g. convert stringified list or int back to list or int
-                except (ValueError, SyntaxError): pass
+                except (ValueError, TypeError, SyntaxError): pass
                 self.target_run.meta[key_] = value_
             elif value_:
                 QMessageBox.warning(self, 'Input error', f"Please enter a key-name (left cell) for the '{value_}' value in row {n+1}")
@@ -1634,37 +1639,41 @@ class EditWindow(QDialog):
         #                        ['start',     events.start]]
         key      = self.events_time.item(rowindex, 0).text().strip()
         value    = self.events_time.item(rowindex, 1).text().strip()
-        timecols = self.target_run.events['time']['cols'] or []
-        timeunit = self.target_run.events['time']['unit'] or 1
-        start    = self.target_run.events['time']['start'] or {'': ''}
+        timecols = self.events.time.cols
+        timeunit = self.events.time.unit
+        start    = self.events.time.start
 
         try:
             if key == 'columns':
-                value = ast.literal_eval(value)         # Convert stringified list back to list
+                value = ast.literal_eval(value)             # Convert stringified list back to list
+                for pattern in value:
+                    re.compile(pattern)
                 LOGGER.verbose(f"User sets events['timecols'] from '{timecols}' to '{value}' for {self.target_run}")
-                self.target_run.events['time']['cols'] = value
+                self.events.time.cols = value
             elif key == 'units/sec':
                 value = int(value)
                 LOGGER.verbose(f"User sets events['units/sec'] from '{timeunit}' to '{value}' for {self.target_run}")
-                self.target_run.events['time']['unit'] = value
+                self.events.time.unit = value
             elif key == 'start':
-                value = ast.literal_eval(value)         # Convert stringified dict back to dict
-                for key, val in value.copy().items():
-                    if key not in self.target_run.eventsparser().logtable:
-                        key_ = self.get_input_column(key)
-                        if key_ == key:
+                value = ast.literal_eval(value)             # Convert stringified dict back to dict
+                for column in value.copy():
+                    if column not in self.events.logtable:
+                        newcol = self.get_input_column(column)
+                        if newcol == column:
                             raise KeyError
-                        value[key_] = value.pop(key)
+                        value[newcol] = value.pop(column)   # Rename the input column
                 LOGGER.verbose(f"User sets events['{key}'] from '{start}' to '{value}' for {self.target_run}")
-                self.target_run.events['time']['start'] = value
-        except (ValueError, SyntaxError):
+                self.events.time.start = value
+        except (ValueError, TypeError, SyntaxError):
             QMessageBox.warning(self, 'Input error', f"Please enter a valid '{value}' value")
+        except re.error as pattern_error:
+            QMessageBox.warning(self, 'Input error', f"Please enter a valid '{value}' pattern:\n\n{pattern_error}")
         except KeyError as key_error:
             pass
 
         # Refresh the events tables, i.e. delete empty rows or add a new row if a key is defined on the last row
         _,_,_,_,events_data = self.run2data()
-        self.fill_table(self.events_time, events_data['time'])
+        self.fill_table(self.events_time,  events_data['time'])
         self.fill_table(self.events_table, events_data['table'])
 
     def events_parsing2run(self, rowindex: int, colindex: int):
@@ -1676,7 +1685,7 @@ class EditWindow(QDialog):
             value    = [dropdown.itemText(n) for n in range(len(dropdown))] + [dropdown.currentIndex()]
         else:
             value    = self.events_parsing.item(rowindex, 1).text().strip()
-        if (oldvalue := self.target_run.events['parsing'].get(key)) is None:
+        if (oldvalue := self.events.parsing.get(key)) is None:
             oldvalue = ''
 
         # Only if cell was changed, update
@@ -1688,7 +1697,7 @@ class EditWindow(QDialog):
                 self.events_parsing.item(rowindex, 1).setText(value)
                 self.events_parsing.blockSignals(False)
             LOGGER.verbose(f"User sets events['parsing']['{key}'] from '{oldvalue}' to '{value}' for {self.target_run}")
-            self.target_run.events['parsing'][key] = value
+            self.events.parsing[key] = value
 
         # Refresh the log and events tables
         _,_,_,_,events_data = self.run2data()
@@ -1698,34 +1707,33 @@ class EditWindow(QDialog):
     def events_rows2run(self, rowindex: int, colindex: int):
         """Events value has been changed. Read the data from the event 'rows' table and, if OK, update the target run"""
 
-        # row: [[condition, {column_in: regex}],
-        #       [cast,      {column_out: newvalue}]]
+        # row: [[condition, {column_in: pattern, column_in: pattern}], [cast, {column_out: value, column_out: value}]]
         mapping = self.events_rows.item(rowindex, colindex).text().strip() if self.events_rows.item(rowindex, colindex) else ''
         nrows   = self.events_rows.rowCount()
 
         if mapping:
             try:
-                mapping = ast.literal_eval(mapping)  # Convert stringified dict back to dict
-                for key, pattern in mapping.copy().items():
-                    re.compile(pattern)
-                    if colindex == 0 and key not in self.target_run.eventsparser().logtable:
-                        key_ = self.get_input_column(key)
-                        if key_ == key:
+                mapping = ast.literal_eval(mapping)                 # Convert stringified dict back to dict
+                for column, pattern in mapping.copy().items():
+                    re.compile(str(pattern) if colindex==0 else '')
+                    if colindex == 0 and column not in self.events.logtable:
+                        newcol = self.get_input_column(column)
+                        if newcol == column:                        # The user cancelled the dialogue
                             raise KeyError
-                        mapping[key_] = mapping.pop(key)
+                        mapping[newcol] = mapping.pop(column)       # Rename the input column
                 LOGGER.verbose(f"User sets events['rows'][{rowindex}] to {mapping}' for {self.target_run}")
                 if rowindex == nrows - 1:
-                    self.target_run.events['rows'].append({'condition' if colindex==0 else 'cast': mapping})
+                    self.events.rows.append({'condition' if colindex==0 else 'cast': mapping})
                 else:
-                    self.target_run.events['rows'][rowindex]['condition' if colindex==0 else 'cast'] = mapping
-            except (ValueError, SyntaxError) as dict_error:
+                    self.events.rows[rowindex]['condition' if colindex==0 else 'cast'] = mapping
+            except (ValueError, TypeError, SyntaxError) as dict_error:
                 QMessageBox.warning(self, 'Input error', f"Please enter a valid '{mapping}' dictionary\n\n{dict_error}")
             except re.error as pattern_error:
                 QMessageBox.warning(self, 'Input error', f"Please enter a valid '{mapping}' pattern:\n\n{pattern_error}")
             except KeyError as key_error:
                 pass
         elif colindex == 0 and rowindex < nrows - 1:                # Remove the row
-            del self.target_run.events['rows'][rowindex]
+            del self.events.rows[rowindex]
         else:
             LOGGER.bcdebug(f"Cannot remove events['rows'][{rowindex}] for {self.target_run}")
 
@@ -1747,16 +1755,16 @@ class EditWindow(QDialog):
         if colindex == 0 and input and not output:
             output = input
 
-        if not input or input in self.target_run.eventsparser().logtable:
+        if not input or input in self.events.logtable:
             LOGGER.verbose(f"User sets the events column to: '{input}: {output}' for {self.target_run}")
             if output:                              # Evaluate and store the data
                 if rowindex == nrows - 1:
-                    self.target_run.events['columns'].append({output: input})
+                    self.events.columns.append({output: input})
                     self.events_columns.insertRow(nrows)
                 else:
-                    self.target_run.events['columns'][rowindex] = {output: input}
+                    self.events.columns[rowindex] = {output: input}
             elif rowindex < nrows - 1:              # Remove the row
-                del self.target_run.events['columns'][rowindex]
+                del self.events.columns[rowindex]
         elif not _input:
             self.events_columns2run(rowindex, -1, self.get_input_column(input))
             return
@@ -1770,7 +1778,7 @@ class EditWindow(QDialog):
         """Ask the user to pick an input column from the log table"""
 
         # Get column names
-        columns    = self.target_run.eventsparser().logtable.columns.tolist()
+        columns    = self.events.logtable.columns.tolist()
         column, ok = QInputDialog.getItem(self, 'Input error', f"Your '{input}' input column does not exist, please choose one of the existing columns:", columns, 0, False)
 
         return column if ok else input
@@ -1808,14 +1816,14 @@ class EditWindow(QDialog):
         provenance = self.target_run.provenance
         if not Path(provenance).is_file():
             LOGGER.warning(f"Can no longer find the source file: {provenance}")
-            QMessageBox.warning(self, 'Edit BIDS mapping', f"Cannot reliably change the datatype and/or suffix because the source file '{provenance}' can no longer be found.\n\nPlease restore the source data or use the `bidsmapper -s` option to solve this issue. Resetting the run-item now...")
+            QMessageBox.warning(self, 'Edit run-item', f"Cannot reliably change the datatype and/or suffix because the source file '{provenance}' can no longer be found.\n\nPlease restore the source data or use the `bidsmapper -s` option to solve this issue. Resetting the run-item now...")
             self.reset()
             return
 
         # Get the new target_run from the template
         template_run = self.template_bidsmap.get_run(self.target_run.datatype, suffix_idx, self.datasource)
         if not template_run:
-            QMessageBox.warning(self, 'Edit BIDS mapping', f"Cannot find the {self.target_run.datatype}[{suffix_idx}] datatype in your template. Resetting the run-item now...")
+            QMessageBox.warning(self, 'Edit run-item', f"Cannot find the {self.target_run.datatype}[{suffix_idx}] datatype in your template. Resetting the run-item now...")
             self.reset()
             return
 
@@ -1828,7 +1836,7 @@ class EditWindow(QDialog):
             if val and key in self.target_run.bids and not self.target_run.bids[key]:
                 self.target_run.bids[key] = val
         self.target_run.meta       = template_run.meta.copy()
-        self.target_run.events     = copy.deepcopy(template_run.events)
+        self.target_run._events    = copy.deepcopy(template_run._events)
 
         # Reset the edit window with the new target_run
         self.reset(refresh=True)
@@ -1890,6 +1898,7 @@ class EditWindow(QDialog):
         if not refresh:
             LOGGER.verbose('User resets the BIDS mapping')
             self.target_run = copy.deepcopy(self.source_run)
+            self.events     = self.target_run.events()
 
             # Reset the datatype dropdown menu
             self.datatype_dropdown.blockSignals(True)
@@ -1943,7 +1952,7 @@ class EditWindow(QDialog):
                                        self.target_run.meta.get('IntendedFor')):
             message = f'The "B0FieldIdentifier/IntendedFor" metadata is left empty for {bidsname} (not recommended)'
         if message:
-            answer = QMessageBox.question(self, 'Edit BIDS mapping', f'WARNING:\n{message}\n\nDo you want to go back and edit the run?',
+            answer = QMessageBox.question(self, 'Edit run-item', f'WARNING:\n{message}\n\nDo you want to go back and edit the run?',
                                           QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
             if answer == QMessageBox.StandardButton.Yes: return
             LOGGER.warning(message)
@@ -1966,7 +1975,7 @@ class EditWindow(QDialog):
             bidsmap = BidsMap(Path(yamlfile), checks=(False, False, False))
             bidsmap.insert_run(self.target_run)
             bidsmap.save()
-            QMessageBox.information(self, 'Edit BIDS mapping', f"Successfully exported:\n\n{self.target_run} -> {yamlfile}")
+            QMessageBox.information(self, 'Edit run-item', f"Successfully exported:\n\n{self.target_run} -> {yamlfile}")
 
     def get_allowed_suffixes(self) -> dict[str, set]:
         """Derive the possible suffixes for each datatype from the template. """
@@ -2120,9 +2129,9 @@ class CompareWindow(QDialog):
             meta_data.append([key, value])
 
         events_data = []
-        parser = runitem.eventsparser()
-        if parser:
-            df = parser.eventstable
+        events      = runitem.events()
+        if events:
+            df = events.eventstable
             events_data.append([*df.columns])
             for i in range(len(df)):
                 events_data.append([*df.iloc[i]])

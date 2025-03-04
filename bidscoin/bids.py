@@ -390,8 +390,8 @@ class RunItem:
         """The BIDS output dictionary (used for construting the BIDS filename)"""
         self.meta       = Meta(data['meta'])
         """The meta output dictionary (will be appended to the json sidecar file)"""
-        self.events     = data['events']
-        """The options to parse the stimulus presentation log file (if any) to BIDS compliant events"""
+        self._events    = data['events']
+        """The events dictionary (used by the EventsParser)"""
 
     def __getattr__(self, name: str):
 
@@ -434,7 +434,7 @@ class RunItem:
                 f"Attributes:\t{self.attributes}\n"
                 f"Bids:\t\t{self.bids}\n"
                 f"Meta:\t\t{self.meta}\n"
-                f"Events:\t\t{self.events}")
+                f"Events:\t\t{self._events}")
 
     def __eq__(self, other):
         """A deep test for the RunItem attributes and YAML data"""
@@ -664,12 +664,13 @@ class RunItem:
 
         return bidsname + bidsext
 
-    def eventsparser(self) -> EventsParser:
-        """Returns a plugin EventsParser instance to parse the stimulus presentation log file (if any)"""
+    def events(self) -> EventsParser:
+        """Returns a plugin EventsParser instance to read and write to/from the events dictionary and to parse the
+        stimulus presentation log file (if any)"""
 
         for name in self.plugins:
             if plugin := bcoin.import_plugin(name, (f"{self.dataformat}Events",)):
-                return getattr(plugin, f"{self.dataformat}Events")(Path(self.provenance), self.events, self.plugins[name])
+                return getattr(plugin, f"{self.dataformat}Events")(Path(self.provenance), self._events, self.plugins[name])
 
 
 class DataType:
@@ -1379,7 +1380,7 @@ class BidsMap:
                         rundata['meta'][metakey] = datasource.dynamicvalue(metavalue, cleanup=False, runtime=runtime)
 
                 # Copy the events-data
-                for eventskey, eventsvalue in runitem.events.items():
+                for eventskey, eventsvalue in runitem._events.items():
 
                     # Replace the dynamic bids values, except the dynamic run-index (e.g. <<>>)
                     rundata['events'][eventskey] = copy.deepcopy(eventsvalue)
@@ -2066,7 +2067,7 @@ def poolmetadata(datasource: DataSource, targetmeta: Path, usermeta: Meta, metae
             metaval = datasource.dynamicvalue(metaval, cleanup=False, runtime=True)
             try:
                 metaval = ast.literal_eval(str(metaval))  # E.g. convert stringified list or int back to list or int
-            except (ValueError, SyntaxError):
+            except (ValueError, TypeError, SyntaxError):
                 pass
         if metapool.get(metakey) and metapool.get(metakey) != metaval:
             LOGGER.info(f"Overruling {metakey} bidsmap values in {targetmeta}: {metapool[metakey]} -> {metaval}")

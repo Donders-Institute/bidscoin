@@ -93,19 +93,19 @@ def test_bidscoiner_neurobs(bids_neurobs, bidsmap_neurobs, test_data):
     logs = (bidsmap_neurobs.parent/'bidscoiner.errors').read_text()
     assert 'ERROR' not in logs
     assert 'WARNING' not in logs
-    assert len(list(bids_neurobs.rglob('sub-*.json*'))) == 2
+    assert len(list(bids_neurobs.rglob('sub-*.json*'))) == 3
 
     tsvfile1 = bids_neurobs/'sub-M059'/'func'/'sub-M059_task-Unspecified_events.tsv'
     tsvfile2 = bids_neurobs/'sub-M059'/'extra_data'/'sub-M059_task-Flanker_events.tsv'
     with open(tsvfile1) as fid:
         data = list(csv.reader(fid, delimiter='\t'))
-    # onset     duration code         trial_type  trial_nr xtra
+    # onset     duration code         event_type  trial_nr xtra
     # 1.0167    5.523    instruction  Picture     1        test
     # 6.5397    1.4517   instruction  Picture     2        test
     # 7.9914    1.5184   instruction  Picture     3        test
     # 147.0519  2.019    break        Picture     6
     assert len(data) == 361
-    assert data[0]   == ['onset',    'duration', 'code',        'trial_type', 'trial_nr', 'xtra']
+    assert data[0]   == ['onset',    'duration', 'code',        'event_type', 'trial_nr', 'xtra']
     assert data[3]   == ['7.9914',   '1.5184',   'instruction', 'Picture',    '3',        'test']
     assert data[4]   == ['147.0519', '2.019',    'break',       'Picture',    '6',        '']
     assert tsvfile2.is_file()

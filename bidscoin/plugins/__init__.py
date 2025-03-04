@@ -1,7 +1,6 @@
 """Base classes for the pre-installed plugins + IO helper functions"""
 
 import logging
-import copy
 import re
 import pandas as pd
 import dateutil.parser
@@ -153,31 +152,76 @@ class PluginInterface(ABC):
         """
 
 
+class EventsTime:
+    """An events['time'] dictionary with 'start', 'cols' and 'unit' values"""
+    def __init__(self, data: dict):
+
+        # Create a data dictionary with all required event.time keys
+        for key, val in {'cols': [], 'unit': 1, 'start': {}}.items():
+            if key not in data: data[key] = val
+        self._data = data
+
+    def __repr__(self):
+
+        return (f"{self.__class__}\n"
+                f"Time.cols:\t{self.cols}\n"
+                f"Time.unit:\t{self.unit}\n"
+                f"Time.start:\t{self.start}")
+
+    @property
+    def cols(self) -> list:
+        return self._data['cols']
+
+    @cols.setter
+    def cols(self, value: list):
+        self._data['cols'] = value
+
+    @property
+    def unit(self) -> float:
+        return self._data['unit']
+
+    @unit.setter
+    def unit(self, value: float):
+        self._data['unit'] = value
+
+    @property
+    def start(self) -> dict:
+        return self._data['start']
+
+    @start.setter
+    def start(self, value: dict):
+        self._data['start'] = value
+
+
 class EventsParser(ABC):
     """Base parser for stimulus presentation logfiles"""
 
-    def __init__(self, sourcefile: Path, _data: dict, options: dict):
+    def __init__(self, sourcefile: Path, data: dict, options: dict):
         """
-        Reads the events table from the events log file
+        Sets all required attributes
 
         :param sourcefile:  The full filepath of the raw log file
-        :param _data:       The run['events'] data (from a bidsmap)
+        :param data:        The run['events'] data (from a bidsmap)
         :param options:     The plugin options
         """
 
+        # Create a data dictionary with all required events keys
+        data = data or {}
+        for key, val in {'parsing': {}, 'columns': [{'onset':''}, {'duration':''}], 'rows': [{}], 'time': {}}.items():
+            if key not in data: data[key] = val
+        self._data = data
+        self.time                       # Add all required data['time'] keys
+
         self.sourcefile = Path(sourcefile)
-        self._data      = _data
         self.options    = options
 
     def __repr__(self):
 
         return (f"{self.__class__}\n"
                 f"Path:\t\t{self.sourcefile}\n"
-                f"Time.cols:\t{self.time.get('cols')}\n"
-                f"Time.unit:\t{self.time.get('unit')}\n"
-                f"Time.start:\t{self.time.get('start')}\n"
                 f"Columns:\t{self.columns}\n"
-                f"Rows:\t{self.rows}")
+                f"Rows:\t{self.rows}\n"
+                f"{repr(self.time)}")
 
     def __str__(self):
 
@@ -198,11 +242,11 @@ class EventsParser(ABC):
         if not self.isvalid:
             pass
 
-        df = copy.deepcopy(self.logtable)
+        df = self.logtable.copy()           # Ensure we do not change the source data
 
         # Convert the timing values to seconds (with maximally 4 digits after the decimal point)
-        timecols     = list(set([col for col in df.columns for pattern in self.time.get('cols',[]) if re.fullmatch(pattern, col)]))
-        df[timecols] = (df[timecols].apply(pd.to_numeric, errors='coerce') / self.time['unit']).round(4)
+        timecols     = list(set([col for col in df.columns for pattern in self.time.cols if re.fullmatch(pattern, col)]))
+        df[timecols] = (df[timecols].apply(pd.to_numeric, errors='coerce') / self.time.unit).round(4)
 
         # Take the logtable columns of interest and from now on use the BIDS column names
         df         = df.loc[:, [sourcecol for item in self.columns for sourcecol in item.values() if sourcecol in df.columns]]
@@ -211,40 +255,42 @@ class EventsParser(ABC):
         if 'duration' not in df.columns: df.insert(1, 'duration', None)
 
         # Set the clock at zero at the start of the experiment
-        if self.time.get('start'):
+        if self.time.start:
             start = pd.Series([True] * len(df))
-            for column, value in self.time['start'].items():
+            for column, value in self.time.start.items():
                 if column in self.logtable.columns:
-                    start &= (self.logtable[column].astype(str) == str(value)).values
+                    start &= (self.logtable[column].astype(str) == str(value))
             if start.any():
-                LOGGER.bcdebug(f"Resetting clock offset: {df['onset'][start.values].iloc[0]}")
-                df['onset'] -= df['onset'][start.values].iloc[0]  # Take the time of the first occurrence as zero
+                LOGGER.bcdebug(f"Resetting clock offset: {df['onset'][start].iloc[0]}")
+                df['onset'] -= df['onset'][start].iloc[0]                   # Take the time of the first occurrence as zero
 
         # Loop over the row groups to filter/edit the rows
-        rows = pd.Series([len(self.rows) == 0] * len(df)).astype(bool)  # Boolean series with True values if no row expressions were specified
-        for group in self.rows:
+        rows = pd.Series([len(self.rows) == 0] * len(df))                   # All rows are True if no row expressions were specified
+        for group in self.rows:                                             # With a group the expressions are AND between groups they are OR
 
-            for column, regex in group['condition'].items():
+            rowgroup = pd.Series([True] * len(df))
+            for column, pattern in (group.get('condition') or {}).items():
 
                 if column not in self.logtable.columns:
+                    LOGGER.bcdebug(f"Unknown condition column: {column}")
                     continue
 
                 # Get the rows that match the expression, i.e. make them True
-                rowgroup = self.logtable[column].astype(str).str.fullmatch(str(regex))
+                rowgroup &= self.logtable[column].astype(str).str.fullmatch(str(pattern))
 
-                # Add the matching rows to the grand rows group
-                rows |= rowgroup.values
+            # Write the value(s) of the matching rows
+            for colname, values in (group.get('cast') or {}).items():
+                df.loc[rowgroup, colname] = values
 
-                # Write the value(s) of the matching rows
-                for colname, values in (group.get('cast') or {}).items():
-                    df.loc[rowgroup, colname] = values
+            # Add the matching rows to the grand rows group
+            rows |= rowgroup
 
-        return df.loc[rows.values].sort_values(by='onset')
+        return df.loc[rows].sort_values(by='onset')
 
     @property
     def parsing(self) -> dict:
         """A dictionary with settings, e.g. to parse the source table from the log file"""
-        return self._data.get('parsing') or {}
+        return self._data['parsing']
 
     @parsing.setter
     def parsing(self, value: dict):
@@ -253,7 +299,7 @@ class EventsParser(ABC):
     @property
     def columns(self) -> list[dict]:
         """List with mappings for the column names of the eventstable"""
-        return self._data.get('columns') or []
+        return self._data['columns']
 
     @columns.setter
     def columns(self, value: list[dict]):
@@ -262,20 +308,15 @@ class EventsParser(ABC):
     @property
     def rows(self) -> list[dict]:
         """List with fullmatch regular expression dictionaries that yield row sets (conditions) in the eventstable"""
-        return self._data.get('rows') or []
+        return self._data['rows']
 
     @rows.setter
     def rows(self, value: list[dict]):
         self._data['rows'] = value
 
     @property
-    def time(self) -> dict:
-        """A dictionary with 'start', 'cols' and 'unit' values"""
-        return self._data.get('time') or {}
-
-    @time.setter
-    def time(self, value: dict):
-        self._data['time'] = value
+    def time(self) -> EventsTime:
+        return EventsTime(self._data['time'])
 
     @property
     def isvalid(self) -> bool:
@@ -292,28 +333,24 @@ class EventsParser(ABC):
             LOGGER.warning(f"Events table must have at least two columns, got {len(self.columns)} instead\n{self}")
             return False
 
-        if (key := [*self.columns[0].keys()][0]) != 'onset':
+        if (key := [*self.columns[0].keys()][0] if self.columns[0] else '') != 'onset':
             LOGGER.warning(f"First events column must be named 'onset', got '{key}' instead\n{self}")
             valid = False
 
-        if (key := [*self.columns[1].keys()][0]) != 'duration':
+        if (key := [*self.columns[1].keys()][0] if self.columns[1] else '') != 'duration':
             LOGGER.warning(f"Second events column must be named 'duration', got '{key}' instead\n{self}")
             valid = False
 
-        if len(self.time.get('cols', [])) < 2:
-            LOGGER.warning(f"Events table must have at least two timecol items, got {len(self.time.get('cols', []))} instead\n{self}")
-            return False
-
-        elif not is_float(self.time.get('unit')):
-            LOGGER.warning(f"Time conversion factor must be a float, got '{self.time.get('unit')}' instead\n{self}")
+        elif not is_float(self.time.unit):
+            LOGGER.warning(f"Time conversion factor must be a float, got '{self.time.unit}' instead\n{self}")
             valid = False
 
         # Check if the logtable has existing and unique column names
         columns = self.logtable.columns
-        for name in set([name for item in self.columns for name in item.values()] + [name for item in self.rows for name in item['condition'].keys()] +
-                        [*self.time.get('start', {}).keys()]):
+        for name in set([name for item in self.columns for name in item.values()] +
+                        [name for item in self.rows for name in (item.get('condition') or {}).keys()] + [*self.time.start.keys()]):
             if name and name not in columns:
-                LOGGER.warning(f"Column '{name}' not found in the input table parsed from {self}")
+                LOGGER.info(f"Column '{name}' not found in the input table parsed from {self}")
                 valid = False
         if columns.duplicated().any():
             LOGGER.warning(f"Duplicate columns found: {columns}\n{self}")
