@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
-"""
+r"""
 A BIDScoin library and application with utilities to perform generic management tasks (See also cli/_bcoin.py)
+
+,-----.  ,--.,------.   ,---.               ,--.
+|  |) /_ |  ||  .-.  \ '   .-'  ,---. ,---. `--',--,--,
+|  .-.  \|  ||  |  \  :`.  `-. | .--'| .-. |,--.|      \
+|  '--' /|  ||  '--'  /.-'    |\ `--.' '-' '|  ||  ||  |
+`------' `--'`-------' `-----'  `---' `---' `--'`--''--'
 
 @author: Marcel Zwiers
 """
