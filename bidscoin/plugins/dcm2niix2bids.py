@@ -168,17 +168,20 @@ class Interface(PluginInterface):
 
                     # Try to automagically set the {part: phase/imag/real} (should work for Siemens data)
                     if not run.datatype == '' and 'part' in run.bids and not run.bids['part'][-1] and run.attributes.get('ImageType'):    # part[-1]==0 -> part is not specified
-                        imagetype = ast.literal_eval(run.attributes['ImageType'])                               # E.g. ImageType = "['ORIGINAL', 'PRIMARY', 'M', 'ND']"
-                        if 'P' in imagetype:
-                            run.bids['part'][-1] = run.bids['part'].index('phase')                              # E.g. part = ['', mag, phase, real, imag, 0]
-                        # elif 'M' in imagetype:
-                        #     run.bids['part'][-1] = run.bids['part'].index('mag')
-                        elif 'I' in imagetype:
-                            run.bids['part'][-1] = run.bids['part'].index('imag')
-                        elif 'R' in imagetype:
-                            run.bids['part'][-1] = run.bids['part'].index('real')
-                        if run.bids['part'][-1]:
-                            LOGGER.verbose(f"Updated {run} entity: 'part' -> '{run.bids['part'][run.bids['part'][-1]]}' ({imagetype})")
+                        try:
+                            imagetype = ast.literal_eval(run.attributes['ImageType'])                               # E.g. ImageType = "['ORIGINAL', 'PRIMARY', 'M', 'ND']"
+                            if 'P' in imagetype:
+                                run.bids['part'][-1] = run.bids['part'].index('phase')                              # E.g. part = ['', mag, phase, real, imag, 0]
+                            # elif 'M' in imagetype:
+                            #     run.bids['part'][-1] = run.bids['part'].index('mag')
+                            elif 'I' in imagetype:
+                                run.bids['part'][-1] = run.bids['part'].index('imag')
+                            elif 'R' in imagetype:
+                                run.bids['part'][-1] = run.bids['part'].index('real')
+                            if run.bids['part'][-1]:
+                                LOGGER.verbose(f"Updated {run} entity: 'part' -> '{run.bids['part'][run.bids['part'][-1]]}' ({imagetype})")
+                        except (ValueError, TypeError, SyntaxError, IndexError, KeyError) as eval_error:
+                            LOGGER.bcdebug(f"Could not evaluate 'ImageType' attribute: {run.attributes['ImageType']} from {run.datasource}\n{eval_error}")
 
                 else:
                     LOGGER.bcdebug(f"Known sample: {run.datasource}")
