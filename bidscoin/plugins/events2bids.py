@@ -339,7 +339,7 @@ class PsychopyEvents(EventsParser):
 
             # Create new DataFrame with 'onset', 'duration', and 'event_type'
             for event in events:
-                onset = df[started := f"{event}.started"]           # Get the onset times
+                onset = df[(started := f"{event}.started")]         # Get the onset times
                 if (stopped := f"{event}.stopped") in df.columns:
                     duration = df[stopped] - df[started]
                 else:
