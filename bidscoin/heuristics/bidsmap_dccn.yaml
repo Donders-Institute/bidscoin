@@ -1161,13 +1161,14 @@ Psychopy:
     events: &psychopy_events
       parsing:                          # The settings to parse the source table from the log file
         table: [long-wide, pivot, 1]    # The raw source table or a pivoted 'onset', 'duration', 'event_type' version
+        expand: scannerPulse.rt         # Expands lists into columns for each array item
       columns:                          # Columns that are included in the output table, i.e. {output column: input column}
       - onset: onset                    # The mapping for the first required column 'onset'
       - duration: duration              # The mapping for the second required column 'duration'
       - event_type: event_type
       rows:
       - condition:                      # Dict(s): key = column name of the log input table, value = fullmatch regular expression to select the rows of interest
-          onset: '\d.*'                 # Select rows with numerical / non-empty onsets
+          event_type: '.*'
       time:
         cols: ['(?i).*time.*', '(?i).*duration.*', '(?i).*onset.*', '(?i).*start.*', '(?i).*stop.*', '.*\.rt']
 
@@ -1247,9 +1248,6 @@ Logdata:
     meta: &free_func_meta
       TaskName:
     events: &free_events
-      rows:                             # Rows that are included in the output table
-      - condition:                      # Dict(s): key = column name of the log input table, value = fullmatch regular expression to select the rows of interest
-          onset: '\d.*'                 # Select rows with numerical / non-empty onsets
       time:
         cols: ['(?i).*time.*', '(?i).*duration.*', '(?i).*onset.*', '(?i).*start.*', '(?i).*stop.*']
 

@@ -1507,12 +1507,12 @@ class EditWindow(QDialog):
 
             # Set up the data for the events table
             df = self.events.logtable
-            events_data['log_table'] = [[{'value': name, 'editable': False} for name in df.columns]] if len(df) else []
+            events_data['log_table'] = [[{'value': name, 'editable': False} for name in df]] if len(df) else []
             for i in range(len(df)):
                 events_data['log_table'].append([{'value': value, 'editable': False} for value in df.iloc[i]])
 
             df = self.events.eventstable
-            events_data['table'] = [[{'value': name, 'editable': False} for name in df.columns]] if len(df) else []
+            events_data['table'] = [[{'value': name, 'editable': False} for name in df]] if len(df) else []
             for i in range(len(df)):
                 events_data['table'].append([{'value': value, 'editable': False} for value in df.iloc[i]])
 
@@ -1915,6 +1915,7 @@ class EditWindow(QDialog):
         self.fill_table(self.meta_table, meta_data)
         if events_data:
             self.fill_table(self.events_parsing, events_data['parsing'])
+            self.fill_table(self.log_table, events_data['log_table'])
             self.fill_table(self.events_time, events_data['time'])
             self.fill_table(self.events_rows, events_data['rows'])
             self.fill_table(self.events_columns, events_data['columns'])

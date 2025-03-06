@@ -245,33 +245,33 @@ class EventsParser(ABC):
         df = self.logtable.copy()           # Ensure we do not change the source data
 
         # Convert the timing values to seconds (with maximally 4 digits after the decimal point)
-        timecols     = list(set([col for col in df.columns for pattern in self.time.cols if re.fullmatch(pattern, col)]))
+        timecols     = list(set(col for col in df for pattern in self.time.cols if re.fullmatch(pattern, col)))
         df[timecols] = (df[timecols].apply(pd.to_numeric, errors='coerce') / self.time.unit).round(4)
 
         # Take the logtable columns of interest and from now on use the BIDS column names
-        df         = df.loc[:, [sourcecol for item in self.columns for sourcecol in item.values() if sourcecol in df.columns]]
-        df.columns = [eventscol for item in self.columns for eventscol, sourcecol in item.items() if sourcecol in df.columns]
-        if 'onset'    not in df.columns: df.insert(0, 'onset',    None)
-        if 'duration' not in df.columns: df.insert(1, 'duration', None)
+        df         = df.loc[:, [sourcecol for item in self.columns for sourcecol in item.values() if sourcecol in df]]
+        df.columns = [eventscol for item in self.columns for eventscol, sourcecol in item.items() if sourcecol in df]
+        if 'onset'    not in df: df.insert(0, 'onset',    None)
+        if 'duration' not in df: df.insert(1, 'duration', None)
 
         # Set the clock at zero at the start of the experiment
         if self.time.start:
-            start = pd.Series([True] * len(df))
+            start = pd.Series([True] * len(df), index=df.index)
             for column, value in self.time.start.items():
-                if column in self.logtable.columns:
+                if column in self.logtable:
                     start &= (self.logtable[column].astype(str) == str(value))
             if start.any():
                 LOGGER.bcdebug(f"Resetting clock offset: {df['onset'][start].iloc[0]}")
                 df['onset'] -= df['onset'][start].iloc[0]                   # Take the time of the first occurrence as zero
 
         # Loop over the row groups to filter/edit the rows
-        rows = pd.Series([len(self.rows) == 0] * len(df))                   # All rows are True if no row expressions were specified
+        rows = pd.Series([len(self.rows) == 0] * len(df), index=df.index)   # All rows are True if no row expressions were specified
         for group in self.rows:                                             # With a group the expressions are AND between groups they are OR
 
-            rowgroup = pd.Series([True] * len(df))
+            rowgroup = pd.Series([True] * len(df), index=df.index)
             for column, pattern in (group.get('condition') or {}).items():
 
-                if column not in self.logtable.columns:
+                if column not in self.logtable:
                     LOGGER.bcdebug(f"Unknown condition column: {column}")
                     continue
 

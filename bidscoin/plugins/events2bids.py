@@ -1,5 +1,5 @@
 """The events2bids plugin converts neurobs Presentation logfiles to event.tsv files"""
-
+import ast
 import logging
 import json
 import dateutil.parser
@@ -310,46 +310,56 @@ class PsychopyEvents(EventsParser):
         else:
             LOGGER.debug(f"Cannot read/parse {sourcefile}")
             self._sourcetable = pd.DataFrame()
-        self._sourcecols  = self._sourcetable.columns
-        """Store the original column names"""
 
     @property
     def logtable(self) -> pd.DataFrame:
         """Returns the Psychopy log-table"""
 
+        table = self.parsing.get('table', ['long-wide', 'pivot', 1])
+        table = table[table[-1]]
+
         # Start with a fresh data frame
-        df         = self._sourcetable
-        df.columns = self._sourcecols
+        df = self._sourcetable.copy()
         if not len(df):
             return df
 
+        # Expand the array items
+        try:
+            for expand in set(col for col in df if re.fullmatch(self.parsing.get('expand') or '', col)):
+                ds  = df[expand].apply(lambda x: ast.literal_eval(x) if isinstance(x,str) and x.startswith('[') else [])    # Convert string representation of lists into actual Python lists
+                df_ = ds.apply(pd.Series).add_prefix(f"{expand}{'.started' if '.' in expand and table=='pivot' else ''}_")  # Append `.started` to pivot the data into the onset column
+                if '.' in expand:                                                                                           # Time columns should have a `.` in their name
+                    df_ = df_.rename(columns=lambda col: re.sub(r'(.*)\.(\w+)_(\d+)', r'\1_\3.\2', col))        # Put e.g. `.rt` or `.started` back at the end
+                if not df_.empty:
+                    df = pd.concat([df.drop(columns=[expand]), df_], axis=1)
+        except re.error as pattern_error:
+            LOGGER.warning(f"The expand pattern {self.parsing.get('expand')} is invalid\n{pattern_error}")
+
         # Use the raw source data
-        table = self.parsing.get('table', ['long-wide', 'pivot', 1])
-        table = table[table[-1]]
         if table == 'long-wide':
             pass
 
         # Create a pivoted dataframe with 'onset', 'duration' and 'event_type' columns
         elif table == 'pivot':
 
-            df_piv = pd.DataFrame(columns=['onset', 'duration', 'event_type'])
-
             # Extract event column names without '.started' suffixes
-            events = sorted(set(col.split('.')[0] for col in df.columns if '.started' in col))
+            events = set(col.rsplit('.',1)[0] for col in df if col.endswith('.started'))
 
             # Create new DataFrame with 'onset', 'duration', and 'event_type'
+            df_piv = pd.DataFrame(columns=['onset', 'duration', 'event_type'])  # Collects all pivoted event data
             for event in events:
-                onset = df[(started := f"{event}.started")]         # Get the onset times
-                if (stopped := f"{event}.stopped") in df.columns:
+                onset = df[(started := f"{event}.started")]                     # Get the onset times
+                if (stopped := f"{event}.stopped") in df:
                     duration = df[stopped] - df[started]
                 else:
-                    duration = pd.Series([float('nan')] * len(df))  # Use NaN for missing `.stopped`
-                event_type = [event] * len(df)                      # Store the event name
-                timecols   = list(set([col for col in df.columns for pattern in self.time.cols if re.fullmatch(pattern, col)
-                                       and col not in df_piv.columns and not col.endswith(('.started', '.stopped'))]))
-                df_piv = pd.concat([df_piv.dropna(axis=1, how='all'),
-                                         pd.DataFrame({'onset': onset, 'duration': duration, 'event_type': event_type}).dropna(axis=1, how='all'),
-                                         df[timecols].dropna(axis=1, how='all')], ignore_index=True)
+                    duration = pd.Series([float('nan')] * len(df), index=df.index)
+                df_piv_ = pd.DataFrame({'onset': onset, 'duration': duration, 'event_type': [event]*len(df)}, index=df.index).dropna(subset=['onset'])
+                df_misc = df.filter(regex=r'^(?!.*\.(started|stopped)$)').loc[df_piv_.index,:]  # Drop all columns that end with '.started', '.stopped'
+                if not df_piv_.empty:                                           # Only concatenate if df_piv_ has data
+                    if df_piv.empty:
+                        df_piv = pd.concat([df_piv_, df_misc], axis=1)      # Re-initialize df_piv / avoid future warnings below about concatenating empty frames
+                    else:
+                        df_piv = pd.concat([df_piv, pd.concat([df_piv_, df_misc], axis=1)])
             df = df_piv.sort_values(by='onset')
 
         else:

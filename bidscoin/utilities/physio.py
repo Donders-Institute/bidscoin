@@ -371,7 +371,7 @@ def physio2tsv(physio: dict, tsvfile: Union[str, Path]):
 
     # Add each trace to a data table and save the table as a BIDS-compliant gzipped tsv file
     physiotable = pd.DataFrame(columns=[key for key in physio if key not in ('UUID','ScanDate','Freq','SliceMap','ACQ','Meta')])
-    for key in physiotable.columns:
+    for key in physiotable:
         physiotable[key] = physio[key]
     LOGGER.verbose(f"Writing physiological traces to: '{tsvfile}'")
     physiotable.to_csv(tsvfile, header=False, index=False, sep='\t', compression='infer')
