@@ -315,15 +315,16 @@ class PsychopyEvents(EventsParser):
     def logtable(self) -> pd.DataFrame:
         """Returns the Psychopy log-table"""
 
-        table = self.parsing.get('table', ['long-wide', 'pivot', 1])
-        table = table[table[-1]]
-
         # Start with a fresh data frame
         df = self._sourcetable.copy()
         if not len(df):
             return df
 
-        # Expand the array items
+        # Get the table name
+        table = self.parsing.get('table', ['long-wide', 'pivot', 1])
+        table = table[table[-1]]
+
+        # Expand the array items in the source data, e.g. scannerPulse.rt = ["[493.15245039993897, 494.6524632999208, 496.15445999987423, 497.65245070005767, 499.1524501000531]"]
         try:
             for expand in set(col for col in df if re.fullmatch(self.parsing.get('expand') or '', col)):
                 ds  = df[expand].apply(lambda x: ast.literal_eval(x) if isinstance(x,str) and x.startswith('[') else [])    # Convert string representation of lists into actual Python lists
@@ -332,8 +333,10 @@ class PsychopyEvents(EventsParser):
                     df_ = df_.rename(columns=lambda col: re.sub(r'(.*)\.(\w+)_(\d+)', r'\1_\3.\2', col))        # Put e.g. `.rt` or `.started` back at the end
                 if not df_.empty:
                     df = pd.concat([df.drop(columns=[expand]), df_], axis=1)
-        except re.error as pattern_error:
+        except (re.error, TypeError) as pattern_error:
             LOGGER.warning(f"The expand pattern {self.parsing.get('expand')} is invalid\n{pattern_error}")
+        except (SyntaxError, ValueError) as eval_error:
+            LOGGER.warning(f"Error evaluating `expand` input: {expand}\n{eval_error}")
 
         # Use the raw source data
         if table == 'long-wide':
@@ -345,10 +348,10 @@ class PsychopyEvents(EventsParser):
             # Extract event column names without '.started' suffixes
             events = set(col.rsplit('.',1)[0] for col in df if col.endswith('.started'))
 
-            # Create new DataFrame with 'onset', 'duration', and 'event_type'
-            df_piv = pd.DataFrame(columns=['onset', 'duration', 'event_type'])  # Collects all pivoted event data
+            # Create a DataFrame with 'onset', 'duration', and 'event_type' to collect pivoted data from the event columns
+            df_piv = pd.DataFrame(columns=['onset', 'duration', 'event_type'])
             for event in events:
-                onset = df[(started := f"{event}.started")]                     # Get the onset times
+                onset = df[(started := f"{event}.started")]
                 if (stopped := f"{event}.stopped") in df:
                     duration = df[stopped] - df[started]
                 else:

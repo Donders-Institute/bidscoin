@@ -1171,6 +1171,8 @@ Psychopy:
           event_type: '.*'
       time:
         cols: ['(?i).*time.*', '(?i).*duration.*', '(?i).*onset.*', '(?i).*start.*', '(?i).*stop.*', '.*\.rt']
+        start:
+          event_type:                   # E.g. scannerPulse.rt_0
 
   eeg:        # ----------------------- All EEG run-items ---------------------------
   - attributes: *psychopy_attr

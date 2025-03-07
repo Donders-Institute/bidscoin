@@ -1690,12 +1690,6 @@ class EditWindow(QDialog):
 
         # Only if cell was changed, update
         if key and value != oldvalue:
-            # Validate user input against BIDS or replace the (dynamic) bids-value if it is a run attribute
-            if isinstance(value, str) and ('<<' not in value or '>>' not in value):
-                value = bids.sanitize(self.datasource.dynamicvalue(value))
-                self.events_parsing.blockSignals(True)
-                self.events_parsing.item(rowindex, 1).setText(value)
-                self.events_parsing.blockSignals(False)
             LOGGER.verbose(f"User sets events['parsing']['{key}'] from '{oldvalue}' to '{value}' for {self.target_run}")
             self.events.parsing[key] = value
 
