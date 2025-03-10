@@ -51,7 +51,7 @@ def readparsefile(fn: Union[bytes,Path], logdatatype: str, firsttime: int=0, exp
     else:
         LOGGER.error(f"Wrong input {fn}: {type(fn)}"); raise FileNotFoundError(fn)
 
-    # Extract the metadata and physiological traces
+    # First find all the header entries, which since XA61 can also be at the end of the file
     LOGGER.verbose(f"Parsing {logdatatype} data...")
     for line in [line for line in lines if line]:
 
@@ -98,7 +98,13 @@ def readparsefile(fn: Union[bytes,Path], logdatatype: str, firsttime: int=0, exp
             if varname == 'ScanDate':
                 scandate = value
 
-        else:
+    # Find and parse the data
+    for line in [line for line in lines if line]:
+
+        # Strip any leading and trailing whitespace and comments
+        line = line.split('#')[0].strip()
+
+        if '=' not in line:
 
             # This must be data; currently it is 3-5 columns, pad it with '0' if needed to always have 5 columns
             dataitems = line.split()
