@@ -94,4 +94,4 @@ Stage: final
     ldconfig
 
 %runscript
-    exec bidscoin
+    exec bidscoin "$@"

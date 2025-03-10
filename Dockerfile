@@ -54,3 +54,5 @@ RUN apt update && apt -y --no-install-recommends install pigz curl python3-pyqt6
     pip install bidscoin[spec2nii2bids,deface]
     # pip install bidscoin[spec2nii2bids,deface]==VERSION
     # pip install /opt/bidscoin[spec2nii2bids,deface]   # = GitHub. NB: Also uncomment in xfiles from builder: `/opt/bidscoin /opt/bidscoin`
+
+CMD ["bidscoin"]
