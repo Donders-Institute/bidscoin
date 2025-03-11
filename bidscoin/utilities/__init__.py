@@ -253,10 +253,16 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
                 else:
                     dicomdata = _DICOMDICT_CACHE
 
-                if re.fullmatch(r'\(?0x[\dA-F]*,?(0x)?[\dA-F]*\)?', tagname):              # Try Pydicom's hexadecimal tag number first (must be a 2-tuple or int)
-                    value = eval(f"dicomdata[{tagname}].value")                                 # NB: This may generate e.g. UserWarning: Invalid value 'filepath' used with the 'in' operator: must be an element tag as a 2-tuple or int, or an element keyword
-                else:
-                    value = dicomdata.get(tagname,'') if tagname in dicomdata else ''       # Then try and see if it is an attribute name. NB: Do not use dicomdata.get(tagname, '') to avoid using its class attributes (e.g. 'filename')
+                try:
+                    tagpattern = r'\(?0x[\dA-F]+,?(0x)?[\dA-F]+\)?'                                 # Pattern for hexadecimal DICOM tags, e.g. '0x00200011', '0x20,0x11' or '(0x20,0x11)'
+                    if re.fullmatch(rf"\[{tagpattern}](\[\d+]\[{tagpattern}])+", tagname):  # Pass bracketed nested tags directly to pydicom, e.g. [0x0008,0x1250][0][0x0008,0x1140][0][(0x0008,0x1155)]
+                        value = eval(f"dicomdata{tagname}.value")
+                    elif re.fullmatch(tagpattern, tagname):                                         # Try Pydicom's hexadecimal tag number (must be a 2-tuple or int)
+                        value = eval(f"dicomdata[{tagname}].value")                                 # NB: This may generate e.g. UserWarning: Invalid value 'filepath' used with the 'in' operator: must be an element tag as a 2-tuple or int, or an element keyword
+                    else:
+                        value = dicomdata.get(tagname,'') if tagname in dicomdata else ''       # Then try and see if it is an attribute name. NB: Do not use dicomdata.get(tagname, '') to avoid using its class attributes (e.g. 'filename')
+                except Exception:
+                    value = ''
 
                 # Try a recursive search
                 if not value and value != 0:
