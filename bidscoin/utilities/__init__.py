@@ -254,7 +254,7 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
                     dicomdata = _DICOMDICT_CACHE
 
                 try:
-                    tagpattern = r'\(?0x[\dA-F]+,?(0x)?[\dA-F]+\)?'                                 # Pattern for hexadecimal DICOM tags, e.g. '0x00200011', '0x20,0x11' or '(0x20,0x11)'
+                    tagpattern = r'\(?0x[\dA-F]+,?(0x)?[\dA-F]*\)?'                                 # Pattern for hexadecimal DICOM tags, e.g. '0x00200011', '0x20,0x11' or '(0x20,0x11)'
                     if re.fullmatch(rf"\[{tagpattern}](\[\d+]\[{tagpattern}])+", tagname):  # Pass bracketed nested tags directly to pydicom, e.g. [0x0008,0x1250][0][0x0008,0x1140][0][(0x0008,0x1155)]
                         value = eval(f"dicomdata{tagname}.value")
                     elif re.fullmatch(tagpattern, tagname):                                         # Try Pydicom's hexadecimal tag number (must be a 2-tuple or int)
