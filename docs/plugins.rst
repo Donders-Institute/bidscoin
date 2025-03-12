@@ -24,10 +24,10 @@ Nibabel2bids: a generic plugin for imaging data
 
 The nibabel2bids plugin wraps around the versatile `nibabel <https://nipy.org/nibabel>`__ tool to convert a wide variety of data formats into NIfTI-files. Currently, the default template bidsmap is tailored to NIfTI source data only (but this can readily be extended), and BIDS sidecar files are not automatically produced by nibabel (but see the note further below). Please cite: `DOI: 10.5281/zenodo.591597 <https://doi.org/10.5281/zenodo.591597>`__
 
-Events2bids: a plugin for NeuroBS Presentation log data
--------------------------------------------------------
+Events2bids: a plugin for stimulus presentation log data
+--------------------------------------------------------
 
-The events2bids plugin parses `NeuroBS <https://www.neurobs.com/>`__ stimulus Presentation log files to BIDS task events files. See the `workflow page <./workflow.html#stimulus-events>`__ for usage.
+The events2bids plugin parses `NeuroBS <https://www.neurobs.com/>`__ Presentation, `PsychoPy <https://psychopy.org/>`__, as well as generic behavioural log files to BIDS task events files. See the `workflow page <./workflow.html#stimulus-events>`__ for usage.
 
 .. note::
    Out of the box, BIDScoin plugins typically produce sidecar files that contain metadata from the source headers. However, when such metadata is missing (e.g. as for nibabel2bids), or when it needs to be appended or overruled, then users can add sidecar files to the source data (as explained `here <./bidsmap_indepth.html#run-items>`__) or add that metadata using the bidseditor (the latter takes precedence).

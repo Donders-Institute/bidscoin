@@ -285,7 +285,7 @@ class EventsParser(ABC):
             # Add the matching rows to the grand rows group
             rows |= rowgroup
 
-        return df.loc[rows].sort_values(by='onset')
+        return df.loc[rows].sort_values(by='onset', key=lambda x: pd.to_numeric(x, errors='coerce'))
 
     @property
     def parsing(self) -> dict:

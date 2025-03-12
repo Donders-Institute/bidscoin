@@ -481,7 +481,7 @@ def test_bidscoin(bidsmapfile, options: dict=None, testplugins: bool=True, testg
             root = tk.Tk()
             root.withdraw()                         # Don't show the window
         except tk.TclError as display_error:
-            LOGGER.error(f"Cannot open a grahical display on your system:\n{display_error}")
+            LOGGER.error(f"Cannot open a graphical display on your system:\n{display_error}")
             success = False
         try:
             from PyQt6.QtWidgets import QApplication, QPushButton

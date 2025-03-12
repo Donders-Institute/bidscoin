@@ -316,7 +316,7 @@ class PsychopyEvents(EventsParser):
         """Returns the Psychopy log-table"""
 
         # Start with a fresh data frame
-        df = self._sourcetable.copy()
+        df: pd.DataFrame = self._sourcetable.copy()
         if not len(df):
             return df
 
@@ -324,13 +324,27 @@ class PsychopyEvents(EventsParser):
         table = self.parsing.get('table', ['long-wide', 'pivot', 1])
         table = table[table[-1]]
 
+        # Add .started, i.e. use absolute timestamps
+        def add_started(time, started: float):
+            try:
+                if isinstance(time, str) and time.startswith('[') and time.endswith(']'):
+                    return [float(val) + started for val in ast.literal_eval(time)]
+                return float(time) + started
+            except (ValueError, TypeError, SyntaxError) as error:
+                return time
+
+        # Identify columns that match the regex and have a corresponding `.started` column, and apply the add_started transformations
+        for add2col, started in {col: f"{col.rsplit('.', 1)[0]}.started" for col in df
+                                 if re.fullmatch(self.parsing.get('add_started') or '', col) and f"{col.rsplit('.', 1)[0]}.started" in df}.items():
+            df[add2col] = df.apply(lambda row: add_started(row[add2col], row[started]), axis=1)
+
         # Expand the array items in the source data, e.g. scannerPulse.rt = ["[493.15245039993897, 494.6524632999208, 496.15445999987423, 497.65245070005767, 499.1524501000531]"]
         try:
             for expand in set(col for col in df if re.fullmatch(self.parsing.get('expand') or '', col)):
-                ds  = df[expand].apply(lambda x: ast.literal_eval(x) if isinstance(x,str) and x.startswith('[') else [])    # Convert string representation of lists into actual Python lists
-                df_ = ds.apply(pd.Series).add_prefix(f"{expand}{'.started' if '.' in expand and table=='pivot' else ''}_")  # Append `.started` to pivot the data into the onset column
+                ds  = df[expand].apply(lambda x: ast.literal_eval(x) if isinstance(x,str) and x.startswith('[') else x)     # Convert string representation of lists into actual Python lists
+                df_ = ds.apply(pd.Series).add_prefix(f"{expand}{'.started' if '.' in expand and table=='pivot' else ''}_")  # Expand each item into its own column and append `.started` to pivot the data into the onset column
                 if '.' in expand:                                                                                           # Time columns should have a `.` in their name
-                    df_ = df_.rename(columns=lambda col: re.sub(r'(.*)\.(\w+)_(\d+)', r'\1_\3.\2', col))        # Put e.g. `.rt` or `.started` back at the end
+                    df_ = df_.rename(columns=lambda col: re.sub(r'(.*)\.(\w+)_(\d+)', r'\1_\3.\2', col))        # Put e.g. `.rt` or `.started` back at the end of the column name
                 if not df_.empty:
                     df = pd.concat([df.drop(columns=[expand]), df_], axis=1)
         except (re.error, TypeError) as pattern_error:

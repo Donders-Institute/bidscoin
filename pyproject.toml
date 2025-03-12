@@ -7,11 +7,11 @@ build-backend    = 'setuptools.build_meta'
 [project]
 name             = 'bidscoin'
 description      = 'Converts and organises raw MRI data-sets according to the Brain Imaging Data Structure (BIDS)'
-version          = '4.5.1.dev'
+version          = '4.5.2.dev'
 readme           = 'README.rst'
 requires-python  = '>= 3.9'
 license          = {file = 'LICENSE.txt'}
-keywords         = ['bids','mri','imaging','neuroimaging','dicom','par','rec','nifti','bidsapp','defacing','echo-combination','skull-stripping','HPC']
+keywords         = ['bids','mri','imaging','neuroimaging','dicom','par','rec','PsychoPy','NeuroBS','nifti','bidsapp','defacing','echo-combination','skull-stripping','HPC']
 authors          = [{email = 'm.zwiers@donders.ru.nl'}, {name = 'Marcel Zwiers'}]
 classifiers      = ['Programming Language :: Python :: 3',
                     'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',

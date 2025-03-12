@@ -176,24 +176,43 @@ Finally, if all BIDS output names in the main window look correct, click the [Sa
 
 Stimulus events
 ```````````````
-If your dataset contain (stimulus) events logfiles and you are using e.g. the `events2bids <./plugins.html#events2bids-a-plugin-for-neurobs-presentation-log-data>`__ plugin to convert them to `BIDS events <https://bids-specification.readthedocs.io/en/stable/modality-specific-files/task-events.html>`__, you will get a ``Presentation`` tab in the main window. The edit window for the run-items in there will include an additional ``BIDS output data`` table, providing a preview of the output data. ``Edit`` the output data if needed.
+If your dataset contain behavioural/stimulus presentation logfiles and you are using e.g. the `events2bids <./plugins.html#events2bids-a-plugin-for-stimulus-presentation-log-data>`__ plugin to convert them to `BIDS events <https://bids-specification.readthedocs.io/en/stable/modality-specific-files/task-events.html>`__, you will get a ``Presentation``, ``PsychoPy`` and/or a generic ``Logdata`` tab in the main window. If you open a run-items in there, you will get the same edit window as explained before, except that an extra ``BIDS output data`` table is appended on the right side. This table provides a preview of your log data after conversion to BIDS. Click on the ``Edit`` button next to the output table to adjust its content to your needs.
 
 .. dropdown:: More details...
 
-   The edit window will then show the input data (left column), the mapping tables to convert the input data (middle column), and the preview of the converted output data. Tweak the mapping tables until the conversion is correct, and click on ``Done``. The mapping tables include tables for selecting the ``Columns`` and ``Rows``, along with a ``Timing`` table for calibration of the clock:
+   The edit window displays the parsed input data on the left, BIDS conversion settings in the center, and a preview of the BIDS output on the right.
 
-   * The **'Columns'** table specifies which input column names are included (left) and how they should be named in the output table (right). You can add, edit and remove column names as needed
-   * The **'Rows'** table specifies which input rows are included in the output table. A ``condition`` (left) is a dictionary with columns names as keys and regular expression patterns as values. Rows are included if the pattern matches with the column value, e.g. when an experimental condition is met. Note that the patterns within a condition act as AND operators, i.e. the more patterns you add, the less rows your include in the output table. The ``output column`` is optional and can be useful, e.g. to create a new output column or (contrast) regressor for your design matrix (see the screenshot below). Each row in the rows table defines a condition. Conditions acts as OR operators, i.e. the more conditions you add to the table, the more rows are included in the output table.
-   * The **'Timing'** table contains settings for converting input time values to BIDS compliant output values:
+   - **Left panel**: Configure how your raw log files are transformed into a tabular format, which is then processed using the settings from the center panel.
 
-     * **columns** -- A list of input column names that hold time values.
-     * **units/sec** -- The number of source data time units per second (e.g., 10000 for clock times with a precision of 0.1 milliseconds).
-     * **start** -- A dictionary with column names and event-codes that define the start of the run (time zero), e.g. the column name and event-code that log the scanner pulses.
+     - For **Presentation log files**, you can select from the drop-down menu which table within your log file to use.
+     - For **PsychoPy log files**, you can select from the drop-down menu whether to use the raw long-wide data, or to use a pivoted version in which all ``.started`` and ``.stopped`` timestamps are stored in the ``onset``, ``duration``, and ``event_type`` columns.
+     - Additionally, for **PsychoPy**, you can specify values for ``add_started`` and ``expand`` as regex patterns to select relevant input columns.
+
+       - **add_started** columns: The corresponding ``.started`` times will be added to these columns. This is useful for converting relative times (e.g., ``.rt`` reaction times) into absolute timestamps.
+       - **expand** columns: If a column contains list data (e.g., ``"['0', '2.1', '4.2']"``), it will be split into multiple new columns. These expanded columns are assumed to store time onsets and will be included when pivoting the data.
+
+   - **Center panel**: Define the mapping parameters that transform the input table (left panel) into the output table (right panel).
+     The mapping parameters are organized into three tables:
+
+     1. **'Columns' table** – Specifies which input column names are included (left) and how they should be named in the output table (right). You can add, edit, and remove column names as needed.
+     2. **'Rows' table** – Specifies which input rows are included in the output table. A **condition** (left) is a dictionary where column names serve as keys and values as regular expression patterns. Rows are included if the pattern matches a column value, i.e. when a specific experimental condition is met.
+
+       - Within a condition, patterns act as **AND** operators, meaning that the more patterns you add to the dictionary, the fewer rows are included in the output.
+       - Between conditions, they act as **OR** operators, meaning that adding more conditions increases the number of included rows.
+       - The **'output column'** is optional and can be used, for example, to create new output columns or contrast regressors for a design matrix (see the screenshot below).
+
+     3. **'Timing' table** – Contains settings for converting input time values to BIDS-compliant output values:
+
+       - **columns** – A list of input column names that contain time values.
+       - **units/sec** – The number of time units per second in the source data (e.g., 10000 for clock times with a precision of 0.1 milliseconds).
+       - **start** – A dictionary specifying column names and event codes that define the start of the run (time zero), such as the column name and event code that log scanner pulses.
 
    .. figure:: ./_static/bidseditor_edit_events.png
       :width: 100%
 
-   *Edit window for conversion of Presentation log data to BIDS output data. Note that, since the first row condition has a non-selective matching pattern* ``.*``, *all input rows are included. Also note that, for selected rows, each of the two subsequent conditions add data ("go" and "stop") to the new* ``task`` *output column.*
+   *Edit window for converting Presentation log data to BIDS output. Note that, since the first row condition uses the non-selective matching pattern* ``.*``, *all input rows are included. Additionally, for selected rows, each of the two subsequent conditions adds data ("go" and "stop") to the new* ``task`` *output column.*
+
+   Adjust the mapping tables until the transformation is correct, then click on **"Done"**.
 
 .. tip::
    The BIDScoin GUI provides several tools to help you set the correct values:
