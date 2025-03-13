@@ -291,6 +291,7 @@ rebranded
 refactoring
 regex
 regressor
+regressors
 ruamel
 runindex
 runitem
