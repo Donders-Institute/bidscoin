@@ -266,7 +266,7 @@ class EventsParser(ABC):
                 df['onset'] -= df['onset'][start].iloc[0]                   # Take the time of the first occurrence as zero
 
         # Loop over the row groups to filter/edit the rows
-        rows = pd.Series([len(self.rows) == 0] * len(df), index=df.index)   # All rows are True if no row expressions were specified
+        rows = pd.Series(len(self.rows) == 0, index=df.index)               # All rows are True if no row expressions were specified
         for group in self.rows:                                             # With a group the expressions are AND between groups they are OR
 
             rowgroup = pd.Series(True, index=df.index)

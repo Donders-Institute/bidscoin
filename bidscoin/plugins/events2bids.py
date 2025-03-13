@@ -369,7 +369,7 @@ class PsychopyEvents(EventsParser):
                 if (stopped := f"{event}.stopped") in df:
                     duration = df[stopped] - df[started]
                 else:
-                    duration = pd.Series([float('nan')] * len(df), index=df.index)
+                    duration = pd.Series(pd.NA, index=df.index)
                 df_piv_ = pd.DataFrame({'onset': onset, 'duration': duration, 'event_type': [event]*len(df)}, index=df.index).dropna(subset=['onset'])
                 df_misc = df.filter(regex=r'^(?!.*\.(started|stopped)$)').loc[df_piv_.index,:]  # Drop all columns that end with '.started', '.stopped'
                 if not df_piv_.empty:                                           # Only concatenate if df_piv_ has data
