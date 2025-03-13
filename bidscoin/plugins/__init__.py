@@ -237,12 +237,13 @@ class EventsParser(ABC):
         """Returns the target events.tsv data"""
 
         # Check the parser's data structure
-        if not len(self.logtable):
+        logtable = self.logtable
+        if not len(logtable):
             return pd.DataFrame(columns=['onset', 'duration'])
         if not self.isvalid:
             pass
 
-        df = self.logtable.copy()           # Ensure we do not change the source data
+        df = logtable.copy()                # Ensure we do not change the source data
 
         # Convert the timing values to seconds (with maximally 4 digits after the decimal point)
         timecols     = list(set(col for col in df for pattern in self.time.cols if re.fullmatch(pattern, col)))
@@ -256,10 +257,10 @@ class EventsParser(ABC):
 
         # Set the clock at zero at the start of the experiment
         if self.time.start:
-            start = pd.Series([True] * len(df), index=df.index)
+            start = pd.Series(True, index=df.index)
             for column, value in self.time.start.items():
-                if column in self.logtable:
-                    start &= (self.logtable[column].astype(str) == str(value))
+                if column in logtable:
+                    start &= (logtable[column].astype(str) == str(value))
             if start.any():
                 LOGGER.bcdebug(f"Resetting clock offset: {df['onset'][start].iloc[0]}")
                 df['onset'] -= df['onset'][start].iloc[0]                   # Take the time of the first occurrence as zero
@@ -268,15 +269,15 @@ class EventsParser(ABC):
         rows = pd.Series([len(self.rows) == 0] * len(df), index=df.index)   # All rows are True if no row expressions were specified
         for group in self.rows:                                             # With a group the expressions are AND between groups they are OR
 
-            rowgroup = pd.Series([True] * len(df), index=df.index)
+            rowgroup = pd.Series(True, index=df.index)
             for column, pattern in (group.get('condition') or {}).items():
 
-                if column not in self.logtable:
+                if column not in logtable:
                     LOGGER.bcdebug(f"Unknown condition column: {column}")
                     continue
 
                 # Get the rows that match the expression, i.e. make them True
-                rowgroup &= self.logtable[column].astype(str).str.fullmatch(str(pattern))
+                rowgroup &= logtable[column].astype(str).str.fullmatch(str(pattern))
 
             # Write the value(s) of the matching rows
             for colname, values in (group.get('cast') or {}).items():
