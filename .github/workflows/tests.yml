@@ -36,7 +36,7 @@ jobs:
         if: runner.os != 'Windows'
         run: |
           if [ "$RUNNER_OS" == "Linux" ]; then
-            apt update && sudo apt install qt6-base-dev
+            sudo apt update && sudo apt install qt6-base-dev
             mkdir dcm2niix_install/ && cd dcm2niix_install/
             curl -fLO https://github.com/rordenlab/dcm2niix/releases/latest/download/dcm2niix_lnx.zip
             unzip dcm2niix*.zip
