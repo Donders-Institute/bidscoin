@@ -1506,12 +1506,12 @@ class EditWindow(QDialog):
                     events_data['columns'].append([{'value': value, 'editable': True}, {'value': key, 'editable': key not in ('onset','duration')}])
 
             # Set up the data for the events table
-            df = self.events.logtable
+            df = self.events.logtable()
             events_data['log_table'] = [[{'value': name, 'editable': False} for name in df]] if len(df) else []
             for i in range(len(df)):
                 events_data['log_table'].append([{'value': value, 'editable': False} for value in df.iloc[i]])
 
-            df = self.events.eventstable
+            df = self.events.eventstable()
             events_data['table'] = [[{'value': name, 'editable': False} for name in df]] if len(df) else []
             for i in range(len(df)):
                 events_data['table'].append([{'value': value, 'editable': False} for value in df.iloc[i]])
@@ -1657,7 +1657,7 @@ class EditWindow(QDialog):
             elif key == 'start':
                 value = ast.literal_eval(value)             # Convert stringified dict back to dict
                 for column in value.copy():
-                    if column not in self.events.logtable:
+                    if column not in self.events.logtable():
                         newcol = self.get_input_column(column)
                         if newcol == column:
                             raise KeyError
@@ -1710,7 +1710,7 @@ class EditWindow(QDialog):
                 mapping = ast.literal_eval(mapping)                 # Convert stringified dict back to dict
                 for column, pattern in mapping.copy().items():
                     re.compile(str(pattern) if colindex==0 else '')
-                    if colindex == 0 and column not in self.events.logtable:
+                    if colindex == 0 and column not in self.events.logtable():
                         newcol = self.get_input_column(column)
                         if newcol == column:                        # The user cancelled the dialogue
                             raise KeyError
@@ -1749,7 +1749,7 @@ class EditWindow(QDialog):
         if colindex == 0 and input and not output:
             output = input
 
-        if not input or input in self.events.logtable:
+        if not input or input in self.events.logtable():
             LOGGER.verbose(f"User sets the events column to: '{input}: {output}' for {self.target_run}")
             if output:                              # Evaluate and store the data
                 if rowindex == nrows - 1:
@@ -1772,7 +1772,7 @@ class EditWindow(QDialog):
         """Ask the user to pick an input column from the log table"""
 
         # Get column names
-        columns    = self.events.logtable.columns.tolist()
+        columns    = self.events.logtable().columns.tolist()
         column, ok = QInputDialog.getItem(self, 'Input error', f"Your '{input}' input column does not exist, please choose one of the existing columns:", columns, 0, False)
 
         return column if ok else input
@@ -2126,7 +2126,7 @@ class CompareWindow(QDialog):
         events_data = []
         events      = runitem.events()
         if events:
-            df = events.eventstable
+            df = events.eventstable()
             events_data.append([*df.columns])
             for i in range(len(df)):
                 events_data.append([*df.iloc[i]])

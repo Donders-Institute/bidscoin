@@ -210,7 +210,7 @@ class EventsParser(ABC):
         for key, val in {'parsing': {}, 'columns': [{'onset':''}, {'duration':''}], 'rows': [{}], 'time': {}}.items():
             if key not in data: data[key] = val
         self._data = data
-        self.time                       # Add all required data['time'] keys
+        self.time                       # Initialize all required data['time'] keys
 
         self.sourcefile = Path(sourcefile)
         self.options    = options
@@ -227,17 +227,15 @@ class EventsParser(ABC):
 
         return f"{self.sourcefile}"
 
-    @property
     @abstractmethod
     def logtable(self) -> pd.DataFrame:
         """Returns the source logging data"""
 
-    @property
     def eventstable(self) -> pd.DataFrame:
         """Returns the target events.tsv data"""
 
         # Check the parser's data structure
-        logtable = self.logtable
+        logtable = self.logtable()
         if not len(logtable):
             return pd.DataFrame(columns=['onset', 'duration'])
         if not self.isvalid:
@@ -347,7 +345,7 @@ class EventsParser(ABC):
             valid = False
 
         # Check if the logtable has existing and unique column names
-        columns = self.logtable.columns
+        columns = self.logtable().columns
         for name in set([name for item in self.columns for name in item.values()] +
                         [name for item in self.rows for name in (item.get('condition') or {}).keys()] + [*self.time.start.keys()]):
             if name and name not in columns:
@@ -363,7 +361,7 @@ class EventsParser(ABC):
         """Write the eventstable to a BIDS events.tsv file"""
 
         LOGGER.verbose(f"Saving events to: {targetfile}")
-        self.eventstable.to_csv(targetfile, sep='\t', index=False)
+        self.eventstable().to_csv(targetfile, sep='\t', index=False)
 
     def rename_duplicates(self, columns: Iterable[str]) -> List[str]:
         """

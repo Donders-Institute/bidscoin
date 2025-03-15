@@ -311,7 +311,6 @@ class PsychopyEvents(EventsParser):
             LOGGER.debug(f"Cannot read/parse {sourcefile}")
             self._sourcetable = pd.DataFrame()
 
-    @property
     def logtable(self) -> pd.DataFrame:
         """Returns the Psychopy log-table"""
 
