@@ -140,7 +140,6 @@ The plugin programming interface is further illustrated in the placeholder Pytho
             # Parse an initial table from the Presentation log file
             self.sourcetable = pd.read_csv(self.sourcefile, sep='\t', skiprows=3, skip_blank_lines=True)
 
-        @property
         def logtable(self) -> pd.DataFrame:
             """Returns the source logging data"""
 

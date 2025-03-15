@@ -226,7 +226,6 @@ class PresentationEvents(EventsParser):
         self._sourcecols  = self._sourcetable.columns
         """Store the original column names"""
 
-    @property
     def logtable(self) -> pd.DataFrame:
         """Returns a Presentation log-table"""
 
@@ -406,7 +405,6 @@ class LogdataEvents(EventsParser):
         self._sourcecols  = self._sourcetable.columns
         """Store the original column names"""
 
-    @property
     def logtable(self) -> pd.DataFrame:
         """Returns the log-table"""
 
