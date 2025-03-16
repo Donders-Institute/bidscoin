@@ -106,7 +106,7 @@ class MyQTableModel(QAbstractTableModel):
                 return str(self._df.columns[section])
         return None
 
-    def update(self, new_df):
+    def update_df(self, new_df):
         """Update DataFrame and notify view"""
         self.beginResetModel()
         self._df = new_df
@@ -1163,7 +1163,7 @@ class EditWindow(QDialog):
         self.bidsname_textbox = bidsname_textbox = QTextBrowser()
         bidsname_textbox.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
         bidsname_textbox.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum)
-        self.refresh_bidsname()
+        self.update_bidsname()
 
         # Set up the meta table
         meta_label = QLabel('Metadata')
@@ -1187,12 +1187,12 @@ class EditWindow(QDialog):
         events_parsing.setMinimumSize(events_parsing.sizeHint())
         log_table_label = QLabel('Log data')
         self.log_model = MyQTableModel(self, self.events.logtable())
-        log_table = QTableView()
+        self.log_table = log_table = QTableView()
         log_table.setModel(self.log_model)
         log_table.setSelectionMode(QTableView.SelectionMode.NoSelection)
         log_table.horizontalHeader().setStretchLastSection(True)
         log_table.verticalHeader().setDefaultSectionSize(ROW_HEIGHT)
-        log_table.resizeColumnsToContents()
+        self.update_table(log_table, self.log_model)
         log_table.setToolTip(f"The raw stimulus presentation data that is parsed from the log file")
 
         # Set up the event-mapping table
@@ -1224,12 +1224,12 @@ class EditWindow(QDialog):
         done_button.hide()
         events_table_label = QLabel('Events data')
         self.events_model = MyQTableModel(self, self.events.eventstable())
-        events_table = QTableView()
+        self.events_table = events_table = QTableView()
         events_table.setModel(self.events_model)
         events_table.setSelectionMode(QTableView.SelectionMode.NoSelection)
         events_table.horizontalHeader().setStretchLastSection(True)
         events_table.verticalHeader().setDefaultSectionSize(ROW_HEIGHT)
-        events_table.resizeColumnsToContents()
+        self.update_table(events_table, self.events_model)
 
         # Group the tables in boxes
         layout1 = QVBoxLayout()
@@ -1347,6 +1347,33 @@ class EditWindow(QDialog):
         LOGGER.verbose(f'User has canceled the edit')
 
         super().reject()
+
+    @staticmethod
+    def update_table(qtable: QTableView, model: MyQTableModel, df=None):
+        """Updates the table data and resize the columns based on first 20 rows & header labels"""
+
+        if df is not None:
+            model.update_df(df)
+
+        num_rows = min(20, model.rowCount())
+
+        for col in range(model.columnCount()):
+
+            max_width = 0  # Track the max width required
+
+            # Measure the width of the header label
+            header_text  = model.headerData(col, Qt.Orientation.Horizontal, Qt.ItemDataRole.DisplayRole)
+            header_width = qtable.fontMetrics().boundingRect(str(header_text)).width()
+            max_width    = max(max_width, header_width)
+
+            # Measure the width of the first 10 row values
+            for row in range(num_rows):
+                index      = model.index(row, col)
+                cell_text  = str(model.data(index, Qt.ItemDataRole.DisplayRole))
+                cell_width = qtable.fontMetrics().boundingRect(cell_text).width()
+                max_width  = max(max_width, cell_width)
+
+            qtable.horizontalHeader().resizeSection(col, max_width + 10)  # +10 for padding
 
     def setup_table(self, data: list, name: str, min_vsize: bool=True) -> MyQTable:
         """Return a table widget with resize policies, filled with the data"""
@@ -1630,7 +1657,7 @@ class EditWindow(QDialog):
                     LOGGER.verbose(f"User sets bids['{key}'] from '{oldvalue}' to '{value}' for {self.target_run}")
                 self.bids_table.blockSignals(False)
                 self.target_run.bids[key] = value
-                self.refresh_bidsname()
+                self.update_bidsname()
 
     def meta2run(self, rowindex: int, colindex: int):
         """Meta value has been changed. If OK, update the target run"""
@@ -1704,7 +1731,7 @@ class EditWindow(QDialog):
 
         # Refresh the events tables, i.e. delete empty rows or add a new row if a key is defined on the last row
         _,_,_,_,events_data = self.run2data()
-        self.events_model.update(self.events.eventstable())
+        self.update_table(self.events_table, self.events_model, self.events.eventstable())
         self.fill_table(self.events_time,  events_data['time'])
 
     def events_parsing2run(self, rowindex: int, colindex: int):
@@ -1725,8 +1752,8 @@ class EditWindow(QDialog):
             self.events.parsing[key] = value
 
         # Refresh the log and events tables
-        self.log_model.update(self.events.logtable())
-        self.events_model.update(self.events.eventstable())
+        self.update_table(self.log_table, self.log_model, self.events.logtable())
+        self.update_table(self.events_table, self.events_model, self.events.eventstable())
 
     def events_rows2run(self, rowindex: int, colindex: int):
         """Events value has been changed. Read the data from the event 'rows' table and, if OK, update the target run"""
@@ -1763,7 +1790,7 @@ class EditWindow(QDialog):
 
         # Refresh the events tables, i.e. delete empty rows or add a new row if a key is defined on the last row
         _,_,_,_,events_data = self.run2data()
-        self.events_model.update(self.events.eventstable())
+        self.update_table(self.events_table, self.events_model, self.events.eventstable())
         self.fill_table(self.events_rows, events_data['rows'])
 
     def events_columns2run(self, rowindex: int, colindex: int, _input: str=''):
@@ -1795,7 +1822,7 @@ class EditWindow(QDialog):
 
         # Refresh the events tables, i.e. delete empty rows or add a new row if a key is defined on the last row
         _,_,_,_,events_data = self.run2data()
-        self.events_model.update(self.events.eventstable())
+        self.update_table(self.events_table, self.events_model, self.events.eventstable())
         self.fill_table(self.events_columns, events_data['columns'])
 
     def get_input_column(self, input: str) -> str:
@@ -1883,7 +1910,7 @@ class EditWindow(QDialog):
 
         self.change_run(target_suffix)
 
-    def refresh_bidsname(self):
+    def update_bidsname(self):
         """Updates the bidsname with the current (edited) bids values"""
 
         datatype = self.target_run.datatype
@@ -1938,8 +1965,8 @@ class EditWindow(QDialog):
         self.fill_table(self.bids_table, bids_data)
         self.fill_table(self.meta_table, meta_data)
         if self.events:
-            self.log_model.update(self.events.logtable())
-            self.events_model.update(self.events.eventstable())
+            self.update_table(self.log_table, self.log_model, self.events.logtable())
+            self.update_table(self.events_table, self.events_model, self.events.eventstable())
             self.fill_table(self.events_parsing, events_data['parsing'])
             self.fill_table(self.events_time, events_data['time'])
             self.fill_table(self.events_rows, events_data['rows'])
@@ -1950,7 +1977,7 @@ class EditWindow(QDialog):
         self.properties_table.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
 
         # Refresh the BIDS output name
-        self.refresh_bidsname()
+        self.update_bidsname()
 
     def accept_run(self):
         """Save the changes to the target_bidsmap and send it back to the main window: Finished!"""
