@@ -15,11 +15,11 @@ from typing import Union
 from pydicom import dcmread, datadict, config
 from pathlib import Path
 from functools import partial
+from PyQt6.QtCore import Qt, QAbstractTableModel
 from PyQt6 import QtCore, QtGui, QtWidgets
 from PyQt6.QtGui import QAction, QFileSystemModel
-from PyQt6.QtWidgets import (QApplication, QMainWindow, QFileDialog, QDialogButtonBox, QTreeView,
-                             QHBoxLayout, QVBoxLayout, QLabel, QDialog, QInputDialog, QMessageBox, QTableWidget,
-                             QTableWidgetItem, QHeaderView, QGroupBox, QTextBrowser, QPushButton, QComboBox)
+from PyQt6.QtWidgets import (QApplication, QMainWindow, QFileDialog, QDialogButtonBox, QTreeView, QHBoxLayout, QVBoxLayout, QLabel, QDialog, QInputDialog,
+                             QMessageBox, QTableWidget, QTableWidgetItem, QHeaderView, QGroupBox, QTextBrowser, QPushButton, QComboBox, QTableView)
 from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     sys.path.append(str(Path(__file__).parents[1]))
@@ -78,6 +78,41 @@ meta: The file extensions of the associated / equally named (meta)data source fi
 fallback: Appends unhandled dcm2niix suffixes to the `acq` label if 'y' (recommended, else the suffix data is discarded)"""
 
 
+class MyQTableModel(QAbstractTableModel):
+    """Custom model to connect a Pandas DataFrame with QTableView"""
+
+    def __init__(self, parent, df):
+        super().__init__(parent)
+        self._df = df
+
+    def rowCount(self, parent=None):
+        return len(self._df)
+
+    def columnCount(self, parent=None):
+        return len(self._df.columns)
+
+    def data(self, index, role=Qt.ItemDataRole.DisplayRole):
+        if not index.isValid():
+            return None
+        if role == Qt.ItemDataRole.DisplayRole:             # Display Data
+            return str(self._df.iloc[index.row(), index.column()])
+
+        return None
+
+    def headerData(self, section: int, orientation: Qt.Orientation, role=Qt.ItemDataRole.DisplayRole):
+        if role == Qt.ItemDataRole.DisplayRole:
+            if orientation == Qt.Orientation.Horizontal:    # Column Headers
+                return str(self._df.columns[section])
+
+        return None
+
+    def update(self, new_df):
+        """Update DataFrame and notify view"""
+        self.beginResetModel()
+        self._df = new_df
+        self.endResetModel()                                # Notify Qt that data has changed
+
+
 class MyQTable(QTableWidget):
 
     def __init__(self, parent, min_vsize: bool=True, ncols: int=0, nrows: int=0):
@@ -113,9 +148,9 @@ class MyQTableItem(QTableWidgetItem):
         self.setText(value)
         self.editable = editable
         if editable:
-            self.setFlags(QtCore.Qt.ItemFlag.ItemIsEnabled | QtCore.Qt.ItemFlag.ItemIsSelectable | QtCore.Qt.ItemFlag.ItemIsEditable)
+            self.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEditable)
         else:
-            self.setFlags(QtCore.Qt.ItemFlag.ItemIsEnabled)
+            self.setFlags(Qt.ItemFlag.ItemIsEnabled)
             self.setForeground(QtGui.QColor('gray'))
 
     def setText(self, value: Union[str,Path,int]):
@@ -441,11 +476,11 @@ class MainWindow(QMainWindow):
         samples_table.setShowGrid(True)
         samples_table.setHorizontalHeaderLabels(['', f'{dataformat} input', 'BIDS data type', 'BIDS output', 'Action', 'Provenance'])
         samples_table.setSortingEnabled(True)
-        samples_table.sortByColumn(0, QtCore.Qt.SortOrder.AscendingOrder)
+        samples_table.sortByColumn(0, Qt.SortOrder.AscendingOrder)
         samples_table.setColumnHidden(2, True)
         samples_table.setColumnHidden(5, True)
         samples_table.itemDoubleClicked.connect(self.sample_doubleclicked)
-        samples_table.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
+        samples_table.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         samples_table.customContextMenuRequested.connect(self.samples_menu)
         header = samples_table.horizontalHeader()
         header.setVisible(True)
@@ -503,14 +538,14 @@ class MainWindow(QMainWindow):
         add_button = QPushButton('Add')
         add_button.clicked.connect(self.add_plugin)
         add_button.setToolTip(f'Click to add an installed plugin')
-        layout.addWidget(add_button, alignment=QtCore.Qt.AlignmentFlag.AlignRight)
+        layout.addWidget(add_button, alignment=Qt.AlignmentFlag.AlignRight)
 
         # Add a 'Default' button below the tables on the left side
         set_button = QPushButton('Set as default')
         set_button.clicked.connect(self.save_options)
         set_button.setToolTip(f'Click to store these options in your default template bidsmap, i.e. set them as default for all new studies')
         layout.addStretch()
-        layout.addWidget(set_button, alignment=QtCore.Qt.AlignmentFlag.AlignLeft)
+        layout.addWidget(set_button, alignment=Qt.AlignmentFlag.AlignLeft)
 
         tab = QtWidgets.QWidget()
         tab.setLayout(layout)
@@ -532,7 +567,7 @@ class MainWindow(QMainWindow):
         tree.setRootIndex(filesystem.index(rootfolder))
         tree.setAnimated(False)
         tree.setSortingEnabled(True)
-        tree.sortByColumn(0, QtCore.Qt.SortOrder.AscendingOrder)
+        tree.sortByColumn(0, Qt.SortOrder.AscendingOrder)
         tree.setExpanded(filesystem.index(str(self.bidsfolder)), True)
         tree.header().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         tree.header().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
@@ -675,9 +710,9 @@ class MainWindow(QMainWindow):
                 samples_table.setItem(idx, 3, MyQTableItem(Path(dtype)/(bidsname + '.*')))
                 samples_table.setItem(idx, 5, MyQTableItem(provenance))                     # Hidden column
 
-                samples_table.item(idx, 0).setFlags(QtCore.Qt.ItemFlag.NoItemFlags)
-                samples_table.item(idx, 1).setFlags(QtCore.Qt.ItemFlag.ItemIsEnabled)
-                samples_table.item(idx, 2).setFlags(QtCore.Qt.ItemFlag.ItemIsEnabled)
+                samples_table.item(idx, 0).setFlags(Qt.ItemFlag.NoItemFlags)
+                samples_table.item(idx, 1).setFlags(Qt.ItemFlag.ItemIsEnabled)
+                samples_table.item(idx, 2).setFlags(Qt.ItemFlag.ItemIsEnabled)
                 samples_table.item(idx, 1).setToolTip('Double-click to inspect the header information')
                 samples_table.item(idx, 1).setStatusTip(str(provenance.parent) + str(Path('/')))
                 if dtype not in self.ignoredatatypes:
@@ -1027,7 +1062,7 @@ class MainWindow(QMainWindow):
         messagebox = QMessageBox(self)
         messagebox.setText(f"\n\nBIDS editor {__version__}\n\n{message}")
         messagebox.setWindowTitle('About')
-        messagebox.setIconPixmap(QtGui.QPixmap(str(BIDSCOIN_LOGO)).scaled(150, 150, QtCore.Qt.AspectRatioMode.KeepAspectRatio, QtCore.Qt.TransformationMode.SmoothTransformation))
+        messagebox.setIconPixmap(QtGui.QPixmap(str(BIDSCOIN_LOGO)).scaled(150, 150, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
         messagebox.show()
 
     @staticmethod
@@ -1080,7 +1115,7 @@ class EditWindow(QDialog):
 
         # Set up the window
         self.setWindowIcon(QtGui.QIcon(str(BIDSCOIN_ICON)))
-        self.setWindowFlags(self.windowFlags() & QtCore.Qt.WindowType.WindowTitleHint & QtCore.Qt.WindowType.WindowMinMaxButtonsHint & QtCore.Qt.WindowType.WindowCloseButtonHint)
+        self.setWindowFlags(self.windowFlags() & Qt.WindowType.WindowTitleHint & Qt.WindowType.WindowMinMaxButtonsHint & Qt.WindowType.WindowCloseButtonHint)
         self.setWindowTitle(f"Edit run-item [{self.dataformat}/{self.source_run.datatype}]")
         self.setWhatsThis(f"BIDScoin mapping of {self.dataformat} properties and attributes to BIDS output data")
 
@@ -1114,7 +1149,7 @@ class EditWindow(QDialog):
         datatype_dropdown.setCurrentIndex(datatype_dropdown.findText(self.target_run.datatype))
         datatype_dropdown.setToolTip('The BIDS data type. First make sure this one is correct, then choose the right suffix')
         for n, datatype in enumerate(self.bidsdatatypes + self.unknowndatatypes + self.ignoredatatypes):
-            datatype_dropdown.setItemData(n, get_datatypehelp(datatype), QtCore.Qt.ItemDataRole.ToolTipRole)
+            datatype_dropdown.setItemData(n, get_datatypehelp(datatype), Qt.ItemDataRole.ToolTipRole)
         datatype_dropdown.currentIndexChanged.connect(self.change_datatype)
 
         # Set up the BIDS table
@@ -1135,7 +1170,7 @@ class EditWindow(QDialog):
         meta_label.setToolTip(f"Key-value pairs that will be appended to the (e.g. dcm2niix-produced) json sidecar file")
         self.meta_table = meta_table = self.setup_table(meta_data, 'meta', min_vsize=False)
         meta_table.setShowGrid(True)
-        meta_table.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
+        meta_table.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         meta_table.customContextMenuRequested.connect(self.import_menu)
         meta_table.cellChanged.connect(self.meta2run)
         meta_table.setToolTip(f"The key-value pair that will be appended to the (e.g. dcm2niix-produced) json sidecar file")
@@ -1151,9 +1186,11 @@ class EditWindow(QDialog):
         events_parsing.setStyleSheet('QTableView::item {border-right: 1px solid #d6d9dc;}')
         events_parsing.setMinimumSize(events_parsing.sizeHint())
         log_table_label = QLabel('Log data')
-        self.log_table = log_table = self.setup_table(events_data.get('log_table',[]), 'log_table', min_vsize=False)
-        log_table.setShowGrid(True)
-        log_table.horizontalHeader().setVisible(True)
+        self.log_model = MyQTableModel(self, self.events.logtable())
+        log_table = QTableView()
+        log_table.setModel(self.log_model)
+        log_table.setSelectionMode(QTableView.SelectionMode.ExtendedSelection)
+        log_table.setSelectionBehavior(QTableView.SelectionBehavior.SelectItems)
         log_table.setToolTip(f"The raw stimulus presentation data that is parsed from the log file")
 
         # Set up the event-mapping table
@@ -1184,10 +1221,11 @@ class EditWindow(QDialog):
         done_button.clicked.connect(self.done_events)
         done_button.hide()
         events_table_label = QLabel('Events data')
-        self.events_table = events_table = self.setup_table(events_data.get('table',[]), 'events_table', min_vsize=False)
-        events_table.setShowGrid(True)
-        events_table.horizontalHeader().setVisible(True)
-        events_table.setToolTip(f"The stimulus presentation data that is saved as a tsv output-file")
+        self.events_model = MyQTableModel(self, self.events.eventstable())
+        events_table = QTableView()
+        events_table.setModel(self.events_model)
+        events_table.setSelectionMode(QTableView.SelectionMode.ExtendedSelection)
+        events_table.setSelectionBehavior(QTableView.SelectionBehavior.SelectItems)
 
         # Group the tables in boxes
         layout1 = QVBoxLayout()
@@ -1202,7 +1240,7 @@ class EditWindow(QDialog):
         sourcebox.setLayout(layout1)
 
         layout1_ = QVBoxLayout()
-        layout1_.addWidget(inspect_button, alignment=QtCore.Qt.AlignmentFlag.AlignRight)
+        layout1_.addWidget(inspect_button, alignment=Qt.AlignmentFlag.AlignRight)
         if events_data.get('parsing'):
             layout1_.addWidget(events_parsing_label)
             layout1_.addWidget(events_parsing)
@@ -1213,13 +1251,13 @@ class EditWindow(QDialog):
         events_inputbox.setLayout(layout1_)
 
         self.arrow = arrow = QLabel()
-        arrow.setPixmap(QtGui.QPixmap(str(RIGHTARROW)).scaled(30, 30, QtCore.Qt.AspectRatioMode.KeepAspectRatio, QtCore.Qt.TransformationMode.SmoothTransformation))
+        arrow.setPixmap(QtGui.QPixmap(str(RIGHTARROW)).scaled(30, 30, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
         arrow_ = QLabel()
-        arrow_.setPixmap(QtGui.QPixmap(str(RIGHTARROW)).scaled(30, 30, QtCore.Qt.AspectRatioMode.KeepAspectRatio, QtCore.Qt.TransformationMode.SmoothTransformation))
+        arrow_.setPixmap(QtGui.QPixmap(str(RIGHTARROW)).scaled(30, 30, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
 
         layout2 = QVBoxLayout()
         layout2.addWidget(datatype_label)
-        layout2.addWidget(datatype_dropdown, alignment=QtCore.Qt.AlignmentFlag.AlignLeft)
+        layout2.addWidget(datatype_dropdown, alignment=Qt.AlignmentFlag.AlignLeft)
         layout2.addWidget(bids_table)
         layout2.addWidget(bidsname_label)
         layout2.addWidget(bidsname_textbox)
@@ -1231,7 +1269,7 @@ class EditWindow(QDialog):
 
         layout2_ = QVBoxLayout()
         layout2_.addWidget(arrow_)
-        layout2_.setAlignment(arrow_, QtCore.Qt.AlignmentFlag.AlignHCenter)
+        layout2_.setAlignment(arrow_, Qt.AlignmentFlag.AlignHCenter)
         layout2_.addWidget(events_columns_label)
         layout2_.addWidget(events_columns)
         layout2_.addWidget(events_rows_label)
@@ -1244,8 +1282,8 @@ class EditWindow(QDialog):
         events_editbox.setLayout(layout2_)
 
         layout3 = QVBoxLayout()
-        layout3.addWidget(edit_button, alignment=QtCore.Qt.AlignmentFlag.AlignRight)
-        layout3.addWidget(done_button, alignment=QtCore.Qt.AlignmentFlag.AlignRight)
+        layout3.addWidget(edit_button, alignment=Qt.AlignmentFlag.AlignRight)
+        layout3.addWidget(done_button, alignment=Qt.AlignmentFlag.AlignRight)
         layout3.addWidget(events_table_label)
         layout3.addWidget(events_table)
         events_outputbox = QGroupBox('BIDS output data')
@@ -1257,7 +1295,7 @@ class EditWindow(QDialog):
         layout_tables.addWidget(sourcebox)
         layout_tables.addWidget(arrow)
         layout_tables.addWidget(bidsbox)
-        if events_data:
+        if self.events:
             layout_tables.addWidget(events_inputbox)
             layout_tables.addWidget(events_editbox)
             layout_tables.addWidget(events_outputbox)
@@ -1321,7 +1359,7 @@ class EditWindow(QDialog):
 
         # Some ugly hacks to adjust individual tables
         tablename = table.objectName()
-        header    = tablename in ('log_table', 'events_table', 'events_rows', 'events_columns')
+        header    = tablename in ('events_rows', 'events_columns')
         extrarow  = [[{'value': '', 'editable': True}, {'value': '', 'editable': True}]] if tablename in ('events_rows','events_columns','meta') else []
         ncols     = len(data[0]) if data else 2         # Always at least two columns (i.e. key, value)
 
@@ -1348,7 +1386,7 @@ class EditWindow(QDialog):
                 dropdown.currentIndexChanged.connect(self.change_suffix)
                 dropdown.setToolTip('The suffix that sets the different run types apart. First make sure the "Data type" dropdown-menu is set correctly before choosing the right suffix here')
                 for n, suffix in enumerate(suffixes):
-                    dropdown.setItemData(n, get_suffixhelp(suffix), QtCore.Qt.ItemDataRole.ToolTipRole)
+                    dropdown.setItemData(n, get_suffixhelp(suffix), Qt.ItemDataRole.ToolTipRole)
                 table.setCellWidget(i, 1, self.spacedwidget(dropdown))
                 continue
 
@@ -1504,17 +1542,6 @@ class EditWindow(QDialog):
             for mapping in self.events.columns:
                 for key, value in mapping.items():
                     events_data['columns'].append([{'value': value, 'editable': True}, {'value': key, 'editable': key not in ('onset','duration')}])
-
-            # Set up the data for the events table
-            df = self.events.logtable()
-            events_data['log_table'] = [[{'value': name, 'editable': False} for name in df]] if len(df) else []
-            for i in range(len(df)):
-                events_data['log_table'].append([{'value': value, 'editable': False} for value in df.iloc[i]])
-
-            df = self.events.eventstable()
-            events_data['table'] = [[{'value': name, 'editable': False} for name in df]] if len(df) else []
-            for i in range(len(df)):
-                events_data['table'].append([{'value': value, 'editable': False} for value in df.iloc[i]])
 
         return properties_data, attributes_data, bids_data, meta_data, events_data
 
@@ -1673,8 +1700,8 @@ class EditWindow(QDialog):
 
         # Refresh the events tables, i.e. delete empty rows or add a new row if a key is defined on the last row
         _,_,_,_,events_data = self.run2data()
+        self.events_model.update(self.events.eventstable())
         self.fill_table(self.events_time,  events_data['time'])
-        self.fill_table(self.events_table, events_data['table'])
 
     def events_parsing2run(self, rowindex: int, colindex: int):
         """Events parsing table has been changed. Read the data from the event 'parsing' table and, if OK, update the target run"""
@@ -1694,9 +1721,8 @@ class EditWindow(QDialog):
             self.events.parsing[key] = value
 
         # Refresh the log and events tables
-        _,_,_,_,events_data = self.run2data()
-        self.fill_table(self.log_table, events_data['log_table'])
-        self.fill_table(self.events_table, events_data['table'])
+        self.log_model.update(self.events.logtable())
+        self.events_model.update(self.events.eventstable())
 
     def events_rows2run(self, rowindex: int, colindex: int):
         """Events value has been changed. Read the data from the event 'rows' table and, if OK, update the target run"""
@@ -1733,7 +1759,7 @@ class EditWindow(QDialog):
 
         # Refresh the events tables, i.e. delete empty rows or add a new row if a key is defined on the last row
         _,_,_,_,events_data = self.run2data()
-        self.fill_table(self.events_table, events_data['table'])
+        self.events_model.update(self.events.eventstable())
         self.fill_table(self.events_rows, events_data['rows'])
 
     def events_columns2run(self, rowindex: int, colindex: int, _input: str=''):
@@ -1765,8 +1791,8 @@ class EditWindow(QDialog):
 
         # Refresh the events tables, i.e. delete empty rows or add a new row if a key is defined on the last row
         _,_,_,_,events_data = self.run2data()
+        self.events_model.update(self.events.eventstable())
         self.fill_table(self.events_columns, events_data['columns'])
-        self.fill_table(self.events_table, events_data['table'])
 
     def get_input_column(self, input: str) -> str:
         """Ask the user to pick an input column from the log table"""
@@ -1907,13 +1933,13 @@ class EditWindow(QDialog):
         self.fill_table(self.attributes_table, attributes_data)
         self.fill_table(self.bids_table, bids_data)
         self.fill_table(self.meta_table, meta_data)
-        if events_data:
+        if self.events:
+            self.log_model.update(self.events.logtable())
+            self.events_model.update(self.events.eventstable())
             self.fill_table(self.events_parsing, events_data['parsing'])
-            self.fill_table(self.log_table, events_data['log_table'])
             self.fill_table(self.events_time, events_data['time'])
             self.fill_table(self.events_rows, events_data['rows'])
             self.fill_table(self.events_columns, events_data['columns'])
-            self.fill_table(self.events_table, events_data['table'])
         self.attributes_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         self.attributes_table.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         self.properties_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
@@ -2027,7 +2053,7 @@ class CompareWindow(QDialog):
 
         # Set up the window
         self.setWindowIcon(QtGui.QIcon(str(BIDSCOIN_ICON)))
-        self.setWindowFlags(self.windowFlags() & QtCore.Qt.WindowType.WindowTitleHint & QtCore.Qt.WindowType.WindowMinMaxButtonsHint & QtCore.Qt.WindowType.WindowCloseButtonHint)
+        self.setWindowFlags(self.windowFlags() & Qt.WindowType.WindowTitleHint & Qt.WindowType.WindowMinMaxButtonsHint & Qt.WindowType.WindowCloseButtonHint)
         self.setWindowTitle('Compare BIDS mappings')
         self.setWhatsThis('BIDScoin mapping of properties and attributes to BIDS output data')
 
@@ -2144,7 +2170,7 @@ class CompareWindow(QDialog):
             for j, value in enumerate(row):
                 item = QTableWidgetItem()
                 item.setText(str(value or ''))
-                item.setFlags(QtCore.Qt.ItemFlag.ItemIsEnabled | QtCore.Qt.ItemFlag.ItemIsSelectable)
+                item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
                 table.setItem(i, j, item)
 
         return table
@@ -2194,7 +2220,7 @@ class InspectWindow(QDialog):
 
         self.setWindowIcon(QtGui.QIcon(str(BIDSCOIN_ICON)))
         self.setWindowTitle(str(filename))
-        self.setWindowFlags(self.windowFlags() & QtCore.Qt.WindowType.WindowContextHelpButtonHint & QtCore.Qt.WindowType.WindowMinMaxButtonsHint & QtCore.Qt.WindowType.WindowCloseButtonHint)
+        self.setWindowFlags(self.windowFlags() & Qt.WindowType.WindowContextHelpButtonHint & Qt.WindowType.WindowMinMaxButtonsHint & Qt.WindowType.WindowCloseButtonHint)
 
         layout = QVBoxLayout(self)
 
