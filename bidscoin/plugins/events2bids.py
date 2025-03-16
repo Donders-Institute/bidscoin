@@ -375,7 +375,7 @@ class PsychopyEvents(EventsParser):
                         df_piv = pd.concat([df_piv_, df_misc], axis=1)      # Re-initialize df_piv / avoid future warnings below about concatenating empty frames
                     else:
                         df_piv = pd.concat([df_piv, pd.concat([df_piv_, df_misc], axis=1)])
-            df = df_piv.sort_values(by='onset')
+            df = df_piv.sort_values(by='onset').reset_index(drop=True)
 
         else:
             LOGGER.error(f"NOT IMPLEMENTED table: {table}")
