@@ -96,14 +96,14 @@ class MyQTableModel(QAbstractTableModel):
             return None
         if role == Qt.ItemDataRole.DisplayRole:             # Display Data
             return str(self._df.iloc[index.row(), index.column()])
-
+        if role == Qt.ItemDataRole.ForegroundRole:
+            return QtGui.QColor('gray')                     # Set all cells' foreground to gray
         return None
 
     def headerData(self, section: int, orientation: Qt.Orientation, role=Qt.ItemDataRole.DisplayRole):
         if role == Qt.ItemDataRole.DisplayRole:
             if orientation == Qt.Orientation.Horizontal:    # Column Headers
                 return str(self._df.columns[section])
-
         return None
 
     def update(self, new_df):
@@ -1189,8 +1189,10 @@ class EditWindow(QDialog):
         self.log_model = MyQTableModel(self, self.events.logtable())
         log_table = QTableView()
         log_table.setModel(self.log_model)
-        log_table.setSelectionMode(QTableView.SelectionMode.ExtendedSelection)
-        log_table.setSelectionBehavior(QTableView.SelectionBehavior.SelectItems)
+        log_table.setSelectionMode(QTableView.SelectionMode.NoSelection)
+        log_table.horizontalHeader().setStretchLastSection(True)
+        log_table.verticalHeader().setDefaultSectionSize(ROW_HEIGHT)
+        log_table.resizeColumnsToContents()
         log_table.setToolTip(f"The raw stimulus presentation data that is parsed from the log file")
 
         # Set up the event-mapping table
@@ -1224,8 +1226,10 @@ class EditWindow(QDialog):
         self.events_model = MyQTableModel(self, self.events.eventstable())
         events_table = QTableView()
         events_table.setModel(self.events_model)
-        events_table.setSelectionMode(QTableView.SelectionMode.ExtendedSelection)
-        events_table.setSelectionBehavior(QTableView.SelectionBehavior.SelectItems)
+        events_table.setSelectionMode(QTableView.SelectionMode.NoSelection)
+        events_table.horizontalHeader().setStretchLastSection(True)
+        events_table.verticalHeader().setDefaultSectionSize(ROW_HEIGHT)
+        events_table.resizeColumnsToContents()
 
         # Group the tables in boxes
         layout1 = QVBoxLayout()
