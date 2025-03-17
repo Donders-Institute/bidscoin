@@ -10,6 +10,7 @@ import re
 import json
 import csv
 import nibabel as nib
+import pandas as pd
 from bids_validator import BIDSValidator
 from typing import Union
 from pydicom import dcmread, datadict, config
@@ -81,7 +82,7 @@ fallback: Appends unhandled dcm2niix suffixes to the `acq` label if 'y' (recomme
 class MyQTableModel(QAbstractTableModel):
     """Custom model to connect a Pandas DataFrame with QTableView"""
 
-    def __init__(self, parent, df):
+    def __init__(self, parent, df: pd.DataFrame):
         super().__init__(parent)
         self._df = df
 
@@ -1186,7 +1187,7 @@ class EditWindow(QDialog):
         events_parsing.setStyleSheet('QTableView::item {border-right: 1px solid #d6d9dc;}')
         events_parsing.setMinimumSize(events_parsing.sizeHint())
         log_table_label = QLabel('Log data')
-        self.log_model = MyQTableModel(self, self.events.logtable())
+        self.log_model = MyQTableModel(self, self.events.logtable() if self.events else pd.DataFrame())
         self.log_table = log_table = QTableView()
         log_table.setModel(self.log_model)
         log_table.setSelectionMode(QTableView.SelectionMode.NoSelection)
@@ -1223,7 +1224,7 @@ class EditWindow(QDialog):
         done_button.clicked.connect(self.done_events)
         done_button.hide()
         events_table_label = QLabel('Events data')
-        self.events_model = MyQTableModel(self, self.events.eventstable())
+        self.events_model = MyQTableModel(self, self.events.eventstable() if self.events else pd.DataFrame())
         self.events_table = events_table = QTableView()
         events_table.setModel(self.events_model)
         events_table.setSelectionMode(QTableView.SelectionMode.NoSelection)
@@ -1349,7 +1350,7 @@ class EditWindow(QDialog):
         super().reject()
 
     @staticmethod
-    def update_table(qtable: QTableView, model: MyQTableModel, df=None):
+    def update_table(qtable: QTableView, model: MyQTableModel, df: pd.DataFrame=None):
         """Updates the table data and resize the columns based on first 20 rows & header labels"""
 
         if df is not None:
