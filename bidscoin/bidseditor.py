@@ -2094,7 +2094,7 @@ class CompareWindow(QDialog):
         for index, runitem in enumerate(runitems):
 
             # Get data for the tables
-            properties_data, attributes_data, bids_data, meta_data, events_data = self.run2data(runitem)
+            properties_data, attributes_data, bids_data, meta_data = self.run2data(runitem)
 
             # Set up the properties table
             properties_label = QLabel('Properties')
@@ -2123,10 +2123,17 @@ class CompareWindow(QDialog):
                 meta_table.setToolTip('The key-value pair that will be appended to the (e.g. dcm2niix-produced) json sidecar file')
 
             # Set up the events table
-            if events_data:
+            events = runitem.events()
+            if events:
                 events_label = QLabel('Events data')
                 events_label.setToolTip('The stimulus events data that are save as tsv-file')
-                events_table = self.fill_table(events_data, 'events', min_vsize=False)
+                events_model = MyQTableModel(self, events.eventstable())
+                events_table = QTableView()
+                events_table.setModel(events_model)
+                events_table.setSelectionMode(QTableView.SelectionMode.NoSelection)
+                events_table.horizontalHeader().setStretchLastSection(True)
+                events_table.verticalHeader().setDefaultSectionSize(ROW_HEIGHT)
+                EditWindow.update_table(events_table, events_model)
                 events_table.setToolTip('The stimulus events data that are save as tsv-file')
 
             bidsname = runitem.bidsname(subid[index], sesid[index], False) + '.*'
@@ -2141,7 +2148,7 @@ class CompareWindow(QDialog):
             if meta_data:
                 layout.addWidget(meta_label)
                 layout.addWidget(meta_table)
-            if events_data:
+            if events:
                 layout.addWidget(events_label)
                 layout.addWidget(events_table)
             groupbox.setLayout(layout)
@@ -2154,7 +2161,7 @@ class CompareWindow(QDialog):
     @staticmethod
     def run2data(runitem: RunItem) -> tuple:
         """Derive the tabular data from the target_run, needed to render the compare window
-        :return: (properties_data, attributes_data, bids_data, meta_data, events_data)
+        :return: (properties_data, attributes_data, bids_data, meta_data)
         """
 
         properties_data = [['filepath', runitem.properties.get('filepath'), runitem.datasource.property('filepath')],
@@ -2181,15 +2188,7 @@ class CompareWindow(QDialog):
             value = runitem.meta.get(key)
             meta_data.append([key, value])
 
-        events_data = []
-        events      = runitem.events()
-        if events:
-            df = events.eventstable()
-            events_data.append([*df.columns])
-            for i in range(len(df)):
-                events_data.append([*df.iloc[i]])
-
-        return properties_data, attributes_data, bids_data, meta_data, events_data
+        return properties_data, attributes_data, bids_data, meta_data
 
     def fill_table(self, data: list, name: str, min_vsize: bool=True) -> MyQTable:
         """Return a table widget filled with the data"""
