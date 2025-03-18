@@ -1332,7 +1332,7 @@ PAR:
       max_slices:
       flow_compensation:
       max_echoes:
-      repetition_time:
+      # repetition_time:                # The TR may vary from acquisition to acquisition when "shortest TR" is set (https://neurostars.org/t/regexp-for-repetition-time/32368/6)
       prep_direction:
     bids: &anat_parent_nonparametric    # See: schema/rules/files/raw/anat.yaml
       task:
@@ -1623,7 +1623,7 @@ PAR:
       max_slices:
       flow_compensation:
       max_echoes:
-      repetition_time:
+      # repetition_time:
       prep_direction:
     bids: &func_parent_func             # See: schema/rules/files/raw/func.yaml
       task: <exam_name>
@@ -1696,7 +1696,7 @@ PAR:
       max_slices:
       flow_compensation:
       max_echoes:
-      repetition_time:
+      # repetition_time:
       prep_direction:
     bids: &perf_parent_group1           # See: schema/rules/files/raw/perf.yaml
       acq: <protocol_name>
@@ -1755,7 +1755,7 @@ PAR:
       max_slices:
       flow_compensation:
       max_echoes:
-      repetition_time:
+      # repetition_time:
       prep_direction:
     bids: &dwi_parent_DWI               # See: schema/rules/files/raw/dwi.yaml
       acq: <protocol_name>
@@ -1796,7 +1796,7 @@ PAR:
       max_slices:
       flow_compensation:
       max_echoes:
-      repetition_time:
+      # repetition_time:
       prep_direction:
     bids: &fmap_parent_fieldmaps        # See: schema/rules/files/raw/fmap.yaml
       acq: <protocol_name>
@@ -1943,7 +1943,7 @@ PAR:
       max_slices:
       flow_compensation:
       max_echoes:
-      repetition_time:
+      # repetition_time:
       prep_direction:
     bids:
       acq: <protocol_name><exam_name>
@@ -1971,7 +1971,7 @@ PAR:
       max_slices:
       flow_compensation:
       max_echoes:
-      repetition_time:
+      # repetition_time:
       prep_direction:
     bids: &leaveout_bids_par
       acq: <protocol_name><exam_name>
