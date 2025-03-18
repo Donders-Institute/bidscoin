@@ -139,16 +139,13 @@ class MyQTableView(QTableView):
             max_width = 0  # Track the max width required
 
             # Measure the width of the header label
-            header_text  = model.headerData(col, Qt.Orientation.Horizontal, Qt.ItemDataRole.DisplayRole)
-            header_width = self.fontMetrics().boundingRect(str(header_text)).width()
-            max_width    = max(max_width, header_width)
+            header_text = model.headerData(col, Qt.Orientation.Horizontal, Qt.ItemDataRole.DisplayRole)
+            max_width   = max(max_width, self.fontMetrics().horizontalAdvance(header_text))
 
-            # Measure the width of the first 10 row values
+            # Measure the width of the first 20 row values
             for row in range(num_rows):
-                index      = model.index(row, col)
-                cell_text  = str(model.data(index, Qt.ItemDataRole.DisplayRole))
-                cell_width = self.fontMetrics().boundingRect(cell_text).width()
-                max_width  = max(max_width, cell_width)
+                cell_text = str(model.data(model.index(row, col), Qt.ItemDataRole.DisplayRole))
+                max_width = max(max_width, self.fontMetrics().horizontalAdvance(cell_text))
 
             self.horizontalHeader().resizeSection(col, max_width + 10)  # +10 for padding
 
