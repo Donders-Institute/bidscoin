@@ -12,7 +12,7 @@ if find_spec('bidscoin') is None:
     import sys
     sys.path.append(str(Path(__file__).parents[2]))
 from bidscoin import bcoin, lsdirs, trackusage
-from bidscoin.utilities import get_dicomfield
+from bidscoin.utilities import get_dicomfield, is_dicomfile
 
 LOGGER = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ def construct_name(scheme: str, dicomfile: Path, force: bool) -> str:
         value = cleanup(get_dicomfield(field, dicomfile))
         if not value and value != 0 and field in alternatives.keys():
             value = cleanup(get_dicomfield(alternatives[field], dicomfile))
-            if field == 'SeriesNumber':
+            if value and field == 'SeriesNumber':
                 value = int(value.replace('.',''))      # Convert the SeriesInstanceUID to an int
         if not value and value != 0 and not force:
             LOGGER.error(f"Missing '{field}' DICOM field specified in the '{scheme}' folder/naming scheme, cannot find a safe name for: {dicomfile}\n")
@@ -139,7 +139,7 @@ def sortsessions(sourcefolder: Path, subprefix: Union[str,None]='', sesprefix: s
     Wrapper around sortsession() to loop over subjects and sessions and map the session DICOM files
 
     :param sourcefolder: The root folder containing the source [sub/][ses/]dicomfiles or the DICOMDIR file
-    :param subprefix:    The prefix for searching the sub folders in session. Use '' to sort DICOMDIR files directly in sourcefolder (None will add DICOMDIR-based sub-/ses-folders
+    :param subprefix:    The prefix for searching the sub folders in session. Use '' to sort DICOMDIR files directly in sourcefolder (None will add DICOMDIR-based sub-/ses-folders)
     :param sesprefix:    The prefix for searching the ses folders in sub folder
     :param folderscheme: Optional naming scheme for the sorted (e.g. Series) subfolders. Follows the Python string formatting syntax with DICOM field names in curly bracers with an optional number of digits for numeric fields', default='{SeriesNumber:03d}-{SeriesDescription}'
     :param namescheme:   Optional naming scheme for renaming the files. Follows the Python string formatting syntax with DICOM field names in curly bracers, e.g. {PatientName}_{SeriesNumber:03d}_{SeriesDescription}_{AcquisitionNumber:05d}_{InstanceNumber:05d}.IMA
@@ -192,7 +192,7 @@ def sortsessions(sourcefolder: Path, subprefix: Union[str,None]='', sesprefix: s
 
     # Sort the DICOM files in the sourcefolder
     else:
-        dicomfiles = [dcmfile for dcmfile in sourcefolder.glob('**/*' if recursive else '*') if dcmfile.is_file() and re.match(pattern, str(dcmfile))]
+        dicomfiles = [dcmfile for dcmfile in sourcefolder.glob('**/*' if recursive else '*') if re.match(pattern, str(dcmfile)) and is_dicomfile(dcmfile)]
         if dicomfiles:
             sortsession(sourcefolder, dicomfiles, folderscheme, namescheme, force, dryrun)
             sessions.add(sourcefolder)

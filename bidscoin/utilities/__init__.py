@@ -82,6 +82,8 @@ def unpack(sesfolder: Path, wildcard: str='', workfolder: Path='', _subprefix: U
         return {sesfolder}, False
 
 
+# Profiling shows dcmread is currently the most expensive function, therefore the (primitive but effective) _DICOMDICT_CACHE optimization
+_DICOMDICT_CACHE = _DICOMFILE_CACHE = None
 @lru_cache(maxsize=65536)
 def is_dicomfile(file: Path) -> bool:
     """
@@ -93,19 +95,26 @@ def is_dicomfile(file: Path) -> bool:
     :return:        Returns true if a file is a DICOM-file
     """
 
+    global _DICOMDICT_CACHE, _DICOMFILE_CACHE
+
     if file.is_file():
 
         # Perform a quick test first
-        with file.open('rb') as dicomfile:
-            dicomfile.seek(0x80, 1)
-            if dicomfile.read(4) == b'DICM':
+        with file.open('rb') as fid:
+            fid.seek(0x80, 1)
+            if fid.read(4) == b'DICM':
                 return True
 
         # Perform a proof of the pudding test (but avoid memory problems when reading a very large (e.g. EEG) source file)
         if file.suffix.lower() in ('.ima','.dcm','.dicm','.dicom',''):
             if file.name == 'DICOMDIR':
                 return True
-            dicomdata = dcmread(file, force=True)   # The DICM tag may be missing for anonymized DICOM files. NB: Force=False raises an error for non-DICOM files
+            if file != _DICOMFILE_CACHE:
+                dicomdata = dcmread(file, force=True)  # The DICM tag may be missing for anonymized DICOM files. NB: Force=False raises an error for non-DICOM files
+                _DICOMDICT_CACHE = dicomdata
+                _DICOMFILE_CACHE = file
+            else:
+                dicomdata = _DICOMDICT_CACHE
             return 'Modality' in dicomdata
 
     return False
@@ -208,8 +217,6 @@ def parse_x_protocol(pattern: str, dicomfile: Path) -> str:
     return ''
 
 
-# Profiling shows this is currently the most expensive function, therefore the (primitive but effective) _DICOMDICT_CACHE optimization
-_DICOMDICT_CACHE = _DICOMFILE_CACHE = None
 @lru_cache(maxsize=65536)
 def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
     """
