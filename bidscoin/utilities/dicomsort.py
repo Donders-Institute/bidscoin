@@ -139,8 +139,8 @@ def sortsessions(sourcefolder: Path, subprefix: Union[str,None]='', sesprefix: U
     Wrapper around sortsession() to loop over subjects and sessions and map the session DICOM files
 
     :param sourcefolder: The root folder containing the source [sub/][ses/]dicomfiles or the DICOMDIR file
-    :param subprefix:    The prefix for searching the sub folders in session. Use '' to sort DICOMDIR files directly in sourcefolder (None will add DICOMDIR-based sub-/ses-folders)
-    :param sesprefix:    The prefix for searching the ses folders in sub folder
+    :param subprefix:    The prefix for searching the sub folders in session. Use '' to sort DICOMDIR files directly in sourcefolder and None to sort in sourcefolder/patient/study subfolders
+    :param sesprefix:    The prefix for searching the ses folders in sub folder. Use '' to sort DICOMDIR files in sourcefolder, and None to sort the files in a sourcefolder/study subfolders
     :param folderscheme: Optional naming scheme for the sorted (e.g. Series) subfolders. Follows the Python string formatting syntax with DICOM field names in curly bracers with an optional number of digits for numeric fields', default='{SeriesNumber:03d}-{SeriesDescription}'
     :param namescheme:   Optional naming scheme for renaming the files. Follows the Python string formatting syntax with DICOM field names in curly bracers, e.g. {PatientName}_{SeriesNumber:03d}_{SeriesDescription}_{AcquisitionNumber:05d}_{InstanceNumber:05d}.IMA
     :param pattern:      The regular expression pattern used in re.match() to select the dicom files

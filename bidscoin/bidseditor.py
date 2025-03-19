@@ -172,7 +172,6 @@ class MyQTable(QTableWidget):
             self.setColumnCount(ncols)
         if nrows:
             self.setRowCount(nrows)
-        self.resizeRowsToContents()
 
 
 class MyQTableItem(QTableWidgetItem):
@@ -247,8 +246,6 @@ class MainWindow(QMainWindow):
 
         # Set up the tabs, add the tables and put the bidsmap data in them
         tabwidget = self.tabwidget = QtWidgets.QTabWidget()
-        tabwidget.setTabPosition(QtWidgets.QTabWidget.TabPosition.North)
-        tabwidget.setTabShape(QtWidgets.QTabWidget.TabShape.Rounded)
 
         self.participant_table  = {}
         self.samples_table      = {}
@@ -280,11 +277,12 @@ class MainWindow(QMainWindow):
         validatebutton.clicked.connect(self.validate_runs)
 
         # Set up the main layout
-        centralwidget = QtWidgets.QWidget()
-        top_layout = QVBoxLayout(centralwidget)
+        top_layout = QVBoxLayout()
         top_layout.addWidget(tabwidget)
         top_layout.addWidget(buttonbox)
         tabwidget.setCurrentIndex(0)
+        centralwidget = QtWidgets.QWidget()
+        centralwidget.setLayout(top_layout)
         self.setCentralWidget(centralwidget)
         if not reset:
             self.adjustSize()
@@ -321,8 +319,8 @@ class MainWindow(QMainWindow):
         if rowindexes and colindex in (-1, 0, 4):      # User clicked the index, the edit-button or elsewhere (i.e. not on an activated widget)
             return
         runitems: list[RunItem] = []
-        subids: list[str]   = []
-        sesids: list[str]   = []
+        subids:   list[str]     = []
+        sesids:   list[str]     = []
         for index in rowindexes:
             datatype   = table.item(index, 2).text()
             provenance = table.item(index, 5).text()
@@ -501,7 +499,6 @@ class MainWindow(QMainWindow):
         header = participant_table.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
         header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
-
         self.fill_participant_table(dataformat)
 
         # Set the bidsmap table
@@ -534,7 +531,6 @@ class MainWindow(QMainWindow):
         tab.setObjectName(dataformat)                                       # NB: Serves to identify the dataformat for the tables in a tab
         tab.setLayout(layout)
         self.tabwidget.addTab(tab, f"{dataformat} mappings")
-        self.tabwidget.setCurrentWidget(tab)
 
         self.fill_samples_table(dataformat)
 
