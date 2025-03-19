@@ -73,7 +73,7 @@ def unpack(sesfolder: Path, wildcard: str='', workfolder: Path='', _subprefix: U
                 sessions.update(dicomsort.sortsessions(worksesfolder, _subprefix, recursive=False))
 
         # Sort the DICOM files if not sorted yet (e.g. DICOMDIR)
-        sessions.update(dicomsort.sortsessions(worksesfolder, _subprefix, recursive=True))
+        sessions.update(dicomsort.sortsessions(worksesfolder, _subprefix, None, recursive=True))
 
         return sessions, True
 

@@ -133,7 +133,7 @@ def sortsession(sessionfolder: Path, dicomfiles: list[Path], folderscheme: str, 
             dicomfile.replace(newfilename)
 
 
-def sortsessions(sourcefolder: Path, subprefix: Union[str,None]='', sesprefix: str='', folderscheme: str='{SeriesNumber:03d}-{SeriesDescription}',
+def sortsessions(sourcefolder: Path, subprefix: Union[str,None]='', sesprefix: Union[str,None]='', folderscheme: str='{SeriesNumber:03d}-{SeriesDescription}',
                  namescheme: str='', pattern: str=r'.*\.(IMA|dcm)$', recursive: bool=True, force: bool=False, dryrun: bool=False) -> set[Path]:
     """
     Wrapper around sortsession() to loop over subjects and sessions and map the session DICOM files
@@ -171,7 +171,7 @@ def sortsessions(sourcefolder: Path, subprefix: Union[str,None]='', sesprefix: s
         LOGGER.info(f"Searching for subject/session folders in: {sourcefolder}")
         for subjectfolder in lsdirs(sourcefolder, (subprefix or '') + '*'):
             for sessionfolder in lsdirs(subjectfolder, sesprefix + '*') if sesprefix else [subjectfolder]:
-                sessions.update(sortsessions(sessionfolder, '', '', folderscheme, namescheme, pattern, recursive, force, dryrun))
+                sessions.update(sortsessions(sessionfolder, '', '' if sesprefix else None, folderscheme, namescheme, pattern, recursive, force, dryrun))
 
     # Use the DICOMDIR file if it is there
     elif (sourcefolder/'DICOMDIR').is_file():
@@ -183,10 +183,12 @@ def sortsessions(sourcefolder: Path, subprefix: Union[str,None]='', sesprefix: s
                 study      = dicomdir.find(PatientID=patientid, StudyInstanceUID=studyuid)
                 dicomfiles = [Path(instance.path) for instance in study]
                 if dicomfiles:
-                    if subprefix == '':         # == '' -> Recursive call of sortsessions() -> Sort directly in the sourcefolder
+                    if subprefix == '' and sesprefix == '':         # -> Recursive call with sesprefix -> Sort directly in the source (=session) folder
                         sessionfolder = sourcefolder
-                    else:                       # CLI call -> Sort in subject/session folder
-                        sessionfolder = sourcefolder/f"{subprefix or ''}{cleanup(patient[0].PatientName)}"/f"{sesprefix or ''}{n:02}-{cleanup(study[0].StudyDescription)}"
+                    elif subprefix == '' and sesprefix is None:     # -> Without sesprefix + unpack()  -> Sort in the study (=session) subfolder
+                        sessionfolder = sourcefolder/f"{n:02}-{cleanup(study[0].StudyDescription)}"
+                    else:                                           # -> CLI call                      -> Sort in patient/study (=subject/session) subfolder
+                        sessionfolder = sourcefolder/f"{cleanup(patient[0].PatientName)}"/f"{n:02}-{cleanup(study[0].StudyDescription)}"
                     sortsession(sessionfolder, dicomfiles, folderscheme, namescheme, force, dryrun)
                     sessions.add(sessionfolder)
 
