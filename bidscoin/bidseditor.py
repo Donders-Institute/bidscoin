@@ -284,8 +284,6 @@ class MainWindow(QMainWindow):
         centralwidget = QtWidgets.QWidget()
         centralwidget.setLayout(top_layout)
         self.setCentralWidget(centralwidget)
-        if not reset:
-            self.adjustSize()
 
     def closeEvent(self, event):
         """Handle exit of the main window -> check if data has been saved"""
