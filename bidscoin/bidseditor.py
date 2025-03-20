@@ -519,8 +519,10 @@ class MainWindow(QMainWindow):
         header = samples_table.horizontalHeader()
         header.setVisible(True)
         header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
-        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Interactive)
         header.setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch)
+        self.fill_samples_table(dataformat)
+        samples_table.resizeColumnsToContents()
 
         layout = QVBoxLayout()
         layout.addWidget(participant_label)
@@ -531,8 +533,6 @@ class MainWindow(QMainWindow):
         tab.setObjectName(dataformat)                                       # NB: Serves to identify the dataformat for the tables in a tab
         tab.setLayout(layout)
         self.tabwidget.addTab(tab, f"{dataformat} mappings")
-
-        self.fill_samples_table(dataformat)
 
     def set_tab_options(self):
         """Set the options tab"""
@@ -637,6 +637,7 @@ class MainWindow(QMainWindow):
             participant_table.setCellWidget(n, 2, edit_button)
         participant_table.setItem(n+1, 0, MyQTableItem())
         participant_table.setItem(n+1, 1, MyQTableItem())
+        participant_table.resizeColumnsToContents()
 
         participant_table.show()
         participant_table.blockSignals(False)
@@ -826,7 +827,6 @@ class MainWindow(QMainWindow):
                     self.editwindow_opened = str(provenance)
                     editwindow.done_edit.connect(self.fill_samples_table)
                     editwindow.finished.connect(self.release_editwindow)
-                    self.adjustSize()
                     editwindow.show()
                     return
             LOGGER.error(f"Could not find [{datatype}] {provenance} run-item")
