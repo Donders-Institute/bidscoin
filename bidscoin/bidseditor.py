@@ -35,7 +35,6 @@ ROW_HEIGHT       = 22
 BIDSCOIN_LOGO    = Path(__file__).parent/'bidscoin_logo.png'
 BIDSCOIN_ICON    = Path(__file__).parent/'bidscoin.ico'
 RIGHTARROW       = Path(__file__).parent/'rightarrow.png'
-
 MAIN_HELP_URL    = f"https://bidscoin.readthedocs.io/en/{__version__.split('+')[0]}"
 HELP_URL_DEFAULT = f"https://bids-specification.readthedocs.io/en/v{bidsversion()}"
 HELP_URLS        = {
@@ -167,7 +166,7 @@ class MyQTable(QTableWidget):
         if min_vsize:
             self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum)
         else:
-            self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
+            self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.MinimumExpanding)
         if ncols:
             self.setColumnCount(ncols)
         if nrows:
@@ -208,7 +207,7 @@ class MainWindow(QMainWindow):
         if not reset:
             super().__init__()
             self.setWindowIcon(QtGui.QIcon(str(BIDSCOIN_ICON)))
-            self.set_menu_statusbar()
+            self.__init_menu_statusbar__()
 
         if not input_bidsmap.dataformats and not input_bidsmap.filepath.is_file():
             filename, _ = QFileDialog.getOpenFileName(self, 'Open a bidsmap file', str(bidsfolder), 'YAML Files (*.yaml *.yml);;All Files (*)')
@@ -245,18 +244,18 @@ class MainWindow(QMainWindow):
         self.ignoredatatypes: list[str]  = input_bidsmap.options['ignoretypes']
 
         # Set up the tabs, add the tables and put the bidsmap data in them
-        tabwidget = self.tabwidget = QtWidgets.QTabWidget()
-
         self.participant_table  = {}
         self.samples_table      = {}
+        """table columns: 0=index, 1=provenance.name, 2=datatype, 3=bidsname, 4=editbutton, 5=provenance"""
         self.options_label      = {}
         self.options_table      = {}
         self.ordered_file_index = {}
         """The mapping between the ordered provenance and an increasing file-index"""
+        tabwidget = self.tabwidget = QtWidgets.QTabWidget()
         for dataformat in self.dataformats:
-            self.set_tab_bidsmap(dataformat)
-        self.set_tab_options()
-        self.set_tab_filebrowser()
+            self.__init_tab_dataformat__(dataformat)
+        self.__init_tab_options__()
+        self.__init_tab_filebrowser__()
 
         # Set datachanged = False only after all the tables are updated (which assigns datachanged = True)
         self.datachanged: bool = False
@@ -285,6 +284,206 @@ class MainWindow(QMainWindow):
         centralwidget.setLayout(top_layout)
         self.setCentralWidget(centralwidget)
 
+    def __init_menu_statusbar__(self):
+        """Set up the menu and statusbar"""
+
+        # Set the menus
+        menubar  = QtWidgets.QMenuBar(self)
+        menufile = QtWidgets.QMenu(menubar)
+        menufile.setTitle('File')
+        menubar.addAction(menufile.menuAction())
+        menuhelp = QtWidgets.QMenu(menubar)
+        menuhelp.setTitle('Help')
+        menubar.addAction(menuhelp.menuAction())
+        self.setMenuBar(menubar)
+
+        # Set the file menu actions
+        actionreset = QAction(self)
+        actionreset.setText('Reset')
+        actionreset.setStatusTip('Reset the bidsmap')
+        actionreset.setShortcut('Ctrl+R')
+        actionreset.triggered.connect(self.reset)
+        menufile.addAction(actionreset)
+
+        actionopen = QAction(self)
+        actionopen.setText('Open')
+        actionopen.setStatusTip('Open a new bidsmap from disk')
+        actionopen.setShortcut('Ctrl+O')
+        actionopen.triggered.connect(self.open_bidsmap)
+        menufile.addAction(actionopen)
+
+        actionsave = QAction(self)
+        actionsave.setText('Save')
+        actionsave.setStatusTip('Save the bidsmap to disk')
+        actionsave.setShortcut('Ctrl+S')
+        actionsave.triggered.connect(self.save_bidsmap)
+        menufile.addAction(actionsave)
+
+        actionexit = QAction(self)
+        actionexit.setText('Exit')
+        actionexit.setStatusTip('Exit the application')
+        actionexit.setShortcut('Ctrl+X')
+        actionexit.triggered.connect(self.closeEvent)
+        menufile.addAction(actionexit)
+
+        # Set help menu actions
+        actionhelp = QAction(self)
+        actionhelp.setText('Documentation')
+        actionhelp.setStatusTip('Go to the online BIDScoin documentation')
+        actionhelp.setShortcut('F1')
+        actionhelp.triggered.connect(self.get_help)
+        menuhelp.addAction(actionhelp)
+
+        actionbidshelp = QAction(self)
+        actionbidshelp.setText('BIDS specification')
+        actionbidshelp.setStatusTip('Go to the online BIDS specification documentation')
+        actionbidshelp.setShortcut('F2')
+        actionbidshelp.triggered.connect(self.get_bids_help)
+        menuhelp.addAction(actionbidshelp)
+
+        actionabout = QAction(self)
+        actionabout.setText('About BIDScoin')
+        actionabout.setStatusTip('Show information about the application')
+        actionabout.triggered.connect(self.show_about)
+        menuhelp.addAction(actionabout)
+
+        # Set the statusbar
+        statusbar = QtWidgets.QStatusBar(self)
+        statusbar.setStatusTip('Statusbar')
+        self.setStatusBar(statusbar)
+
+    def __init_tab_dataformat__(self, dataformat: str):
+        """Set the SOURCE file sample listing tab"""
+
+        # Set the Participant table
+        participant_label = QLabel('Participant data')
+        participant_label.setToolTip('Data to parse the subject/session labels, and to populate the participants tsv- and json-files')
+
+        self.participant_table[dataformat] = participant_table = MyQTable(self, ncols=3)
+        participant_table.setToolTip(f"Use e.g. '<<filepath:/sub-(.*?)/>>' to parse the subject and (optional) session label from the pathname. NB: the () parentheses indicate the part that is extracted as the subject/session label\n"
+                                     f"Use a dynamic {dataformat} attribute (e.g. '<<PatientName>>') to extract the subject and (optional) session label from the {dataformat} header")
+        participant_table.cellChanged.connect(self.participant_table2bidsmap)
+        header = participant_table.horizontalHeader()
+        header.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+        self.fill_participant_table(dataformat)
+
+        # Set the bidsmap table
+        label = QLabel('Representative samples')
+        label.setToolTip('List of unique source-data samples (datatypes)')
+
+        self.samples_table[dataformat] = samples_table = MyQTable(self, min_vsize=False, ncols=6)
+        """table columns: 0=index, 1=provenance.name, 2=datatype, 3=bidsname, 4=editbutton, 5=provenance"""
+        samples_table.setMouseTracking(True)                                # Needed for showing filepath in the statusbar
+        samples_table.setShowGrid(True)
+        samples_table.setHorizontalHeaderLabels(['', f'{dataformat} input', 'BIDS data type', 'BIDS output', 'Action', 'Provenance'])
+        samples_table.setSortingEnabled(True)
+        samples_table.sortByColumn(0, Qt.SortOrder.AscendingOrder)
+        samples_table.setColumnHidden(2, True)
+        samples_table.setColumnHidden(5, True)
+        samples_table.itemDoubleClicked.connect(self.sample_doubleclicked)
+        samples_table.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        samples_table.customContextMenuRequested.connect(self.samples_menu)
+        header = samples_table.horizontalHeader()
+        header.setVisible(True)
+        header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+        header.setSectionResizeMode(3, QHeaderView.ResizeMode.Interactive)
+        self.fill_samples_table(dataformat)
+        samples_table.resizeColumnsToContents()
+        for col in range(samples_table.columnCount()):
+            samples_table.setColumnWidth(col, samples_table.columnWidth(col) + 20)  # Add 20 pixels of padding
+        layout = QVBoxLayout()
+        layout.addWidget(participant_label)
+        layout.addWidget(participant_table)
+        layout.addWidget(label)
+        layout.addWidget(samples_table)
+        tab = QtWidgets.QWidget()
+        tab.setObjectName(dataformat)                                       # NB: Serves to identify the dataformat for the tables in a tab
+        tab.setLayout(layout)
+        self.tabwidget.addTab(tab, f"{dataformat} mappings")
+
+    def __init_tab_options__(self):
+        """Set the options tab"""
+
+        # Create the bidscoin table
+        bidscoin_options = self.output_bidsmap.options
+        self.options_label['bidscoin'] = bidscoin_label = QLabel('BIDScoin')
+        bidscoin_label.setToolTip(TOOLTIP_BIDSCOIN)
+        self.options_table['bidscoin'] = bidscoin_table = MyQTable(self, ncols=3)    # columns: [key] [value] [testbutton]
+        bidscoin_table.setRowCount(len(bidscoin_options.keys()))
+        bidscoin_table.setToolTip(TOOLTIP_BIDSCOIN)
+        header = bidscoin_table.horizontalHeader()
+        header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+        test_button = QPushButton('Test')                       # Add a test-button
+        test_button.clicked.connect(self.test_bidscoin)
+        test_button.setToolTip(f'Click to test the BIDScoin installation')
+        bidscoin_table.setCellWidget(0, 2, test_button)
+        for n, (key, value) in enumerate(bidscoin_options.items()):
+            bidscoin_table.setItem(n, 0, MyQTableItem(key, editable=False))
+            bidscoin_table.setItem(n, 1, MyQTableItem(value))
+        bidscoin_table.cellChanged.connect(self.options2bidsmap)
+
+        # Set up the tab layout and add the bidscoin table
+        layout = self.options_layout = QVBoxLayout()
+        layout.addWidget(bidscoin_label)
+        layout.addWidget(bidscoin_table)
+
+        # Add the plugin tables
+        for plugin, options in self.output_bidsmap.plugins.items():
+            plugin_label, plugin_table = self.plugin_table(plugin, options)
+            layout.addWidget(plugin_label)
+            layout.addWidget(plugin_table)
+
+        # Add an 'Add' button below the tables on the right side
+        add_button = QPushButton('Add')
+        add_button.clicked.connect(self.add_plugin)
+        add_button.setToolTip(f'Click to add an installed plugin')
+        layout.addWidget(add_button, alignment=Qt.AlignmentFlag.AlignRight)
+
+        # Add a 'Default' button below the tables on the left side
+        set_button = QPushButton('Set as default')
+        set_button.clicked.connect(self.save_options)
+        set_button.setToolTip(f'Click to store these options in your default template bidsmap, i.e. set them as default for all new studies')
+        layout.addStretch()
+        layout.addWidget(set_button, alignment=Qt.AlignmentFlag.AlignLeft)
+
+        tab = QtWidgets.QWidget()
+        tab.setLayout(layout)
+
+        self.tabwidget.addTab(tab, 'Options')
+
+    def __init_tab_filebrowser__(self):
+        """Set the raw data folder inspector tab"""
+
+        rootfolder = str(self.bidsfolder.parent)
+        label = QLabel(rootfolder)
+        label.setWordWrap(True)
+
+        filesystem = self.filesystem = QFileSystemModel()
+        filesystem.setRootPath(rootfolder)
+        filesystem.setFilter(QtCore.QDir.Filter.NoDotAndDotDot | QtCore.QDir.Filter.AllDirs | QtCore.QDir.Filter.Files)
+        tree = QTreeView()
+        tree.setModel(filesystem)
+        tree.setRootIndex(filesystem.index(rootfolder))
+        tree.setAnimated(False)
+        tree.setSortingEnabled(True)
+        tree.sortByColumn(0, Qt.SortOrder.AscendingOrder)
+        tree.setExpanded(filesystem.index(str(self.bidsfolder)), True)
+        tree.header().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        tree.header().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+        tree.header().setStretchLastSection(False)
+        tree.doubleClicked.connect(self.open_inspectwindow)
+
+        layout = QVBoxLayout()
+        layout.addWidget(label)
+        layout.addWidget(tree)
+        tab = QtWidgets.QWidget()
+        tab.setLayout(layout)
+
+        self.tabwidget.addTab(tab, 'Data browser')
+
     def closeEvent(self, event):
         """Handle exit of the main window -> check if data has been saved"""
 
@@ -304,6 +503,302 @@ class MainWindow(QMainWindow):
         else:                               # User pressed alt-X (= menu action) -> normal close()
             self.close()
         QApplication.quit()
+
+    def fill_participant_table(self, dataformat: str):
+        """(Re)populate the participant table with the new bidsmap data"""
+
+        # Populate the participant table
+        participant_table = self.participant_table[dataformat]
+        participant_table.blockSignals(True)
+        participant_table.hide()
+        participant_table.setRowCount(len(self.output_bidsmap.dataformat(dataformat).participant) + 1)
+        participant_table.clearContents()
+        n = 0
+        for n, (key, item) in enumerate(self.output_bidsmap.dataformat(dataformat).participant.items()):
+            tableitem = MyQTableItem(key, editable=key not in ('participant_id','session_id'))
+            tableitem.setToolTip(get_columnhelp(key))
+            participant_table = self.participant_table[dataformat]
+            participant_table.setItem(n, 0, tableitem)
+            participant_table.setItem(n, 1, MyQTableItem(item['value']))
+            edit_button = QPushButton('Metadata')
+            edit_button.setToolTip('Data for participants json sidecar-file')
+            edit_button.clicked.connect(self.edit_metadata)
+            participant_table.setCellWidget(n, 2, edit_button)
+        participant_table.setItem(n+1, 0, MyQTableItem())
+        participant_table.setItem(n+1, 1, MyQTableItem())
+        participant_table.resizeColumnsToContents()
+        participant_table.show()
+        participant_table.blockSignals(False)
+
+    def participant_table2bidsmap(self, rowindex: int, colindex: int):
+        """
+        A value has been changed in the participant table. If it is valid, save it to the bidsmap and update the
+        participant and samples table
+
+        :param rowindex:
+        :param colindex:
+        :return:
+        """
+
+        # Only if cell was actually clicked, update
+        if self.tabwidget.currentIndex() < 0:
+            return
+        dataformat        = self.tabwidget.currentWidget().objectName()
+        participant_data  = self.output_bidsmap.dataformat(dataformat).participant
+        participant_table = self.participant_table[dataformat]
+        key               = participant_table.item(rowindex, 0).text().strip()
+        value             = participant_table.item(rowindex, 1).text().strip()
+
+        # Check if the participant keys are still present in the participant_table
+        datachanged = False
+        if colindex == 0:
+            for key_ in participant_data.copy():
+                if key_ not in [participant_table.item(row, 0).text().strip() for row in range(participant_table.rowCount()-1)]:
+                    participant_data.pop(key_, None)
+                    datachanged = True
+
+        # Add the key-value data to the participant data
+        if key:
+            if key not in participant_data:
+                LOGGER.verbose(f"User adds {dataformat}['{key}']")
+                participant_data[key] = {'value': value, 'meta': {'Description': ''}}
+                datachanged           = True
+            else:
+                if value != (oldvalue := participant_data[key]['value']):
+                    LOGGER.verbose(f"User sets {dataformat}['{key}'] from '{oldvalue}' to '{value}'")
+                    participant_data[key]['value'] = value
+                    datachanged                    = True
+
+        # Only if cell content was changed, update
+        if datachanged:
+            self.fill_participant_table(dataformat)
+            self.fill_samples_table(dataformat)
+            self.datachanged = True
+
+    def edit_metadata(self):
+        """Pop-up a text window to edit the sidecar metadata of participant item"""
+
+        dataformat        = self.tabwidget.currentWidget().objectName()
+        participant_table = self.participant_table[dataformat]
+        clicked           = self.focusWidget()
+        rowindex          = participant_table.indexAt(clicked.pos()).row()
+        key               = participant_table.item(rowindex, 0).text().strip()
+        meta              = self.output_bidsmap.dataformat(dataformat).participant[key].get('meta', {})
+
+        text, ok = QtWidgets.QInputDialog.getMultiLineText(self, 'Edit sidecar metadata', f"json metadata for '{key}':", text=json.dumps(meta, indent=2))
+        if ok:
+            try:
+                meta_ = json.loads(text)
+                if meta_ != meta:
+                    self.output_bidsmap.dataformat(dataformat).participant[key]['meta'] = meta_
+                    self.datachanged = True
+            except json.decoder.JSONDecodeError as jsonerror:
+                QMessageBox.warning(self, f"Sidecar metadata parsing error", f"{text}\n\nPlease provide valid json metadata:\n{jsonerror}")
+                self.edit_metadata()
+
+    def fill_samples_table(self, dataformat: str):
+        """(Re)populate the sample table with bidsnames according to the new bidsmap data"""
+
+        self.datachanged = True
+        output_bidsmap   = self.output_bidsmap
+
+        # Add runs to the samples table
+        idx           = 0
+        num_files     = self.set_ordered_file_index(dataformat)
+        samples_table = self.samples_table[dataformat]
+        """table columns: 0=index, 1=provenance.name, 2=datatype, 3=bidsname, 4=editbutton, 5=provenance"""
+        samples_table.blockSignals(True)
+        samples_table.hide()
+        samples_table.setRowCount(num_files)
+        samples_table.setSortingEnabled(False)
+        samples_table.clearContents()
+        for datatype in output_bidsmap.dataformat(dataformat).datatypes:
+            for runitem in datatype.runitems:
+
+                # Check the runitem and get some data
+                dtype        = datatype.datatype
+                validrun     = all(runitem.check(checks=(False, False, False))[1:3])
+                provenance   = Path(runitem.provenance)
+                subid        = output_bidsmap.dataformat(dataformat).subject
+                sesid        = output_bidsmap.dataformat(dataformat).session
+                subid, sesid = runitem.datasource.subid_sesid(subid, sesid or '')
+                bidsname     = runitem.bidsname(subid, sesid, not bids.check_ignore(datatype,self.bidsignore) and dtype not in self.ignoredatatypes)
+                ignore       = bids.check_ignore(datatype, self.bidsignore) or bids.check_ignore(bidsname+'.json', self.bidsignore, 'file')
+                session      = self.bidsfolder/subid/sesid
+                row_index    = self.ordered_file_index[dataformat][provenance]
+
+                samples_table.setItem(idx, 0, MyQTableItem(f"{row_index + 1:03d}", editable=False))
+                samples_table.setItem(idx, 1, MyQTableItem(provenance.name))
+                samples_table.setItem(idx, 2, MyQTableItem(dtype))                          # Hidden column
+                samples_table.setItem(idx, 3, MyQTableItem(Path(dtype)/(bidsname + '.*')))
+                samples_table.setItem(idx, 5, MyQTableItem(provenance))                     # Hidden column
+
+                samples_table.item(idx, 0).setFlags(Qt.ItemFlag.NoItemFlags)
+                samples_table.item(idx, 1).setFlags(Qt.ItemFlag.ItemIsEnabled)
+                samples_table.item(idx, 2).setFlags(Qt.ItemFlag.ItemIsEnabled)
+                samples_table.item(idx, 1).setToolTip('Double-click to inspect the header information')
+                samples_table.item(idx, 1).setStatusTip(str(provenance.parent) + str(Path('/')))
+                if dtype not in self.ignoredatatypes:
+                    samples_table.item(idx, 3).setStatusTip(str(session) + str(Path('/')))
+
+                if samples_table.item(idx, 3):
+                    if ignore:
+                        samples_table.item(idx, 3).setForeground(QtGui.QColor('darkorange'))
+                        samples_table.item(idx, 3).setToolTip(f"Orange: This {datatype} item is ignored by BIDS-apps and BIDS-validators")
+                    elif dtype in self.ignoredatatypes:
+                        samples_table.item(idx, 1).setForeground(QtGui.QColor('gray'))
+                        samples_table.item(idx, 3).setForeground(QtGui.QColor('gray'))
+                        font = samples_table.item(idx, 3).font()
+                        font.setStrikeOut(True)
+                        samples_table.item(idx, 3).setFont(font)
+                        samples_table.item(idx, 3).setToolTip('Gray/Strike-out: This imaging data type will be ignored and not converted BIDS')
+                    elif not validrun or dtype in self.unknowndatatypes:
+                        samples_table.item(idx, 3).setForeground(QtGui.QColor('red'))
+                        samples_table.item(idx, 3).setToolTip(f"Red: This {datatype} item is not BIDS-valid but will still be converted. You should edit this item or make sure it is in your bidsignore list ([Options] tab)")
+                    else:
+                        samples_table.item(idx, 3).setForeground(QtGui.QColor('green'))
+                        samples_table.item(idx, 3).setToolTip(f"Green: This '{datatype}' data type is part of BIDS")
+
+                if validrun or ignore or dtype in self.ignoredatatypes:
+                    edit_button = QPushButton('Edit')
+                    edit_button.setToolTip('Click to see more details and edit the BIDS output name')
+                else:
+                    edit_button = QPushButton('Edit*')
+                    edit_button.setToolTip('*: Contains invalid/missing values! Click to see more details and edit the BIDS output name')
+                edit_button.clicked.connect(self.open_editwindow)
+                edit_button.setCheckable(not sys.platform.startswith('darwin'))
+                edit_button.setAutoExclusive(True)
+                if provenance.name and str(provenance) == self.editwindow_opened:   # Highlight the previously opened item
+                    edit_button.setChecked(True)
+                else:
+                    edit_button.setChecked(False)
+                samples_table.setCellWidget(idx, 4, edit_button)
+
+                idx += 1
+
+        samples_table.setSortingEnabled(True)
+        samples_table.show()
+        samples_table.blockSignals(False)
+
+    def set_ordered_file_index(self, dataformat: str) -> int:
+        """Sets the mapping between the ordered provenance and an increasing file-index"""
+
+        provenances = self.output_bidsmap.dir(dataformat)
+        if len(provenances) > len(self.ordered_file_index.get(dataformat,[])):
+            ordered_index = {}
+            for file_index, file_name in enumerate(provenances):
+                ordered_index[file_name]        = file_index
+            self.ordered_file_index[dataformat] = ordered_index
+
+        return len(provenances)
+
+    def open_editwindow(self, provenance: Path=Path(), datatype: str=''):
+        """Make sure that index map has been updated"""
+
+        dataformat = self.tabwidget.currentWidget().objectName()
+        if not datatype:
+            samples_table = self.samples_table[dataformat]
+            clicked       = self.focusWidget()
+            rowindex      = samples_table.indexAt(clicked.pos()).row()
+            if rowindex < 0:                                        # This presumably happened on PyQt5@macOS (rowindex = -1)? (github issue #131)
+                LOGGER.bcdebug(f"User clicked on the [Edit] button (presumably) but PyQt returns pos={clicked.pos()} -> rowindex={rowindex}")
+                return                                              # TODO: Simply changing this to 0? (the value of rowindex when data type is DICOM)
+            datatype      = samples_table.item(rowindex, 2).text()
+            provenance    = samples_table.item(rowindex, 5).text()
+
+        # Check for open edit window, find the right data type index and open the edit window
+        if not self.editwindow_opened:
+            # Find the source index of the runitem in the list of runitemss (using the provenance) and open the edit window
+            for runitem in self.output_bidsmap.dataformat(dataformat).datatype(datatype).runitems:
+                if Path(runitem.provenance) == Path(provenance):
+                    LOGGER.verbose(f'User is editing {provenance}')
+                    self.editwindow = editwindow = EditWindow(self, runitem, self.output_bidsmap, self.template_bidsmap)
+                    self.editwindow_opened = str(provenance)
+                    editwindow.done_edit.connect(self.fill_samples_table)
+                    editwindow.finished.connect(self.release_editwindow)
+                    editwindow.setWindowFlags(editwindow.windowFlags() | Qt.WindowType.Window)
+                    editwindow.show()
+                    return
+            LOGGER.error(f"Could not find [{datatype}] {provenance} run-item")
+
+        else:
+            # Ask the user if he wants to save his results first before opening a new edit window
+            self.editwindow.reject()
+            if self.editwindow_opened:
+                return
+            self.open_editwindow(provenance, datatype)
+
+    def release_editwindow(self):
+        """Allow a new edit window to be opened"""
+        self.editwindow_opened = None
+
+    def plugin_table(self, name: str, plugin: dict) -> tuple:
+        """:return: a plugin-label and a filled plugin-table"""
+
+        self.options_label[name] = plugin_label = QLabel(f"{name} - plugin")
+        self.options_table[name] = plugin_table = MyQTable(self, ncols=3)   # columns: [key] [value] [testbutton]
+        plugin_table.setRowCount(max(len(plugin.keys()) + 1, 2))            # Add an extra row for new key-value pairs
+        header = plugin_table.horizontalHeader()
+        header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+        test_button = QPushButton('Test')                                   # Add a test-button
+        test_button.clicked.connect(partial(self.test_plugin, name))
+        test_button.setToolTip(f'Click to test the "{name}" installation')
+        plugin_table.setCellWidget(0, 2, test_button)
+        delete_button = QPushButton('Remove')                               # Add a delete-button
+        delete_button.clicked.connect(partial(self.del_plugin, name))
+        delete_button.setToolTip(f'Click to discard / stop using the "{name}" plugin')
+        plugin_table.setCellWidget(1, 2, delete_button)
+        plugin_label.setToolTip(bcoin.import_plugin(name).__doc__)
+        plugin_table.setToolTip(TOOLTIP_DCM2NIIX if name == 'dcm2niix2bids' else f"Here you can enter key-value data for the '{name}' plugin")
+        for n, (key, value) in enumerate(plugin.items()):
+            plugin_table.setItem(n, 0, MyQTableItem(key))
+            plugin_table.setItem(n, 1, MyQTableItem(value))
+            plugin_table.setItem(n, 2, MyQTableItem('', editable=False))
+        plugin_table.setItem(plugin_table.rowCount() - 1, 2, MyQTableItem('', editable=False))
+        plugin_table.cellChanged.connect(self.options2bidsmap)
+
+        return plugin_label, plugin_table
+
+    def options2bidsmap(self, rowindex: int, colindex: int):
+        """Saves all Options tables to the bidsmap and add an extra row to the plugin_table if it is full"""
+
+        for plugin, table in self.options_table.items():
+            if plugin == 'bidscoin':
+                oldoptions = self.output_bidsmap.options
+            else:
+                oldoptions = self.output_bidsmap.plugins.get(plugin,{})
+            newoptions = {}
+            for rownr in range(table.rowCount()):
+                keyitem = table.item(rownr, 0)
+                valitem = table.item(rownr, 1)
+                key = val = ''
+                if keyitem: key = keyitem.text().strip()
+                if valitem: val = valitem.text().strip()
+                if key:
+                    if not val.startswith('"') and not val.endswith('"'):           # E.g. convert string or int to list or int but avoid encoding strings such as "C:\tmp" (\t -> tab)
+                        try: val = ast.literal_eval(val)
+                        except (ValueError, TypeError, SyntaxError): pass
+                    newoptions[key] = val
+                    if val != oldoptions.get(key):
+                        LOGGER.verbose(f"User sets the '{plugin}' option from '{key}: {oldoptions.get(key)}' to '{key}: {val}'")
+                        self.datachanged = True
+            if plugin == 'bidscoin':
+                self.output_bidsmap.options = newoptions
+                self.unknowndatatypes  = newoptions.get('unknowntypes', [])
+                self.ignoredatatypes   = newoptions.get('ignoretypes', [])
+                self.bidsignore        = newoptions.get('bidsignore', [])
+                for dataformat in self.dataformats:
+                    self.fill_samples_table(dataformat)
+            else:
+                self.output_bidsmap.plugins[plugin] = newoptions
+
+            # Add an extra row if the table is full
+            if rowindex + 1 == table.rowCount() and table.currentItem() and table.currentItem().text().strip():
+                table.blockSignals(True)
+                table.insertRow(table.rowCount())
+                table.setItem(table.rowCount() - 1, 2, MyQTableItem('', editable=False))
+                table.blockSignals(False)
 
     @QtCore.pyqtSlot(QtCore.QPoint)
     def samples_menu(self, pos):
@@ -415,499 +910,6 @@ class MainWindow(QMainWindow):
 
                 self.fill_samples_table(dataformat)
 
-    def set_menu_statusbar(self):
-        """Set up the menu and statusbar"""
-
-        # Set the menus
-        menubar  = QtWidgets.QMenuBar(self)
-        menufile = QtWidgets.QMenu(menubar)
-        menufile.setTitle('File')
-        menubar.addAction(menufile.menuAction())
-        menuhelp = QtWidgets.QMenu(menubar)
-        menuhelp.setTitle('Help')
-        menubar.addAction(menuhelp.menuAction())
-        self.setMenuBar(menubar)
-
-        # Set the file menu actions
-        actionreset = QAction(self)
-        actionreset.setText('Reset')
-        actionreset.setStatusTip('Reset the bidsmap')
-        actionreset.setShortcut('Ctrl+R')
-        actionreset.triggered.connect(self.reset)
-        menufile.addAction(actionreset)
-
-        actionopen = QAction(self)
-        actionopen.setText('Open')
-        actionopen.setStatusTip('Open a new bidsmap from disk')
-        actionopen.setShortcut('Ctrl+O')
-        actionopen.triggered.connect(self.open_bidsmap)
-        menufile.addAction(actionopen)
-
-        actionsave = QAction(self)
-        actionsave.setText('Save')
-        actionsave.setStatusTip('Save the bidsmap to disk')
-        actionsave.setShortcut('Ctrl+S')
-        actionsave.triggered.connect(self.save_bidsmap)
-        menufile.addAction(actionsave)
-
-        actionexit = QAction(self)
-        actionexit.setText('Exit')
-        actionexit.setStatusTip('Exit the application')
-        actionexit.setShortcut('Ctrl+X')
-        actionexit.triggered.connect(self.closeEvent)
-        menufile.addAction(actionexit)
-
-        # Set help menu actions
-        actionhelp = QAction(self)
-        actionhelp.setText('Documentation')
-        actionhelp.setStatusTip('Go to the online BIDScoin documentation')
-        actionhelp.setShortcut('F1')
-        actionhelp.triggered.connect(self.get_help)
-        menuhelp.addAction(actionhelp)
-
-        actionbidshelp = QAction(self)
-        actionbidshelp.setText('BIDS specification')
-        actionbidshelp.setStatusTip('Go to the online BIDS specification documentation')
-        actionbidshelp.setShortcut('F2')
-        actionbidshelp.triggered.connect(self.get_bids_help)
-        menuhelp.addAction(actionbidshelp)
-
-        actionabout = QAction(self)
-        actionabout.setText('About BIDScoin')
-        actionabout.setStatusTip('Show information about the application')
-        actionabout.triggered.connect(self.show_about)
-        menuhelp.addAction(actionabout)
-
-        # Set the statusbar
-        statusbar = QtWidgets.QStatusBar(self)
-        statusbar.setStatusTip('Statusbar')
-        self.setStatusBar(statusbar)
-
-    def set_tab_bidsmap(self, dataformat: str):
-        """Set the SOURCE file sample listing tab"""
-
-        # Set the Participant table
-        participant_label = QLabel('Participant data')
-        participant_label.setToolTip('Data to parse the subject/session labels, and to populate the participants tsv- and json-files')
-
-        self.participant_table[dataformat] = participant_table = MyQTable(self, ncols=3)
-        participant_table.setToolTip(f"Use e.g. '<<filepath:/sub-(.*?)/>>' to parse the subject and (optional) session label from the pathname. NB: the () parentheses indicate the part that is extracted as the subject/session label\n"
-                                     f"Use a dynamic {dataformat} attribute (e.g. '<<PatientName>>') to extract the subject and (optional) session label from the {dataformat} header")
-        participant_table.cellChanged.connect(self.participant_table2bidsmap)
-        header = participant_table.horizontalHeader()
-        header.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
-        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
-        self.fill_participant_table(dataformat)
-
-        # Set the bidsmap table
-        label = QLabel('Representative samples')
-        label.setToolTip('List of unique source-data samples (datatypes)')
-
-        self.samples_table[dataformat] = samples_table = MyQTable(self, min_vsize=False, ncols=6)
-        samples_table.setMouseTracking(True)                                # Needed for showing filepath in the statusbar
-        samples_table.setShowGrid(True)
-        samples_table.setHorizontalHeaderLabels(['', f'{dataformat} input', 'BIDS data type', 'BIDS output', 'Action', 'Provenance'])
-        samples_table.setSortingEnabled(True)
-        samples_table.sortByColumn(0, Qt.SortOrder.AscendingOrder)
-        samples_table.setColumnHidden(2, True)
-        samples_table.setColumnHidden(5, True)
-        samples_table.itemDoubleClicked.connect(self.sample_doubleclicked)
-        samples_table.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-        samples_table.customContextMenuRequested.connect(self.samples_menu)
-        header = samples_table.horizontalHeader()
-        header.setVisible(True)
-        header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
-        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Interactive)
-        header.setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch)
-        self.fill_samples_table(dataformat)
-        samples_table.resizeColumnsToContents()
-
-        layout = QVBoxLayout()
-        layout.addWidget(participant_label)
-        layout.addWidget(participant_table)
-        layout.addWidget(label)
-        layout.addWidget(samples_table)
-        tab = QtWidgets.QWidget()
-        tab.setObjectName(dataformat)                                       # NB: Serves to identify the dataformat for the tables in a tab
-        tab.setLayout(layout)
-        self.tabwidget.addTab(tab, f"{dataformat} mappings")
-
-    def set_tab_options(self):
-        """Set the options tab"""
-
-        # Create the bidscoin table
-        bidscoin_options = self.output_bidsmap.options
-        self.options_label['bidscoin'] = bidscoin_label = QLabel('BIDScoin')
-        bidscoin_label.setToolTip(TOOLTIP_BIDSCOIN)
-        self.options_table['bidscoin'] = bidscoin_table = MyQTable(self, ncols=3)    # columns: [key] [value] [testbutton]
-        bidscoin_table.setRowCount(len(bidscoin_options.keys()))
-        bidscoin_table.setToolTip(TOOLTIP_BIDSCOIN)
-        header = bidscoin_table.horizontalHeader()
-        header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
-        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
-        test_button = QPushButton('Test')                       # Add a test-button
-        test_button.clicked.connect(self.test_bidscoin)
-        test_button.setToolTip(f'Click to test the BIDScoin installation')
-        bidscoin_table.setCellWidget(0, 2, test_button)
-        for n, (key, value) in enumerate(bidscoin_options.items()):
-            bidscoin_table.setItem(n, 0, MyQTableItem(key, editable=False))
-            bidscoin_table.setItem(n, 1, MyQTableItem(value))
-        bidscoin_table.cellChanged.connect(self.options2bidsmap)
-
-        # Set up the tab layout and add the bidscoin table
-        layout = self.options_layout = QVBoxLayout()
-        layout.addWidget(bidscoin_label)
-        layout.addWidget(bidscoin_table)
-
-        # Add the plugin tables
-        for plugin, options in self.output_bidsmap.plugins.items():
-            plugin_label, plugin_table = self.plugin_table(plugin, options)
-            layout.addWidget(plugin_label)
-            layout.addWidget(plugin_table)
-
-        # Add an 'Add' button below the tables on the right side
-        add_button = QPushButton('Add')
-        add_button.clicked.connect(self.add_plugin)
-        add_button.setToolTip(f'Click to add an installed plugin')
-        layout.addWidget(add_button, alignment=Qt.AlignmentFlag.AlignRight)
-
-        # Add a 'Default' button below the tables on the left side
-        set_button = QPushButton('Set as default')
-        set_button.clicked.connect(self.save_options)
-        set_button.setToolTip(f'Click to store these options in your default template bidsmap, i.e. set them as default for all new studies')
-        layout.addStretch()
-        layout.addWidget(set_button, alignment=Qt.AlignmentFlag.AlignLeft)
-
-        tab = QtWidgets.QWidget()
-        tab.setLayout(layout)
-
-        self.tabwidget.addTab(tab, 'Options')
-
-    def set_tab_filebrowser(self):
-        """Set the raw data folder inspector tab"""
-
-        rootfolder = str(self.bidsfolder.parent)
-        label = QLabel(rootfolder)
-        label.setWordWrap(True)
-
-        filesystem = self.filesystem = QFileSystemModel()
-        filesystem.setRootPath(rootfolder)
-        filesystem.setFilter(QtCore.QDir.Filter.NoDotAndDotDot | QtCore.QDir.Filter.AllDirs | QtCore.QDir.Filter.Files)
-        tree = QTreeView()
-        tree.setModel(filesystem)
-        tree.setRootIndex(filesystem.index(rootfolder))
-        tree.setAnimated(False)
-        tree.setSortingEnabled(True)
-        tree.sortByColumn(0, Qt.SortOrder.AscendingOrder)
-        tree.setExpanded(filesystem.index(str(self.bidsfolder)), True)
-        tree.header().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
-        tree.header().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
-        tree.header().setStretchLastSection(False)
-        tree.doubleClicked.connect(self.open_inspectwindow)
-
-        layout = QVBoxLayout()
-        layout.addWidget(label)
-        layout.addWidget(tree)
-        tab = QtWidgets.QWidget()
-        tab.setLayout(layout)
-
-        self.tabwidget.addTab(tab, 'Data browser')
-
-    def fill_participant_table(self, dataformat: str):
-        """(Re)populate the participant table with the new bidsmap data"""
-
-        # Populate the participant table
-        participant_table = self.participant_table[dataformat]
-        participant_table.blockSignals(True)
-        participant_table.hide()
-        participant_table.setRowCount(len(self.output_bidsmap.dataformat(dataformat).participant) + 1)
-        participant_table.clearContents()
-        n = 0
-        for n, (key, item) in enumerate(self.output_bidsmap.dataformat(dataformat).participant.items()):
-            tableitem = MyQTableItem(key, editable=key not in ('participant_id','session_id'))
-            tableitem.setToolTip(get_columnhelp(key))
-            participant_table = self.participant_table[dataformat]
-            participant_table.setItem(n, 0, tableitem)
-            participant_table.setItem(n, 1, MyQTableItem(item['value']))
-            edit_button = QPushButton('Metadata')
-            edit_button.setToolTip('Data for participants json sidecar-file')
-            edit_button.clicked.connect(self.edit_metadata)
-            participant_table.setCellWidget(n, 2, edit_button)
-        participant_table.setItem(n+1, 0, MyQTableItem())
-        participant_table.setItem(n+1, 1, MyQTableItem())
-        participant_table.resizeColumnsToContents()
-
-        participant_table.show()
-        participant_table.blockSignals(False)
-
-    def participant_table2bidsmap(self, rowindex: int, colindex: int):
-        """
-        A value has been changed in the participant table. If it is valid, save it to the bidsmap and update the
-        participant and samples table
-
-        :param rowindex:
-        :param colindex:
-        :return:
-        """
-
-        # Only if cell was actually clicked, update
-        if self.tabwidget.currentIndex() < 0:
-            return
-        dataformat        = self.tabwidget.currentWidget().objectName()
-        participant_data  = self.output_bidsmap.dataformat(dataformat).participant
-        participant_table = self.participant_table[dataformat]
-        key               = participant_table.item(rowindex, 0).text().strip()
-        value             = participant_table.item(rowindex, 1).text().strip()
-
-        # Check if the participant keys are still present in the participant_table
-        datachanged = False
-        if colindex == 0:
-            for key_ in participant_data.copy():
-                if key_ not in [participant_table.item(row, 0).text().strip() for row in range(participant_table.rowCount()-1)]:
-                    participant_data.pop(key_, None)
-                    datachanged = True
-
-        # Add the key-value data to the participant data
-        if key:
-            if key not in participant_data:
-                LOGGER.verbose(f"User adds {dataformat}['{key}']")
-                participant_data[key] = {'value': value, 'meta': {'Description': ''}}
-                datachanged           = True
-            else:
-                if value != (oldvalue := participant_data[key]['value']):
-                    LOGGER.verbose(f"User sets {dataformat}['{key}'] from '{oldvalue}' to '{value}'")
-                    participant_data[key]['value'] = value
-                    datachanged                    = True
-
-        # Only if cell content was changed, update
-        if datachanged:
-            self.fill_participant_table(dataformat)
-            self.fill_samples_table(dataformat)
-            self.datachanged = True
-
-    def edit_metadata(self):
-        """Pop-up a text window to edit the sidecar metadata of participant item"""
-
-        dataformat        = self.tabwidget.currentWidget().objectName()
-        participant_table = self.participant_table[dataformat]
-        clicked           = self.focusWidget()
-        rowindex          = participant_table.indexAt(clicked.pos()).row()
-        key               = participant_table.item(rowindex, 0).text().strip()
-        meta              = self.output_bidsmap.dataformat(dataformat).participant[key].get('meta', {})
-
-        text, ok = QtWidgets.QInputDialog.getMultiLineText(self, 'Edit sidecar metadata', f"json metadata for '{key}':", text=json.dumps(meta, indent=2))
-        if ok:
-            try:
-                meta_ = json.loads(text)
-                if meta_ != meta:
-                    self.output_bidsmap.dataformat(dataformat).participant[key]['meta'] = meta_
-                    self.datachanged = True
-            except json.decoder.JSONDecodeError as jsonerror:
-                QMessageBox.warning(self, f"Sidecar metadata parsing error", f"{text}\n\nPlease provide valid json metadata:\n{jsonerror}")
-                self.edit_metadata()
-
-    def fill_samples_table(self, dataformat: str):
-        """(Re)populate the sample table with bidsnames according to the new bidsmap data"""
-
-        self.datachanged = True
-        output_bidsmap   = self.output_bidsmap
-
-        # Add runs to the samples table
-        idx           = 0
-        num_files     = self.set_ordered_file_index(dataformat)
-        samples_table = self.samples_table[dataformat]
-        samples_table.blockSignals(True)
-        samples_table.hide()
-        samples_table.setRowCount(num_files)
-        samples_table.setSortingEnabled(False)
-        samples_table.clearContents()
-        for datatype in output_bidsmap.dataformat(dataformat).datatypes:
-            for runitem in datatype.runitems:
-
-                # Check the runitem and get some data
-                dtype        = datatype.datatype
-                validrun     = all(runitem.check(checks=(False, False, False))[1:3])
-                provenance   = Path(runitem.provenance)
-                subid        = output_bidsmap.dataformat(dataformat).subject
-                sesid        = output_bidsmap.dataformat(dataformat).session
-                subid, sesid = runitem.datasource.subid_sesid(subid, sesid or '')
-                bidsname     = runitem.bidsname(subid, sesid, not bids.check_ignore(datatype,self.bidsignore) and dtype not in self.ignoredatatypes)
-                ignore       = bids.check_ignore(datatype, self.bidsignore) or bids.check_ignore(bidsname+'.json', self.bidsignore, 'file')
-                session      = self.bidsfolder/subid/sesid
-                row_index    = self.ordered_file_index[dataformat][provenance]
-
-                samples_table.setItem(idx, 0, MyQTableItem(f"{row_index + 1:03d}", editable=False))
-                samples_table.setItem(idx, 1, MyQTableItem(provenance.name))
-                samples_table.setItem(idx, 2, MyQTableItem(dtype))                          # Hidden column
-                samples_table.setItem(idx, 3, MyQTableItem(Path(dtype)/(bidsname + '.*')))
-                samples_table.setItem(idx, 5, MyQTableItem(provenance))                     # Hidden column
-
-                samples_table.item(idx, 0).setFlags(Qt.ItemFlag.NoItemFlags)
-                samples_table.item(idx, 1).setFlags(Qt.ItemFlag.ItemIsEnabled)
-                samples_table.item(idx, 2).setFlags(Qt.ItemFlag.ItemIsEnabled)
-                samples_table.item(idx, 1).setToolTip('Double-click to inspect the header information')
-                samples_table.item(idx, 1).setStatusTip(str(provenance.parent) + str(Path('/')))
-                if dtype not in self.ignoredatatypes:
-                    samples_table.item(idx, 3).setStatusTip(str(session) + str(Path('/')))
-
-                if samples_table.item(idx, 3):
-                    if ignore:
-                        samples_table.item(idx, 3).setForeground(QtGui.QColor('darkorange'))
-                        samples_table.item(idx, 3).setToolTip(f"Orange: This {datatype} item is ignored by BIDS-apps and BIDS-validators")
-                    elif dtype in self.ignoredatatypes:
-                        samples_table.item(idx, 1).setForeground(QtGui.QColor('gray'))
-                        samples_table.item(idx, 3).setForeground(QtGui.QColor('gray'))
-                        font = samples_table.item(idx, 3).font()
-                        font.setStrikeOut(True)
-                        samples_table.item(idx, 3).setFont(font)
-                        samples_table.item(idx, 3).setToolTip('Gray/Strike-out: This imaging data type will be ignored and not converted BIDS')
-                    elif not validrun or dtype in self.unknowndatatypes:
-                        samples_table.item(idx, 3).setForeground(QtGui.QColor('red'))
-                        samples_table.item(idx, 3).setToolTip(f"Red: This {datatype} item is not BIDS-valid but will still be converted. You should edit this item or make sure it is in your bidsignore list ([Options] tab)")
-                    else:
-                        samples_table.item(idx, 3).setForeground(QtGui.QColor('green'))
-                        samples_table.item(idx, 3).setToolTip(f"Green: This '{datatype}' data type is part of BIDS")
-
-                if validrun or ignore or dtype in self.ignoredatatypes:
-                    edit_button = QPushButton('Edit')
-                    edit_button.setToolTip('Click to see more details and edit the BIDS output name')
-                else:
-                    edit_button = QPushButton('Edit*')
-                    edit_button.setToolTip('*: Contains invalid/missing values! Click to see more details and edit the BIDS output name')
-                edit_button.clicked.connect(self.open_editwindow)
-                edit_button.setCheckable(not sys.platform.startswith('darwin'))
-                edit_button.setAutoExclusive(True)
-                if provenance.name and str(provenance) == self.editwindow_opened:   # Highlight the previously opened item
-                    edit_button.setChecked(True)
-                else:
-                    edit_button.setChecked(False)
-                samples_table.setCellWidget(idx, 4, edit_button)
-
-                idx += 1
-
-        samples_table.setSortingEnabled(True)
-        samples_table.show()
-        samples_table.blockSignals(False)
-
-    def set_ordered_file_index(self, dataformat: str) -> int:
-        """Sets the mapping between the ordered provenance and an increasing file-index"""
-
-        provenances = self.output_bidsmap.dir(dataformat)
-        if len(provenances) > len(self.ordered_file_index.get(dataformat,[])):
-            ordered_index = {}
-            for file_index, file_name in enumerate(provenances):
-                ordered_index[file_name]        = file_index
-            self.ordered_file_index[dataformat] = ordered_index
-
-        return len(provenances)
-
-    def open_editwindow(self, provenance: Path=Path(), datatype: str=''):
-        """Make sure that index map has been updated"""
-
-        dataformat = self.tabwidget.currentWidget().objectName()
-        if not datatype:
-            samples_table = self.samples_table[dataformat]
-            clicked       = self.focusWidget()
-            rowindex      = samples_table.indexAt(clicked.pos()).row()
-            if rowindex < 0:                                        # This presumably happened on PyQt5@macOS (rowindex = -1)? (github issue #131)
-                LOGGER.bcdebug(f"User clicked on the [Edit] button (presumably) but PyQt returns pos={clicked.pos()} -> rowindex={rowindex}")
-                return                                              # TODO: Simply changing this to 0? (the value of rowindex when data type is DICOM)
-            datatype      = samples_table.item(rowindex, 2).text()
-            provenance    = samples_table.item(rowindex, 5).text()
-
-        # Check for open edit window, find the right data type index and open the edit window
-        if not self.editwindow_opened:
-            # Find the source index of the runitem in the list of runitemss (using the provenance) and open the edit window
-            for runitem in self.output_bidsmap.dataformat(dataformat).datatype(datatype).runitems:
-                if Path(runitem.provenance) == Path(provenance):
-                    LOGGER.verbose(f'User is editing {provenance}')
-                    self.editwindow = editwindow = EditWindow(runitem, self.output_bidsmap, self.template_bidsmap)
-                    self.editwindow_opened = str(provenance)
-                    editwindow.done_edit.connect(self.fill_samples_table)
-                    editwindow.finished.connect(self.release_editwindow)
-                    editwindow.show()
-                    return
-            LOGGER.error(f"Could not find [{datatype}] {provenance} run-item")
-
-        else:
-            # Ask the user if he wants to save his results first before opening a new edit window
-            self.editwindow.reject()
-            if self.editwindow_opened:
-                return
-            self.open_editwindow(provenance, datatype)
-
-    def release_editwindow(self):
-        """Allow a new edit window to be opened"""
-        self.editwindow_opened = None
-
-    def plugin_table(self, name: str, plugin: dict) -> tuple:
-        """:return: a plugin-label and a filled plugin-table"""
-
-        self.options_label[name] = plugin_label = QLabel(f"{name} - plugin")
-        self.options_table[name] = plugin_table = MyQTable(self, ncols=3)   # columns: [key] [value] [testbutton]
-        plugin_table.setRowCount(max(len(plugin.keys()) + 1, 2))            # Add an extra row for new key-value pairs
-        header = plugin_table.horizontalHeader()
-        header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
-        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
-        test_button = QPushButton('Test')                                   # Add a test-button
-        test_button.clicked.connect(partial(self.test_plugin, name))
-        test_button.setToolTip(f'Click to test the "{name}" installation')
-        plugin_table.setCellWidget(0, 2, test_button)
-        delete_button = QPushButton('Remove')                               # Add a delete-button
-        delete_button.clicked.connect(partial(self.del_plugin, name))
-        delete_button.setToolTip(f'Click to discard / stop using the "{name}" plugin')
-        plugin_table.setCellWidget(1, 2, delete_button)
-        plugin_label.setToolTip(bcoin.import_plugin(name).__doc__)
-        plugin_table.setToolTip(TOOLTIP_DCM2NIIX if name == 'dcm2niix2bids' else f"Here you can enter key-value data for the '{name}' plugin")
-        for n, (key, value) in enumerate(plugin.items()):
-            plugin_table.setItem(n, 0, MyQTableItem(key))
-            plugin_table.setItem(n, 1, MyQTableItem(value))
-            plugin_table.setItem(n, 2, MyQTableItem('', editable=False))
-        plugin_table.setItem(plugin_table.rowCount() - 1, 2, MyQTableItem('', editable=False))
-        plugin_table.cellChanged.connect(self.options2bidsmap)
-
-        return plugin_label, plugin_table
-
-    def options2bidsmap(self, rowindex: int, colindex: int):
-        """Saves all Options tables to the bidsmap and add an extra row to the plugin_table if it is full"""
-
-        for plugin, table in self.options_table.items():
-            if plugin == 'bidscoin':
-                oldoptions = self.output_bidsmap.options
-            else:
-                oldoptions = self.output_bidsmap.plugins.get(plugin,{})
-            newoptions = {}
-            for rownr in range(table.rowCount()):
-                keyitem = table.item(rownr, 0)
-                valitem = table.item(rownr, 1)
-                key = val = ''
-                if keyitem: key = keyitem.text().strip()
-                if valitem: val = valitem.text().strip()
-                if key:
-                    if not val.startswith('"') and not val.endswith('"'):           # E.g. convert string or int to list or int but avoid encoding strings such as "C:\tmp" (\t -> tab)
-                        try: val = ast.literal_eval(val)
-                        except (ValueError, TypeError, SyntaxError): pass
-                    newoptions[key] = val
-                    if val != oldoptions.get(key):
-                        LOGGER.verbose(f"User sets the '{plugin}' option from '{key}: {oldoptions.get(key)}' to '{key}: {val}'")
-                        self.datachanged = True
-            if plugin == 'bidscoin':
-                self.output_bidsmap.options = newoptions
-                self.unknowndatatypes  = newoptions.get('unknowntypes', [])
-                self.ignoredatatypes   = newoptions.get('ignoretypes', [])
-                self.bidsignore        = newoptions.get('bidsignore', [])
-                for dataformat in self.dataformats:
-                    self.fill_samples_table(dataformat)
-            else:
-                self.output_bidsmap.plugins[plugin] = newoptions
-
-            # Add an extra row if the table is full
-            if rowindex + 1 == table.rowCount() and table.currentItem() and table.currentItem().text().strip():
-                table.blockSignals(True)
-                table.insertRow(table.rowCount())
-                table.setItem(table.rowCount() - 1, 2, MyQTableItem('', editable=False))
-                table.blockSignals(False)
-
     def add_plugin(self):
         """Interactively add an installed plugin to the Options-tab and save the data in the bidsmap"""
 
@@ -927,10 +929,9 @@ class MainWindow(QMainWindow):
         layout.addWidget(label)
         layout.addWidget(dropdown)
         layout.addWidget(buttonbox)
-        qdialog = QDialog(parent=self, modal=True)
+        qdialog = QDialog(self, modal=True)
         qdialog.setLayout(layout)
         qdialog.setWindowTitle('BIDScoin Options')
-        qdialog.setWindowIcon(QtGui.QIcon(str(BIDSCOIN_ICON)))
         buttonbox.accepted.connect(qdialog.accept)
         buttonbox.rejected.connect(qdialog.reject)
         answer = qdialog.exec()
@@ -1116,8 +1117,8 @@ class EditWindow(QDialog):
     # Emit the new bidsmap when done (see docstring)
     done_edit = QtCore.pyqtSignal(str)
 
-    def __init__(self, runitem: RunItem, bidsmap: BidsMap, template_bidsmap: BidsMap):
-        super().__init__()
+    def __init__(self, parent, runitem: RunItem, bidsmap: BidsMap, template_bidsmap: BidsMap):
+        super().__init__(parent)
 
         # Add missing default events and events.time keys
         runitem.events()
@@ -1145,7 +1146,6 @@ class EditWindow(QDialog):
         self.subid, self.sesid = runitem.datasource.subid_sesid(bidsmap.dataformat(runitem.dataformat).subject, bidsmap.dataformat(runitem.dataformat).session or '')
 
         # Set up the window
-        self.setWindowIcon(QtGui.QIcon(str(BIDSCOIN_ICON)))
         self.setWindowFlags(self.windowFlags() & Qt.WindowType.WindowTitleHint & Qt.WindowType.WindowMinMaxButtonsHint & Qt.WindowType.WindowCloseButtonHint)
         self.setWindowTitle(f"Edit run-item [{self.dataformat}/{self.source_run.datatype}]")
         self.setWhatsThis(f"BIDScoin mapping of {self.dataformat} properties and attributes to BIDS output data")
@@ -1162,11 +1162,13 @@ class EditWindow(QDialog):
         properties_table.cellDoubleClicked.connect(self.inspect_sourcefile)
         properties_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         properties_table.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        properties_table.setMinimumHeight(properties_table.height() + 10)                   # Add 10 pixels of padding (to avoid scrollbar flickering on some older systems)
 
         # Set up the attributes table
         attributes_label = QLabel(f"Attributes")
         attributes_label.setToolTip(f"The {self.dataformat} attributes that match with (identify) the source file. NB: Expert usage (e.g. using regular expressions, see documentation). Copy: Ctrl+C")
         self.attributes_table = attributes_table = self.setup_table(attributes_data, 'attributes', min_vsize=False)
+        attributes_table.resizeColumnsToContents()          # TODO: Fix (this should work to make the edit window wider, except that it doesn't)
         attributes_table.cellChanged.connect(self.attributes2run)
         attributes_table.setToolTip(f"The {self.dataformat} attribute that matches with the source file")
         attributes_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
@@ -1256,7 +1258,7 @@ class EditWindow(QDialog):
         layout1.addWidget(properties_table)
         layout1.addWidget(attributes_label)
         layout1.addWidget(attributes_table)
-        sizepolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
+        sizepolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.MinimumExpanding)
         sizepolicy.setHorizontalStretch(1)
         self.sourcebox = sourcebox = QGroupBox(f"{self.dataformat} input")
         sourcebox.setSizePolicy(sizepolicy)
@@ -1963,10 +1965,10 @@ class EditWindow(QDialog):
             self.fill_table(self.events_time, events_data['time'])
             self.fill_table(self.events_rows, events_data['rows'])
             self.fill_table(self.events_columns, events_data['columns'])
-        self.attributes_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
-        self.attributes_table.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         self.properties_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         self.properties_table.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        self.attributes_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        self.attributes_table.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
 
         # Refresh the BIDS output name
         self.update_bidsname()
@@ -2093,6 +2095,7 @@ class CompareWindow(QDialog):
             properties_table = self.fill_table(properties_data, 'properties')
             properties_table.setToolTip('The filesystem property that matches with the source file')
             properties_table.cellDoubleClicked.connect(partial(self.inspect_sourcefile, runitem.provenance))
+            properties_table.setMinimumHeight(properties_table.height() + 10)  # Add 10 pixels of padding (to avoid scrollbar flickering on some older systems)
 
             # Set up the attributes table
             attributes_label = QLabel('Attributes')
@@ -2110,7 +2113,7 @@ class CompareWindow(QDialog):
             if meta_data:
                 meta_label = QLabel('Metadata')
                 meta_label.setToolTip('Key-value pairs that will be appended to the (e.g. dcm2niix-produced) json sidecar file')
-                meta_table = self.fill_table(meta_data, 'meta', min_vsize=False)
+                meta_table = self.fill_table(meta_data, 'meta')
                 meta_table.setToolTip('The key-value pair that will be appended to the (e.g. dcm2niix-produced) json sidecar file')
 
             # Set up the events table

@@ -242,6 +242,8 @@ def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: 
 
         if errors:
             LOGGER.info(f"The following BIDScoin errors and warnings were reported:\n\n{40 * '>'}\n{errors}{40 * '<'}\n")
+            LOGGER.info(f"For the complete log see: {logfile}\n"
+                        f"NB: That folder may contain privacy sensitive information, e.g. pathnames in logfiles and provenance data samples")
 
         return
 

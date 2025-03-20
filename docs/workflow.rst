@@ -49,35 +49,31 @@ Here is how to run the bidsmapper command:
 
     options:
       -h, --help            show this help message and exit
-      -b NAME, --bidsmap NAME
-                            The study bidsmap file with the mapping heuristics. If the bidsmap filename
-                            is just the base name (i.e. no '/' in the name) then it is assumed to be
-                            located in the current directory or in bidsfolder/code/bidscoin. Default:
-                            bidsmap.yaml
-      -t NAME, --template NAME
-                            The bidsmap template file with the default heuristics (this could be provided
+      -b, --bidsmap NAME    The study bidsmap file with the mapping heuristics. If the bidsmap filename is
+                            just the base name (i.e. no '/' in the name) then it is assumed to be located
+                            in the current directory or in bidsfolder/code/bidscoin. Default: bidsmap.yaml
+      -t, --template NAME   The bidsmap template file with the default heuristics (this could be provided
                             by your institute). If the bidsmap filename is just the base name (i.e. no '/'
                             in the name) then it is assumed to be located in the bidscoin config folder.
                             Default: bidsmap_dccn
-      -p NAME [NAME ...], --plugins NAME [NAME ...]
+      -p, --plugins NAME [NAME ...]
                             List of plugins to be used. Default: the plugin list of the study/template
                             bidsmap
-      -n PREFIX, --subprefix PREFIX
-                            The prefix common for all the source subject-folders (e.g. ``Pt`` is the
+      -n, --subprefix PREFIX
+                            The prefix common for all the source subject-folders (e.g. 'Pt' is the
                             subprefix if subject folders are named 'Pt018', 'Pt019', ...). Use '*' when
                             your subject folders do not have a prefix. Default: the value of the
                             study/template bidsmap, e.g. 'sub-'
-      -m PREFIX, --sesprefix PREFIX
-                            The prefix common for all the source session-folders (e.g. ``M_`` is the
+      -m, --sesprefix PREFIX
+                            The prefix common for all the source session-folders (e.g. 'M_' is the
                             subprefix if session folders are named 'M_pre', 'M_post', ..). Use '*' when
                             your session folders do not have a prefix. Default: the value of the
                             study/template bidsmap, e.g. 'ses-'
-      -u PATTERN, --unzip PATTERN
-                            Wildcard pattern to unpack tarball/zip-files in the sub/ses sourcefolder that
+      -u, --unzip PATTERN   Wildcard pattern to unpack tarball/zip-files in the sub/ses sourcefolder that
                             need to be unzipped (in a tempdir) to make the data readable. Default: the
                             value of the study/template bidsmap
       -s, --store           Store newly discovered data samples in the bidsfolder/code/provenance folder
-                            (useful for editing e.g. zipped or transferred datasets)
+                            (useful for editing e.g. zipped or DICOMDIR datasets)
       -a, --automated       Save the automatically generated bidsmap to disk and without interactively
                             tweaking it with the bidseditor
       -f, --force           Discard the previously saved bidsmap and log file, instead of reusing them
@@ -89,11 +85,12 @@ Here is how to run the bidsmapper command:
 
     ::
 
-        examples:
-          bidsmapper myproject/raw myproject/bids
-          bidsmapper myproject/raw myproject/bids -t bidsmap_custom  # Uses a template bidsmap of choice
-          bidsmapper myproject/raw myproject/bids -p nibabel2bids    # Uses a plugin of choice
-          bidsmapper myproject/raw myproject/bids -u '*.tar.gz'      # Unzip tarball source files
+    examples:
+      bidsmapper myproject/raw myproject/bids
+      bidsmapper myproject/raw myproject/bids -t bidsmap_custom  # Uses a template bidsmap of choice
+      bidsmapper myproject/raw myproject/bids -p nibabel2bids    # Uses a plugin of choice
+      bidsmapper myproject/raw myproject/bids -n patient- -m '*' # Handles DICOMDIR datasets
+      bidsmapper myproject/raw myproject/bids -u '*.tar.gz'      # Unzip tarball source files
 
 After the source data has been scanned, the bidsmapper will automatically launch `step 1b <#step-1b-running-the-bidseditor>`__ to let the user check and edit the automatically generated study bidsmap. For a fully automated workflow users can skip this interactive step using the ``-i`` option (see above).
 
@@ -122,13 +119,11 @@ Here is how to run the bidseditor command:
 
     options:
       -h, --help            show this help message and exit
-      -b NAME, --bidsmap NAME
-                            The study bidsmap file with the mapping heuristics. If the bidsmap filename
+      -b, --bidsmap NAME    The study bidsmap file with the mapping heuristics. If the bidsmap filename
                             is just the base name (i.e. no "/" in the name) then it is assumed to be
                             located in the current directory or in bidsfolder/code/bidscoin. Default:
                             bidsmap.yaml
-      -t NAME, --template NAME
-                            The template bidsmap file with the default heuristics (this could be provided
+      -t, --template NAME   The template bidsmap file with the default heuristics (this could be provided
                             by your institute). If the bidsmap filename is just the base name (i.e. no "/"
                             in the name) then it is assumed to be located in the bidscoin config folder.
                             Default: bidsmap_dccn
@@ -250,19 +245,17 @@ Here is how to run the bidscoiner command:
 
     options:
       -h, --help            show this help message and exit
-      -p LABEL [LABEL ...], --participant LABEL [LABEL ...]
+      -p, --participant LABEL [LABEL ...]
                             Space separated list of selected sub-# names/folders to be processed (the
                             sub-prefix can be omitted). Otherwise all subjects in the sourcefolder will
                             be processed
-      -b NAME, --bidsmap NAME
-                            The study bidsmap file with the mapping heuristics. If the bidsmap filename
+      -b, --bidsmap NAME    The study bidsmap file with the mapping heuristics. If the bidsmap filename
                             is just the base name (i.e. no "/" in the name) then it is assumed to be
                             located in the current directory or in bidsfolder/code/bidscoin. Default:
                             bidsmap.yaml
       -f, --force           Process all subjects, regardless of existing subject folders in the
                             bidsfolder. Otherwise these subject folders will be skipped
-      -c [SPECS], --cluster [SPECS]
-                            Use the DRMAA library to submit the bidscoiner jobs to a high-performance
+      -c, --cluster [SPECS] Use the DRMAA library to submit the bidscoiner jobs to a high-performance
                             compute (HPC) cluster. You can add an opaque DRMAA argument with native
                             specifications for your HPC resource manager (NB: Use quotes and include at
                             least one space character to prevent premature parsing -- see examples)

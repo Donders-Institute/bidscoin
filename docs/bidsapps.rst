@@ -38,11 +38,10 @@ If you have a previously converted BIDS data repository and you would like to re
 
     options:
       -h, --help            show this help message and exit
-      -p LABEL [LABEL ...], --participant LABEL [LABEL ...]
+      -p, --participant LABEL [LABEL ...]
                             Space separated list of sub-# identifiers to be processed (the sub-prefix can
                             be left out). If not specified then all participants will be processed
-      -b NAME, --bidsmap NAME
-                            Selects a custom study bidsmap file for extracting source data properties and
+      -b, --bidsmap NAME    Selects a custom study bidsmap file for extracting source data properties and
                             attributes. If the bidsmap filename is just the base name (i.e. no "/" in the
                             name) then it is assumed to be located in the current directory or in
                             bidsfolder/code/bidscoin. Default: bidsmap.yaml or else the template bidsmap
@@ -75,19 +74,19 @@ Before sharing or pre-processing their images, you may want to combine the separ
 
     options:
       -h, --help            show this help message and exit
-      -p LABEL [LABEL ...], --participant LABEL [LABEL ...]
+      -p, --participant LABEL [LABEL ...]
                             Space separated list of sub-# identifiers to be processed (the sub-prefix can
                             be left out). If not specified then all participants will be processed
                             (default: None)
-      -o DESTINATION, --output DESTINATION
+      -o, --output DESTINATION
                             A string that determines where the output is saved. It can be the name of a
                             BIDS datatype folder, such as 'func', or of the derivatives folder, i.e.
                             'derivatives'. If output is left empty then the combined image is saved in
                             the input datatype folder and the original echo images are moved to the
                             'extra_data' folder (default: )
-      -a {PAID,TE,average}, --algorithm {PAID,TE,average}
+      -a, --algorithm {PAID,TE,average}
                             Combination algorithm (default: TE)
-      -w [WEIGHT ...], --weights [WEIGHT ...]
+      -w, --weights [WEIGHT ...]
                             Weights for each echo (default: None)
       -f, --force           Process all images, regardless whether target images already exist. Otherwise
                             the echo-combination will be skipped (default: False)
@@ -125,22 +124,21 @@ Before sharing or pre-processing your data, you may want to deface your anatomic
 
     options:
       -h, --help            show this help message and exit
-      -p LABEL [LABEL ...], --participant LABEL [LABEL ...]
+      -p, --participant LABEL [LABEL ...]
                             Space separated list of sub-# identifiers to be processed (the sub-prefix can
                             be left out). If not specified then all participants will be processed
                             (default: None)
-      -o DESTINATION, --output DESTINATION
+      -o, --output DESTINATION
                             A string that determines where the defaced images are saved. It can be the
                             name of a BIDS datatype folder, such as 'anat', or of the derivatives folder,
                             i.e. 'derivatives'. If output is left empty then the original images are
                             replaced by the defaced images (default: None)
-      -c [SPECS], --cluster [SPECS]
-                            Use the DRMAA library to submit the deface jobs to a high-performance compute
+      -c, --cluster [SPECS] Use the DRMAA library to submit the deface jobs to a high-performance compute
                             (HPC) cluster. You can add an opaque DRMAA argument with native
                             specifications for your HPC resource manager (NB: Use quotes and include at
                             least one space character to prevent premature parsing -- see examples)
                             (default: None)
-      -a DICT, --args DICT  Additional arguments (in dict/json-style) that are passed to pydeface (NB:
+      -a, --args DICT       Additional arguments (in dict/json-style) that are passed to pydeface (NB:
                             Use quotes). See examples for usage (default: {})
       -f, --force           Deface all images, regardless if they have already been defaced (i.e. if
                             {"Defaced": True} in the json sidecar file) (default: False)
@@ -178,26 +176,25 @@ This utility is very similar to the `deface <#defacing>`__ utility above, except
 
     options:
       -h, --help            show this help message and exit
-      -m PATTERN, --maskpattern PATTERN
+      -m, --maskpattern PATTERN
                             Globlike search pattern (relative to the subject/session folder) to select
                             the images from which the defacemask is computed, e.g. 'anat/*_part-
                             mag_*_T2starw*'. If not given then 'pattern' is used (default: None)
-      -p LABEL [LABEL ...], --participant LABEL [LABEL ...]
+      -p, --participant LABEL [LABEL ...]
                             Space separated list of sub-# identifiers to be processed (the sub-prefix can
                             be left out). If not specified then all participants will be processed
                             (default: None)
-      -o DESTINATION, --output DESTINATION
+      -o, --output DESTINATION
                             A string that determines where the defaced images are saved. It can be the
                             name of a BIDS datatype folder, such as 'anat', or of the derivatives folder,
                             i.e. 'derivatives'. If output is left empty then the original images are
                             replaced by the defaced images (default: None)
-      -c [SPECS], --cluster [SPECS]
-                            Use the DRMAA library to submit the deface jobs to a high-performance compute
+      -c, --cluster [SPECS] Use the DRMAA library to submit the deface jobs to a high-performance compute
                             (HPC) cluster. You can add an opaque DRMAA argument with native
                             specifications for your HPC resource manager (NB: Use quotes and include at
                             least one space character to prevent premature parsing -- see examples)
                             (default: None)
-      -a DICT, --args DICT  Additional arguments (in dict/json-style) that are passed to pydeface (NB:
+      -a, --args DICT       Additional arguments (in dict/json-style) that are passed to pydeface (NB:
                             Use quotes). See examples for usage (default: {})
       -f, --force           Process all images, regardless if images have already been defaced (i.e. if
                             {"Defaced": True} in the json sidecar file) (default: False)
@@ -233,16 +230,15 @@ The ``skullstrip``-tool is a wrapper around the synthstrip tool that writes BIDS
 
     options:
       -h, --help            show this help message and exit
-      -p LABEL [LABEL ...], --participant LABEL [LABEL ...]
+      -p, --participant LABEL [LABEL ...]
                             Space separated list of sub-# identifiers to be processed (the sub-prefix can
                             be left out). If not specified then all participants will be processed
                             (default: None)
-      -m PATTERN, --masked PATTERN
-                            Globlike search pattern (relative to the subject/session folder) to select
+      -m, --masked PATTERN  Globlike search pattern (relative to the subject/session folder) to select
                             additional (3D/4D) images from the same space that need to be masked with the
                             same mask, e.g. 'fmap/*_phasediff'. NB: This option can only be used if
                             pattern yields a single file per session (default: None)
-      -o DESTINATION [DESTINATION ...], --output DESTINATION [DESTINATION ...]
+      -o, --output DESTINATION [DESTINATION ...]
                             One or two output strings that determine where the skullstripped + additional
                             masked images are saved. Each output string can be the name of a BIDS
                             datatype folder, such as 'anat', or of the derivatives folder, i.e.
@@ -251,11 +247,10 @@ The ``skullstrip``-tool is a wrapper around the synthstrip tool that writes BIDS
                             None)
       -f, --force           Process images, regardless whether images have already been skullstripped
                             (i.e. if {'SkullStripped': True} in the json sidecar file) (default: False)
-      -a ARGS, --args ARGS  Additional arguments that are passed to synthstrip (NB: Use quotes and
+      -a, --args ARGS       Additional arguments that are passed to synthstrip (NB: Use quotes and
                             include at least one space character to prevent premature parsing) (default:
                             )
-      -c [SPECS], --cluster [SPECS]
-                            Use the DRMAA library to submit the skullstrip jobs to a high-performance
+      -c, --cluster [SPECS] Use the DRMAA library to submit the skullstrip jobs to a high-performance
                             compute (HPC) cluster. You can add an opaque DRMAA argument with native
                             specifications for your HPC resource manager (NB: Use quotes and include at
                             least one space character to prevent premature parsing -- see examples)
@@ -298,27 +293,26 @@ Quality control
 
     options:
       -h, --help            show this help message and exit
-      -o PATTERN, --outlinepattern PATTERN
+      -o, --outlinepattern PATTERN
                             Globlike search pattern to select red outline images that are projected on
                             top of the reported images (i.e. 'outlinepattern' must yield the same number
                             of images as 'pattern'. Prepend `outlinedir:` if your outline images are in
                             `outlinedir` instead of `bidsdir` (see examples below)`
-      -i FILENAME, --outlineimage FILENAME
+      -i, --outlineimage FILENAME
                             A common red-outline image that is projected on top of all images
-      -p LABEL [LABEL ...], --participant LABEL [LABEL ...]
+      -p, --participant LABEL [LABEL ...]
                             Space separated list of sub-# identifiers to be processed (the sub-prefix can
                             be left out). If not specified then all participants will be processed
-      -r FOLDER, --reportfolder FOLDER
+      -r, --reportfolder FOLDER
                             The folder where the report is saved (default:
                             bidsfolder/derivatives/slicereport)
-      -x FOLDER [FOLDER ...], --xlinkfolder FOLDER [FOLDER ...]
+      -x, --xlinkfolder FOLDER [FOLDER ...]
                             A (list of) QC report folder(s) with cross-linkable sub-reports, e.g.
                             bidsfolder/derivatives/mriqc
-      -q NAME [NAME ...], --qcscores NAME [NAME ...]
+      -q, --qcscores NAME [NAME ...]
                             Column names for creating an accompanying tsv-file to store QC-rating scores
                             (default: rating_overall)
-      -c [SPECS], --cluster [SPECS]
-                            Use the DRMAA library to submit the slicereport jobs to a high-performance
+      -c, --cluster [SPECS] Use the DRMAA library to submit the slicereport jobs to a high-performance
                             compute (HPC) cluster. You can add an opaque DRMAA argument with native
                             specifications for your HPC resource manager (NB: Use quotes and include at
                             least one space character to prevent premature parsing -- see examples)

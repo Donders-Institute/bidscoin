@@ -37,19 +37,20 @@ class Interface(PluginInterface):
         if dataformat and dataformat not in ('Presentation', 'Psychopy'):
             return ''
 
-        if sourcefile.suffix.lower() in ('.log',):
-            try:
+        try:
+            if sourcefile.suffix.lower() in ('.log',):
                 with sourcefile.open('r') as fid:
                     for n in (1,2,3):
                         if fid.readline().startswith('Scenario -'):
                             return 'Presentation'
-            except Exception:
-                pass
 
-        if sourcefile.suffix.lower() in ('.tsv', '.csv'):           # '.psydat' = WIP
-            with sourcefile.open('r', encoding='utf-8-sig') as fid:
-                header = fid.readline()
-            return 'Psychopy' if 'psychopyVersion' in header else 'Logdata'
+            if sourcefile.suffix.lower() in ('.tsv', '.csv'):           # '.psydat' = WIP
+                with sourcefile.open('r', encoding='utf-8-sig') as fid:
+                    header = fid.readline()
+                return 'Psychopy' if 'psychopyVersion' in header else 'Logdata'
+
+        except Exception:
+            pass
 
         return ''
 
@@ -67,29 +68,29 @@ class Interface(PluginInterface):
                             during run-item matching)
         """
 
-        if dataformat == 'Presentation':
-            try:
+        try:
+            if dataformat == 'Presentation':
                 with sourcefile.open('r') as fid:
                     while '-' in (line := fid.readline()):
                         key, value = line.split('-', 1)
                         if attribute == key.strip():
                             return value.strip() or ('Unspecified' if attribute=='Scenario' else '')   # Avoid empty values as they are skipped during run-matching
 
-            except (IOError, OSError) as ioerror:
-                LOGGER.exception(f"Could not get the Presentation '{attribute}' attribute from {sourcefile}\n{ioerror}")
+            elif dataformat == 'Psychopy':
+                if sourcefile.suffix.lower() in ('.psydat',):
+                    if find_spec('psychopy'):
+                        psydat = fromFile(sourcefile)
+                        return psydat.extraInfo.get(attribute) or ''
+                    else:
+                        LOGGER.warning(f"Could not read the PsychoPy '{sourcefile}', please install `psychopy`")
 
-        elif dataformat == 'Psychopy':
-            if sourcefile.suffix.lower() in ('.psydat',):
-                if find_spec('psychopy'):
-                    psydat = fromFile(sourcefile)
-                    return psydat.extraInfo.get(attribute) or ''
-                else:
-                    LOGGER.warning(f"Could not read the PsychoPy '{sourcefile}', please install `psychopy`")
+                if sourcefile.suffix.lower() in ('.tsv', '.csv'):
+                    df = pd.read_csv(sourcefile, nrows=1, sep=None, engine='python', skip_blank_lines=True, encoding='utf-8-sig')
+                    if attribute in df.columns[-(options.get('extraInfo',7) + 1):]:     # The `extraInfo` columns (7?) are always last + a separator
+                        return df.loc[0, attribute]
 
-            if sourcefile.suffix.lower() in ('.tsv', '.csv'):
-                df = pd.read_csv(sourcefile, nrows=1, sep=None, engine='python', skip_blank_lines=True, encoding='utf-8-sig')
-                if attribute in df.columns[-(options.get('extraInfo',7) + 1):]:     # The `extraInfo` columns (7?) are always last + a separator
-                    return df.loc[0, attribute]
+        except (IOError, OSError) as ioerror:
+            LOGGER.warning(f"Could not get the {dataformat} '{attribute}' attribute from {sourcefile}\n{ioerror}")
 
         return ''
 
