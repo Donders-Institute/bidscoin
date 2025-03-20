@@ -106,8 +106,8 @@ def sortsession(sessionfolder: Path, dicomfiles: list[Path], folderscheme: str, 
             continue
 
         # Skip radiology reports, as they have a very limited DICOM header
-        if get_dicomfield('CodeMeaning', dicomfile) == 'Radiology Report':
-            LOGGER.info(f"Skipping radiology report '{dicomfile}'")
+        if get_dicomfield('Modality', dicomfile) == 'SR':
+            LOGGER.info(f"Skipping report file '{dicomfile}'")
             continue
 
         # Create a new subfolder if needed
