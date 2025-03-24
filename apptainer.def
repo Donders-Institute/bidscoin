@@ -65,7 +65,11 @@ Stage: final
 %files from builder
     /usr/local/bin/dcm2niix /usr/local/bin/dcm2niix
     /opt/fsl /opt/fsl
-    # /opt/bidscoin /opt/bidscoin     # Only needed for pip install from GitHub
+    # /opt/bidscoin /opt/bidscoin              # Only needed for pip install from GitHub
+
+%files
+    # ./bidscoin /opt/bidscoin/bidscoin        # Only needed for pip install from the local git repo
+    # ./pyproject.toml /opt/bidscoin/pyproject.toml
 
 %environment
     export FSLDIR=/opt/fsl FSLOUTPUTTYPE=NIFTI_GZ
@@ -79,12 +83,12 @@ Stage: final
 
     # Pre-install essential packages
     # NOTE: PyQt is installed as Debian package to solve dependencies issues occurring when installed with pip
-    apt -y --no-install-recommends install python3-pyqt6 build-essential libgl1 libxcb-cursor0 dbus qt6-wayland && apt clean     # Add build-essential for newer python:3-slim base images (pip needs gcc and wayland support is not yet provided for)
+    apt -y --no-install-recommends install tk build-essential libgl1 libxcb-cursor0 dbus qt6-wayland && apt clean     # Add build-essential for newer python:3-slim base images (pip needs gcc and wayland support is not yet provided for)
 
     # Install BIDScoin
     pip install bidscoin[spec2nii2bids,deface]
     # pip install bidscoin[spec2nii2bids,deface]==VERSION
-    # pip install /opt/bidscoin[spec2nii2bids,deface]   # = GitHub. NB: Also uncomment in xfiles from builder: `/opt/bidscoin /opt/bidscoin`
+    # pip install /opt/bidscoin[spec2nii2bids,deface]   # = GitHub/local repo. NB: Also uncomment in %files (from builder): `/opt/bidscoin /opt/bidscoin` etc
 
     # Uncomment the line below if you get errors like: ImportError: libQt5Core.so.5: cannot open shared object file: No such file or directory
     # strip --remove-section=.note.ABI-tag /usr/lib/x86_64-linux-gnu/libQt5Core.so.5

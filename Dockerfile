@@ -41,6 +41,9 @@ COPY --from=builder /usr/local/bin/dcm2niix /usr/local/bin/dcm2niix
 COPY --from=builder /opt/fsl /opt/fsl
 # Only needed for pip install from GitHub
 # COPY --from=builder /opt/bidscoin /opt/bidscoin
+# Only needed for pip install from local repo
+# COPY ./bidscoin /opt/bidscoin/bidscoin
+# COPY ./pyproject.toml /opt/bidscoin/pyproject.toml
 
 # Set environment variables
 ENV FSLDIR=/opt/fsl FSLOUTPUTTYPE=NIFTI_GZ \
@@ -50,9 +53,9 @@ ENV FSLDIR=/opt/fsl FSLOUTPUTTYPE=NIFTI_GZ \
 
 # First install pyqt as Debian package to solve dependencies issues occurring when installed with pip
 # Then install the latest stable BIDScoin release (add build-essential for newer python:3-slim base images (pip needs gcc and wayland support is not yet provided for))
-RUN apt update && apt -y --no-install-recommends install pigz curl python3-pyqt6 build-essential libgl1 libxcb-cursor0 dbus qt6-wayland && apt clean; \
+RUN apt update && apt -y --no-install-recommends install pigz curl tk build-essential libgl1 libxcb-cursor0 dbus qt6-wayland && apt clean; \
     pip install bidscoin[spec2nii2bids,deface]
     # pip install bidscoin[spec2nii2bids,deface]==VERSION
-    # pip install /opt/bidscoin[spec2nii2bids,deface]   # = GitHub. NB: Also uncomment in xfiles from builder: `/opt/bidscoin /opt/bidscoin`
+    # pip install /opt/bidscoin[spec2nii2bids,deface]   # = GitHub/local repo. NB: Also uncomment in COPY (--from=builder): `/opt/bidscoin /opt/bidscoin` etc
 
 CMD ["bidscoin"]

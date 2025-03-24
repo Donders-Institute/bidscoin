@@ -26,7 +26,7 @@ from tqdm.contrib.logging import logging_redirect_tqdm
 from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     sys.path.append(str(Path(__file__).parents[1]))
-from bidscoin import templatefolder, pluginfolder, bidsmap_template, tutorialurl, trackusage, tracking, configdir, configfile, config, DEBUG
+from bidscoin import templatefolder, pluginfolder, bidsmap_template, tutorialurl, trackusage, tracking, configdir, configfile, config, DEBUG, __version__
 
 LOGGER = logging.getLogger(__name__)
 
@@ -448,7 +448,7 @@ def test_bidscoin(bidsmapfile, options: dict=None, testplugins: bool=True, testg
 
     if not bidsmapfile: return 1
 
-    LOGGER.info("--------- Testing the BIDScoin's core functionality ---------")
+    LOGGER.info(f"--------- Testing BIDScoin's {__version__} core functionality ---------")
 
     # Test loading the template bidsmap
     success = True
@@ -478,18 +478,19 @@ def test_bidscoin(bidsmapfile, options: dict=None, testplugins: bool=True, testg
         LOGGER.info('Testing the PyQt GUI setup:')
         import tkinter as tk
         try:
-            root = tk.Tk()
-            root.withdraw()                         # Don't show the window
-        except tk.TclError as display_error:
-            LOGGER.error(f"Cannot open a graphical display on your system:\n{display_error}")
-            success = False
-        try:
+            root = tk.Tk()                      # Test opening a window using the TKinter standard library
+            root.after(1, root.destroy)     # Destroy after 1ms
+            root.mainloop()                     # Run event loop (shows the window)
+
             from PyQt6.QtWidgets import QApplication, QPushButton
             app = QApplication(sys.argv)
             window = QPushButton('Minimal GUI test: OK')
             window.show()
             QApplication.quit()
             LOGGER.success('The GUI seems to work OK')
+        except tk.TclError as display_error:
+            LOGGER.error(f"Cannot open a graphical display on your system:\n{display_error}")
+            success = False
         except Exception as pyqterror:
             LOGGER.error(f"The installed PyQt version does not seem to work for your system:\n{pyqterror}")
             success = False
