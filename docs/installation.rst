@@ -124,7 +124,7 @@ You can use the following command syntax to execute BIDScoin tools in the contai
 .. code-block:: console
 
    $ apptainer exec bidscoin.sif <bidscoin_tool> <bidscoin_tool_args>                                           # Use this if you downloaded or built the image yourself
-   $ apptainer exec oras://ghcr.io/Donders-Institute/bidscoin:<version> <bidscoin_tool> <bidscoin_tool_args>    # This will pull the image from the GitHub registry if needed
+   $ apptainer exec oras://ghcr.io/donders-institute/bidscoin:<version> <bidscoin_tool> <bidscoin_tool_args>    # This will pull the image from the GitHub registry if needed
 
 Where ``<bidscoin_tool>`` is a BIDScoin tool (e.g., ``bidsmapper``, ``bidscoiner``, ``dicomsort``) and ``<bidscoin_tool_args>`` are the tool's arguments. So for instance, if you have source data in ``myhome/data/raw``, instead of running ``bidsmapper data/raw data/bids`` and then ``bidsmapper data/raw data/bids`` from your home directory, you now execute:
 
