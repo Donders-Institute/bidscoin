@@ -2,6 +2,7 @@ name: Build and deploy Apptainer image
 on:
   release:
     types: [published]
+  workflow_dispatch:      # This allows manual triggering
 
 jobs:
   build-and-push:
