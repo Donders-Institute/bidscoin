@@ -2,7 +2,19 @@
 
 *All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)*
 
-## [4.5.2.dev2]
+## [dev]
+
+## [4.6.0] - 2025-03-25
+
+### Added
+- An events parser for Psychopy log-files
+- A generic parser for tabular log-files
+- Apptainer SIF images hosted as GitHub packages
+- Support for bracketed nested tags, e.g. [0x0008,0x1250][0][0x0008,0x1140][0][(0x0008,0x1155)] (GitHub #261)
+
+### Changed
+- No longer use `repetition_time` for PAR/REC as it may vary across acquisitions (https://neurostars.org/t/regexp-for-repetition-time/32368/6)
+- The parsing of subject/session labels from DICOMDIR data -- special thanks to [neuro_coder](https://neurostars.org/t/problem-assigning-sub-ses-to-dicomdir-layout-dataset/32423/50) for testing
 
 ## [4.5.0] - 2025-02-05
 
@@ -476,8 +488,10 @@ A first stable release of BIDScoin :-)
 ### To do
 - Add support for non-imaging data
 
-[dev]: https://github.com/Donders-Institute/bidscoin/compare/4.4.0...HEAD
-[4.3.4]: https://github.com/Donders-Institute/bidscoin/compare/4.3.3...4.4.0
+[dev]: https://github.com/Donders-Institute/bidscoin/compare/4.6.0...HEAD
+[4.6.0]: https://github.com/Donders-Institute/bidscoin/compare/4.5.0...4.6.0
+[4.5.0]: https://github.com/Donders-Institute/bidscoin/compare/4.4.0...4.5.0
+[4.4.0]: https://github.com/Donders-Institute/bidscoin/compare/4.3.3...4.4.0
 [4.3.3]: https://github.com/Donders-Institute/bidscoin/compare/4.3.2...4.3.3
 [4.3.2]: https://github.com/Donders-Institute/bidscoin/compare/4.3.1...4.3.2
 [4.3.1]: https://github.com/Donders-Institute/bidscoin/compare/4.3.0...4.3.1
