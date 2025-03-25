@@ -103,7 +103,7 @@ This image does not include FreeSurfer/synthstrip (needed for ``skullstrip``)
 Getting the container image
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-You can download a pre-build Apptainer image `directly from the GitHub Container Registry <https://github.com/orgs/Donders-Institute/packages?repo_name=bidscoin>`__, or pull a BIDScoin Docker image and convert it into an Apptainer image:
+You can download a pre-build Apptainer image `directly from the GitHub Container Registry <https://github.com/Donders-Institute/bidscoin/pkgs/container/bidscoin>`__, or pull a BIDScoin Docker image and convert it into an Apptainer image:
 
 .. code-block:: console
 
