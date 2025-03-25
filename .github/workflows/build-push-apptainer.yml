@@ -28,4 +28,4 @@ jobs:
       - name: Login and deploy container
         run: |
            echo ${{ secrets.GITHUB_TOKEN }} | apptainer registry login -u "${{ github.actor }}" --password-stdin oras://ghcr.io
-           apptainer push bidscoin.sif oras://ghcr.io/${GITHUB_REPOSITORY}:${GITHUB_REF_NAME}
+           apptainer push bidscoin.sif oras://ghcr.io/Donders-Institute/bidscoin:${GITHUB_REF_NAME}
