@@ -7,14 +7,14 @@
 ## [4.6.0] - 2025-03-25
 
 ### Added
-- An events parser for Psychopy log-files
-- A generic parser for tabular log-files
-- Apptainer SIF images hosted as GitHub packages
-- Support for bracketed nested tags, e.g. [0x0008,0x1250][0][0x0008,0x1140][0][(0x0008,0x1155)] (GitHub #261)
+- An events parser for PsychoPy log-files
+- A generic events parser for tabular log-files
+- Apptainer images hosted as GitHub packages
+- Support for bracketed nested tags, e.g. `[0x0008,0x1250][0][0x0008,0x1140][0][(0x0008,0x1155)]` (GitHub #261)
 
 ### Changed
 - No longer use `repetition_time` for PAR/REC as it may vary across acquisitions (https://neurostars.org/t/regexp-for-repetition-time/32368/6)
-- The parsing of subject/session labels from DICOMDIR data -- special thanks to [neuro_coder](https://neurostars.org/t/problem-assigning-sub-ses-to-dicomdir-layout-dataset/32423/50) for testing
+- The parsing of subject/session labels from DICOMDIR data -- special thanks to [`neuro_coder`](https://neurostars.org/t/problem-assigning-sub-ses-to-dicomdir-layout-dataset/32423/50) for testing
 
 ## [4.5.0] - 2025-02-05
 
