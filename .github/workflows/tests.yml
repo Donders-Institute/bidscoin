@@ -1,15 +1,16 @@
 name: Pytests
 on:
   push:
-    paths-ignore:
+    paths-ignore: &ignore
       - 'docs/**'
+      - '.github/**'
       - '**.rst'
       - '**.md'
+      - 'apptainer.def'
+      - 'Dockerfile'
+      - '.readthedocs.yaml'
   pull_request:
-    paths-ignore:
-      - 'docs/**'
-      - '**.rst'
-      - '**.md'
+    paths-ignore: *ignore
 
 jobs:
   tests:

@@ -14,7 +14,11 @@ By default, when finished the bidsmapper automatically launches the bidseditor, 
     $ bidsmapper sourcefolder bidsfolder    # Scans your data and creates a study bidsmap
     $ bidscoiner sourcefolder bidsfolder    # Converts your data to BIDS using the study bidsmap
 
-If you add new subjects all you need to do is re-run the bidscoiner -- unless the scan protocol was changed, then you also need to first re-run the bidsmapper to add the new samples to the study bidsmap. The paragraphs below describe the BIDScoin workflow in more detail.
+If you add new subjects all you need to do is re-run the bidscoiner -- unless the scan protocol was changed, then you also need to first re-run the bidsmapper to add the new samples to the study bidsmap. The figure and paragraphs below describe the BIDScoin workflow in more detail.
+
+.. figure:: ./_static/bidscoin_architecture.png
+
+   The BIDScoin architecture and dataflow, showing how the bidsmapper performs data discovery to produce a study bidsmap, which the user can modify using a GUI. The bidscoiner then has all the info it needs to perform the data conversion.
 
 .. tip::
    If you don't know what shell command to use or what to do, run the ``bidscoin`` command to give you a workflow overview
