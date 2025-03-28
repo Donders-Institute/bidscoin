@@ -24,6 +24,11 @@ jobs:
           fetch-depth: 0  # Fetch full history including all tags
           fetch-tags: true
 
+      - name: Install git
+        run: |
+          apt-get update
+          apt-get install -y git
+
       - name: Get latest tag
         id: tag
         run: |
