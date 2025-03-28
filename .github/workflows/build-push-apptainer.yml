@@ -26,7 +26,12 @@ jobs:
 
       - name: Get latest tag
         id: tag
-        run: echo "LATEST_TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
+        run: |
+          if ! LATEST_TAG=$(git describe --tags --abbrev=0); then
+            echo "::error::No tags found in repository"
+            exit 1
+          fi
+          echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_ENV
 
       - name: Build SIF image
         run: |
