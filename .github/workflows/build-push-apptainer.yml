@@ -23,33 +23,15 @@ jobs:
         with:
           fetch-depth: 0  # Fetch full history including all tags
 
-      - name: Fetch all tags
-        run: git fetch --tags  # Ensure all tags are available
-
-      - name: Get the latest tag
-        id: get-latest-tag
+      - name: Get latest tag
+        id: tag
         run: echo "LATEST_TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
-
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: marcelzwiers/bidscoin
-          tags: |
-            type=semver,pattern=${{ env.LATEST_TAG }}
-            type=raw,value=latest
 
       - name: Build SIF image
         run: |
-           apptainer build bidscoin.sif apptainer.def
+          apptainer build bidscoin.sif apptainer.def
 
       - name: Login and deploy container
         run: |
-           echo ${{ secrets.GITHUB_TOKEN }} | apptainer registry login -u "${{ github.actor }}" --password-stdin oras://ghcr.io
-           apptainer push bidscoin.sif oras://ghcr.io/donders-institute/bidscoin:${GITHUB_REF_NAME}
+          echo ${{ secrets.GITHUB_TOKEN }} | apptainer registry login -u "${{ github.actor }}" --password-stdin oras://ghcr.io
+          apptainer push bidscoin.sif oras://ghcr.io/donders-institute/bidscoin:${{ env.LATEST_TAG }}
