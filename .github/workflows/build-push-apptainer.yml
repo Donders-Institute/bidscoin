@@ -30,6 +30,7 @@ jobs:
       - name: Get latest tag
         id: tag
         run: |
+          cd "$GITHUB_WORKSPACE" 
           git fetch --tags
           if ! LATEST_TAG=$(git describe --tags --abbrev=0); then
             echo "::error::No tags found in repository"
