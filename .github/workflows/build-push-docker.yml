@@ -15,8 +15,11 @@ jobs:
       attestations: write
       id-token: write
     steps:
-      - name: Check out the repo
+      - name: Check out the latest tag of the repo
         uses: actions/checkout@v4
+        with:
+          ref: $(git describe --tags --abbrev=0)
+          fetch-depth: 0
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v3

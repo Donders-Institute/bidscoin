@@ -18,9 +18,11 @@ jobs:
 
     name: Build and deploy container
     steps:
-
-      - name: Check out code for the container builds
+      - name: Check out the latest tag of the repo
         uses: actions/checkout@v4
+        with:
+          ref: $(git describe --tags --abbrev=0)
+          fetch-depth: 0
 
       - name: Build SIF image
         run: |

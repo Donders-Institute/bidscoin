@@ -7,7 +7,7 @@
 ## [4.6.1] - 2025-03-28
 
 ### Fixed
-- A usability regression that could render a main windows that is larger than the screen
+- A usability regression that could render a main window that is larger than the screen
 
 ## [4.6.0] - 2025-03-25
 
