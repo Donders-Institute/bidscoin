@@ -19,9 +19,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Fetch full history including all tags
-
-      - name: Fetch all tags
-        run: git fetch --tags  # Ensure `git describe` works
+          fetch-tags: true
 
       - name: Get latest tag
         id: tag
