@@ -21,11 +21,18 @@ jobs:
       - name: Check out the repository
         uses: actions/checkout@v4
 
+      - name: Verify the git repository
+        run: |
+          echo "Current directory:   $(pwd)"
+          echo "WORKSPACE directory: $GITHUB_WORKSPACE"
+          ls -la      # Check contents
+
       - name: Install git
         run: |
           apk update
           apk add git
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git status  # Verify that Git is working and repository is accessible
 
       - name: Get latest tag
         id: tag
