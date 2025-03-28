@@ -18,17 +18,14 @@ jobs:
       - name: Check out the repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Ensure all tags are fetched
+          fetch-depth: 0  # Fetch full history including all tags
+
+      - name: Fetch all tags
+        run: git fetch --tags  # Ensure all tags are available
 
       - name: Get the latest tag
         id: get-latest-tag
         run: echo "LATEST_TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
-
-      - name: Check out the latest tag
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ env.LATEST_TAG }}
-          fetch-depth: 0
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
@@ -42,7 +39,7 @@ jobs:
         with:
           images: marcelzwiers/bidscoin
           tags: |
-            type=semver,pattern={{version}}
+            type=semver,pattern=${{ env.LATEST_TAG }}
             type=raw,value=latest
 
       - name: Build and push Docker image
