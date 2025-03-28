@@ -3,7 +3,7 @@ on:
   workflow_run:
     workflows: ["Build and deploy PyPI package"]
     types: [completed]
-  workflow_dispatch:      # This allows manual triggering
+  workflow_dispatch:  # This allows manual triggering
 
 jobs:
   build-and-push:
@@ -21,23 +21,26 @@ jobs:
       - name: Check out the repository
         uses: actions/checkout@v4
 
-      - name: Verify the git repository
+      - name: Verify Git repository and working directory
         run: |
-          echo "Current directory:   $(pwd)"
-          echo "WORKSPACE directory: $GITHUB_WORKSPACE"
-          ls -la      # Check contents
+          echo "Current directory: $(pwd)"
+          echo "Listing contents:"
+          ls -la  # List contents to see if the repository exists
+          git status  # Verify that Git can see the repo
 
       - name: Install git
         run: |
           apk update
           apk add git
-          git config --global --add safe.directory "$GITHUB_WORKSPACE"
-          git status  # Verify that Git is working and repository is accessible
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"  # Ensure the workspace is safe
 
       - name: Get latest tag
         id: tag
         run: |
-          cd "$GITHUB_WORKSPACE" 
+          cd "$GITHUB_WORKSPACE"            # Explicitly set the correct directory
+          echo "Current directory: $(pwd)"  # Debug: Check if we're in the correct directory
+          ls -la                            # List contents again to ensure we're in the right repo
+          git status                        # Verify Git is working inside the container
           git fetch --tags
           if ! LATEST_TAG=$(git describe --tags --abbrev=0); then
             echo "::error::No tags found in repository"
