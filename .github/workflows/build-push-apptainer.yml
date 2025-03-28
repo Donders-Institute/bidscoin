@@ -18,10 +18,19 @@ jobs:
 
     name: Build and deploy container
     steps:
-      - name: Check out the latest tag of the repo
+      - name: Check out the repository
         uses: actions/checkout@v4
         with:
-          ref: $(git describe --tags --abbrev=0)
+          fetch-depth: 0  # Ensure all tags are fetched
+
+      - name: Get the latest tag
+        id: get-latest-tag
+        run: echo "LATEST_TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
+
+      - name: Check out the latest tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.LATEST_TAG }}
           fetch-depth: 0
 
       - name: Build SIF image
