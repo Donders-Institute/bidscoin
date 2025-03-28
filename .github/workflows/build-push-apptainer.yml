@@ -21,26 +21,28 @@ jobs:
       - name: Check out the repository
         uses: actions/checkout@v4
 
+      - name: Install git
+        run: |
+          apk update
+          apk add --no-cache git
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"  # Ensure the workspace is safe
+          git --version  # Verify that Git is installed successfully
+
       - name: Verify Git repository and working directory
         run: |
           echo "Current directory: $(pwd)"
           echo "Listing contents:"
           ls -la  # List contents to see if the repository exists
+          git --version  # Check that git is accessible
           git status  # Verify that Git can see the repo
-
-      - name: Install git
-        run: |
-          apk update
-          apk add git
-          git config --global --add safe.directory "$GITHUB_WORKSPACE"  # Ensure the workspace is safe
 
       - name: Get latest tag
         id: tag
         run: |
-          cd "$GITHUB_WORKSPACE"            # Explicitly set the correct directory
+          cd "$GITHUB_WORKSPACE"  # Explicitly set the correct directory
           echo "Current directory: $(pwd)"  # Debug: Check if we're in the correct directory
-          ls -la                            # List contents again to ensure we're in the right repo
-          git status                        # Verify Git is working inside the container
+          ls -la  # List contents again to ensure we're in the right repo
+          git status  # Verify Git is working inside the container
           git fetch --tags
           if ! LATEST_TAG=$(git describe --tags --abbrev=0); then
             echo "::error::No tags found in repository"
