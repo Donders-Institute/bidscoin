@@ -25,7 +25,7 @@ jobs:
         id: tag
         run: |
           if ! LATEST_TAG=$(git describe --tags --abbrev=0); then
-            echo "::error::No tags found in repository"
+            echo "::error::Latest tag not found in repository"
             exit 1
           fi
           echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_ENV
