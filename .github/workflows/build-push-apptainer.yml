@@ -23,6 +23,9 @@ jobs:
         with:
           fetch-depth: 0  # Fetch full history including all tags
 
+      - name: Fetch all tags
+        run: git fetch --tags  # Ensure `git describe` works
+
       - name: Get latest tag
         id: tag
         run: echo "LATEST_TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
@@ -33,5 +36,5 @@ jobs:
 
       - name: Login and deploy container
         run: |
-          echo ${{ secrets.GITHUB_TOKEN }} | apptainer registry login -u "${{ github.actor }}" --password-stdin oras://ghcr.io
+          echo "${{ secrets.GITHUB_TOKEN }}" | apptainer registry login -u "${{ github.actor }}" --password-stdin oras://ghcr.io
           apptainer push bidscoin.sif oras://ghcr.io/donders-institute/bidscoin:${{ env.LATEST_TAG }}

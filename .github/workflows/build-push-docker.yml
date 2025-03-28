@@ -20,6 +20,9 @@ jobs:
         with:
           fetch-depth: 0  # Fetch full history including all tags
 
+      - name: Fetch all tags
+        run: git fetch --tags  # Ensure `git describe` works
+
       - name: Get latest tag
         id: tag
         run: echo "LATEST_TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
