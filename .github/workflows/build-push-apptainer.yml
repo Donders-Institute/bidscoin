@@ -25,6 +25,7 @@ jobs:
         run: |
           apk update
           apk add git
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
       - name: Get latest tag
         id: tag
