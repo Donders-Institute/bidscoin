@@ -47,3 +47,4 @@ jobs:
         run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | apptainer registry login -u "${{ github.actor }}" --password-stdin oras://ghcr.io
           apptainer push bidscoin.sif oras://ghcr.io/donders-institute/bidscoin:${{ env.LATEST_TAG }}
+          apptainer push bidscoin.sif oras://ghcr.io/donders-institute/bidscoin:latest
