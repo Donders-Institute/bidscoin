@@ -11,6 +11,7 @@ import json
 import csv
 import nibabel as nib
 import pandas as pd
+import random
 from bids_validator import BIDSValidator
 from typing import Union
 from pydicom import dcmread, datadict, config
@@ -2070,6 +2071,14 @@ class EditWindow(QDialog):
         help_url = HELP_URLS.get(self.target_run.datatype, HELP_URL_DEFAULT)
         webbrowser.open(help_url)
 
+        messagebox = QMessageBox(self)
+        messagebox.setText(f"\n{get_douglas_adams_quote()}")
+        messagebox.setWindowTitle("Don't panic")
+        messagebox.setIconPixmap(QtGui.QPixmap(str(Path(__file__).parent/'egg.png')).scaled(150, 150, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
+        messagebox.setToolTip("Thanks for all the fish!")
+        messagebox.setFont(QtGui.QFont('Courier New', pointSize=13))
+        messagebox.show()
+
 
 class CompareWindow(QDialog):
 
@@ -2428,6 +2437,34 @@ def get_eventshelp(eventkey: str) -> str:
             return f"{item.display_name}\n{item.description}"
 
     return f"{eventkey}\nA custom column name"
+
+
+def get_douglas_adams_quote():
+    quotes = ['The answer to the ultimate question of life, the universe, and everything is 42.',
+              "Don't Panic and always carry a towel!",
+              'I love deadlines. I love the whooshing noise they make as they go by.',
+              'A common mistake that people make when trying to design something completely foolproof is to underestimate the ingenuity of complete fools.',
+              'Time is an illusion. Lunchtime doubly so.',
+              'Human beings, who are almost unique in having the ability to learn from the experience of others, are also remarkable for their apparent disinclination to do so.',
+              'Flying is learning how to throw yourself at the ground and miss.',
+              'It is a mistake to think you can solve any major problems just with potatoes.',
+              'The major difference between a thing that might go wrong and a thing that cannot possibly go wrong is that when a thing that cannot possibly go wrong goes wrong it usually turns out to be impossible to get at or repair.',
+              "The chances of finding out what's really going on in the universe are so remote, the only thing to do is hang the sense of it and keep yourself occupied.",
+              'This must be Thursday. I never could get the hang of Thursdays.',
+              'For a moment, nothing happened. Then, after a second or so, nothing continued to happen.',
+              "The ships hung in the sky in much the same way that bricks don't.",
+              'In the beginning the Universe was created. This has made a lot of people very angry and been widely regarded as a bad move.',
+              'I may not have gone where I intended to go, but I think I have ended up where I needed to be.',
+              'He was a dreamer, a thinker, a speculative philosopher... or, as his wife would have it, an idiot.',
+              "Coding is simple. You just have to gaze at an empty IDE until your forehead develops a persistent twitch and your keyboard starts typing 'Hello World' by itself out of sheer pity.",
+              "Debugging follows the same principles as flying: The trick is to throw yourself at the keyboard, miss completely, and by some miraculous oversight of the universe's quality assurance process, end up with working code.",
+              "Space is big. Really big. You just won't believe how vastly, hugely, mind-bogglingly big it is. I mean, you may think it's long way down the road to the chemist's, but that's just peanuts to space.",
+              "There is a theory which states that if ever anyone discovers exactly what the Universe is for and why it is here, it will instantly disappear and be replaced by something even more bizarre and inexplicable.\n\nThere is another theory which states that this has already happened.",
+              "You live and learn. At any rate, you live.",
+              "Anyone who is capable of getting themselves made President should on no account be allowed to do the job.",
+              "If it looks like a duck, and quacks like a duck, we have at least to consider the possibility that we have a small aquatic bird of the family anatidae on our hands."]
+
+    return random.choice(quotes)
 
 
 def bidseditor(bidsfolder: str, bidsmap: str='', template: str=bidsmap_template) -> None:
