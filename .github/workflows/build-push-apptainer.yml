@@ -26,8 +26,8 @@ jobs:
 
       - name: Install git
         run: |
-          apt-get update
-          apt-get install -y git
+          apk update
+          apk add git
 
       - name: Get latest tag
         id: tag
