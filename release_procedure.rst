@@ -41,7 +41,7 @@ DCCN deployment
 
 1. Copy the dev folder, update the bidsmaps and module::
 
-    VERSION="4.6.0"
+    VERSION="4.6.1"
     cp -r /opt/bidscoin/dev /opt/bidscoin/$VERSION
     cd /opt/_modules/bidscoin
     ln -s .common $VERSION
@@ -68,7 +68,7 @@ Neurodesk
 1. Pull and edit the bidscoin neurocontainer in a separate release branch
 2. In the VM, build and test a neurodocker image::
 
-    VERSION="4.6.0"
+    VERSION="4.6.1"
     cd ~/PycharmProjects/neurocontainers/recipes/bidscoin
     conda activate neurodocker
     ./build.sh -ds

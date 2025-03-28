@@ -4,6 +4,11 @@
 
 ## [dev]
 
+## [4.6.1] - 2025-03-28
+
+### Fixed
+- A usability regression that could render a main windows that is larger than the screen
+
 ## [4.6.0] - 2025-03-25
 
 ### Added
@@ -488,7 +493,8 @@ A first stable release of BIDScoin :-)
 ### To do
 - Add support for non-imaging data
 
-[dev]: https://github.com/Donders-Institute/bidscoin/compare/4.6.0...HEAD
+[dev]: https://github.com/Donders-Institute/bidscoin/compare/4.6.1...HEAD
+[4.6.1]: https://github.com/Donders-Institute/bidscoin/compare/4.6.0...4.6.1
 [4.6.0]: https://github.com/Donders-Institute/bidscoin/compare/4.5.0...4.6.0
 [4.5.0]: https://github.com/Donders-Institute/bidscoin/compare/4.4.0...4.5.0
 [4.4.0]: https://github.com/Donders-Institute/bidscoin/compare/4.3.3...4.4.0
