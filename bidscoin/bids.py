@@ -579,12 +579,12 @@ class RunItem:
 
         # Compose the bidsname
         bidsname    = f"sub-{subid}{'_ses-'+sesid if sesid else ''}"                # Start with the subject/session identifier
-        entitiekeys = [entities[entity].name for entity in entityrules]        # Use the valid keys from the BIDS schema
+        entitiekeys = [entities[entity].name for entity in entityrules]             # Use the valid keys from the BIDS schema
         if not validkeys:                                                           # Use the (ordered valid + invalid) keys from the run item
             entitiekeys = [key for key in entitiekeys if key in self.bids] + \
                           [key for key in self.bids if key not in entitiekeys and key!='suffix']
         for entitykey in entitiekeys:
-            bidsvalue = self.bids.get(entitykey)                                  # Get the entity data from the run item
+            bidsvalue = self.bids.get(entitykey)                                    # Get the entity data from the run item
             if not bidsvalue:
                 bidsvalue = ''
             if isinstance(bidsvalue, list):

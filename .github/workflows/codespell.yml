@@ -5,6 +5,7 @@ name: Codespell
 on:
   push:
     branches: [master]
+    tags-ignore: ['*']      # Explicitly ignore tags to avoid running twice
   pull_request:
     branches: [master]
 

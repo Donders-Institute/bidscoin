@@ -266,6 +266,7 @@ def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: 
                 for sesfolder in sesfolders:
 
                     # Run the bidscoiner plugins
+                    bidssession = Path()
                     for plugin in plugins:
 
                         # Check if we should skip the sesfolder

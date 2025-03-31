@@ -194,7 +194,7 @@ def trackusage(event: str, message='', dryrun: bool=False) -> dict:
     if message:
         if isinstance(message, Exception):
             trace   = traceback.extract_tb(traceback.sys.exc_info()[2])[-1]     # Get the last traceback entry
-            message = f"({trace.filename},{trace.lineno}){message}"             # Prepend the traceback info
+            message = f"{message} ({trace.filename},{trace.lineno})"            # Append the traceback info
         data['message'] = str(message)
     if container := os.getenv('CONTAINER'):
         data['container'] = container

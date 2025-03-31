@@ -476,21 +476,23 @@ def test_bidscoin(bidsmapfile, options: dict=None, testplugins: bool=True, testg
     # Test PyQt
     if testgui:
         LOGGER.info('Testing the PyQt GUI setup:')
-        import tkinter as tk
+        if find_spec('tkinter'):
+            import tkinter as tk                    # Not always installed (e.g. WSL2)
+            try:
+                root = tk.Tk()                      # Test opening a window using the TKinter standard library
+                root.after(200, root.destroy)   # Destroy after 200ms to prevent blocking
+                root.mainloop()                     # Run event loop (shows the window)
+            except tk.TclError as display_error:
+                LOGGER.error(f"Cannot open a graphical display on your system:\n{display_error}")
+                success = False
         try:
-            root = tk.Tk()                      # Test opening a window using the TKinter standard library
-            root.after(1, root.destroy)     # Destroy after 1ms
-            root.mainloop()                     # Run event loop (shows the window)
-
             from PyQt6.QtWidgets import QApplication, QPushButton
-            app = QApplication(sys.argv)
+            from PyQt6.QtCore import QTimer
+            app = QApplication([])
             window = QPushButton('Minimal GUI test: OK')
             window.show()
-            QApplication.quit()
+            QTimer.singleShot(200, app.quit)        # Quit after 200ms to prevent blocking
             LOGGER.success('The GUI seems to work OK')
-        except tk.TclError as display_error:
-            LOGGER.error(f"Cannot open a graphical display on your system:\n{display_error}")
-            success = False
         except Exception as pyqterror:
             LOGGER.error(f"The installed PyQt version does not seem to work for your system:\n{pyqterror}")
             success = False
