@@ -28,6 +28,7 @@ Options:
     unknowntypes: [extra_data]      # A list of datatypes that are converted to BIDS-like datatype folders
     ignoretypes: [exclude]          # A list of datatypes that are excluded / not converted to BIDS
     anon: y                         # Set this anonymization flag to 'y' to round off age and discard acquisition date from the metadata
+    stripsuffix: y                  # Strips off the suffix from bids-values (to reduce redundancy within filenames)
     unzip:                          # Wildcard pattern to select tarball/zip-files in the source folders that need to be unzipped (in a tempdir) to expose the data, e.g. '*.tar.gz'
   plugins:                          # List of plugins with plugin-specific key-value pairs (that can be used by the plugin)
     dcm2niix2bids:                  # See dcm2niix -h and https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage#General_Usage for more info

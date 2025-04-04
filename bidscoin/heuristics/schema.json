@@ -23,6 +23,7 @@
                   "unknowntypes": { "type": ["array"] },
                   "ignoretypes": { "type": ["array"] },
                   "anon": { "type": ["string", "null"] },
+                  "stripsuffix": { "type": ["string", "null"] },
                   "unzip": { "type": ["string", "null"] }
                },
                "additionalProperties": false

@@ -545,7 +545,7 @@ class RunItem:
 
         # See if we have a suffix for this datatype
         bids = self.bids
-        if 'suffix' in bids and bids['suffix']:
+        if 'suffix' in bids and bids['suffix'] and self.options.get('stripsuffix','y').lower() in ('y', 'yes'):
             suffix = bids['suffix'].lower()
         else:
             return
