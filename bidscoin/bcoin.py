@@ -418,7 +418,7 @@ def test_bidsmap(bidsmapfile: str):
     Tests the bidsmaps run-items and their bidsname using BIDScoin's check and the bids-validator
 
     :param bidsmapfile: The bidsmap or the full path/base name of the bidsmap yaml-file
-    :return:
+    :return:            True if all tested runs in bidsmap were bids-valid, otherwise False
     """
 
     if not bidsmapfile:
