@@ -82,7 +82,6 @@ def synchronize(pbatch, jobids: list, event: str, wait: int=15):
     :param jobids: The job ids
     :param event:  The event that is passed to trackusage()
     :param wait:   The extra wait time for the NAS
-    :return:
     """
 
     if jobids:

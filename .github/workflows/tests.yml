@@ -9,8 +9,6 @@ on:
       - 'apptainer.def'
       - 'Dockerfile'
       - '.readthedocs.yaml'
-    tags-ignore:      # Explicitly ignore tags to avoid running twice
-      - '*'
   pull_request:
     paths-ignore:
       - 'docs/**'
