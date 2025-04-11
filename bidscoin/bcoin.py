@@ -125,7 +125,6 @@ def setup_logging(logfile: Path=Path()):
     does not seem to work / is ignored by the plugins. Extending `logging.getLoggerClass()` works robustly
 
     :param logfile:     Name of the log file
-    :return:
     """
 
     # Set the default formats
