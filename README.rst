@@ -73,6 +73,6 @@ Are you a Python programmer with an interest in BIDS who knows about GE and/or P
 .. |BIDS| image:: https://img.shields.io/badge/BIDS-v1.10.0-blue
    :target: https://bids-specification.readthedocs.io/en/v1.10.0/
    :alt: Brain Imaging Data Structure (BIDS)
-.. |Tests| image:: https://github.com/Donders-Institute/bidscoin/actions/workflows/tests.yaml/badge.svg
+.. |Tests| image:: https://github.com/Donders-Institute/bidscoin/actions/workflows/tests.yml/badge.svg
    :target: https://github.com/Donders-Institute/bidscoin/actions
    :alt: Pytest results
