@@ -63,7 +63,7 @@ html_context = {
   'github_repo': 'bidscoin',
   'github_user': 'Donders-Institute',
   'github_version': 'master',
-  'conf_py_path': '/doc/',          # Needs leading and trailing slashes
+  'conf_py_path': '/docs/',         # Needs leading and trailing slashes
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
