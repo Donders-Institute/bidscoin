@@ -93,7 +93,7 @@ def test_bidscoiner_neurobs(bids_neurobs, bidsmap_neurobs, test_data):
     logs = (bidsmap_neurobs.parent/'bidscoiner.errors').read_text()
     assert 'ERROR' not in logs
     assert 'WARNING' not in logs
-    assert len(list(bids_neurobs.rglob('sub-*.json*'))) == 3
+    assert len(list(bids_neurobs.rglob('sub-*.json*'))) == 2    # M059-Stimulus.tsv does not have metadata
 
     tsvfile1 = bids_neurobs/'sub-M059'/'func'/'sub-M059_task-Unspecified_events.tsv'
     tsvfile2 = bids_neurobs/'sub-M059'/'extra_data'/'sub-M059_task-Flanker_events.tsv'
