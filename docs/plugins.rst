@@ -29,9 +29,6 @@ Events2bids: a plugin for stimulus presentation log data
 
 The events2bids plugin parses `NeuroBS <https://www.neurobs.com/>`__ Presentation, `PsychoPy <https://psychopy.org/>`__, as well as generic behavioural log files to BIDS task events files. See the `workflow page <./workflow.html#stimulus-events>`__ for usage.
 
-.. note::
-   Out of the box, BIDScoin plugins typically produce sidecar files that contain metadata from the source headers. However, when such metadata is missing (e.g. as for nibabel2bids), or when it needs to be appended or overruled, then users can add sidecar files to the source data (as explained `here <./bidsmap_indepth.html#run-items>`__) or add that metadata using the bidseditor (the latter takes precedence).
-
 The plugin programming interface
 --------------------------------
 
