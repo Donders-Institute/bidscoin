@@ -2086,9 +2086,10 @@ def poolmetadata(datasource: DataSource, targetmeta: Path, usermeta: Meta, metae
             elif isinstance(metapool[key], list):
                 metapool[key] = [item.replace('<<session', f"<<ses{ses}") for item in metapool[key]]
 
-        # Remove unused (but added from the template) B0FieldIdentifiers/Sources
-        if not metapool.get(key):
-            metapool.pop(key, None)
+    # Remove unused keys, such as B0FieldIdentifiers/Sources (added from the template)
+    for metakey, metaval in metapool.items():
+        if not metaval and metaval != 0:
+            metapool.pop(metakey, None)
 
     return Meta(metapool)
 
