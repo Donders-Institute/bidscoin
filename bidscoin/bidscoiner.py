@@ -292,11 +292,11 @@ def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: 
                         outputdir.mkdir(parents=True, exist_ok=True)
                         trackusage(name)
                         plugin.Interface().bidscoiner(sesfolder, bidsmap, outputdir)
-                        personals = plugin.Interface().personals(bidsmap, datasource)
+                        personals = plugin.Interface().personals(bidsmap, datasource, sesid)
 
                         # Add a subject row to the participants table (if there is any data)
                         if next(outputdir.rglob('*.json'), None):
-                            bids.addparticipant(bidsfolder/'participants.tsv', subid, sesid, personals)
+                            bids.addparticipant(bidsfolder/'participants.tsv', subid, personals)
 
                     # Add the special field map metadata (IntendedFor, TE, etc)
                     bids.addmetadata(outputdir)

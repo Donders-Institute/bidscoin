@@ -2094,13 +2094,12 @@ def poolmetadata(datasource: DataSource, targetmeta: Path, usermeta: Meta, metae
     return Meta(metapool)
 
 
-def addparticipant(participants_tsv: Path, subid: str='', sesid: str='', data: dict=None, dryrun: bool=False) -> pd.DataFrame:
+def addparticipant(participants_tsv: Path, subid: str='', data: dict=None, dryrun: bool=False) -> pd.DataFrame:
     """
     Read/create and/or add (if it's not there yet) a participant to the participants.tsv/.json file
 
     :param participants_tsv:    The participants.tsv file
     :param subid:               The subject label. Leave empty to just read the participants table (add nothing)
-    :param sesid:               The session label
     :param data:                Personal data of the participant, such as sex or age
     :param dryrun:              Boolean to just display the participants info
     :return:                    The participants table
@@ -2121,10 +2120,9 @@ def addparticipant(participants_tsv: Path, subid: str='', sesid: str='', data: d
         if subid not in table.index and not data:
             table.loc[subid, 'dummy'] = None
             data_added                = True
-        for dyncol in data:
-            col = dyncol.replace('<<session>>', sesid.replace('ses-', ''))
+        for col in data:
             if col not in table or subid not in table.index or pd.isnull(table.loc[subid, col]) or table.loc[subid, col] == 'n/a':
-                table.loc[subid, col] = data[dyncol]
+                table.loc[subid, col] = data[col]
                 data_added            = True
 
         # Write the data to the participants tsv-file

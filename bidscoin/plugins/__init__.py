@@ -53,25 +53,27 @@ class PluginInterface(ABC):
         :return:            The retrieved attribute value
         """
 
-    def personals(self, bidsmap: 'BidsMap', datasource: 'DataSource') -> dict:
+    def personals(self, bidsmap: 'BidsMap', datasource: 'DataSource', sesid: str='') -> dict:
         """
         Collects personal data from a datasource to populate the participants.tsv file. See code for ad hoc age/sex
         encoding corrections
 
         :param bidsmap:     The full mapping heuristics from the bidsmap YAML-file
         :param datasource:  The data source from which (personal) dynamic values are read
+        :param sesid:       The session label
         :return:            A dictionary with the personal data (e.g. age or sex)
         """
 
         personals = {}
-        for key, item in bidsmap.dataformat(datasource.dataformat).participant.items():
-            if key in ('participant_id', 'session_id'):
+        for dynkey, item in bidsmap.dataformat(datasource.dataformat).participant.items():
+            key = dynkey.replace('<<session>>', sesid.replace('ses-', ''))
+            if dynkey in ('participant_id', 'session_id'):
                 continue
             else:
                 personals[key] = datasource.dynamicvalue(item.get('value'), cleanup=False, runtime=True)
 
             # Perform ad hoc age encoding corrections (-> DICOM/Twix PatientAge: nnnD, nnnW, nnnM or nnnY)
-            if (key == 'age' or ('age' in key and '<<session>>' in key)) and personals[key] and isinstance(personals[key], str):
+            if (key == 'age' or ('age' in dynkey and '<<session>>' in dynkey)) and personals[key] and isinstance(personals[key], str):
                 age = personals[key]
                 try:
                     if '-' in age:      # -> Pfile: rhr_rh_scan_date - rhe_dateofbirth

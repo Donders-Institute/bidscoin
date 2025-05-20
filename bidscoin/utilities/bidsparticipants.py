@@ -102,7 +102,7 @@ def bidsparticipants(sourcefolder: str, bidsfolder: str, keys: list, bidsmap: st
 
                         # Update/append the personal source data
                         LOGGER.info(f"Scanning session: {sesfolder}")
-                        personaldata = plugin.Interface().personals(bidsmap, datasource)
+                        personaldata = plugin.Interface().personals(bidsmap, datasource, sesid)
                         if personaldata:
                             personals.update(personaldata)
                             success = True
@@ -117,7 +117,7 @@ def bidsparticipants(sourcefolder: str, bidsfolder: str, keys: list, bidsmap: st
 
             # Store the collected personals in the participant_table. TODO: Check that only values that are consistent over sessions go in the participants.tsv file, otherwise put them in a sessions.tsv file
             if sessions:
-                participants_table = bids.addparticipant(participants_tsv, subid, sesid, personals, dryrun)
+                participants_table = bids.addparticipant(participants_tsv, subid, personals, dryrun)
 
     # Add the participants sidecar file
     bids.addparticipant_meta(bidsfolder/'participants.json', bidsmap)
