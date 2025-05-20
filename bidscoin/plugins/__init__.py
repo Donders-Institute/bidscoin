@@ -71,8 +71,8 @@ class PluginInterface(ABC):
                 personals[key] = datasource.dynamicvalue(item.get('value'), cleanup=False, runtime=True)
 
             # Perform ad hoc age encoding corrections (-> DICOM/Twix PatientAge: nnnD, nnnW, nnnM or nnnY)
-            if key == 'age' and personals['age'] and isinstance(personals['age'], str):
-                age = personals['age']
+            if (key == 'age' or ('age' in key and '<<session>>' in key)) and personals[key] and isinstance(personals[key], str):
+                age = personals[key]
                 try:
                     if '-' in age:      # -> Pfile: rhr_rh_scan_date - rhe_dateofbirth
                         scandate, dateofbirth = age.split('-', 1)
@@ -84,9 +84,9 @@ class PluginInterface(ABC):
                     elif age.endswith('Y'): age = float(age.rstrip('Y'))
                     if bidsmap.options.get('anon','y') in ('y','yes'):
                         age = int(float(age))
-                    personals['age'] = str(age)             # Or better keep it as int/float?
+                    personals[key] = str(age)             # Or better keep it as int/float?
                 except Exception as exc:
-                    LOGGER.warning(f"Could not parse '{personals['age']}' as 'age' from: {datasource}\n{exc}")
+                    LOGGER.warning(f"Could not parse '{personals[key]}' as 'age' from: {datasource}\n{exc}")
 
             # Perform add hoc sex encoding corrections (-> Pfile rhe_patsex: 0=O, 1=M, 2=F)
             elif key == 'sex':

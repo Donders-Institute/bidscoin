@@ -54,7 +54,7 @@ DICOM:
       value: <<filepath:/sub-.*?/ses-(.*?)/>>   # This filesystem property extracts the session label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
       meta:
         Description: The session identifier of the form ses-<label>, matching a session found in the dataset
-    age: &age
+    age<<session>>: &age
       value: <<PatientAge>>
       meta:
         Description: Age of the participant

@@ -1887,7 +1887,7 @@ def addmetadata(bidsses: Path):
     """
     Adds the special field map metadata (IntendedFor, TE, etc.)
 
-    :param bidsses: The session folder with the BIDS session data
+    :param bidsses: The subject/session output folder with the BIDS meta data
     """
 
     subid = bidsses.name if bidsses.name.startswith('sub-') else bidsses.parent.name
@@ -2076,15 +2076,15 @@ def poolmetadata(datasource: DataSource, targetmeta: Path, usermeta: Meta, metae
         metapool[metakey] = metaval or None
 
     # Update <<session>> in B0FieldIdentifiers/Sources. NB: Leave range specifiers (<<session:[-2:2]>>) untouched (-> bidscoiner)
+    sesid = get_bidsvalue(targetmeta, 'ses')
     for key in ('B0FieldSource', 'B0FieldIdentifier'):
 
         # Replace <<session>> with the actual session label
         if fnmatch(str(metapool.get(key)), '*<<session*>>*'):
-            ses = get_bidsvalue(targetmeta, 'ses')
             if isinstance(metapool[key], str):
-                metapool[key] = metapool[key].replace('<<session', f"<<ses{ses}")
+                metapool[key] = metapool[key].replace('<<session', f"<<ses{sesid}")
             elif isinstance(metapool[key], list):
-                metapool[key] = [item.replace('<<session', f"<<ses{ses}") for item in metapool[key]]
+                metapool[key] = [item.replace('<<session', f"<<ses{sesid}") for item in metapool[key]]
 
     # Remove unused keys, such as B0FieldIdentifiers/Sources (added from the template)
     for metakey, metaval in metapool.copy().items():
@@ -2106,8 +2106,6 @@ def addparticipant(participants_tsv: Path, subid: str='', sesid: str='', data: d
     :return:                    The participants table
     """
 
-    # TODO: Check that only values that are consistent over sessions go in the participants.tsv file, otherwise put them in a sessions.tsv file
-
     # Input check
     data = data or {}
 
@@ -2120,16 +2118,13 @@ def addparticipant(participants_tsv: Path, subid: str='', sesid: str='', data: d
     # Add the participant row
     data_added = False
     if subid:
-        if subid not in table.index:
-            if sesid:
-                table.loc[subid, 'session_id'] = sesid
-                data_added                     = True
-            elif not data:
-                table.loc[subid, 'dummy'] = None
-                data_added                = True
-        for key in data:
-            if key not in table or subid not in table.index or pd.isnull(table.loc[subid, key]) or table.loc[subid, key] == 'n/a':
-                table.loc[subid, key] = data[key]
+        if subid not in table.index and not data:
+            table.loc[subid, 'dummy'] = None
+            data_added                = True
+        for dyncol in data:
+            col = dyncol.replace('<<session>>', sesid.replace('ses-', ''))
+            if col not in table or subid not in table.index or pd.isnull(table.loc[subid, col]) or table.loc[subid, col] == 'n/a':
+                table.loc[subid, col] = data[dyncol]
                 data_added            = True
 
         # Write the data to the participants tsv-file
@@ -2166,8 +2161,9 @@ def addparticipant_meta(participants_json: Path, bidsmap: BidsMap=None) -> dict:
         participants_df = addparticipant(participants_json.with_suffix('.tsv'))
         for column in ['participant_id'] + list(participants_df.columns):
             for dataformat in bidsmap.dataformats:
-                if not metadata.get(column) and column in dataformat.participant:
-                    metadata[column] = dataformat.participant[column].get('meta', {})
+                for dyncolumn in dataformat.participant:
+                    if not metadata.get(column) and (column == dyncolumn or ('<<session>>' in dyncolumn and dyncolumn.replace('<<session>>', '') in column)):
+                        metadata[column] = dataformat.participant[dyncolumn].get('meta', {})
 
         # Save the data
         with participants_json.open('w') as json_fid:
