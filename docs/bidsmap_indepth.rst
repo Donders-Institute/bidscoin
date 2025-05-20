@@ -115,7 +115,7 @@ In sum, a run-item maps the input dictionaries (2) and (3) to the output diction
    A snippet of a study bidsmap, featuring an example run-item from the 'anat' data type subsection within the 'DICOM' data format section. The arrow illustrates how the 'properties' and 'attributes' input dictionaries are mapped onto the 'bids' and 'meta' output dictionaries. Note that the 'part' value in the bids dictionary is a list, which appears in the bidseditor GUI as a drop-down menu (with the first empty item being selected). Also note the special double bracket `dynamic values <./bidsmap_features.html#dynamic-values>`__ (<<..>>).
 
 .. note::
-   Out of the box, BIDScoin plugins typically produce sidecar files that contain metadata from the source headers. However, when such metadata is missing (e.g. as for nibabel2bids), or when it needs to be appended or overruled, then users can add sidecar files to the source data (as explained `here <./bidsmap_indepth.html#run-items>`__) or add that metadata using the bidseditor (the latter takes precedence). Metadata keys with empty/missing values will be removed from the sidear files.
+   Out of the box, BIDScoin plugins typically produce sidecar files that contain metadata from the source headers. However, when such metadata is missing (e.g. as for nibabel2bids), or when it needs to be appended or overruled, then users can add sidecar files to the source data (as explained `here <./bidsmap_indepth.html#run-items>`__) or add that metadata using the bidseditor (the latter takes precedence). Metadata keys with empty/missing values will be removed from the sidecar files.
 
 Run-item matching
 -----------------

@@ -266,7 +266,7 @@ def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: 
                 for sesfolder in sesfolders:
 
                     # Run the bidscoiner plugins
-                    bidssession = Path()
+                    outputdir = Path()
                     for plugin in plugins:
 
                         # Check if we should skip the sesfolder
@@ -278,31 +278,31 @@ def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: 
                         subid        = bidsmap.dataformat(datasource.dataformat).subject
                         sesid        = bidsmap.dataformat(datasource.dataformat).session
                         subid, sesid = datasource.subid_sesid(subid, sesid or '')
-                        bidssession  = bidsfolder/subid/sesid       # TODO: Support DICOMDIR with multiple subjects (as in PYDICOMDIR)
-                        if not force and bidssession.is_dir():
+                        outputdir  = bidsfolder/subid/sesid       # TODO: Support DICOMDIR with multiple subjects (as in PYDICOMDIR)
+                        if not force and outputdir.is_dir():
                             datatypes = set()
-                            for datatype in [dtype for dtype in lsdirs(bidssession) if next(dtype.iterdir(), None)]:    # See what non-empty datatypes we already have in the bids session-folder
+                            for datatype in [dtype for dtype in lsdirs(outputdir) if next(dtype.iterdir(), None)]:    # See what non-empty datatypes we already have in the bids session-folder
                                 if datatype.name in bidsmap.dataformat(datasource.dataformat).datatypes:                # See if the plugin may add data for this datatype
                                     datatypes.add(datatype.name)
                             if datatypes and not any(issubclass(cls, EventsParser) for _,cls in inspect.getmembers(plugin, inspect.isclass)):  # Always allow events plugins to add data
-                                LOGGER.info(f">>> Skipping {name} processing: {bidssession} already contains {datatypes} data. Use the -f option to force processing if needed.")
+                                LOGGER.info(f">>> Skipping {name} processing: {outputdir} already contains {datatypes} data. Use the -f option to force processing if needed.")
                                 continue
 
                         LOGGER.info(f">>> Coining {name} datasources in: {sesfolder}")
-                        bidssession.mkdir(parents=True, exist_ok=True)
+                        outputdir.mkdir(parents=True, exist_ok=True)
                         trackusage(name)
-                        plugin.Interface().bidscoiner(sesfolder, bidsmap, bidssession)
+                        plugin.Interface().bidscoiner(sesfolder, bidsmap, outputdir)
                         personals = plugin.Interface().personals(bidsmap, datasource)
 
                         # Add a subject row to the participants table (if there is any data)
-                        if next(bidssession.rglob('*.json'), None):
+                        if next(outputdir.rglob('*.json'), None):
                             bids.addparticipant(bidsfolder/'participants.tsv', subid, sesid, personals)
 
                     # Add the special field map metadata (IntendedFor, TE, etc)
-                    bids.addmetadata(bidssession)
+                    bids.addmetadata(outputdir)
 
                     # Check/repair the run-indices using acq_time info in the scans_table
-                    bids.check_runindices(bidssession)
+                    bids.check_runindices(outputdir)
 
                     # Clean-up the temporary unpacked data
                     if unpacked:

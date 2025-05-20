@@ -12,7 +12,7 @@ BIDScoin: Coin your imaging data to BIDS
 
    <img name="bidscoin-logo" src="https://github.com/Donders-Institute/bidscoin/blob/master/bidscoin/bidscoin_logo.png" height="340px" align="right" alt=" ">
 
-|PyPI version| |Neurodesk| |BIDS| |Python Version| |GPLv3| |RTD| |Tests| |DOI|
+|PyPI version| |Neurodesk| |BIDS| |GPLv3| |RTD| |Tests| |DOI|
 
 BIDScoin is a user-friendly Python application suite that converts ("coins") source-level (raw) neuroimaging data sets to standardized data sets that are organized according to the Brain Imaging Data Structure (`BIDS <https://bids-specification.readthedocs.io>`__) specification. Rather than depending on complex programmatic logic for source data-type identification, BIDScoin uses a mapping approach to discover the different source data types in your repository and convert them into BIDS data types. Different runs of source data are uniquely identified by their file system properties (e.g. file name or size) and by their attributes (e.g. ``ProtocolName`` from the DICOM header). Mapping information can be pre-specified (e.g. per site), allowing BIDScoin to make intelligent first suggestions on how to classify and convert the data. While this command-line procedure exploits all information available on disk, BIDScoin offers a `Graphical User Interface (GUI) <./screenshots.html>`__ for researchers to check and edit these mappings -- bringing in the missing knowledge that often exists in their heads only. This interactive step can also be skipped for employment in fully automated dataflow pipelines.
 

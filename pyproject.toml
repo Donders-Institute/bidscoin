@@ -94,7 +94,7 @@ build_manpages   = "build_manpages.build_manpages"
 testpaths        = ['tests']
 
 [tool.tox]
-legacy_tox_ini = """
+legacy_tox_ini   = """
 [tox]
 min_version      = 4.0
 envlist          = py39, py310, py311, py312, py313, docs
@@ -125,7 +125,7 @@ commands         = make -C docs html
 
 # Ref: https://github.com/codespell-project/codespell#using-a-config-file
 [tool.codespell]
-skip = '.git,*.pdf,*.svg,go.sum'
-check-hidden = true
-ignore-regex = '\b(PULS|TE|ALS)\b'
+skip              = '.git,*.pdf,*.svg,go.sum'
+check-hidden      = true
+ignore-regex      = '\b(PULS|TE|ALS)\b'
 ignore-words-list = 'uptodate,mis'
