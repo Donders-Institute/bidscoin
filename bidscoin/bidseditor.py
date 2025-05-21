@@ -2406,8 +2406,8 @@ def get_metahelp(metakey: str) -> str:
                                 '\nduring bidscoiner runtime with glob-style matching patterns,'
                                 '\n"such as <<Reward*_bold><Stop*_epi>>" or <<dwi/*acq-highres*>>'
                                 '\n(see documentation)')
-            if metakey in ('B0FieldIdentifier', 'B0FieldSource'):   # <<session>> is a special dynamic value in BIDScoin
-                description += ('\nNB: The `<<session>>` (sub)string will be replaced by the'
+            if metakey in ('B0FieldIdentifier', 'B0FieldSource'):   # <<session_id>> is a special dynamic value in BIDScoin
+                description += ('\nNB: The `<<session_id>>` (sub)string will be replaced by the'
                                 '\nsession label during bidscoiner runtime. In this way you can'
                                 '\ncreate session-specific B0FieldIdentifier/Source tags (recommended)')
 

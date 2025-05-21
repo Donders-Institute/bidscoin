@@ -600,8 +600,8 @@ def test_updatemetadata(dcm_file, tmp_path):
     # Create the user metadata
     usermeta = Meta({'PatientName':       'UserTest',
                      'DynamicName':       '<<(0010,0010)>>',
-                     'B0FieldSource':     'Source<<session:[-2:2]>>',
-                     'B0FieldIdentifier': ['Identifier<<session>>', 'Identifier'],
+                     'B0FieldSource':     'Source<<session_id:[-2:2]>>',
+                     'B0FieldIdentifier': ['Identifier<<session_id>>', 'Identifier'],
                      'foo':               ''})
 
     # Test if the user metadata takes precedence

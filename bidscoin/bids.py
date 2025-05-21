@@ -1374,7 +1374,7 @@ class BidsMap:
                     # Replace the dynamic meta values, except the IntendedFor value (e.g. <<task>>)
                     if metakey == 'IntendedFor':
                         rundata['meta'][metakey] = metavalue
-                    elif metakey in ('B0FieldSource', 'B0FieldIdentifier') and fnmatch(str(metavalue), '*<<session*>>*'):
+                    elif metakey in ('B0FieldSource', 'B0FieldIdentifier') and fnmatch(str(metavalue), '*<<session_id*>>*'):
                         rundata['meta'][metakey] = metavalue
                     else:
                         rundata['meta'][metakey] = datasource.dynamicvalue(metavalue, cleanup=False, runtime=runtime)
@@ -1448,7 +1448,7 @@ class BidsMap:
 
                     if metakey == 'IntendedFor':
                         runitem.meta[metakey] = metavalue
-                    elif metakey in ('B0FieldSource', 'B0FieldIdentifier') and fnmatch(str(metavalue), '*<<session*>>*'):
+                    elif metakey in ('B0FieldSource', 'B0FieldIdentifier') and fnmatch(str(metavalue), '*<<session_id*>>*'):
                         runitem.meta[metakey] = metavalue
                     else:
                         runitem.meta[metakey] = datasource.dynamicvalue(metavalue, cleanup=False)
@@ -1944,7 +1944,7 @@ def addmetadata(bidsses: Path):
 
             # Populate the dynamic B0FieldIdentifier/Source values with a run-index string if they contain a range specifier
             b0fieldtag = jsondata.get('B0FieldIdentifier')              # TODO: Refactor the code below to deal with B0FieldIdentifier lists (anywhere) instead of assuming it's a string (inside the fmap folder)
-            if isinstance(b0fieldtag, str) and fnmatch(b0fieldtag, '*<<*:[[]*[]]>>*'):  # b0fieldtag = 'tag<<session:[lowerlimit:upperlimit]>>tag'
+            if isinstance(b0fieldtag, str) and fnmatch(b0fieldtag, '*<<*:[[]*[]]>>*'):  # b0fieldtag = 'tag<<session_id:[lowerlimit:upperlimit]>>tag'
 
                 # Search in all runs for the b0fieldtag and store the relative paths to the session folder
                 niifiles = set()
@@ -2015,7 +2015,7 @@ def poolmetadata(datasource: DataSource, targetmeta: Path, usermeta: Meta, metae
     """
     Load the metadata from the target (json sidecar), then add metadata from the source (json sidecar) and finally add
     the user metadata (meta table). Source metadata other than json sidecars are copied over to the target folder. Special
-    dynamic <<session>> values are replaced with the session label, and unused B0-field tags are removed
+    dynamic <<session_id>> values are replaced with the session label, and unused B0-field tags are removed
 
     NB: In future versions this function could also support more source metadata formats, e.g. yaml, csv- or Excel-files
 
@@ -2063,7 +2063,7 @@ def poolmetadata(datasource: DataSource, targetmeta: Path, usermeta: Meta, metae
 
     # Add all the metadata to the metadict. NB: the dynamic `IntendedFor` value is handled separately later
     for metakey, metaval in usermeta.items():
-        if metakey != 'IntendedFor' and not (metakey in ('B0FieldSource', 'B0FieldIdentifier') and fnmatch(str(metaval), '*<<session*>>*')):
+        if metakey != 'IntendedFor' and not (metakey in ('B0FieldSource', 'B0FieldIdentifier') and fnmatch(str(metaval), '*<<session_id*>>*')):
             metaval = datasource.dynamicvalue(metaval, cleanup=False, runtime=True)
             try:
                 metaval = ast.literal_eval(str(metaval))  # E.g. convert stringified list or int back to list or int
@@ -2075,16 +2075,16 @@ def poolmetadata(datasource: DataSource, targetmeta: Path, usermeta: Meta, metae
             LOGGER.bcdebug(f"Adding '{metakey}: {metaval}' to: {targetmeta}")
         metapool[metakey] = metaval or None
 
-    # Update <<session>> in B0FieldIdentifiers/Sources. NB: Leave range specifiers (<<session:[-2:2]>>) untouched (-> bidscoiner)
+    # Update <<session_id>> in B0FieldIdentifiers/Sources. NB: Leave range specifiers (<<session_id:[-2:2]>>) untouched (-> bidscoiner)
     sesid = get_bidsvalue(targetmeta, 'ses')
     for key in ('B0FieldSource', 'B0FieldIdentifier'):
 
-        # Replace <<session>> with the actual session label
-        if fnmatch(str(metapool.get(key)), '*<<session*>>*'):
+        # Replace <<session_id>> with the actual session label
+        if fnmatch(str(metapool.get(key)), '*<<session_id*>>*'):
             if isinstance(metapool[key], str):
-                metapool[key] = metapool[key].replace('<<session', f"<<ses{sesid}")
+                metapool[key] = metapool[key].replace('<<session_id', f"<<ses{sesid}")
             elif isinstance(metapool[key], list):
-                metapool[key] = [item.replace('<<session', f"<<ses{sesid}") for item in metapool[key]]
+                metapool[key] = [item.replace('<<session_id', f"<<ses{sesid}") for item in metapool[key]]
 
     # Remove unused keys, such as B0FieldIdentifiers/Sources (added from the template)
     for metakey, metaval in metapool.copy().items():
@@ -2160,7 +2160,7 @@ def addparticipant_meta(participants_json: Path, bidsmap: BidsMap=None) -> dict:
         for column in ['participant_id'] + list(participants_df.columns):
             for dataformat in bidsmap.dataformats:
                 for dyncolumn in dataformat.participant:
-                    if not metadata.get(column) and (column == dyncolumn or ('<<session>>' in dyncolumn and dyncolumn.replace('<<session>>', '') in column)):
+                    if not metadata.get(column) and (column == dyncolumn or ('<<session_id>>' in dyncolumn and dyncolumn.replace('<<session_id>>', '') in column)):
                         metadata[column] = dataformat.participant[dyncolumn].get('meta', {})
 
         # Save the data

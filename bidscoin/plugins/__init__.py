@@ -66,14 +66,14 @@ class PluginInterface(ABC):
 
         personals = {}
         for dynkey, item in bidsmap.dataformat(datasource.dataformat).participant.items():
-            key = dynkey.replace('<<session>>', sesid.replace('ses-', ''))
+            key = dynkey.replace('<<session_id>>', sesid.replace('ses-', '@'))
             if dynkey in ('participant_id', 'session_id'):
                 continue
             else:
                 personals[key] = datasource.dynamicvalue(item.get('value'), cleanup=False, runtime=True)
 
             # Perform ad hoc age encoding corrections (-> DICOM/Twix PatientAge: nnnD, nnnW, nnnM or nnnY)
-            if (key == 'age' or ('age' in dynkey and '<<session>>' in dynkey)) and personals[key] and isinstance(personals[key], str):
+            if (key == 'age' or ('age' in dynkey and '<<session_id>>' in dynkey)) and personals[key] and isinstance(personals[key], str):
                 age = personals[key]
                 try:
                     if '-' in age:      # -> Pfile: rhr_rh_scan_date - rhe_dateofbirth
