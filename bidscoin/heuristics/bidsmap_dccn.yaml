@@ -57,7 +57,7 @@ DICOM:
     age<<session_id>>: &age
       value: <<PatientAge>>
       meta:
-        Description: Age of the participant
+        Description: Age of the participant at the time of the acquired session
         Units: year
     sex: &sex
       value: <<PatientSex>>

@@ -2075,7 +2075,7 @@ def poolmetadata(datasource: DataSource, targetmeta: Path, usermeta: Meta, metae
             LOGGER.bcdebug(f"Adding '{metakey}: {metaval}' to: {targetmeta}")
         metapool[metakey] = metaval or None
 
-    # Update <<session_id>> in B0FieldIdentifiers/Sources. NB: Leave range specifiers (<<session_id:[-2:2]>>) untouched (-> bidscoiner)
+    # Update <<session_id>> in B0FieldIdentifiers/Sources. NB: Leave range specifiers (<<session_id:[-2:2]>>) untouched until all data is present (-> bidscoiner -> addmetadata)
     sesid = get_bidsvalue(targetmeta, 'ses')
     for key in ('B0FieldSource', 'B0FieldIdentifier'):
 

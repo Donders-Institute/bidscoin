@@ -98,7 +98,7 @@ def sortsession(sessionfolder: Path, dicomfiles: list[Path], folderscheme: str, 
         sessionfolder.mkdir(parents=True, exist_ok=True)
 
     # Sort the dicomfiles in (e.g. DICOM Series) subfolders
-    for dicomfile in dicomfiles:
+    for n, dicomfile in enumerate(dicomfiles):
 
         # Check if the DICOM file exists (e.g. in case of DICOMDIRs this may not be the case)
         if not dicomfile.is_file():
@@ -120,7 +120,8 @@ def sortsession(sessionfolder: Path, dicomfiles: list[Path], folderscheme: str, 
                 return
             destination = sessionfolder/subfolder
             if not destination.is_dir():
-                LOGGER.verbose(f"   Creating:  {destination}")
+                sorted = int(100 * n / len(dicomfiles))
+                LOGGER.verbose(f"[{sorted}%]   Creating:  {destination}")
                 if not dryrun:
                     destination.mkdir(parents=True)
 
