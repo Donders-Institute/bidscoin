@@ -66,7 +66,7 @@ class PluginInterface(ABC):
 
         personals = {}
         for dynkey, item in bidsmap.dataformat(datasource.dataformat).participant.items():
-            key = dynkey.replace('<<session_id>>', sesid.replace('ses-', '@'))
+            key = dynkey.replace('<<session_id>>', sesid.replace('ses-', '@ses-'))
             if dynkey in ('participant_id', 'session_id'):
                 continue
             else:

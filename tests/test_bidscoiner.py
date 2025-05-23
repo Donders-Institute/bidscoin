@@ -55,9 +55,9 @@ def test_bidscoiner_dicomdir(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir):
     # sub-Archibald   ses-02CTHEADBRAINWOCONTRAST     42      n/a     n/a     n/a
     # sub-Peter       ses-01                          43      M       n/a     81.632700
     assert data[0] == list(meta.keys())
-    assert data[0] == ['participant_id', 'age@02CTHEADBRAINWOCONTRAST', 'sex', 'height', 'weight',    'age@01', 'age@03Brain', 'age@04BrainMRA']
-    assert data[1] == ['sub-Archibald',  '42',                          'n/a', 'n/a',    'n/a',       'n/a',    'n/a',         'n/a']
-    assert data[2] == ['sub-Peter',      'n/a',                         'M',   'n/a',    '81.632700', '43',     '45',          '45']
+    assert data[0] == ['participant_id', 'age@ses-02CTHEADBRAINWOCONTRAST', 'sex', 'height', 'weight',    'age@ses-01', 'age@ses-03Brain', 'age@ses-04BrainMRA']
+    assert data[1] == ['sub-Archibald',  '42',                              'n/a', 'n/a',    'n/a',       'n/a',        'n/a',              'n/a']
+    assert data[2] == ['sub-Peter',      'n/a',                             'M',   'n/a',    '81.632700', '43',         '45',               '45']
 
 
 def test_bidscoiner_dicomdir_skip(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir):
