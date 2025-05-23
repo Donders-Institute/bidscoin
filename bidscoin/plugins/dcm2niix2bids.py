@@ -105,13 +105,13 @@ class Interface(PluginInterface):
         if dataformat == 'DICOM':
 
             # Parse custom "DICOM" tags
-            if attribute == 'PatientAgeCalculated':
+            if attribute == 'PatientAgeDerived':
                 try:
                     acqdate   = datetime.strptime(get_dicomfield('AcquisitionDate',  sourcefile), '%Y%m%d')
                     birthdate = datetime.strptime(get_dicomfield('PatientBirthDate', sourcefile), '%Y%m%d')
                     return (acqdate - birthdate).days / 365.25
                 except Exception as dateerror:
-                    LOGGER.warning(f"Could not calculate 'PatientAgeCalculated' from 'AcquisitionDate' and 'PatientBirthDate' in {sourcefile}, using 'PatientAge' instead\n{dateerror}")
+                    LOGGER.warning(f"Could not calculate 'PatientAgeDerived' from 'AcquisitionDate' and 'PatientBirthDate' in {sourcefile}, using 'PatientAge' instead\n{dateerror}")
                     return get_dicomfield('PatientAge', sourcefile)
             else:
                 return get_dicomfield(attribute, sourcefile)
