@@ -10,6 +10,7 @@ import dateutil.parser
 import pandas as pd
 import json
 import ast
+from datetime import datetime
 from bids_validator import BIDSValidator
 from typing import Union
 from pathlib import Path
@@ -91,7 +92,7 @@ class Interface(PluginInterface):
 
         return ''
 
-    def get_attribute(self, dataformat: Union[DataFormat, str], sourcefile: Path, attribute: str, options) -> Union[str, int]:
+    def get_attribute(self, dataformat: Union[DataFormat, str], sourcefile: Path, attribute: str, options) -> Union[None, str, int, float]:
         """
         This plugin supports reading attributes from DICOM and PAR dataformats
 
@@ -102,7 +103,18 @@ class Interface(PluginInterface):
         :return:            The retrieved attribute value
         """
         if dataformat == 'DICOM':
-            return get_dicomfield(attribute, sourcefile)
+
+            # Parse custom "DICOM" tags
+            if attribute == 'PatientAgeCalculated':
+                try:
+                    acqdate   = datetime.strptime(get_dicomfield('AcquisitionDate',  sourcefile), '%Y%m%d')
+                    birthdate = datetime.strptime(get_dicomfield('PatientBirthDate', sourcefile), '%Y%m%d')
+                    return (acqdate - birthdate).days / 365.25
+                except Exception as dateerror:
+                    LOGGER.warning(f"Could not calculate 'PatientAgeCalculated' from 'AcquisitionDate' and 'PatientBirthDate' in {sourcefile}, using 'PatientAge' instead\n{dateerror}")
+                    return get_dicomfield('PatientAge', sourcefile)
+            else:
+                return get_dicomfield(attribute, sourcefile)
 
         if dataformat == 'PAR':
             return get_parfield(attribute, sourcefile)
