@@ -12,7 +12,7 @@ You can use the ``bidscoin`` utility to list, install or uninstall BIDScoin plug
 Dcm2niix2bids: a plugin for DICOM and PAR/REC data
 --------------------------------------------------
 
-The 'dcm2niix2bids' plugin is a wrapper around the well-known pydicom, nibabel and (in particular) `dcm2niix <https://github.com/rordenlab/dcm2niix>`__ tools to interact with and convert DICOM and Philips SPAR/REC source data. Pydicom is used to read DICOM attributes, nibabel is used to read PAR attribute values and dcm2niix is used to convert the DICOM and PAR/REC source data to NIfTI and create BIDS sidecar files. Personal data from the source header (e.g. Age, Sex) is added to the BIDS participants.tsv file. Please cite: `DOI: 10.1016/j.jneumeth.2016.03.001 <https://doi.org/10.1016/j.jneumeth.2016.03.001>`__
+The 'dcm2niix2bids' plugin is a wrapper around the well-known pydicom, nibabel and (in particular) `dcm2niix <https://github.com/rordenlab/dcm2niix>`__ tools to interact with and convert DICOM and Philips SPAR/REC source data. Pydicom is used to read DICOM attributes, nibabel is used to read PAR attribute values and dcm2niix is used to convert the DICOM and PAR/REC source data to NIfTI and create BIDS sidecar files. Personal data from the source header (e.g. Age, Sex) is added to the BIDS participants.tsv file. The plugin supports a custom tag ``PatientAgeDerived``, which computes age with high precision by taking the difference between ``AcquisitionDate`` and ``BirthDate``. Please cite: `DOI: 10.1016/j.jneumeth.2016.03.001 <https://doi.org/10.1016/j.jneumeth.2016.03.001>`__
 
 Spec2nii2bids: a plugin for MR spectroscopy data
 ------------------------------------------------

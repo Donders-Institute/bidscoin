@@ -109,8 +109,8 @@ The bidscoiner says that the IntendedFor search gave no results
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Even if you have specified the IntendedFor value in the bidseditor, you still get `"Empty 'IntendedFor' field map value in {..}: the search for {..} gave no results"`. This may be because you hardcoded the IntendedFor value instead of providing a search pattern. Or it may be that you provided a correct search pattern but that for some subjects the target images were not acquired or could not be found (e.g. due to irregularities in the acquisition). Check out the BIDS output session(s) mentioned in the warning(s) and see if and how you should update your IntendedFor search pattern accordingly.
 
-The bidscoiner says that I need to check my scan.tsv files
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The bidscoiner says that I need to check my scans.tsv files
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 This may occur when you use a dynamic run-index (e.g. ``<<>>`` or ``<<1>>``) and the folder names of your DICOM Series do not start with the DICOM SeriesNumber (this is default on Siemens). The solution would be to rename your Series folder to alphabetical order (in many cases this can be done with ``disomsort``), or to use another dynamic value, e.g. ``<<SeriesNumber>>`` (the latter will yield properly ordered run-indices, albeit with a variable step, e.g. yielding ``run-2`` + ``run-5`` instead of ``run-1`` + ``run-2``
 
 I use dynamic run-indices and now have 'orphan' run-indices in my BIDS directory
@@ -125,6 +125,10 @@ You can simply use the ``bidseditor`` to make changes to your bidsmap, delete al
 
    $ bidsmapper bidsfolder bidsfolder_new -p nibabel2bids -t bidsmap_bids2bids
    $ bidscoiner bidsfolder bidsfolder_new
+
+I have set ``anon: n``, but I still get rounded "PatientAge" numbers
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+In DICOM, ``PatientAge`` can be stored in `days, weeks, months or years <https://dicom.nema.org/dicom/2013/output/chtml/part05/sect_6.2.html>`__. So probably your ``PatientAge`` data was stored in years. To get a decimal age data, you can use the custom ``PatientAgeDerived`` tag from the `dcm2niix2bids plugin <./plugins.html#dcm2niix2bids>`__.
 
 Irregular data acquisition
 --------------------------

@@ -19,6 +19,11 @@ def dcm_file():
 
 
 @pytest.fixture(scope='module')
+def dcm_xa60_file(test_data):
+    return Path(test_data/'XA60'/'00001_1.3.12.2.1107.5.2.43.66068.30000024121907551118800028571.IMA')
+
+
+@pytest.fixture(scope='module')
 def dicomdir():
     return Path(get_testdata_file('DICOMDIR'))
 
@@ -56,6 +61,11 @@ class TestDataSource:
     def test_attributes(self, datasource, extdatasource):
         assert datasource.attribute(r'PatientName:.*\^(.*?)1') == 'MR'         # PatientName = 'CompressedSamples^MR1'
         assert extdatasource.attribute('PatientName') == 'ExtendedAttributesTest'
+
+    def test_age_derived(self, dcm_xa60_file):
+        datasource = DataSource(dcm_xa60_file, {'dcm2niix2bids': Plugin({})}, 'DICOM')
+        assert datasource.attribute('PatientAge') == '036Y'
+        assert datasource.attribute('PatientAgeDerived') == '36.36139630390144'
 
     @pytest.mark.parametrize('subid',  ['sub-001', 'pat^visit'])
     @pytest.mark.parametrize('sesid',  ['ses-01',  'visit^01', ''])
