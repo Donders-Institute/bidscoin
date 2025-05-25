@@ -4,6 +4,17 @@
 
 ## [dev]
 
+## [4.6.2] - 2025-#-#
+
+### Added
+- Make stripping the suffix from bids-values in run-items optional (GitHub issue #265)
+- Dynamic participants.tsv columns (GitHub issue #267)
+- A custom `PatientAgeDerived` "DICOM" tag (GitHub issue #267)
+
+### Changed
+- Remove empty key-value pairs from the json sidecar files (GitHub issue #269)
+- Use `session_id` consistently (instead of `session`)
+
 ## [4.6.1] - 2025-03-28
 
 ### Fixed
@@ -493,7 +504,8 @@ A first stable release of BIDScoin :-)
 ### To do
 - Add support for non-imaging data
 
-[dev]: https://github.com/Donders-Institute/bidscoin/compare/4.6.1...HEAD
+[dev]: https://github.com/Donders-Institute/bidscoin/compare/4.6.2...HEAD
+[4.6.2]: https://github.com/Donders-Institute/bidscoin/compare/4.6.1...4.6.2
 [4.6.1]: https://github.com/Donders-Institute/bidscoin/compare/4.6.0...4.6.1
 [4.6.0]: https://github.com/Donders-Institute/bidscoin/compare/4.5.0...4.6.0
 [4.5.0]: https://github.com/Donders-Institute/bidscoin/compare/4.4.0...4.5.0

@@ -6,6 +6,7 @@ build
 docs/_build
 bidscoin.egg-info
 .coverage
+.coveragerc
 .vscode
 venv
 .eggs
