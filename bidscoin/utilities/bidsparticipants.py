@@ -15,13 +15,12 @@ from bidscoin.bids import BidsMap
 from bidscoin.utilities import unpack
 
 
-def bidsparticipants(sourcefolder: str, bidsfolder: str, keys: list, bidsmap: str= 'bidsmap.yaml', dryrun: bool=False) -> None:
+def bidsparticipants(sourcefolder: str, bidsfolder: str, bidsmap: str='bidsmap.yaml', dryrun: bool=False) -> None:
     """
     Main function that processes all the subjects and session in the sourcefolder to (re)generate the participants.tsv file in the BIDS folder.
 
     :param sourcefolder: The root folder-name of the sub/ses/data/file tree containing the source data files
     :param bidsfolder:   The name of the BIDS root folder
-    :param keys:         The keys that are extracted from the source data when populating the participants.tsv file
     :param bidsmap:      The name of the bidsmap YAML-file. If the bidsmap pathname is just the base name (i.e. no "/" in the name) then it is assumed to be located in the current directory or in bidsfolder/code/bidscoin
     :param dryrun:       Boolean to just display the participants info
     :return:             Nothing

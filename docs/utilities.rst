@@ -186,9 +186,6 @@ The bidsparticipants tool is useful for (re-)generating a participants.tsv file 
 
     options:
       -h, --help            show this help message and exit
-      -k, --keys KEY [KEY ...]
-                            Space separated list of the participants.tsv columns. Default: 'session_id'
-                            'age' 'sex' 'size' 'weight'
       -d, --dryrun          Do not save anything, only print the participants info on screen
       -b, --bidsmap NAME    The study bidsmap file with the mapping heuristics. If the bidsmap filename
                             is just the base name (i.e. no "/" in the name) then it is assumed to be
@@ -197,4 +194,4 @@ The bidsparticipants tool is useful for (re-)generating a participants.tsv file 
 
     examples:
       bidsparticipants myproject/raw myproject/bids
-      bidsparticipants myproject/raw myproject/bids -k participant_id age sex
+      bidsparticipants myproject/raw myproject/bids -b mybidsmap

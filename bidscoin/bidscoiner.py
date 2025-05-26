@@ -57,12 +57,15 @@ def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: 
 
     # Create a dataset description file if it does not exist
     dataset_file = bidsfolder/'dataset_description.json'
-    generatedby  = [{"Name":"BIDScoin", 'Version':__version__, 'Description:':'A flexible GUI application suite that converts source datasets to BIDS', 'CodeURL':'https://github.com/Donders-Institute/bidscoin'}]
+    generatedby  = [{'Name':         'BIDScoin',
+                     'Version':      __version__,
+                     'Description:': 'A versatile GUI application suite that converts source datasets to BIDS',
+                     'CodeURL':      'https://github.com/Donders-Institute/bidscoin'}]
     if not dataset_file.is_file():
         LOGGER.info(f"Creating dataset description file: {dataset_file}")
         dataset_description = {'Name':                  'REQUIRED. Name of the dataset',
                                'GeneratedBy':           generatedby,
-                               'BIDSVersion':           str(bidsversion()),
+                               'BIDSVersion':           bidsversion(),
                                'DatasetType':           'raw',
                                'License':               'RECOMMENDED. The license for the dataset. The use of license name abbreviations is RECOMMENDED for specifying a license. The corresponding full license text MAY be specified in an additional LICENSE file',
                                'Authors':               ['OPTIONAL. List of individuals who contributed to the creation/curation of the dataset'],
@@ -281,8 +284,8 @@ def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: 
                         outputdir  = bidsfolder/subid/sesid       # TODO: Support DICOMDIR with multiple subjects (as in PYDICOMDIR)
                         if not force and outputdir.is_dir():
                             datatypes = set()
-                            for datatype in [dtype for dtype in lsdirs(outputdir) if next(dtype.iterdir(), None)]:    # See what non-empty datatypes we already have in the bids session-folder
-                                if datatype.name in bidsmap.dataformat(datasource.dataformat).datatypes:                # See if the plugin may add data for this datatype
+                            for datatype in [dtype for dtype in lsdirs(outputdir) if next(dtype.iterdir(), None)]:  # See what non-empty datatypes we already have in the bids session-folder
+                                if datatype.name in bidsmap.dataformat(datasource.dataformat).datatypes:            # See if the plugin may add data for this datatype
                                     datatypes.add(datatype.name)
                             if datatypes and not any(issubclass(cls, EventsParser) for _,cls in inspect.getmembers(plugin, inspect.isclass)):  # Always allow events plugins to add data
                                 LOGGER.info(f">>> Skipping {name} processing: {outputdir} already contains {datatypes} data. Use the -f option to force processing if needed.")
@@ -304,7 +307,7 @@ def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: 
                     # Check/repair the run-indices using acq_time info in the scans_table
                     bids.check_runindices(outputdir)
 
-                    # Clean-up the temporary unpacked data
+                    # Clean up the temporary unpacked data
                     if unpacked:
                         shutil.rmtree(sesfolder)
 

@@ -27,9 +27,9 @@ if find_spec('bidscoin') is None:
 from bidscoin import bcoin, schemafolder, templatefolder, is_hidden, __version__
 from bidscoin.plugins import EventsParser
 
-# Define custom data types (replace with proper classes or TypeAlias of Python >= 3.10)
+# Define custom data types (TODO: replace with proper classes or TypeAlias of Python >= 3.10)
 Plugin     = NewType('Plugin',     dict[str, Any])
-Plugins    = NewType('Plugin',     dict[str, Plugin])
+Plugins    = NewType('Plugins',    dict[str, Plugin])
 Options    = NewType('Options',    dict[str, Any])
 Properties = NewType('Properties', dict[str, Any])
 Attributes = NewType('Attributes', dict[str, Any])
@@ -57,7 +57,17 @@ class NoAliasDumper(yaml.SafeDumper):
 
 
 class DataSource:
-    """Reads properties, attributes and BIDS-related features to source files of a supported dataformat (e.g. DICOM or PAR)"""
+    """
+    Reads properties, attributes (via plugins) from source files of a supported dataformat (e.g. DICOM or PAR).
+    This class offers methods to transparently handle dynamic values (including regular expressions), and to access
+    extended source data attributes.
+
+    :ivar path:       The full path of a representative file for this data source
+    :ivar dataformat: The dataformat name of the plugin that interacts with the data source, e.g. DICOM or PAR
+    :ivar plugins:    The plugins that are used to interact with the source data type
+    :ivar subprefix:  The subprefix used in the sourcefolder
+    :ivar sesprefix:  The sesprefix used in the sourcefolder
+    """
 
     def __init__(self, sourcefile: Union[str, Path]='', plugins: Plugins=None, dataformat: str='', options: Options=None):
         """
@@ -70,15 +80,10 @@ class DataSource:
         """
 
         self.path       = Path(sourcefile or '')
-        """The full path of a representative file for this data source"""
         self.dataformat = dataformat
-        """The dataformat name of the plugin that interacts with the data source, e.g. DICOM or PAR"""
         self.plugins    = plugins or {}
-        """The plugins that are used to interact with the source data type"""
         self.subprefix  = options['subprefix'] if options else ''
-        """The subprefix used in the sourcefolder"""
         self.sesprefix  = options['sesprefix'] if options else ''
-        """The sesprefix used in the sourcefolder"""
         self._cache     = {}
 
     def __eq__(self, other):
@@ -107,13 +112,13 @@ class DataSource:
     def resubprefix(self) -> str:
         """Returns the subprefix with escaped regular expression characters (except '-'). A single '*' wildcard is returned as ''"""
 
-        return '' if self.subprefix=='*' else re.escape(self.subprefix).replace(r'\-','-')
+        return '' if self.subprefix == '*' else re.escape(self.subprefix).replace(r'\-','-')
 
     @property
     def resesprefix(self) -> str:
         """Returns the sesprefix with escaped regular expression characters (except '-'). A single '*' wildcard is returned as ''"""
 
-        return '' if self.sesprefix=='*' else re.escape(self.sesprefix).replace(r'\-','-')
+        return '' if self.sesprefix == '*' else re.escape(self.sesprefix).replace(r'\-','-')
 
     def has_support(self) -> str:
         """Find and return the dataformat supported by the plugins. If a dataformat is found, then update self.dataformat accordingly"""
@@ -343,7 +348,19 @@ class DataSource:
 class RunItem:
     """
     Reads and writes to/from a YAML runitem dictionary, i.e. the provenance string, the properties and attributies input
-    dictionaries and the bids and meta output dictionaries (bidsmap > dataformat > datatype > run-item)
+    dictionaries and the bids and meta output dictionaries (bidsmap > dataformat > datatype > run-item). Methods are
+    provided to obtain the mapping to the BIDS output names.
+
+    :ivar datasource: A DataSource object created from the run-item provenance
+    :ivar dataformat: The name of the dataformat
+    :ivar datatype:   The name of the data type
+    :ivar options:    The dictionary with the BIDScoin options
+    :ivar plugins:    The plugin dictionaries with their options
+    :ivar provenance: The file path of the data source
+    :ivar properties: The file system properties from the data source that can be matched against other data sources
+    :ivar attributes: The (header) attributes from the data source that can be matched against other data sources
+    :ivar bids:       The BIDS output dictionary (used for construting the BIDS filename)
+    :ivar meta:       The meta output dictionary (will be appended to the json sidecar file)
     """
 
     def __init__(self, dataformat: str='', datatype: str='', data: dict=None, options: Options=None, plugins: Plugins=None):
@@ -366,30 +383,20 @@ class RunItem:
 
         # Set the regular attributes
         self.datasource = DataSource(data['provenance'], plugins, dataformat, options)
-        """A DataSource object created from the run-item provenance"""
         self.dataformat = dataformat
-        """The name of the dataformat"""
         self.datatype   = datatype
-        """The name of the data type"""
         self.options    = options
-        """The dictionary with the BIDScoin options"""
         self.plugins    = plugins
-        """The plugin dictionaries with their options"""
 
         # Set the data attributes. TODO: create data classes instead?
         self.provenance = data['provenance']
-        """The file path of the data source"""
         self.properties = Properties(data['properties'])
-        """The file system properties from the data source that can be matched against other data sources"""
         for key, val in {'filepath': '', 'filename': '', 'filesize': '', 'nrfiles': None}.items():
             if key not in self.properties:
                 self.properties[key] = val
         self.attributes = Attributes(data['attributes'])
-        """The (header) attributes from the data source that can be matched against other data sources"""
         self.bids       = Bids(data['bids'])
-        """The BIDS output dictionary (used for construting the BIDS filename)"""
         self.meta       = Meta(data['meta'])
-        """The meta output dictionary (will be appended to the json sidecar file)"""
         self._events    = data['events']
         """The events dictionary (used by the EventsParser)"""
 
@@ -490,20 +497,20 @@ class RunItem:
                     entitykey    = entities[entity].name
                     entityformat = entities[entity].format      # E.g. 'label' or 'index' (the entity type always seems to be 'string')
                     bidsvalue    = bids.get(entitykey)
-                    dynamicvalue = True if isinstance(bidsvalue, str) and ('<' in bidsvalue and '>' in bidsvalue) else False
+                    isdynamic    = True if isinstance(bidsvalue, str) and ('<' in bidsvalue and '>' in bidsvalue) else False
                     if entitykey in ('sub', 'ses'): continue
                     if isinstance(bidsvalue, list):
                         bidsvalue = bidsvalue[bidsvalue[-1]]    # Get the selected item
                     if entitykey not in bids:
                         if checks[0]: LOGGER.warning(f'Invalid bidsmap: The "{entitykey}" key is missing ({datatype}/*_{bids["suffix"]} -> {provenance})')
                         run_keysok = False
-                    if bidsvalue and not dynamicvalue and bidsvalue!=sanitize(bidsvalue):
+                    if bidsvalue and not isdynamic and bidsvalue != sanitize(bidsvalue):
                         if checks[2]: LOGGER.warning(f'Invalid {entitykey} value: "{bidsvalue}" ({datatype}/*_{bids["suffix"]} -> {provenance})')
                         run_valsok = False
-                    elif not bidsvalue and filerules[datatype][typegroup].entities[entity]== 'required':
+                    elif not bidsvalue and filerules[datatype][typegroup].entities[entity] == 'required':
                         if checks[2]: LOGGER.warning(f'Required "{entitykey}" value is missing ({datatype}/*_{bids["suffix"]} -> {provenance})')
                         run_valsok = False
-                    if bidsvalue and not dynamicvalue and entityformat=='index' and not str(bidsvalue).isdecimal():
+                    if bidsvalue and not isdynamic and entityformat == 'index' and not str(bidsvalue).isdecimal():
                         if checks[2]: LOGGER.warning(f'Invalid {entitykey}-index: "{bidsvalue}" is not a number ({datatype}/*_{bids["suffix"]} -> {provenance})')
                         run_valsok = False
 
@@ -589,8 +596,8 @@ class RunItem:
                 bidsvalue = ''
             if isinstance(bidsvalue, list):
                 bidsvalue = bidsvalue[bidsvalue[-1]]                                # Get the selected item
-            elif runtime and not (entitykey=='run' and (bidsvalue.replace('<','').replace('>','').isdecimal() or bidsvalue == '<<>>')):
-                bidsvalue = self.datasource.dynamicvalue(bidsvalue, cleanup=True, runtime=runtime)
+            elif runtime and not (entitykey == 'run' and (bidsvalue.replace('<','').replace('>','').isdecimal() or bidsvalue == '<<>>')):
+                bidsvalue = self.datasource.dynamicvalue(bidsvalue, cleanup=cleanup, runtime=runtime)
             if cleanup:
                 bidsvalue = sanitize(bidsvalue)
             if bidsvalue:
@@ -674,7 +681,14 @@ class RunItem:
 
 
 class DataType:
-    """Reads and writes to/from a YAML datatype dictionary (bidsmap > dataformat > datatype)"""
+    """
+    Reads and writes to/from a YAML datatype dictionary (bidsmap > dataformat > datatype)
+
+    :ivar dataformat: The name of the dataformat (= section in the bidsmap)
+    :ivar datatype:   The name of the datatype (= section in a dataformat)
+    :ivar options:    The dictionary with the BIDScoin options
+    :ivar plugins:    The plugin dictionaries with their options
+    """
 
     def __init__(self, dataformat: str, datatype: str, data: list, options: Options, plugins: Plugins):
         """
@@ -688,13 +702,9 @@ class DataType:
         """
 
         self.dataformat = dataformat
-        """The name of the dataformat"""
         self.datatype   = datatype
-        """The name of the datatype"""
         self.options    = options
-        """The dictionary with the BIDScoin options"""
         self.plugins    = plugins
-        """The plugin dictionaries with their options"""
         self._data      = data
         """The YAML datatype dictionary, i.e. a list of runitems"""
 
@@ -767,7 +777,13 @@ class DataType:
 
 
 class DataFormat:
-    """Reads and writes to/from a YAML dataformat dictionary (bidsmap > dataformat)"""
+    """
+    Reads and writes to/from a YAML dataformat dictionary (bidsmap > dataformat)
+
+    :ivar dataformat: The name of the dataformat (= section in the bidsmap)
+    :ivar options:    The dictionary with the BIDScoin options
+    :ivar plugins:    The plugin dictionaries with their options
+    """
 
     def __init__(self, dataformat: str, data: dict, options: Options, plugins: Plugins):
         """
@@ -783,11 +799,8 @@ class DataFormat:
         self.__dict__['_data'] = {}
 
         self.dataformat = dataformat
-        """The name of the dataformat"""
         self.options    = options
-        """The dictionary with the BIDScoin options"""
         self.plugins    = plugins
-        """The plugin dictionaries with their options"""
         self._data      = data
         """The YAML dataformat dictionary, i.e. participant items + a set of datatypes"""
 
@@ -888,7 +901,14 @@ class DataFormat:
 
 
 class BidsMap:
-    """Reads and writes mapping heuristics from the bidsmap YAML-file"""
+    """
+    Reads and writes mapping heuristics from the bidsmap YAML file and provides various methods interacting with bidsmap data. Bidsmaps
+    offer access (hierarchically) to ``DataFormat()``, ``Datatype()``, ``RunItem()``, ``DataSource()`` and ``EventsParser`` objects.
+
+    :ivar filepath: The full path to the bidsmap yaml-file
+    :ivar store:    The in- and output folders for storing samples in the provenance store (NB: this is set by bidsmapper)
+    :ivar plugins:  The plugins that are used to interact with the source data type
+    """
 
     def __init__(self, yamlfile: Path, folder: Path=templatefolder, plugins: Iterable[Union[Path,str]]=(), checks: tuple[bool,bool,bool]=(True,True,True)):
         """
@@ -896,10 +916,10 @@ class BidsMap:
         searched before the default 'heuristics'. If yamfile is empty, then first 'bidsmap.yaml' is searched for, then 'bidsmap_template'. So fullpath
         has precedence over folder and bidsmap.yaml has precedence over the bidsmap_template.
 
-        :param yamlfile:    The full path or base name of the bidsmap yaml-file
-        :param folder:      Used when yamlfile=base name and not in the pwd: yamlfile is then assumed to be in the (bids/code/bidscoin)folder. A bidsignore file in folder will be added to the bidsmap bidsignore items
-        :param plugins:     List of plugins to be used (with default options, overrules the plugin list in the study/template bidsmaps). Leave empty to use all plugins in the bidsmap
-        :param checks:      Booleans to check if all (bidskeys, bids-suffixes, bids-values) in the run are present according to the BIDS schema specifications
+        :param yamlfile: The full path or base name of the bidsmap yaml-file
+        :param folder:   Used when yamlfile=basename and not in the pwd: yamlfile is then assumed to be in the (bids/code/bidscoin)folder. A bidsignore file in folder will be added to the bidsmap bidsignore items
+        :param plugins:  List of plugins to be used (with default options, overrules the plugin list in the study/template bidsmaps). Leave empty to use all plugins in the bidsmap
+        :param checks:   Booleans to check if all (bidskeys, bids-suffixes, bids-values) in the run are present according to the BIDS schema specifications
         """
 
         # Initialize the getter/setter data dictionary
@@ -907,15 +927,12 @@ class BidsMap:
 
         # Input checking
         self.plugins = plugins = plugins or {}
-        """The plugins that are used to interact with the source data type"""
         self.store = {}
-        """The in- and output folders for storing samples in the provenance store (NB: this is set by bidsmapper)"""
         if not yamlfile.suffix:
             yamlfile = yamlfile.with_suffix('.yaml')                # Add a standard file-extension if needed
         if len(yamlfile.parents) == 1 and not yamlfile.is_file():
             yamlfile = folder/yamlfile                              # Get the full path to the bidsmap yaml-file
         self.filepath = yamlfile = yamlfile.resolve()
-        """The full path to the bidsmap yaml-file"""
         if not yamlfile.is_file():
             if yamlfile.name: LOGGER.info(f"No bidsmap file found: {yamlfile}")
             return
@@ -1113,9 +1130,9 @@ class BidsMap:
                     ignore   = check_ignore(datatype, bidsignore) or check_ignore(bidsname+'.json', bidsignore, 'file')
                     ignore_1 = datatype in ignoretypes or ignore
                     ignore_2 = datatype in ignoretypes
-                    for ext in extensions + ['.tsv' if runitem.bids['suffix']=='events' else '.dum']:      # NB: `ext` used to be '.json', which is more generic (but see https://github.com/bids-standard/bids-validator/issues/2113)
+                    for ext in extensions + ['.tsv' if runitem.bids['suffix'] == 'events' else '.dum']:      # NB: `ext` used to be '.json', which is more generic (but see https://github.com/bids-standard/bids-validator/issues/2113)
                         if bidstest := bids_validator.BIDSValidator().is_bids(f"/sub-{sanitize(dataformat)}/{datatype}/{bidsname}{ext}"): break
-                    if level==3 or (abs(level)==2 and not ignore_2) or (-2<level<2 and not ignore_1):
+                    if level == 3 or (abs(level) == 2 and not ignore_2) or (-2<level<2 and not ignore_1):
                         valid = valid and bidstest
                     if (level==0 and not bidstest) or (level==1 and not ignore_1) or (level==2 and not ignore_2) or level==3:
                         LOGGER.info(f"{bidstest}{'*' if ignore else ''}:\t{datatype}/{bidsname}.*")

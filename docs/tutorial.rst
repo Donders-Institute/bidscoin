@@ -14,12 +14,11 @@ The tutorial below was written with the DCCN user in mind that wants to convert 
 1. Setting up the environment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Depending on how BIDScoin was installed, you may have to set your Python environment settings before you can run BIDScoin commands from your command-line interface/shell. This is already done for you when you run a `BIDScoin play <./play.html>`__ instance in the cloud. In the DCCN compute cluster example below it is assumed that an `environment module <https://modules.sourceforge.net/>`__ is used to load your Linux Anaconda Python installation and that BIDScoin is installed in a `conda environment <https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands>`__ named "bidscoin". Run or adjust these commands to your computer system if needed:
+Depending on how BIDScoin was installed, you may have to set your Python environment settings before you can run BIDScoin commands from your command-line interface/shell. This is already done for you when you run a `BIDScoin play <./play.html>`__ instance in the cloud. In the DCCN, you can load a BIDScoin `environment module <https://modules.sourceforge.net/>`__ that manages the settings for you. External users may have to activate their `conda <https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands>`__ or `virtual environment <https://docs.python.org/3/tutorial/venv.html>`__.
 
 .. code-block:: console
 
-   $ module add bidscoin                # Load the DCCN bidscoin module with the PATH settings and Anaconda environment
-   $ source activate /opt/bidscoin      # Activate the Python virtual environment with the BIDScoin Python packages
+   $ module load bidscoin   # Load the DCCN PATH settings and Python environment (else activate your virtual enviroment)
 
 Now you should be able to execute BIDScoin commands. Test this by running ``bidscoin`` to get a general workflow overview. Can you generate a list of all BIDScoin tools? What about the plugins? Test the bidscoin installation and make sure everything is OK
 
@@ -30,8 +29,8 @@ Create a tutorial playground folder by executing these shell commands:
 
 .. code-block:: console
 
-   $ bidscoin --download .              # Download the tutorial data (use a "." for the current folder or a pathname of choice to save it elsewhere)
-   $ cd ./bidscointutorial              # Go to the downloaded data (replace "." with the full pathname if your data was saved elsewhere)
+   $ bidscoin --download .  # Download the tutorial data (use a "." for the current folder or a pathname of choice to save it elsewhere)
+   $ cd ./bidscointutorial  # Go to the downloaded data (replace "." with the full pathname if your data was saved elsewhere)
 
 The new ``bidscointutorial`` folder contains a ``raw`` source-data folder and a ``bids_ref`` reference BIDS folder, i.e. the intended end product of this tutorial. In the raw folder you will find these DICOM Series folders (aka "runs")::
 

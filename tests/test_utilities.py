@@ -121,7 +121,7 @@ def test_bidsparticipants(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir):
     if participantsfile.is_file():                                  # Compare newly generated data with reference data from test_bidscoiner
         with open(participantsfile) as fid:
             refdata = list(csv.reader(fid, delimiter='\t'))
-        bidsparticipants.bidsparticipants(raw_dicomdir, bids_dicomdir, ['age', 'sex', 'size', 'weight'], bidsmap=bidsmap_dicomdir)
+        bidsparticipants.bidsparticipants(raw_dicomdir, bids_dicomdir, bidsmap=bidsmap_dicomdir)
         with open(participantsfile) as fid:
             newdata = list(csv.reader(fid, delimiter='\t'))
         assert newdata == refdata

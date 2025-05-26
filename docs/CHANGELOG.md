@@ -4,7 +4,7 @@
 
 ## [dev]
 
-## [4.6.2] - 2025-#-#
+## [4.6.2] - 2025-06-16
 
 ### Added
 - Make stripping the suffix from bids-values in run-items optional (GitHub issue #265)
@@ -14,6 +14,8 @@
 ### Changed
 - Remove empty key-value pairs from the json sidecar files (GitHub issue #269)
 - Use `session_id` consistently (instead of `session`)
+- Allow `+` signs in labels of filenames (new in BIDS v1.11)
+- The logging level in the terminal output -- looks much nicer now!
 
 ## [4.6.1] - 2025-03-28
 
