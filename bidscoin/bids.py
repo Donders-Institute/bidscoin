@@ -1645,14 +1645,9 @@ def sanitize(label: Union[str, DataFormat, DataType]):
         return ''
     if not isinstance(label, (str, DataFormat, DataType)):
         return label
-    label = str(label)
+    pattern = bidsschema.objects.formats.label.pattern[:-1].replace('[', '[^')   # Schema pattern: '[0-9a-zA-Z+]+', see https://github.com/bids-standard/bids-specification/pull/1926/files
 
-    special_characters = (' ', '_', '-','.')
-
-    for special in special_characters:
-        label = label.strip().replace(special, '')
-
-    return re.sub(r'(?u)[^-\w.]', '', label)
+    return re.sub(pattern, '', str(label))  # Replace anything that NOT matches the pattern with ''
 
 
 def match_runvalue(attribute, pattern) -> bool:
