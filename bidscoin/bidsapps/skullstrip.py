@@ -14,8 +14,7 @@ import logging
 import pandas as pd
 import nibabel as nib
 import tempfile
-from tqdm import tqdm
-from tqdm.contrib.logging import logging_redirect_tqdm
+from rich.progress import track
 from pathlib import Path
 from importlib.util import find_spec
 if find_spec('bidscoin') is None:
@@ -90,141 +89,140 @@ def skullstrip(bidsfolder: str, pattern: str, participant: list, masked: str, ou
             jt.joinFiles           = True
 
         # Loop over bids subject/session-directories
-        with logging_redirect_tqdm():
-            for n, subject in enumerate(tqdm(subjects, unit='subject', colour='green', leave=False), 1):
+        for n, subject in enumerate(track(subjects, description='[green]Subjects', transient=True), 1):
 
-                subid    = subject.name
-                sessions = lsdirs(subject, 'ses-*')
-                if not sessions:
-                    sessions = [subject]
-                for session in sessions:
+            subid    = subject.name
+            sessions = lsdirs(subject, 'ses-*')
+            if not sessions:
+                sessions = [subject]
+            for session in sessions:
 
-                    LOGGER.info('--------------------------------------')
-                    LOGGER.info(f"Processing ({n}/{len(subjects)}): {session}")
+                LOGGER.info('--------------------------------------')
+                LOGGER.info(f"Processing ({n}/{len(subjects)}): {session}")
 
-                    # Search for images that need to be skullstripped
-                    sesid   = session.name if session.name.startswith('ses-') else ''
-                    srcimgs = sorted([match for match in session.glob(pattern) if '.nii' in match.suffixes])
-                    addimgs = sorted([match for match in session.glob(masked)  if '.nii' in match.suffixes]) if masked else []
-                    if not srcimgs:
-                        LOGGER.info(f"No images found for {pattern} in: {session}")
-                    if masked and not addimgs:
-                        LOGGER.info(f"No images found for {masked} in: {session}")
-                    if addimgs and len(srcimgs) > 1:
-                        LOGGER.error(f"{len(srcimgs)} matches found for {session/pattern}, which is ambiguous (the {masked} masked option requires a single match)")
-                        addimgs = []
-                    for srcimg in srcimgs:
+                # Search for images that need to be skullstripped
+                sesid   = session.name if session.name.startswith('ses-') else ''
+                srcimgs = sorted([match for match in session.glob(pattern) if '.nii' in match.suffixes])
+                addimgs = sorted([match for match in session.glob(masked)  if '.nii' in match.suffixes]) if masked else []
+                if not srcimgs:
+                    LOGGER.info(f"No images found for {pattern} in: {session}")
+                if masked and not addimgs:
+                    LOGGER.info(f"No images found for {masked} in: {session}")
+                if addimgs and len(srcimgs) > 1:
+                    LOGGER.error(f"{len(srcimgs)} matches found for {session/pattern}, which is ambiguous (the {masked} masked option requires a single match)")
+                    addimgs = []
+                for srcimg in srcimgs:
 
-                        # Construct the output filename and relative path names (for updating the IntendedFor list and scans.tsv file)
-                        srcent, suffix = srcimg.with_suffix('').stem.rsplit('_',1)  # Name without suffix, suffix
-                        derent         = 'space-orig_desc-brain'
-                        ext            = ''.join(srcimg.suffixes)                   # Account for e.g. '.nii.gz'
-                        if output[0] == 'derivatives':
-                            outputimg = bidsdir/'derivatives'/'skullstrip'/subid/sesid/srcimg.parent.name/f"{srcent}_{derent}_{suffix}{ext}"
+                    # Construct the output filename and relative path names (for updating the IntendedFor list and scans.tsv file)
+                    srcent, suffix = srcimg.with_suffix('').stem.rsplit('_',1)  # Name without suffix, suffix
+                    derent         = 'space-orig_desc-brain'
+                    ext            = ''.join(srcimg.suffixes)                   # Account for e.g. '.nii.gz'
+                    if output[0] == 'derivatives':
+                        outputimg = bidsdir/'derivatives'/'skullstrip'/subid/sesid/srcimg.parent.name/f"{srcent}_{derent}_{suffix}{ext}"
+                    else:
+                        outputimg = session/output[0]/srcimg.name               # NB: Overwrite the original image
+                    outputimg.parent.mkdir(parents=True, exist_ok=True)
+
+                    # Check the json "SkullStripped" field to see if it has already been skullstripped
+                    outputjson = outputimg.with_suffix('').with_suffix('.json')
+                    if not force and outputjson.is_file():
+                        with outputjson.open('r') as sidecar:
+                            metadata = json.load(sidecar)
+                        if metadata.get('SkullStripped'):
+                            LOGGER.info(f"Skipping already skullstripped image: {outputimg}")
+                            continue
+
+                    # Skullstrip the image
+                    maskimg = bidsdir/'derivatives'/'skullstrip'/subid/sesid/srcimg.parent.name/f"{srcent}_{derent}_mask{ext}"
+                    maskimg.parent.mkdir(parents=True, exist_ok=True)
+                    if cluster:
+                        jt.args       = ['-i', srcimg, '-o', outputimg, '-m', maskimg] + args.split()
+                        jt.jobName    = f"skullstrip_{subid}_{sesid}"
+                        jt.outputPath = f"{os.getenv('HOSTNAME')}:{Path.cwd() if DEBUG else tempfile.gettempdir()}/{jt.jobName}.out"
+                        jobids.append(pbatch.runJob(jt))
+                        LOGGER.info(f"Your skullstrip job has been submitted with ID: {jobids[-1]}")
+                    elif run_command(f"mri_synthstrip -i {srcimg} -o {outputimg} -m {maskimg} {args}"):
+                        continue
+
+                    # Add a json sidecar-file with the "SkullStripped" field
+                    srcjson = srcimg.with_suffix('').with_suffix('.json')
+                    if srcjson.is_file():
+                        with srcjson.open('r') as sidecar:
+                            metadata = json.load(sidecar)
+                    else:
+                        metadata = {}
+                    metadata['SkullStripped'] = True
+                    with outputjson.open('w') as sidecar:
+                        json.dump(metadata, sidecar, indent=4)
+                    metadata['Type'] = 'Brain'
+                    with maskimg.with_suffix('').with_suffix('.json').open('w') as sidecar:
+                        json.dump(metadata, sidecar, indent=4)
+
+                    # Apply the mask to the additional images and save it as output
+                    maskobj    = nib.load(maskimg)   if addimgs else []
+                    maskvol    = maskobj.get_fdata() if addimgs else []
+                    addoutimgs = []                # To be used for updating the IntendedFor list and the scans.tsv file
+                    for addimg in addimgs:
+
+                        # Define the output image
+                        if output[1] == 'derivatives':
+                            srcent, suffix = addimg.name.rsplit('_', 1)     # NB: suffix = suffix.ext
+                            addoutimg      = bidsdir/'derivatives'/'skullstrip'/subid/sesid/addimg.parent.name/f"{srcent}_{derent}_{suffix}"
                         else:
-                            outputimg = session/output[0]/srcimg.name               # NB: Overwrite the original image
-                        outputimg.parent.mkdir(parents=True, exist_ok=True)
-
-                        # Check the json "SkullStripped" field to see if it has already been skullstripped
-                        outputjson = outputimg.with_suffix('').with_suffix('.json')
+                            addoutimg = session/output[1]/addimg.name       # NB: Could be the same as the original image
+                        addoutimgs.append(addoutimg)
+                        outputjson = addoutimg.with_suffix('').with_suffix('.json')
                         if not force and outputjson.is_file():
                             with outputjson.open('r') as sidecar:
                                 metadata = json.load(sidecar)
                             if metadata.get('SkullStripped'):
-                                LOGGER.info(f"Skipping already skullstripped image: {outputimg}")
+                                LOGGER.info(f"Skipping already skullstripped image: {addoutimg}")
                                 continue
 
-                        # Skullstrip the image
-                        maskimg = bidsdir/'derivatives'/'skullstrip'/subid/sesid/srcimg.parent.name/f"{srcent}_{derent}_mask{ext}"
-                        maskimg.parent.mkdir(parents=True, exist_ok=True)
-                        if cluster:
-                            jt.args       = ['-i', srcimg, '-o', outputimg, '-m', maskimg] + args.split()
-                            jt.jobName    = f"skullstrip_{subid}_{sesid}"
-                            jt.outputPath = f"{os.getenv('HOSTNAME')}:{Path.cwd() if DEBUG else tempfile.gettempdir()}/{jt.jobName}.out"
-                            jobids.append(pbatch.runJob(jt))
-                            LOGGER.info(f"Your skullstrip job has been submitted with ID: {jobids[-1]}")
-                        elif run_command(f"mri_synthstrip -i {srcimg} -o {outputimg} -m {maskimg} {args}"):
+                        # Load the volume data, multiply it with the mask and save it to the output image
+                        addoutimg.parent.mkdir(parents=True, exist_ok=True)
+                        addobj = nib.load(addimg)
+                        if addobj.header.get_data_shape()[0:3] == maskobj.header.get_data_shape():
+                            LOGGER.info(f"Applying skullstrip-mask to: {addoutimg}")
+                            addmsk = nib.Nifti1Image(addobj.get_fdata() * maskvol, addobj.affine, addobj.header)
+                            addmsk.to_filename(addoutimg)
+                        else:
+                            LOGGER.error(f"Cannot apply skullstrip-mask to: {addoutimg}\nIt's dimensions are {addobj.header.get_data_shape()} but the mask is {maskobj.header.get_data_shape()}")
                             continue
 
-                        # Add a json sidecar-file with the "SkullStripped" field
-                        srcjson = srcimg.with_suffix('').with_suffix('.json')
-                        if srcjson.is_file():
-                            with srcjson.open('r') as sidecar:
+                        # Add a json sidecar-file to the output image
+                        if addimg.with_suffix('').with_suffix('.json').is_file():
+                            with addimg.with_suffix('').with_suffix('.json').open('r') as sidecar:
                                 metadata = json.load(sidecar)
                         else:
                             metadata = {}
                         metadata['SkullStripped'] = True
                         with outputjson.open('w') as sidecar:
                             json.dump(metadata, sidecar, indent=4)
-                        metadata['Type'] = 'Brain'
-                        with maskimg.with_suffix('').with_suffix('.json').open('w') as sidecar:
-                            json.dump(metadata, sidecar, indent=4)
 
-                        # Apply the mask to the additional images and save it as output
-                        maskobj    = nib.load(maskimg)   if addimgs else []
-                        maskvol    = maskobj.get_fdata() if addimgs else []
-                        addoutimgs = []                # To be used for updating the IntendedFor list and the scans.tsv file
-                        for addimg in addimgs:
+                    # Update the scans.tsv file
+                    scans_tsv = session/f"{subid}{'_'+sesid if sesid else ''}_scans.tsv"
+                    if scans_tsv.is_file():
 
-                            # Define the output image
-                            if output[1] == 'derivatives':
-                                srcent, suffix = addimg.name.rsplit('_', 1)     # NB: suffix = suffix.ext
-                                addoutimg      = bidsdir/'derivatives'/'skullstrip'/subid/sesid/addimg.parent.name/f"{srcent}_{derent}_{suffix}"
-                            else:
-                                addoutimg = session/output[1]/addimg.name       # NB: Could be the same as the original image
-                            addoutimgs.append(addoutimg)
-                            outputjson = addoutimg.with_suffix('').with_suffix('.json')
-                            if not force and outputjson.is_file():
-                                with outputjson.open('r') as sidecar:
-                                    metadata = json.load(sidecar)
-                                if metadata.get('SkullStripped'):
-                                    LOGGER.info(f"Skipping already skullstripped image: {addoutimg}")
-                                    continue
-
-                            # Load the volume data, multiply it with the mask and save it to the output image
-                            addoutimg.parent.mkdir(parents=True, exist_ok=True)
-                            addobj = nib.load(addimg)
-                            if addobj.header.get_data_shape()[0:3] == maskobj.header.get_data_shape():
-                                LOGGER.info(f"Applying skullstrip-mask to: {addoutimg}")
-                                addmsk = nib.Nifti1Image(addobj.get_fdata() * maskvol, addobj.affine, addobj.header)
-                                addmsk.to_filename(addoutimg)
-                            else:
-                                LOGGER.error(f"Cannot apply skullstrip-mask to: {addoutimg}\nIt's dimensions are {addobj.header.get_data_shape()} but the mask is {maskobj.header.get_data_shape()}")
+                        # Add the new images to the scans table
+                        scans_table = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
+                        bidsignore  = (bidsdir/'.bidsignore').read_text().splitlines() if (bidsdir/'.bidsignore').is_file() else ['extra_data/']
+                        for original, stripped in zip([srcimg] + addimgs, [outputimg] + addoutimgs):
+                            if not stripped.name or 'derivatives' in stripped.parts or bids.check_ignore(stripped.parent.name, bidsignore):
                                 continue
+                            original_rel = original.relative_to(session).as_posix()
+                            stripped_rel = stripped.relative_to(session).as_posix()
+                            datatype     = stripped_rel.split('/')[0]
+                            if original_rel in scans_table.index and stripped_rel not in scans_table.index and datatype in bids.filerules:
+                                LOGGER.info(f"Adding '{stripped_rel}' to '{scans_tsv}'")
+                                scans_table.loc[stripped_rel] = scans_table.loc[original_rel]
 
-                            # Add a json sidecar-file to the output image
-                            if addimg.with_suffix('').with_suffix('.json').is_file():
-                                with addimg.with_suffix('').with_suffix('.json').open('r') as sidecar:
-                                    metadata = json.load(sidecar)
-                            else:
-                                metadata = {}
-                            metadata['SkullStripped'] = True
-                            with outputjson.open('w') as sidecar:
-                                json.dump(metadata, sidecar, indent=4)
-
-                        # Update the scans.tsv file
-                        scans_tsv = session/f"{subid}{'_'+sesid if sesid else ''}_scans.tsv"
-                        if scans_tsv.is_file():
-
-                            # Add the new images to the scans table
-                            scans_table = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
-                            bidsignore  = (bidsdir/'.bidsignore').read_text().splitlines() if (bidsdir/'.bidsignore').is_file() else ['extra_data/']
-                            for original, stripped in zip([srcimg] + addimgs, [outputimg] + addoutimgs):
-                                if not stripped.name or 'derivatives' in stripped.parts or bids.check_ignore(stripped.parent.name, bidsignore):
-                                    continue
-                                original_rel = original.relative_to(session).as_posix()
-                                stripped_rel = stripped.relative_to(session).as_posix()
-                                datatype     = stripped_rel.split('/')[0]
-                                if original_rel in scans_table.index and stripped_rel not in scans_table.index and datatype in bids.filerules:
-                                    LOGGER.info(f"Adding '{stripped_rel}' to '{scans_tsv}'")
-                                    scans_table.loc[stripped_rel] = scans_table.loc[original_rel]
-
-                            # Save the data
-                            scans_table.sort_values(by=['acq_time','filename'], inplace=True)
-                            scans_table.replace('','n/a').to_csv(scans_tsv, sep='\t', encoding='utf-8', na_rep='n/a')
-                            for scan in scans_table.index:
-                                if not (session/scan).is_file():
-                                    LOGGER.warning(f"Found non-existent file '{scan}' in '{scans_tsv}'")
+                        # Save the data
+                        scans_table.sort_values(by=['acq_time','filename'], inplace=True)
+                        scans_table.replace('','n/a').to_csv(scans_tsv, sep='\t', encoding='utf-8', na_rep='n/a')
+                        for scan in scans_table.index:
+                            if not (session/scan).is_file():
+                                LOGGER.warning(f"Found non-existent file '{scan}' in '{scans_tsv}'")
 
         if cluster and jobids:
             LOGGER.info('')

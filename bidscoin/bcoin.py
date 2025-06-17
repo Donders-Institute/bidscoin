@@ -7,7 +7,6 @@ A BIDScoin library and application with utilities to perform generic management 
 
 import os
 import types
-import coloredlogs
 import logging
 import shutil
 import sys
@@ -21,30 +20,16 @@ from importlib.metadata import entry_points
 from importlib.util import spec_from_file_location, module_from_spec
 from pathlib import Path
 from typing import Union
-from tqdm import tqdm
-from tqdm.contrib.logging import logging_redirect_tqdm
+from rich.progress import track, Progress, TextColumn, BarColumn, DownloadColumn, TransferSpeedColumn, TimeRemainingColumn, TimeElapsedColumn
+from rich.logging import RichHandler
+from rich.theme import Theme
+from rich.console import Console
 from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     sys.path.append(str(Path(__file__).parents[1]))
 from bidscoin import templatefolder, pluginfolder, bidsmap_template, tutorialurl, trackusage, tracking, configdir, configfile, config, DEBUG, __version__
 
 LOGGER = logging.getLogger(__name__)
-
-
-class TqdmUpTo(tqdm):
-
-    def update_to(self, b=1, bsize=1, tsize=None):
-        """
-        Adds a tqdm progress bar to urllib.request.urlretrieve()
-        https://gist.github.com/leimao/37ff6e990b3226c2c9670a2cd1e4a6f5
-
-        :param b:       Number of blocks transferred so far [default: 1].
-        :param bsize:   Size of each block (in tqdm units) [default: 1].
-        :param tsize:   Total size (in tqdm units). If [default: None] remains unchanged.
-        """
-        if tsize is not None:
-            self.total = tsize
-        self.update(b * bsize - self.n)  # will also set self.n = b * bsize
 
 
 def drmaa_nativespec(specs: str, session) -> str:
@@ -75,8 +60,8 @@ def drmaa_nativespec(specs: str, session) -> str:
 
 def synchronize(pbatch, jobids: list, event: str, wait: int=15):
     """
-    Shows tqdm progress bars for queued and running DRMAA jobs. Waits until all jobs have finished +
-    some extra wait time to give NAS systems the opportunity to fully synchronize
+    Shows Rich progress bars for queued and running DRMAA jobs. Waits until all jobs have finished +
+    some extra wait time to give NAS systems the opportunity to fully synchronize.
 
     :param pbatch: The DRMAA session
     :param jobids: The job ids
@@ -84,33 +69,33 @@ def synchronize(pbatch, jobids: list, event: str, wait: int=15):
     :param wait:   The extra wait time for the NAS
     """
 
-    if jobids:
-        match = re.search(r"(slurm|pbs|torque|sge|lsf|condor|uge)", pbatch.drmaaImplementation.lower())
-        trackusage(f"{event}_{match.group(1) if match else 'drmaa'}")
-    else:
+    if not jobids:
         return
 
-    with logging_redirect_tqdm():
+    match = re.search(r"(slurm|pbs|torque|sge|lsf|condor|uge)", pbatch.drmaaImplementation.lower())
+    trackusage(f"{event}_{match.group(1) if match else 'drmaa'}")
 
-        qbar = tqdm(total=len(jobids), desc='Queued ', unit='job', leave=False, bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}]')
-        rbar = tqdm(total=len(jobids), desc='Running', unit='job', leave=False, bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}]', colour='green')
+    with Progress(TextColumn('{task.description}'), BarColumn(), TextColumn('{task.completed}/{task.total}'), TimeElapsedColumn(), transient=True) as progress:
+
+        qtask = progress.add_task('[white]Queued  ', total=len(jobids))
+        rtask = progress.add_task('[green]Running ', total=len(jobids))
+
         done = 0
         while done < len(jobids):
             jobs   = [pbatch.jobStatus(jobid) for jobid in jobids]
             done   = sum(status in ('done', 'failed', 'undetermined') for status in jobs)
-            qbar.n = sum(status == 'queued_active'                    for status in jobs)
-            rbar.n = sum(status == 'running'                          for status in jobs)
-            qbar.refresh(), rbar.refresh()
+            qcount = sum(status == 'queued_active'                    for status in jobs)
+            rcount = sum(status == 'running'                          for status in jobs)
+            progress.update(qtask, completed=qcount)
+            progress.update(rtask, completed=rcount)
             time.sleep(2)
-        qbar.close(), rbar.close()
 
-        failedjobs = [jobid for jobid in jobids if pbatch.jobStatus(jobid)=='failed']
-        if failedjobs:
+        if failedjobs := [jobid for jobid in jobids if pbatch.jobStatus(jobid) == 'failed']:
             LOGGER.error(f"{len(failedjobs)} HPC jobs failed to run:\n{failedjobs}\nThis may well be due to an underspecified `--cluster` input option (e.g. not enough memory)")
 
-        # Give NAS systems some time to fully synchronize
-        for t in tqdm(range(wait*100), desc='synchronizing', leave=False, bar_format='{l_bar}{bar}| [{elapsed}]'):
-            time.sleep(.01)
+        # Synchronization wait bar
+        for t in track(range(wait*100), description='[cyan]Synchronizing', transient=True):
+            time.sleep(0.01)
 
 
 def setup_logging(logfile: Path=Path()):
@@ -129,11 +114,11 @@ def setup_logging(logfile: Path=Path()):
 
     # Set the default formats
     if DEBUG:
-        fmt  = '%(asctime)s - %(name)s - %(levelname)s | %(message)s'
-        cfmt = '%(levelname)s - %(name)s | %(message)s'
+        fmt  = '%(asctime)s - %(name)s | %(message)s'
+        cfmt = '%(name)s | %(message)s'
     else:
         fmt  = '%(asctime)s - %(levelname)s | %(message)s'
-        cfmt = '%(levelname)s | %(message)s'
+        cfmt = '%(message)s'
     datefmt  = '%Y-%m-%d %H:%M:%S'
 
     # Register custom log levels
@@ -161,13 +146,16 @@ def setup_logging(logfile: Path=Path()):
     logger = logging.getLogger()
     logger.setLevel('BCDEBUG' if DEBUG else 'VERBOSE')
 
-    # Add the console streamhandler and bring some color to those boring logs! :-)
-    coloredlogs.install(level='BCDEBUG' if DEBUG else 'VERBOSE' if not logfile.name else 'INFO', fmt=cfmt, datefmt=datefmt)   # NB: Using tqdm sets the streamhandler level to 0, see: https://github.com/tqdm/tqdm/pull/1235
-    coloredlogs.DEFAULT_LEVEL_STYLES['verbose']['color'] = 245  # = Gray
+    # Add the Rich console handler and bring some color to those boring logs! :-)
+    console        = Console(theme=Theme({'logging.level.verbose': 'grey50', 'logging.level.success': 'green bold', 'logging.level.bcdebug': 'bright_yellow'}))
+    consolehandler = RichHandler(console=console, show_time=False, show_level=True, show_path=DEBUG, rich_tracebacks=True, markup=True, level='BCDEBUG' if DEBUG else 'VERBOSE' if not logfile.name else 'INFO')
+    consolehandler.set_name('console')
+    consolehandler.setFormatter(logging.Formatter(fmt=cfmt, datefmt=datefmt))
+    logger.addHandler(consolehandler)
 
     if logfile.name:
 
-        # Add the log filehandler
+        # Add the verbose filehandler
         logfile.parent.mkdir(parents=True, exist_ok=True)      # Create the log dir if it does not exist
         formatter  = logging.Formatter(fmt=fmt, datefmt=datefmt)
         loghandler = logging.FileHandler(logfile)
@@ -184,7 +172,7 @@ def setup_logging(logfile: Path=Path()):
         logger.addHandler(errorhandler)
 
     if DEBUG:
-        LOGGER.info('\t<<<<<<<<<< Running BIDScoin in DEBUG mode >>>>>>>>>>')
+        LOGGER.info('\t[bold bright_yellow]<<<<<<<<<< Running BIDScoin in DEBUG mode >>>>>>>>>>')
         settracking('show')
 
 
@@ -550,8 +538,14 @@ def pulltutorialdata(tutorialfolder: str) -> None:
 
     # Download the data
     LOGGER.info(f"Downloading the tutorial dataset...")
-    with TqdmUpTo(unit='B', unit_scale=True, unit_divisor=1024, miniters=1, desc=tutorialtargz.name) as t:
-        urllib.request.urlretrieve(tutorialurl, tutorialtargz, reporthook=t.update_to)  # NB: In case of ssl certificate issues use: with urllib.request.urlopen(tutorialurl, context=ssl.SSLContext()) as data, open(tutorialtargz, 'wb') as targz_fid: shutil.copyfileobj(data, targz_fid)
+    with Progress(TextColumn('[bold blue]{task.fields[filename]}'), BarColumn(), DownloadColumn(), TransferSpeedColumn(), TimeRemainingColumn()) as progress:
+        task = progress.add_task('[cyan]Download', filename=tutorialtargz.name, total=None)
+        def reporthook(blocknum: int, blocksize: int, totalsize: int):
+            if totalsize > 0 and progress.tasks[task].total is None:
+                progress.update(task, total=totalsize)
+            progress.update(task, completed=blocknum * blocksize)
+
+        urllib.request.urlretrieve(tutorialurl, tutorialtargz, reporthook=reporthook)  # NB: In case of ssl certificate issues use: with urllib.request.urlopen(tutorialurl, context=ssl.SSLContext()) as data, open(tutorialtargz, 'wb') as targz_fid: shutil.copyfileobj(data, targz_fid)
 
     # Unzip the data in the target folder
     LOGGER.info(f"Unpacking the downloaded data in: {tutorialfolder}")

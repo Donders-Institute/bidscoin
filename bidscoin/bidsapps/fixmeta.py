@@ -11,8 +11,7 @@ if __name__ == "__main__" and os.getenv('DUECREDIT_ENABLE','').lower() not in ('
 
 import logging
 import json
-from tqdm import tqdm
-from tqdm.contrib.logging import logging_redirect_tqdm
+from rich.progress import track
 from pathlib import Path
 from importlib.util import find_spec
 if find_spec('bidscoin') is None:
@@ -60,50 +59,49 @@ def fixmeta(bidsfolder: str, pattern: str, metadata: dict, participant: list, bi
     provdata = bids.bidsprov(bidsdir)
 
     # Loop over the subject/session-directories
-    with logging_redirect_tqdm():
-        for subject in tqdm(subjects, unit='subject', colour='green', leave=False):
-            sessions = lsdirs(subject, 'ses-*')
-            if not sessions:
-                sessions = [subject]
-            for session in sessions:
+    for subject in track(subjects, description='[green]Subjects', transient=True):
+        sessions = lsdirs(subject, 'ses-*')
+        if not sessions:
+            sessions = [subject]
+        for session in sessions:
 
-                # Search for the image(s) to fix
-                LOGGER.info(f"Fixing metadata in: {session.relative_to(bidsdir)}")
-                targets = sorted([match for match in session.rglob(pattern) if match.suffixes[0] in ('.tsv','.nii')])
-                if not targets:
-                    LOGGER.warning(f"Could not find data files using: {session.relative_to(bidsdir)}/{pattern}")
-                    continue
+            # Search for the image(s) to fix
+            LOGGER.info(f"Fixing metadata in: {session.relative_to(bidsdir)}")
+            targets = sorted([match for match in session.rglob(pattern) if match.suffixes[0] in ('.tsv','.nii')])
+            if not targets:
+                LOGGER.warning(f"Could not find data files using: {session.relative_to(bidsdir)}/{pattern}")
+                continue
 
-                # Fix the targets
-                for target in targets:
+            # Fix the targets
+            for target in targets:
 
-                    # Lookup the source folder in the bidscoiner.tsv provenance logs and get a datasource from it
-                    sourcedir = ''
-                    for source, row in provdata.iterrows():
-                        if isinstance(row['targets'], str) and target.name in row['targets']:
-                            sourcedir = source
-                    datasource = bids.get_datasource(Path(sourcedir), plugins)
-                    LOGGER.bcdebug(f"Datasource provenance: '{target.name}' -> '{datasource}'")
+                # Lookup the source folder in the bidscoiner.tsv provenance logs and get a datasource from it
+                sourcedir = ''
+                for source, row in provdata.iterrows():
+                    if isinstance(row['targets'], str) and target.name in row['targets']:
+                        sourcedir = source
+                datasource = bids.get_datasource(Path(sourcedir), plugins)
+                LOGGER.bcdebug(f"Datasource provenance: '{target.name}' -> '{datasource}'")
 
-                    # Load/copy over the source metadata
-                    jsonfile = target.with_suffix('').with_suffix('.json')
-                    jsondata = bids.poolmetadata(datasource, jsonfile, bids.Meta({}), ['.json'])
-                    for key, value in metadata.items():
-                        if isinstance(value, list):
-                            for n in range(0, len(value), 2):
-                                if isinstance(jsondata.get(key), str):
-                                    jsondata[key] = jsondata[key].replace(value[n], value[n+1])
-                        else:
-                            jsondata[key] = value
-                        LOGGER.verbose(f"Writing '{key}: {jsondata.get(key)}' to: {jsonfile}")
+                # Load/copy over the source metadata
+                jsonfile = target.with_suffix('').with_suffix('.json')
+                jsondata = bids.poolmetadata(datasource, jsonfile, bids.Meta({}), ['.json'])
+                for key, value in metadata.items():
+                    if isinstance(value, list):
+                        for n in range(0, len(value), 2):
+                            if isinstance(jsondata.get(key), str):
+                                jsondata[key] = jsondata[key].replace(value[n], value[n+1])
+                    else:
+                        jsondata[key] = value
+                    LOGGER.verbose(f"Writing '{key}: {jsondata.get(key)}' to: {jsonfile}")
 
-                    # Save the metadata to the json sidecar-file
-                    if jsondata:
-                        with jsonfile.open('w') as json_fid:
-                            json.dump(jsondata, json_fid, indent=4)
+                # Save the metadata to the json sidecar-file
+                if jsondata:
+                    with jsonfile.open('w') as json_fid:
+                        json.dump(jsondata, json_fid, indent=4)
 
-                # Add the special field map metadata (IntendedFor, TE, etc)
-                bids.addmetadata(session)
+            # Add the special field map metadata (IntendedFor, TE, etc)
+            bids.addmetadata(session)
 
 
 def main():

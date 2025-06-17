@@ -3,8 +3,7 @@
 
 import logging
 import shutil
-from tqdm import tqdm
-from tqdm.contrib.logging import logging_redirect_tqdm
+from rich.progress import track
 from pathlib import Path
 from importlib.util import find_spec
 if find_spec('bidscoin') is None:
@@ -51,7 +50,7 @@ def bidsparticipants(sourcefolder: str, bidsfolder: str, bidsmap: str='bidsmap.y
     subprefix = bidsmap.options['subprefix']
     sesprefix = bidsmap.options['sesprefix']
 
-    # Get the table & dictionary of the subjects that have been processed
+    # Get the table and dictionary of the subjects that have been processed
     participants_tsv   = bidsfolder/'participants.tsv'
     participants_table = bids.addparticipant(participants_tsv)
 
@@ -69,54 +68,53 @@ def bidsparticipants(sourcefolder: str, bidsfolder: str, bidsmap: str='bidsmap.y
     plugins = [plugin for name in bidsmap.plugins if (plugin := bcoin.import_plugin(name))]
 
     # Loop over all subjects in the bids-folder and add them to the participants table
-    with logging_redirect_tqdm():
-        for n, subject in enumerate(tqdm(subjects, unit='subject', colour='green', leave=False), 1):
+    for n, subject in enumerate(track(subjects, description='[green]Subjects', transient=True), 1):
 
-            LOGGER.info(f"------------------- Subject {n}/{len(subjects)} -------------------")
-            personals = {}
-            subject   = rawfolder/subject.name.replace('sub-', subprefix.replace('*',''))     # TODO: This assumes e.g. that the subject-ids in the rawfolder did not contain BIDS-invalid characters (such as '_')
-            sessions  = lsdirs(subject, ('' if sesprefix=='*' else sesprefix) + '*')
-            if not subject.is_dir():
-                LOGGER.error(f"Could not find source-folder: {subject}")
-                continue
-            if not sessions:
-                sessions = [subject]
-            for session in sessions:
+        LOGGER.info(f"------------------- Subject {n}/{len(subjects)} -------------------")
+        personals = {}
+        subject   = rawfolder/subject.name.replace('sub-', subprefix.replace('*',''))     # TODO: This assumes e.g. that the subject-ids in the rawfolder did not contain BIDS-invalid characters (such as '_')
+        sessions  = lsdirs(subject, ('' if sesprefix=='*' else sesprefix) + '*')
+        if not subject.is_dir():
+            LOGGER.error(f"Could not find source-folder: {subject}")
+            continue
+        if not sessions:
+            sessions = [subject]
+        for session in sessions:
 
-                success      = False            # Only take data from the first session -> BIDS specification
-                subid, sesid = bids.DataSource(session/'dum.my', bidsmap.plugins, '', bidsmap.options).subid_sesid()
+            success      = False            # Only take data from the first session -> BIDS specification
+            subid, sesid = bids.DataSource(session/'dum.my', bidsmap.plugins, '', bidsmap.options).subid_sesid()
 
-                # Unpack the data in a temporary folder if it is tarballed/zipped and/or contains a DICOMDIR file
-                sesfolders, unpacked = unpack(session, bidsmap.options.get('unzip',''))
-                for sesfolder in sesfolders:
+            # Unpack the data in a temporary folder if it is tarballed/zipped and/or contains a DICOMDIR file
+            sesfolders, unpacked = unpack(session, bidsmap.options.get('unzip',''))
+            for sesfolder in sesfolders:
 
-                    # Run the plugin.Interface().personals()
-                    for plugin in plugins:
+                # Run the plugin.Interface().personals()
+                for plugin in plugins:
 
-                        name       = Path(plugin.__file__).stem
-                        datasource = bids.get_datasource(sesfolder, {name: bidsmap.plugins[name]})
-                        if not datasource.dataformat:
-                            LOGGER.info(f">>> No {name} datasources found in '{sesfolder}'")
-                            continue
+                    name       = Path(plugin.__file__).stem
+                    datasource = bids.get_datasource(sesfolder, {name: bidsmap.plugins[name]})
+                    if not datasource.dataformat:
+                        LOGGER.info(f">>> No {name} datasources found in '{sesfolder}'")
+                        continue
 
-                        # Update/append the personal source data
-                        LOGGER.info(f"Scanning session: {sesfolder}")
-                        personaldata = plugin.Interface().personals(bidsmap, datasource, sesid)
-                        if personaldata:
-                            personals.update(personaldata)
-                            success = True
+                    # Update/append the personal source data
+                    LOGGER.info(f"Scanning session: {sesfolder}")
+                    personaldata = plugin.Interface().personals(bidsmap, datasource, sesid)
+                    if personaldata:
+                        personals.update(personaldata)
+                        success = True
 
-                        # Clean-up the temporary unpacked data
-                        if unpacked:
-                            shutil.rmtree(sesfolder)
+                    # Clean-up the temporary unpacked data
+                    if unpacked:
+                        shutil.rmtree(sesfolder)
 
-                        if success: break
                     if success: break
                 if success: break
+            if success: break
 
-            # Store the collected personals in the participant_table. TODO: Check that only values that are consistent over sessions go in the participants.tsv file, otherwise put them in a sessions.tsv file
-            if sessions:
-                participants_table = bids.addparticipant(participants_tsv, subid, personals, dryrun)
+        # Store the collected personals in the participant_table. TODO: Check that only values that are consistent over sessions go in the participants.tsv file, otherwise put them in a sessions.tsv file
+        if sessions:
+            participants_table = bids.addparticipant(participants_tsv, subid, personals, dryrun)
 
     # Add the participants sidecar file
     bids.addparticipant_meta(bidsfolder/'participants.json', bidsmap)

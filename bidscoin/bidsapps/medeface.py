@@ -16,8 +16,7 @@ import pydeface.utils as pdu
 import nibabel as nib
 import numpy as np
 import tempfile
-from tqdm import tqdm
-from tqdm.contrib.logging import logging_redirect_tqdm
+from rich.progress import track
 from pathlib import Path
 from importlib.util import find_spec
 if find_spec('bidscoin') is None:
@@ -82,61 +81,7 @@ def medeface(bidsfolder: str, pattern: str, maskpattern: str, participant: list,
             jt.joinFiles           = True
 
         # Loop over bids subject/session-directories to first get all the echo-combined deface masks
-        with logging_redirect_tqdm():
-            for n, subject in enumerate(tqdm(subjects, unit='subject', colour='yellow', leave=False), 1):
-
-                subid    = subject.name
-                sessions = lsdirs(subject, 'ses-*')
-                if not sessions:
-                    sessions = [subject]
-                for session in sessions:
-
-                    LOGGER.info('--------------------------------------')
-                    LOGGER.info(f"Processing ({n}/{len(subjects)}): {session}")
-
-                    # Read the echo-images that will be combined to compute the deface-mask
-                    sesid     = session.name if session.name.startswith('ses-') else ''
-                    echofiles = sorted([match for match in session.glob(maskpattern) if '.nii' in match.suffixes])
-                    if not echofiles:
-                        LOGGER.info(f'No mask files found for: {session}/{maskpattern}')
-                        continue
-
-                    # Check the json "Defaced" field to see if it has already been defaced
-                    if not force and echofiles[0].with_suffix('').with_suffix('.json').is_file():
-                        with echofiles[0].with_suffix('').with_suffix('.json').open('r') as fid:
-                            jsondata = json.load(fid)
-                        if jsondata.get('Defaced'):
-                            LOGGER.info(f"Skipping already defaced images: {[str(echofile) for echofile in echofiles]}")
-                            continue
-
-                    LOGGER.info(f'Loading mask files: {[str(echofile) for echofile in echofiles]}')
-                    echos = [nib.load(echofile) for echofile in echofiles]
-
-                    # Create a temporary echo-combined image
-                    tmpfile  = session/tmp_combined
-                    combined = nib.Nifti1Image(np.mean([echo.get_fdata() for echo in echos], axis=0), echos[0].affine, echos[0].header)
-                    combined.to_filename(tmpfile)
-
-                    # Deface the echo-combined image
-                    LOGGER.info(f"Creating a deface-mask from the echo-combined image: {tmpfile}")
-                    if cluster:
-                        jt.args       = [str(tmpfile), '--outfile', str(tmpfile), '--force'] + [item for pair in [[f"--{key}", val] for key,val in args.items()] for item in pair]
-                        jt.jobName    = f"medeface_{subid}_{sesid}"
-                        jt.outputPath = f"{os.getenv('HOSTNAME')}:{Path.cwd() if DEBUG else tempfile.gettempdir()}/{jt.jobName}.out"
-                        jobids.append(pbatch.runJob(jt))
-                        LOGGER.info(f"Your deface job has been submitted with ID: {jobids[-1]}")
-                    else:
-                        pdu.deface_image(str(tmpfile), str(tmpfile), force=True, forcecleanup=True, **args)
-
-        if cluster and jobids:
-            LOGGER.info('')
-            LOGGER.info('Waiting for the deface jobs to finish...')
-            bcoin.synchronize(pbatch, jobids, 'medeface')
-            pbatch.deleteJobTemplate(jt)
-
-    # Loop again over bids subject/session-directories to apply the deface-masks and write metadata
-    with logging_redirect_tqdm():
-        for n, subject in enumerate(tqdm(subjects, unit='subject', colour='green', leave=False), 1):
+        for n, subject in enumerate(track(subjects, description='[bright_yellow]Subjects', transient=True), 1):
 
             subid    = subject.name
             sessions = lsdirs(subject, 'ses-*')
@@ -147,60 +92,112 @@ def medeface(bidsfolder: str, pattern: str, maskpattern: str, participant: list,
                 LOGGER.info('--------------------------------------')
                 LOGGER.info(f"Processing ({n}/{len(subjects)}): {session}")
 
-                # Read the temporary defacemask
-                sesid   = session.name if session.name.startswith('ses-') else ''
-                tmpfile = session/tmp_combined
-                if not tmpfile.is_file():
-                    LOGGER.info(f'No {tmpfile} file found')
+                # Read the echo-images that will be combined to compute the deface-mask
+                sesid     = session.name if session.name.startswith('ses-') else ''
+                echofiles = sorted([match for match in session.glob(maskpattern) if '.nii' in match.suffixes])
+                if not echofiles:
+                    LOGGER.info(f'No mask files found for: {session}/{maskpattern}')
                     continue
-                defacemask = nib.load(tmpfile).get_fdata() != 0     # The original defacemask is saved in a temporary folder, so it may be deleted -> use the defaced image to infer the mask
-                tmpfile.unlink()
 
-                # Process the echo-images that need to be defaced
-                for echofile in sorted([match for match in session.glob(pattern) if '.nii' in match.suffixes]):
+                # Check the json "Defaced" field to see if it has already been defaced
+                if not force and echofiles[0].with_suffix('').with_suffix('.json').is_file():
+                    with echofiles[0].with_suffix('').with_suffix('.json').open('r') as fid:
+                        jsondata = json.load(fid)
+                    if jsondata.get('Defaced'):
+                        LOGGER.info(f"Skipping already defaced images: {[str(echofile) for echofile in echofiles]}")
+                        continue
 
-                    # Construct the output filename and relative path name (used in BIDS)
-                    echofile_rel = echofile.relative_to(session).as_posix()
-                    if not output:
-                        outputfile     = echofile
-                        outputfile_rel = echofile_rel
-                    elif output == 'derivatives':
-                        srcent, suffix = echofile.with_suffix('').stem.rsplit('_', 1)   # Name without suffix, suffix
-                        ext = ''.join(echofile.suffixes)                                # Account for e.g. '.nii.gz'
-                        outputfile     = bidsdir/'derivatives'/'deface'/subid/sesid/echofile.parent.name/f"{srcent}_space-orig_{suffix}{ext}"
-                        outputfile_rel = outputfile.relative_to(bidsdir).as_posix()
-                    else:
-                        outputfile     = session/output/echofile.name
-                        outputfile_rel = outputfile.relative_to(session).as_posix()
-                    outputfile.parent.mkdir(parents=True, exist_ok=True)
+                LOGGER.info(f'Loading mask files: {[str(echofile) for echofile in echofiles]}')
+                echos = [nib.load(echofile) for echofile in echofiles]
 
-                    # Apply the defacemask
-                    LOGGER.info(f'Applying deface mask on: {echofile} -> {outputfile_rel}')
-                    echoimg   = nib.load(echofile)
-                    outputimg = nib.Nifti1Image(echoimg.get_fdata() * defacemask, echoimg.affine, echoimg.header)
-                    outputimg.to_filename(outputfile)
+                # Create a temporary echo-combined image
+                tmpfile  = session/tmp_combined
+                combined = nib.Nifti1Image(np.mean([echo.get_fdata() for echo in echos], axis=0), echos[0].affine, echos[0].header)
+                combined.to_filename(tmpfile)
 
-                    # Add a json sidecar-file with the "Defaced" field
-                    inputjson  = echofile.with_suffix('').with_suffix('.json')
-                    outputjson = outputfile.with_suffix('').with_suffix('.json')
-                    if inputjson.is_file():
-                        with inputjson.open('r') as sidecar:
-                            metadata = json.load(sidecar)
-                    else:
-                        metadata = {}
-                    metadata['Defaced'] = True
-                    with outputjson.open('w') as sidecar:
-                        json.dump(metadata, sidecar, indent=4)
+                # Deface the echo-combined image
+                LOGGER.info(f"Creating a deface-mask from the echo-combined image: {tmpfile}")
+                if cluster:
+                    jt.args       = [str(tmpfile), '--outfile', str(tmpfile), '--force'] + [item for pair in [[f"--{key}", val] for key,val in args.items()] for item in pair]
+                    jt.jobName    = f"medeface_{subid}_{sesid}"
+                    jt.outputPath = f"{os.getenv('HOSTNAME')}:{Path.cwd() if DEBUG else tempfile.gettempdir()}/{jt.jobName}.out"
+                    jobids.append(pbatch.runJob(jt))
+                    LOGGER.info(f"Your deface job has been submitted with ID: {jobids[-1]}")
+                else:
+                    pdu.deface_image(str(tmpfile), str(tmpfile), force=True, forcecleanup=True, **args)
 
-                    # Update the scans.tsv file
-                    scans_tsv  = session/f"{subid}{'_'+sesid if sesid else ''}_scans.tsv"
-                    bidsignore = (bidsdir/'.bidsignore').read_text().splitlines() if (bidsdir/'.bidsignore').is_file() else ['extra_data/']
-                    if output and not bids.check_ignore(output, bidsignore) and scans_tsv.is_file():
-                        LOGGER.info(f"Adding {outputfile_rel} to {scans_tsv}")
-                        scans_table                     = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
-                        scans_table.loc[outputfile_rel] = scans_table.loc[echofile_rel]
-                        scans_table.sort_values(by=['acq_time','filename'], inplace=True)
-                        scans_table.to_csv(scans_tsv, sep='\t', encoding='utf-8')
+        if cluster and jobids:
+            LOGGER.info('')
+            LOGGER.info('Waiting for the deface jobs to finish...')
+            bcoin.synchronize(pbatch, jobids, 'medeface')
+            pbatch.deleteJobTemplate(jt)
+
+    # Loop again over bids subject/session-directories to apply the deface-masks and write metadata
+    for n, subject in enumerate(track(subjects, description='[green]Subjects', transient=True), 1):
+
+        subid    = subject.name
+        sessions = lsdirs(subject, 'ses-*')
+        if not sessions:
+            sessions = [subject]
+        for session in sessions:
+
+            LOGGER.info('--------------------------------------')
+            LOGGER.info(f"Processing ({n}/{len(subjects)}): {session}")
+
+            # Read the temporary defacemask
+            sesid   = session.name if session.name.startswith('ses-') else ''
+            tmpfile = session/tmp_combined
+            if not tmpfile.is_file():
+                LOGGER.info(f'No {tmpfile} file found')
+                continue
+            defacemask = nib.load(tmpfile).get_fdata() != 0     # The original defacemask is saved in a temporary folder, so it may be deleted -> use the defaced image to infer the mask
+            tmpfile.unlink()
+
+            # Process the echo-images that need to be defaced
+            for echofile in sorted([match for match in session.glob(pattern) if '.nii' in match.suffixes]):
+
+                # Construct the output filename and relative path name (used in BIDS)
+                echofile_rel = echofile.relative_to(session).as_posix()
+                if not output:
+                    outputfile     = echofile
+                    outputfile_rel = echofile_rel
+                elif output == 'derivatives':
+                    srcent, suffix = echofile.with_suffix('').stem.rsplit('_', 1)   # Name without suffix, suffix
+                    ext = ''.join(echofile.suffixes)                                # Account for e.g. '.nii.gz'
+                    outputfile     = bidsdir/'derivatives'/'deface'/subid/sesid/echofile.parent.name/f"{srcent}_space-orig_{suffix}{ext}"
+                    outputfile_rel = outputfile.relative_to(bidsdir).as_posix()
+                else:
+                    outputfile     = session/output/echofile.name
+                    outputfile_rel = outputfile.relative_to(session).as_posix()
+                outputfile.parent.mkdir(parents=True, exist_ok=True)
+
+                # Apply the defacemask
+                LOGGER.info(f'Applying deface mask on: {echofile} -> {outputfile_rel}')
+                echoimg   = nib.load(echofile)
+                outputimg = nib.Nifti1Image(echoimg.get_fdata() * defacemask, echoimg.affine, echoimg.header)
+                outputimg.to_filename(outputfile)
+
+                # Add a json sidecar-file with the "Defaced" field
+                inputjson  = echofile.with_suffix('').with_suffix('.json')
+                outputjson = outputfile.with_suffix('').with_suffix('.json')
+                if inputjson.is_file():
+                    with inputjson.open('r') as sidecar:
+                        metadata = json.load(sidecar)
+                else:
+                    metadata = {}
+                metadata['Defaced'] = True
+                with outputjson.open('w') as sidecar:
+                    json.dump(metadata, sidecar, indent=4)
+
+                # Update the scans.tsv file
+                scans_tsv  = session/f"{subid}{'_'+sesid if sesid else ''}_scans.tsv"
+                bidsignore = (bidsdir/'.bidsignore').read_text().splitlines() if (bidsdir/'.bidsignore').is_file() else ['extra_data/']
+                if output and not bids.check_ignore(output, bidsignore) and scans_tsv.is_file():
+                    LOGGER.info(f"Adding {outputfile_rel} to {scans_tsv}")
+                    scans_table                     = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
+                    scans_table.loc[outputfile_rel] = scans_table.loc[echofile_rel]
+                    scans_table.sort_values(by=['acq_time','filename'], inplace=True)
+                    scans_table.to_csv(scans_tsv, sep='\t', encoding='utf-8')
 
     LOGGER.info('-------------- FINISHED! -------------')
     LOGGER.info('')

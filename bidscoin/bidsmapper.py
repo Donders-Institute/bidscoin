@@ -12,8 +12,7 @@ import copy
 import logging
 import shutil
 import re
-from tqdm import tqdm
-from tqdm.contrib.logging import logging_redirect_tqdm
+from rich.progress import track
 from pathlib import Path
 from importlib.util import find_spec
 if find_spec('bidscoin') is None:
@@ -101,41 +100,38 @@ def bidsmapper(sourcefolder: str, bidsfolder: str, bidsmap: str, template: str, 
         bidsmap_old = copy.deepcopy(bidsmap_new)
 
     # Import the data scanning plugins
-    plugins = [plugin for name in bidsmap_new.plugins if (plugin := bcoin.import_plugin(name))]
-    if not plugins:
+    if not (plugins := [plugin for name in bidsmap_new.plugins if (plugin := bcoin.import_plugin(name))]):
         LOGGER.warning(f"The {bidsmap_new.plugins.keys()} plugins listed in your bidsmap['Options'] did not have a usable `bidsmapper` interface, nothing to do")
         LOGGER.info('-------------- FINISHED! ------------')
         LOGGER.info('')
         return bidsmap_new
 
     # Loop over all subjects and sessions and built up the bidsmap entries
-    subjects = lsdirs(rawfolder, ('' if subprefix=='*' else subprefix) + '*')
-    if not subjects:
-        LOGGER.warning(f'No subjects found in: {rawfolder/subprefix}*')
-    with logging_redirect_tqdm():
-        for n, subject in enumerate(tqdm(subjects, unit='subject', colour='green', leave=False), 1):
+    if not (subjects := lsdirs(rawfolder, ('' if subprefix=='*' else subprefix) + '*')):
+        LOGGER.warning(f"No subjects found in: {rawfolder/subprefix}*")
+    for n, subject in enumerate(track(subjects, description='[green]Subjects', transient=True), 1):
 
-            sessions = lsdirs(subject, ('' if sesprefix=='*' else sesprefix) + '*')
-            if not sessions or (subject/'DICOMDIR').is_file():
-                sessions = [subject]
-            for session in sessions:
+        sessions = lsdirs(subject, ('' if sesprefix=='*' else sesprefix) + '*')
+        if not sessions or (subject/'DICOMDIR').is_file():
+            sessions = [subject]
+        for session in sessions:
 
-                # Unpack the data in a temporary folder if it is tarballed/zipped and/or contains a DICOMDIR file
-                LOGGER.info(f"Mapping: {session} (subject {n}/{len(subjects)})")
-                sesfolders, unpacked = unpack(session, unzip)
-                for sesfolder in sesfolders:
-                    if store:
-                        bidsmap_new.store = {'source': sesfolder.parent.parent.parent.parent if unpacked else rawfolder.parent,
-                                             'target': bidscoinfolder/'provenance'}
+            # Unpack the data in a temporary folder if it is tarballed/zipped and/or contains a DICOMDIR file
+            LOGGER.info(f"Mapping: {session} (subject {n}/{len(subjects)})")
+            sesfolders, unpacked = unpack(session, unzip)
+            for sesfolder in sesfolders:
+                if store:
+                    bidsmap_new.store = {'source': sesfolder.parent.parent.parent.parent if unpacked else rawfolder.parent,
+                                         'target': bidscoinfolder/'provenance'}
 
-                    # Run the bidsmapper plugins
-                    for plugin in plugins:
-                        LOGGER.verbose(f"Executing plugin: {Path(plugin.__file__).stem} -> {sesfolder}")
-                        plugin.Interface().bidsmapper(sesfolder, bidsmap_new, bidsmap_old, template)
+                # Run the bidsmapper plugins
+                for plugin in plugins:
+                    LOGGER.verbose(f"Executing plugin: {Path(plugin.__file__).stem} -> {sesfolder}")
+                    plugin.Interface().bidsmapper(sesfolder, bidsmap_new, bidsmap_old, template)
 
-                    # Clean-up the temporary unpacked data
-                    if unpacked:
-                        shutil.rmtree(sesfolder)
+                # Clean-up the temporary unpacked data
+                if unpacked:
+                    shutil.rmtree(sesfolder)
 
     # Save the new study bidsmap in the bidscoinfolder or launch the bidseditor UI_MainWindow
     if automated:

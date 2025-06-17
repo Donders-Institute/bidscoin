@@ -21,6 +21,7 @@
 
 ### Fixed
 - A usability regression that could render a main window that is larger than the screen
+- The logging level in the terminal output -- looks much nicer now!
 
 ## [4.6.0] - 2025-03-25
 

@@ -14,8 +14,7 @@ import csv
 import json
 import tempfile
 import nibabel as nib
-from tqdm import tqdm
-from tqdm.contrib.logging import logging_redirect_tqdm
+from rich.progress import track
 from copy import copy
 from pathlib import Path
 from importlib.util import find_spec
@@ -227,68 +226,67 @@ def slicereport(bidsfolder: str, pattern: str, outlinepattern: str, outlineimage
             tsv_writer.writerow(['subject/session'] + qcscores)
 
     # Loop over the subject/session-directories
-    with logging_redirect_tqdm():
-        for subject in tqdm(subjects, unit='subject', colour='green', leave=False):
-            sessions  = lsdirs(subject, 'ses-*')
-            style_rel = '../../style.css'
-            if not sessions:
-                sessions  = [subject]
-                style_rel = '../style.css'
-            for session in sessions:
+    for subject in track(subjects, description='[green]Subjects', transient=True):
+        sessions  = lsdirs(subject, 'ses-*')
+        style_rel = '../../style.css'
+        if not sessions:
+            sessions  = [subject]
+            style_rel = '../style.css'
+        for session in sessions:
 
-                # Write a row in the QC tsv-file
-                if qcscores:
-                    with open(qcfile, 'a') as fid:
-                        tsv_writer = csv.writer(fid, delimiter='\t')
-                        tsv_writer.writerow([str(session.relative_to(bidsdir))] + len(qcscores) * ['n/a'])
+            # Write a row in the QC tsv-file
+            if qcscores:
+                with open(qcfile, 'a') as fid:
+                    tsv_writer = csv.writer(fid, delimiter='\t')
+                    tsv_writer.writerow([str(session.relative_to(bidsdir))] + len(qcscores) * ['n/a'])
 
-                # Search for the (nibabel supported) image(s) to report
-                LOGGER.info(f"Processing images in: {session.relative_to(bidsdir)}")
-                images = sorted([match for match in session.glob(pattern) if match.suffixes[0] in valid_exts])
-                if not images:
-                    LOGGER.warning(f"Could not find images using: {session.relative_to(bidsdir)}/{pattern}")
-                    continue
-                outlineimages = [''] * len(images)
-                if outlinepattern:
-                    outlinesession = outlinedir/session.relative_to(bidsdir)
-                    outlineimages  = sorted([match for match in outlinesession.glob(outlinepattern) if match.suffixes[0] in valid_exts])
-                    if len(outlineimages) != len(images):
-                        LOGGER.error(f"Nr of outline images ({len(outlineimages)}) in {outlinesession} should be the same as the number of underlying images ({len(images)})")
-                        outlineimages = [''] * len(images)
+            # Search for the (nibabel supported) image(s) to report
+            LOGGER.info(f"Processing images in: {session.relative_to(bidsdir)}")
+            images = sorted([match for match in session.glob(pattern) if match.suffixes[0] in valid_exts])
+            if not images:
+                LOGGER.warning(f"Could not find images using: {session.relative_to(bidsdir)}/{pattern}")
+                continue
+            outlineimages = [''] * len(images)
+            if outlinepattern:
+                outlinesession = outlinedir/session.relative_to(bidsdir)
+                outlineimages  = sorted([match for match in outlinesession.glob(outlinepattern) if match.suffixes[0] in valid_exts])
+                if len(outlineimages) != len(images):
+                    LOGGER.error(f"Nr of outline images ({len(outlineimages)}) in {outlinesession} should be the same as the number of underlying images ({len(images)})")
+                    outlineimages = [''] * len(images)
 
-                # Generate a report row and a sub-report for each session
-                reportses = reportfolder/session.relative_to(bidsdir)
-                reportses.mkdir(parents=True, exist_ok=True)
-                for n, image in enumerate(images):
+            # Generate a report row and a sub-report for each session
+            reportses = reportfolder/session.relative_to(bidsdir)
+            reportses.mkdir(parents=True, exist_ok=True)
+            for n, image in enumerate(images):
 
-                    # Generate the sliced image montage
-                    outline = Path(outlineimages[n] if outlinepattern else outlineimage)
-                    montage = reportses/image.with_suffix('').with_suffix('.png').name
-                    slicer_append(image, operations, outline, options, outputs, sliceroutput, montage, cluster)
+                # Generate the sliced image montage
+                outline = Path(outlineimages[n] if outlinepattern else outlineimage)
+                montage = reportses/image.with_suffix('').with_suffix('.png').name
+                slicer_append(image, operations, outline, options, outputs, sliceroutput, montage, cluster)
 
-                    # Add the montage as a (sub-report linked) row to the report
-                    caption   = f"{image.relative_to(bidsdir)}{'&nbsp;&nbsp;&nbsp;( ../'+str(outline.relative_to(outlinesession))+' )' if outlinepattern and outline.name else ''}"
-                    subreport = reportses/f"{bids.insert_bidskeyval(image, 'desc', 'subreport', False).with_suffix('').stem}.html"
-                    with report.open('a') as fid:
-                        fid.write(f'\n<p><a href="{subreport.relative_to(reportfolder).as_posix()}"><img src="{montage.relative_to(reportfolder).as_posix()}"><br>\n{caption}</a></p>\n')
+                # Add the montage as a (sub-report linked) row to the report
+                caption   = f"{image.relative_to(bidsdir)}{'&nbsp;&nbsp;&nbsp;( ../'+str(outline.relative_to(outlinesession))+' )' if outlinepattern and outline.name else ''}"
+                subreport = reportses/f"{bids.insert_bidskeyval(image, 'desc', 'subreport', False).with_suffix('').stem}.html"
+                with report.open('a') as fid:
+                    fid.write(f'\n<p><a href="{subreport.relative_to(reportfolder).as_posix()}"><img src="{montage.relative_to(reportfolder).as_posix()}"><br>\n{caption}</a></p>\n')
 
-                    # Add the sub-report
-                    if suboutputs:
-                        montage = subreport.with_suffix('.png')
-                        slicer_append(image, suboperations, outline, suboptions, suboutputs, subsliceroutput, montage, cluster)
-                    crossreports = ''
-                    for crossdir in xlinkfolder:          # Include niprep reports
-                        for crossreport in sorted(Path(crossdir).glob(f"{subject.name.split('_')[0]}*.html")) + sorted((Path(crossdir)/session.relative_to(bidsdir)).glob('*.html')):
-                            crossreports += f'\n<br><a href="{crossreport.resolve()}">&#8618; {crossreport}</a>'
-                    if subreport.with_suffix('.json').is_file():
-                        with open(subreport.with_suffix('.json'), 'r') as meta_fid:
-                            metadata = f"\n\n<p>{json.load(meta_fid)}</p>"
-                    elif image.with_suffix('').with_suffix('.json').is_file():
-                        with open(image.with_suffix('').with_suffix('.json'), 'r') as meta_fid:
-                            metadata = f"\n\n<p>{json.load(meta_fid)}</p>"
-                    else:
-                        metadata = ''
-                    subreport.write_text(f'{html_head.replace("style.css", style_rel)}<h1>{caption}</h1>\n{crossreports}\n<p><img src="{montage.name}"></p>{metadata}\n\n</body></html>')
+                # Add the sub-report
+                if suboutputs:
+                    montage = subreport.with_suffix('.png')
+                    slicer_append(image, suboperations, outline, suboptions, suboutputs, subsliceroutput, montage, cluster)
+                crossreports = ''
+                for crossdir in xlinkfolder:          # Include niprep reports
+                    for crossreport in sorted(Path(crossdir).glob(f"{subject.name.split('_')[0]}*.html")) + sorted((Path(crossdir)/session.relative_to(bidsdir)).glob('*.html')):
+                        crossreports += f'\n<br><a href="{crossreport.resolve()}">&#8618; {crossreport}</a>'
+                if subreport.with_suffix('.json').is_file():
+                    with open(subreport.with_suffix('.json'), 'r') as meta_fid:
+                        metadata = f"\n\n<p>{json.load(meta_fid)}</p>"
+                elif image.with_suffix('').with_suffix('.json').is_file():
+                    with open(image.with_suffix('').with_suffix('.json'), 'r') as meta_fid:
+                        metadata = f"\n\n<p>{json.load(meta_fid)}</p>"
+                else:
+                    metadata = ''
+                subreport.write_text(f'{html_head.replace("style.css", style_rel)}<h1>{caption}</h1>\n{crossreports}\n<p><img src="{montage.name}"></p>{metadata}\n\n</body></html>')
 
     # Create a dataset description file if it does not exist
     dataset = reportfolder/'dataset_description.json'
