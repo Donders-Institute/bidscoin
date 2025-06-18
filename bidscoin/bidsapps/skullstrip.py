@@ -140,7 +140,7 @@ def skullstrip(bidsfolder: str, pattern: str, participant: list, masked: str, ou
                         jt.jobName    = f"skullstrip_{subid}_{sesid}"
                         jt.outputPath = f"{os.getenv('HOSTNAME')}:{Path.cwd() if DEBUG else tempfile.gettempdir()}/{jt.jobName}.out"
                         jobids.append(pbatch.runJob(jt))
-                        LOGGER.info(f"Your skullstrip job has been submitted with ID: {jobids[-1]}")
+                        LOGGER.info(f"Your '{jt.jobName}' job has been submitted with ID: {jobids[-1]}")
                     elif run_command(f"mri_synthstrip -i {srcimg} -o {outputimg} -m {maskimg} {args}"):
                         continue
 

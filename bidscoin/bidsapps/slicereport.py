@@ -128,7 +128,7 @@ def slicer_append(inputimage: Path, operations: str, outlineimage: Path, mainopt
             jt.outputPath          = f"{os.getenv('HOSTNAME')}:{workdir if DEBUG else tempfile.gettempdir()}/{jt.jobName}.out"
             JOBIDS.append(pbatch.runJob(jt))
             pbatch.deleteJobTemplate(jt)
-            LOGGER.verbose(f"Your slicereport job has been submitted with ID: {JOBIDS[-1]}")
+            LOGGER.verbose(f"Your '{jt.jobName}' job has been submitted with ID: {JOBIDS[-1]}")
 
     else:
         LOGGER.bcdebug(f"Command: {command}")

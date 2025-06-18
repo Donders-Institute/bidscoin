@@ -6,6 +6,7 @@ A BIDScoin library and application with utilities to perform generic management 
 """
 
 import os
+import platform
 import types
 import logging
 import shutil
@@ -90,12 +91,12 @@ def synchronize(pbatch, jobids: list, event: str, wait: int=15):
             progress.update(rtask, completed=rcount)
             time.sleep(2)
 
-        if failedjobs := [jobid for jobid in jobids if pbatch.jobStatus(jobid) == 'failed']:
-            LOGGER.error(f"{len(failedjobs)} HPC jobs failed to run:\n{failedjobs}\nThis may well be due to an underspecified `--cluster` input option (e.g. not enough memory)")
+    if failedjobs := [jobid for jobid in jobids if pbatch.jobStatus(jobid) == 'failed']:
+        LOGGER.error(f"{len(failedjobs)} HPC jobs failed to run:\n{failedjobs}\nThis may well be due to an underspecified `--cluster` input option (e.g. not enough memory)")
 
-        # Synchronization wait bar
-        for t in track(range(wait*100), description='[cyan]Synchronizing', transient=True):
-            time.sleep(0.01)
+    # Synchronization wait bar
+    for t in track(range(wait*100), description='[cyan]Synchronizing', transient=True):
+        time.sleep(0.01)
 
 
 def setup_logging(logfile: Path=Path()) -> Console:
@@ -135,7 +136,7 @@ def setup_logging(logfile: Path=Path()) -> Console:
     logger.setLevel('BCDEBUG' if DEBUG else 'VERBOSE')
 
     # Add the Rich console handler and bring some color to those boring logs! :-)
-    if 'consolehandler' not in (handlers := [handler.name for handler in logger.handlers]):
+    if 'consolehandler' not in [handler.get_name() for handler in logger.handlers]:
         console        = Console(theme=Theme({'logging.level.verbose': 'grey50', 'logging.level.success': 'green bold', 'logging.level.bcdebug': 'bright_yellow'}))
         keywords       = RichHandler.KEYWORDS + ['IntendedFor', 'B0FieldIdentifier', 'B0FieldSource', 'TaskName', '->', '-->']
         level          = 'BCDEBUG' if DEBUG else 'VERBOSE' if not logfile.name else 'INFO'
@@ -143,15 +144,16 @@ def setup_logging(logfile: Path=Path()) -> Console:
         consolehandler.set_name('consolehandler')
         logger.addHandler(consolehandler)
     else:
-        console = next((handler.console for handler in logger.handlers if handler.get_name() == 'consolehandler'), None)
+        console = next(handler.console for handler in logger.handlers if handler.get_name() == 'consolehandler')
 
     # Add the optional file handlers
     if logfile.name:
 
         logfile.parent.mkdir(parents=True, exist_ok=True)
-        formatter = logging.Formatter(fmt=f"%(asctime)s - %({'level' if DEBUG else ''}name)s | %(message)s", datefmt='%Y-%m-%d %H:%M:%S')
-        for handler in [handler for handler in logger.handlers if handler.get_name() in ('loghandler', 'errorhandler')]:
-            logger.removeHandler(handler)
+        formatter = logging.Formatter(fmt=f"%(asctime)s {'- %(name)s:%(lineno)d ' if DEBUG else ''}- %(levelname)s | %(message)s", datefmt='%Y-%m-%d %H:%M:%S')
+        for handler in logger.handlers:
+            if handler.get_name() in ('loghandler', 'errorhandler'):
+                logger.removeHandler(handler)
 
         # Add the verbose file handler
         loghandler = logging.FileHandler(logfile)
@@ -190,7 +192,7 @@ def reporterrors() -> str:
             if errorfile.is_file():
                 if errorfile.stat().st_size:
                     errors = errorfile.read_text()
-                    LOGGER.warning(f"The following BIDScoin errors and warnings were reported:\n\n{40 * '>'}\n{errors}{40 * '<'}\n")
+                    LOGGER.info(f"The following BIDScoin errors and warnings were reported:\n\n{40 * '>'}\n{errors}{40 * '<'}\n")
                     trackusage(f"{errorfile.stem}_{'error' if 'ERROR' in errors else 'warning'}")
 
                 else:
@@ -202,7 +204,7 @@ def reporterrors() -> str:
 
     # Final message
     if 'logfile' in locals():
-        LOGGER.info(f"For the complete log see: {logfile}\n"
+        LOGGER.info(f"For the complete detailed log see: {logfile}\n"
                     f"NB: That folder may contain privacy sensitive information, e.g. pathnames in logfiles and provenance data samples")
 
     return errors
@@ -214,7 +216,7 @@ def list_executables(show: bool=False) -> list:
     :return:        List of BIDScoin console scripts
     """
 
-    if show: LOGGER.info('[bright_yellow]Executable BIDScoin tools:')
+    if show: LOGGER.info('[bright_yellow]BIDScoin commands:')
 
     scripts = []
     if sys.version_info.major == 3 and sys.version_info.minor < 10:
@@ -433,12 +435,14 @@ def test_bidscoin(bidsmapfile, options: dict=None, testplugins: bool=True, testg
     if not bidsmapfile: return 1
 
     LOGGER.info(f"[bright_yellow]--------- Testing BIDScoin's {__version__} core:")
+    LOGGER.info(f"Python:\t{platform.python_version()}\n"
+                f"System:\t{platform.system()} - {platform.release()}")
 
     # Test loading the template bidsmap
     success = True
     if isinstance(bidsmapfile, (str, Path)):
         bidsmapfile = Path(bidsmapfile)
-        LOGGER.info(f"Running bidsmap checks:")
+        LOGGER.info(f"[bright_yellow]--------- Running bidsmap checks:")
         try:            # Moving the import to the top of this module will cause circular import issues
             from bidscoin import bids
             bidsmap = bids.BidsMap(bidsmapfile, checks=(True, True, False))
@@ -511,7 +515,7 @@ def test_bidscoin(bidsmapfile, options: dict=None, testplugins: bool=True, testg
                 errorcode = test_plugin(plugin.stem, bidsmap.plugins.get(plugin.stem, {}))
                 success   = not errorcode and success
                 if errorcode:
-                    LOGGER.warning(f"Failed test: {plugin.stem}\nThis may be fine if you do not neend and did not install this plugin")
+                    LOGGER.warning(f"Failed test: {plugin.stem}\nThis is OK if you do not need (and did not install) this plugin")
 
     if not success:
         LOGGER.warning('Not all tests finished successfully (this may be OK, but check the output above)')

@@ -121,7 +121,7 @@ def deface(bidsfolder: str, pattern: str, participant: list, force: bool, output
                         jt.jobName    = f"deface_{subid}_{sesid}"
                         jt.outputPath = f"{os.getenv('HOSTNAME')}:{Path.cwd() if DEBUG else tempfile.gettempdir()}/{jt.jobName}.out"
                         jobids.append(pbatch.runJob(jt))
-                        LOGGER.info(f"Your deface job has been submitted with ID: {jobids[-1]}")
+                        LOGGER.info(f"Your '{jt.jobName}' job has been submitted with ID: {jobids[-1]}")
                     else:
                         pdu.deface_image(str(match), str(outputfile), force=True, forcecleanup=True, **args)
 
