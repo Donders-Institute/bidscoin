@@ -135,18 +135,23 @@ def setup_logging(logfile: Path=Path()) -> Console:
     logger.setLevel('BCDEBUG' if DEBUG else 'VERBOSE')
 
     # Add the Rich console handler and bring some color to those boring logs! :-)
-    console        = Console(theme=Theme({'logging.level.verbose': 'grey50', 'logging.level.success': 'green bold', 'logging.level.bcdebug': 'bright_yellow'}))
-    keywords       = RichHandler.KEYWORDS + ['IntendedFor', 'B0FieldIdentifier', 'B0FieldSource', 'TaskName', '->', '-->']
-    level          = 'BCDEBUG' if DEBUG else 'VERBOSE' if not logfile.name else 'INFO'
-    consolehandler = RichHandler(console=console, show_time=False, show_level=True, show_path=DEBUG, rich_tracebacks=True, markup=True, keywords=keywords, level=level)
-    consolehandler.set_name('consolehandler')
-    logger.addHandler(consolehandler)
+    if 'consolehandler' not in (handlers := [handler.name for handler in logger.handlers]):
+        console        = Console(theme=Theme({'logging.level.verbose': 'grey50', 'logging.level.success': 'green bold', 'logging.level.bcdebug': 'bright_yellow'}))
+        keywords       = RichHandler.KEYWORDS + ['IntendedFor', 'B0FieldIdentifier', 'B0FieldSource', 'TaskName', '->', '-->']
+        level          = 'BCDEBUG' if DEBUG else 'VERBOSE' if not logfile.name else 'INFO'
+        consolehandler = RichHandler(console=console, show_time=False, show_level=True, show_path=DEBUG, rich_tracebacks=True, markup=True, keywords=keywords, level=level)
+        consolehandler.set_name('consolehandler')
+        logger.addHandler(consolehandler)
+    else:
+        console = next((handler.console for handler in logger.handlers if handler.get_name() == 'consolehandler'), None)
 
     # Add the optional file handlers
     if logfile.name:
 
         logfile.parent.mkdir(parents=True, exist_ok=True)
         formatter = logging.Formatter(fmt=f"%(asctime)s - %({'level' if DEBUG else ''}name)s | %(message)s", datefmt='%Y-%m-%d %H:%M:%S')
+        for handler in [handler for handler in logger.handlers if handler.get_name() in ('loghandler', 'errorhandler')]:
+            logger.removeHandler(handler)
 
         # Add the verbose file handler
         loghandler = logging.FileHandler(logfile)
@@ -179,7 +184,7 @@ def reporterrors() -> str:
     # Find the root filehandlers and report the errors and warnings
     errors = ''
     for handler in logging.getLogger().handlers:
-        if handler.name == 'errorhandler':
+        if handler.get_name() == 'errorhandler':
 
             errorfile = Path(handler.baseFilename)
             if errorfile.is_file():
@@ -192,7 +197,7 @@ def reporterrors() -> str:
                     LOGGER.success(f'No BIDScoin errors or warnings were reported')
                     LOGGER.info('')
 
-        elif handler.name == 'loghandler':
+        elif handler.get_name() == 'loghandler':
             logfile = Path(handler.baseFilename)
 
     # Final message
