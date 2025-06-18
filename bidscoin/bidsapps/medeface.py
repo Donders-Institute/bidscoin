@@ -48,7 +48,7 @@ def medeface(bidsfolder: str, pattern: str, maskpattern: str, participant: list,
         maskpattern = pattern
 
     # Start logging
-    bcoin.setup_logging(bidsdir/'code'/'bidscoin'/'medeface.log')
+    console = bcoin.setup_logging(bidsdir/'code'/'bidscoin'/'medeface.log')
     LOGGER.info('')
     LOGGER.info('------------ START multi-echo deface ----------')
     LOGGER.info(f">>> medeface bidsfolder={bidsdir} pattern={pattern} maskpattern={maskpattern} participant={participant} output={output} cluster={cluster} {args}")
@@ -81,7 +81,7 @@ def medeface(bidsfolder: str, pattern: str, maskpattern: str, participant: list,
             jt.joinFiles           = True
 
         # Loop over bids subject/session-directories to first get all the echo-combined deface masks
-        for n, subject in enumerate(track(subjects, description='[bright_yellow]Subjects', transient=True), 1):
+        for n, subject in enumerate(track(subjects, description='[bright_yellow]Subjects', console=console, transient=True), 1):
 
             subid    = subject.name
             sessions = lsdirs(subject, 'ses-*')
@@ -133,7 +133,7 @@ def medeface(bidsfolder: str, pattern: str, maskpattern: str, participant: list,
             pbatch.deleteJobTemplate(jt)
 
     # Loop again over bids subject/session-directories to apply the deface-masks and write metadata
-    for n, subject in enumerate(track(subjects, description='[green]Subjects', transient=True), 1):
+    for n, subject in enumerate(track(subjects, description='[green]Subjects', console=console, transient=True), 1):
 
         subid    = subject.name
         sessions = lsdirs(subject, 'ses-*')
@@ -216,7 +216,7 @@ def main():
 
     except Exception as error:
         trackusage('medeface_exception', error)
-        raise error
+        raise
 
 
 if __name__ == '__main__':

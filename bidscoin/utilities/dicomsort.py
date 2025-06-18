@@ -224,7 +224,7 @@ def main():
 
     except Exception as error:
         trackusage('dicomsort_exception', error)
-        raise error
+        raise
 
 
 if __name__ == "__main__":

@@ -57,7 +57,7 @@ def skullstrip(bidsfolder: str, pattern: str, participant: list, masked: str, ou
         return
 
     # Start logging
-    bcoin.setup_logging(bidsdir/'code'/'bidscoin'/'skullstrip.log')
+    console = bcoin.setup_logging(bidsdir/'code'/'bidscoin'/'skullstrip.log')
     LOGGER.info('')
     LOGGER.info('------------ START skullstrip ------------')
     LOGGER.info(f">>> skullstrip bidsfolder={bidsdir} pattern={pattern} participant={participant} masked={masked} output={output} force={force} {args}")
@@ -89,7 +89,7 @@ def skullstrip(bidsfolder: str, pattern: str, participant: list, masked: str, ou
             jt.joinFiles           = True
 
         # Loop over bids subject/session-directories
-        for n, subject in enumerate(track(subjects, description='[green]Subjects', transient=True), 1):
+        for n, subject in enumerate(track(subjects, description='[green]Subjects', console=console, transient=True), 1):
 
             subid    = subject.name
             sessions = lsdirs(subject, 'ses-*')
@@ -247,7 +247,7 @@ def main():
 
     except Exception as error:
         trackusage('skullstrip_exception', error)
-        raise error
+        raise
 
 
 if __name__ == '__main__':

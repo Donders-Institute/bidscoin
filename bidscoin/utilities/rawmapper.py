@@ -149,7 +149,7 @@ def main():
 
     except Exception as error:
         trackusage('rawmapper_exception', error)
-        raise error
+        raise
 
 
 if __name__ == "__main__":

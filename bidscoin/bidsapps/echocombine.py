@@ -41,7 +41,7 @@ def echocombine(bidsfolder: str, pattern: str, participant: list, output: str, a
         return
 
     # Start logging
-    bcoin.setup_logging(bidsdir/'code'/'bidscoin'/'echocombine.log')
+    console = bcoin.setup_logging(bidsdir/'code'/'bidscoin'/'echocombine.log')
     LOGGER.info('')
     LOGGER.info(f"--------- START echocombine ---------")
     LOGGER.info(f">>> echocombine bidsfolder={bidsdir} pattern={pattern} participant={participant} output={output}"
@@ -57,7 +57,7 @@ def echocombine(bidsfolder: str, pattern: str, participant: list, output: str, a
         subjects = [bidsdir/subject for subject in subjects if (bidsdir/subject).is_dir()]
 
     # Loop over bids subject/session-directories
-    for n, subject in enumerate(track(subjects, description='[green]Subjects', transient=True), 1):
+    for n, subject in enumerate(track(subjects, description='[green]Subjects', console=console, transient=True), 1):
 
         subid    = subject.name
         sessions = lsdirs(subject, 'ses-*')
@@ -208,7 +208,7 @@ def main():
 
     except Exception as error:
         trackusage('echocombine_exception', error)
-        raise error
+        raise
 
 
 if __name__ == '__main__':

@@ -35,9 +35,9 @@ def bidsparticipants(sourcefolder: str, bidsfolder: str, bidsmap: str='bidsmap.y
 
     # Start logging
     if dryrun:
-        bcoin.setup_logging()
+        console = bcoin.setup_logging()
     else:
-        bcoin.setup_logging(bidsfolder/'code'/'bidscoin'/'bidsparticipants.log')
+        console = bcoin.setup_logging(bidsfolder/'code'/'bidscoin'/'bidsparticipants.log')
     LOGGER.info('')
     LOGGER.info(f"-------------- START bidsparticipants {__version__} ------------")
     LOGGER.info(f">>> bidsparticipants sourcefolder={rawfolder} bidsfolder={bidsfolder} bidsmap={bidsmap}")
@@ -68,7 +68,7 @@ def bidsparticipants(sourcefolder: str, bidsfolder: str, bidsmap: str='bidsmap.y
     plugins = [plugin for name in bidsmap.plugins if (plugin := bcoin.import_plugin(name))]
 
     # Loop over all subjects in the bids-folder and add them to the participants table
-    for n, subject in enumerate(track(subjects, description='[green]Subjects', transient=True), 1):
+    for n, subject in enumerate(track(subjects, description='[green]Subjects', console=console, transient=True), 1):
 
         LOGGER.info(f"------------------- Subject {n}/{len(subjects)} -------------------")
         personals = {}
@@ -140,7 +140,7 @@ def main():
 
     except Exception as error:
         trackusage('bidsparticipants_exception', error)
-        raise error
+        raise
 
 
 if __name__ == "__main__":

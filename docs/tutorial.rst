@@ -18,7 +18,7 @@ Depending on how BIDScoin was installed, you may have to set your Python environ
 
 .. code-block:: console
 
-   $ module load bidscoin   # Load the DCCN PATH settings and Python environment (else activate your virtual enviroment)
+   $ module load bidscoin   # Load the DCCN PATH settings and Python environment (else activate your virtual environment)
 
 Now you should be able to execute BIDScoin commands. Test this by running ``bidscoin`` to get a general workflow overview. Can you generate a list of all BIDScoin tools? What about the plugins? Test the bidscoin installation and make sure everything is OK
 

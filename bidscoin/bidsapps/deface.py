@@ -43,7 +43,7 @@ def deface(bidsfolder: str, pattern: str, participant: list, force: bool, output
         return
 
     # Start logging
-    bcoin.setup_logging(bidsdir/'code'/'bidscoin'/'deface.log')
+    console = bcoin.setup_logging(bidsdir/'code'/'bidscoin'/'deface.log')
     LOGGER.info('')
     LOGGER.info('------------ START deface ------------')
     LOGGER.info(f">>> deface bidsfolder={bidsdir} pattern={pattern} participant={participant} output={output} cluster={cluster} {args}")
@@ -75,7 +75,7 @@ def deface(bidsfolder: str, pattern: str, participant: list, force: bool, output
             jt.joinFiles           = True
 
         # Loop over bids subject/session-directories
-        for n, subject in enumerate(track(subjects, description='[green]Subjects', transient=True), 1):
+        for n, subject in enumerate(track(subjects, description='[green]Subjects', console=console, transient=True), 1):
 
             subid    = subject.name
             sessions = lsdirs(subject, 'ses-*')
@@ -169,7 +169,7 @@ def main():
 
     except Exception as error:
         trackusage('deface_exception', error)
-        raise error
+        raise
 
 
 if __name__ == '__main__':

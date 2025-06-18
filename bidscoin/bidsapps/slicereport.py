@@ -209,7 +209,7 @@ def slicereport(bidsfolder: str, pattern: str, outlinepattern: str, outlineimage
     # Start logging
     reportfolder.mkdir(parents=True, exist_ok=True)
     (reportfolder/'slicereport.log').unlink(missing_ok=True)
-    bcoin.setup_logging(reportfolder/'slicereport.log')
+    console = bcoin.setup_logging(reportfolder/'slicereport.log')
     LOGGER.info(f"Command: slicereport {' '.join(sys.argv[1:])}")
 
     # Create the report index file
@@ -226,7 +226,7 @@ def slicereport(bidsfolder: str, pattern: str, outlinepattern: str, outlineimage
             tsv_writer.writerow(['subject/session'] + qcscores)
 
     # Loop over the subject/session-directories
-    for subject in track(subjects, description='[green]Subjects', transient=True):
+    for subject in track(subjects, description='[green]Subjects', console=console, transient=True):
         sessions  = lsdirs(subject, 'ses-*')
         style_rel = '../../style.css'
         if not sessions:
@@ -332,7 +332,7 @@ def main():
 
     except Exception as error:
         trackusage('slicereport_exception', error)
-        raise error
+        raise
 
 
 if __name__ == '__main__':

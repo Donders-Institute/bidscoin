@@ -48,7 +48,7 @@ def fixmeta(bidsfolder: str, pattern: str, metadata: dict, participant: list, bi
         subjects = [bidsdir/subject for subject in subjects if (bidsdir/subject).is_dir()]
 
     # Start logging
-    bcoin.setup_logging(bidsdir/'code'/'bidscoin'/'fixmeta.log')
+    console = bcoin.setup_logging(bidsdir/'code'/'bidscoin'/'fixmeta.log')
     LOGGER.info(f"Command: fixmeta {' '.join(sys.argv[1:])}")
 
     # Load the bidsmap data (-> plugins)
@@ -59,7 +59,7 @@ def fixmeta(bidsfolder: str, pattern: str, metadata: dict, participant: list, bi
     provdata = bids.bidsprov(bidsdir)
 
     # Loop over the subject/session-directories
-    for subject in track(subjects, description='[green]Subjects', transient=True):
+    for subject in track(subjects, description='[green]Subjects', console=console, transient=True):
         sessions = lsdirs(subject, 'ses-*')
         if not sessions:
             sessions = [subject]
@@ -117,7 +117,7 @@ def main():
 
     except Exception as error:
         trackusage('fixmeta_exception', error)
-        raise error
+        raise
 
 
 if __name__ == '__main__':

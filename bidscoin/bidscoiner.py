@@ -49,7 +49,7 @@ def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: 
         raise SystemExit(f"\n[ERROR] Exiting the program because your sourcefolder argument '{sourcefolder}' was not found")
 
     # Start logging
-    bcoin.setup_logging(bidscoinfolder/'bidscoiner.log')
+    console = bcoin.setup_logging(bidscoinfolder/'bidscoiner.log')
     LOGGER.info('')
     LOGGER.info(f"-------------- START BIDScoiner {__version__}: BIDS {bidsversion()} ------------")
     LOGGER.info(f">>> bidscoiner sourcefolder={rawfolder} bidsfolder={bidsfolder} participant={participant} force={force} bidsmap={bidsmapfile}")
@@ -250,7 +250,7 @@ def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: 
         return
 
     # Loop over all subjects and sessions and convert them using the bidsmap entries
-    for n, subject in enumerate(track(subjects, description='[green]Subjects', transient=True), 1):
+    for n, subject in enumerate(track(subjects, description='[green]Subjects', console=console, transient=True), 1):
 
         LOGGER.info(f"------------------- Subject {n}/{len(subjects)} -------------------")
         if not subject.is_dir():
@@ -332,7 +332,7 @@ def main():
 
     except Exception as error:
         trackusage('bidscoiner_exception', error)
-        raise error
+        raise
 
 
 if __name__ == "__main__":

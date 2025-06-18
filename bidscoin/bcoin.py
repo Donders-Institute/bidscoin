@@ -98,35 +98,23 @@ def synchronize(pbatch, jobids: list, event: str, wait: int=15):
             time.sleep(0.01)
 
 
-def setup_logging(logfile: Path=Path()):
+def setup_logging(logfile: Path=Path()) -> Console:
     """
     Set up the logging framework:
     1) Extend the Logger class with custom 'bcdebug', 'verbose' and 'success' logging levels / methods
     2) Add a console streamhandler
-    3) If given a log file, then add a regular log + a warning/error filehandler
+    3) If given a logfile, then add a regular verbose + a warning/error filehandler
 
-    NB: Defining a `CustomLogger(logging.Logger)` class + setting `logging.setLoggerClass(CustomLogger)`
-    (as in https://github.com/xolox/python-verboselogs/blob/master/verboselogs/__init__.py)
-    does not seem to work / is ignored by the plugins. Extending `logging.getLoggerClass()` works robustly
-
-    :param logfile:     Name of the log file
+    :param logfile: Name of the log file
+    :return:        The rich console (e.g. needed for progress tracking)
     """
 
-    # Set the default formats
-    if DEBUG:
-        fmt  = '%(asctime)s - %(name)s | %(message)s'
-        cfmt = '%(name)s | %(message)s'
-    else:
-        fmt  = '%(asctime)s - %(levelname)s | %(message)s'
-        cfmt = '%(message)s'
-    datefmt  = '%Y-%m-%d %H:%M:%S'
-
-    # Register custom log levels
+    # Register custom logging levels
     for name, level in {'BCDEBUG': 11, 'VERBOSE': 15, 'SUCCESS': 25}.items():
         logging.addLevelName(level, name)
         setattr(logging, name, level)
 
-    # Register custom log methods
+    # Register custom logging methods
     def bcdebug(self, message, *args, **kws):
         if self.isEnabledFor(logging.BCDEBUG):
             self._log(logging.BCDEBUG, message, args, **kws)
@@ -148,23 +136,26 @@ def setup_logging(logfile: Path=Path()):
 
     # Add the Rich console handler and bring some color to those boring logs! :-)
     console        = Console(theme=Theme({'logging.level.verbose': 'grey50', 'logging.level.success': 'green bold', 'logging.level.bcdebug': 'bright_yellow'}))
-    consolehandler = RichHandler(console=console, show_time=False, show_level=True, show_path=DEBUG, rich_tracebacks=True, markup=True, level='BCDEBUG' if DEBUG else 'VERBOSE' if not logfile.name else 'INFO')
-    consolehandler.set_name('console')
-    consolehandler.setFormatter(logging.Formatter(fmt=cfmt, datefmt=datefmt))
+    keywords       = RichHandler.KEYWORDS + ['IntendedFor', 'B0FieldIdentifier', 'B0FieldSource', 'TaskName', '->', '-->']
+    level          = 'BCDEBUG' if DEBUG else 'VERBOSE' if not logfile.name else 'INFO'
+    consolehandler = RichHandler(console=console, show_time=False, show_level=True, show_path=DEBUG, rich_tracebacks=True, markup=True, keywords=keywords, level=level)
+    consolehandler.set_name('consolehandler')
     logger.addHandler(consolehandler)
 
+    # Add the optional file handlers
     if logfile.name:
 
-        # Add the verbose filehandler
-        logfile.parent.mkdir(parents=True, exist_ok=True)      # Create the log dir if it does not exist
-        formatter  = logging.Formatter(fmt=fmt, datefmt=datefmt)
+        logfile.parent.mkdir(parents=True, exist_ok=True)
+        formatter = logging.Formatter(fmt=f"%(asctime)s - %({'level' if DEBUG else ''}name)s | %(message)s", datefmt='%Y-%m-%d %H:%M:%S')
+
+        # Add the verbose file handler
         loghandler = logging.FileHandler(logfile)
         loghandler.setLevel('BCDEBUG')
         loghandler.setFormatter(formatter)
         loghandler.set_name('loghandler')
         logger.addHandler(loghandler)
 
-        # Add the error/warnings filehandler
+        # Add the error/warnings file handler
         errorhandler = logging.FileHandler(logfile.with_suffix('.errors'), mode='w')
         errorhandler.setLevel('WARNING')
         errorhandler.setFormatter(formatter)
@@ -172,8 +163,10 @@ def setup_logging(logfile: Path=Path()):
         logger.addHandler(errorhandler)
 
     if DEBUG:
-        LOGGER.info('\t[bold bright_yellow]<<<<<<<<<< Running BIDScoin in DEBUG mode >>>>>>>>>>')
+        LOGGER.info('[bright_yellow bold]============= Running BIDScoin in DEBUG mode =============')
         settracking('show')
+
+    return console
 
 
 def reporterrors() -> str:
@@ -192,7 +185,7 @@ def reporterrors() -> str:
             if errorfile.is_file():
                 if errorfile.stat().st_size:
                     errors = errorfile.read_text()
-                    LOGGER.info(f"The following BIDScoin errors and warnings were reported:\n\n{40 * '>'}\n{errors}{40 * '<'}\n")
+                    LOGGER.warning(f"The following BIDScoin errors and warnings were reported:\n\n{40 * '>'}\n{errors}{40 * '<'}\n")
                     trackusage(f"{errorfile.stem}_{'error' if 'ERROR' in errors else 'warning'}")
 
                 else:
@@ -216,7 +209,7 @@ def list_executables(show: bool=False) -> list:
     :return:        List of BIDScoin console scripts
     """
 
-    if show: LOGGER.info('Executable BIDScoin tools:')
+    if show: LOGGER.info('[bright_yellow]Executable BIDScoin tools:')
 
     scripts = []
     if sys.version_info.major == 3 and sys.version_info.minor < 10:
@@ -237,14 +230,14 @@ def list_plugins(show: bool=False) -> tuple[list[Path], list[Path]]:
     :return:     List of the installed plugins and template bidsmaps
     """
 
-    if show: LOGGER.info(f"Installed template bidsmaps ({templatefolder}):")
+    if show: LOGGER.info(f"[bright_yellow]Installed template bidsmaps ({templatefolder}):")
     templates = []
     for template in templatefolder.glob('*.yaml'):
         if template.stem != '__init__':
             templates.append(template)
             if show: LOGGER.info(f"- {template.stem}{' (default)' if template.samefile(bidsmap_template) else ''}")
 
-    if show: LOGGER.info(f"Installed plugins ({pluginfolder}):")
+    if show: LOGGER.info(f"[bright_yellow]Installed plugins ({pluginfolder}):")
     plugins = []
     for plugin in pluginfolder.glob('*.py'):
         if plugin.stem != '__init__':
@@ -258,7 +251,7 @@ def install_plugins(filenames: list[str]=()) -> None:
     """
     Installs template bidsmaps and plugins
 
-    :param filenames:   Fullpath filenames of the and template bidsmaps plugins that need to be installed
+    :param filenames:   Fullpath filenames of the plugins and template bidsmaps that need to be installed
     :return:            Nothing
     """
 
@@ -266,7 +259,7 @@ def install_plugins(filenames: list[str]=()) -> None:
 
     files = [Path(file) for file in filenames if file.endswith('.yaml') or file.endswith('.py')]
 
-    # Install the template bidsmaps and plugins in their targetfolder
+    # Install the template bidsmaps and plugins in their target folder
     for file in files:
 
         # Check if we can import the plugin
@@ -379,7 +372,7 @@ def test_plugin(plugin: Union[Path,str], options: dict) -> int:
 
     if not plugin: return 1
 
-    LOGGER.info(f"--------- Testing the '{plugin}' plugin ---------")
+    LOGGER.info(f"[bright_yellow]--------- Testing the '{plugin}' plugin:")
 
     # First test to see if we can import the plugin interface
     module = import_plugin(plugin)
@@ -413,7 +406,7 @@ def test_bidsmap(bidsmapfile: str):
     # Include the import in the test + moving the import to the top of this module will cause circular import issues
     from bidscoin import bids
 
-    LOGGER.info('--------- Testing bidsmap runs and their bids-names ---------')
+    LOGGER.info('[bright_yellow]--------- Testing bidsmap runs and their bids-names:')
 
     bidsmapfile = Path(bidsmapfile)
     if bidsmapfile.is_dir():
@@ -434,7 +427,7 @@ def test_bidscoin(bidsmapfile, options: dict=None, testplugins: bool=True, testg
 
     if not bidsmapfile: return 1
 
-    LOGGER.info(f"--------- Testing BIDScoin's {__version__} core functionality ---------")
+    LOGGER.info(f"[bright_yellow]--------- Testing BIDScoin's {__version__} core:")
 
     # Test loading the template bidsmap
     success = True
@@ -461,9 +454,10 @@ def test_bidscoin(bidsmapfile, options: dict=None, testplugins: bool=True, testg
 
     # Test PyQt
     if testgui:
-        LOGGER.info('Testing the PyQt GUI setup:')
-        if find_spec('tkinter'):
-            import tkinter as tk                    # Not always installed (e.g. WSL2)
+        LOGGER.info('[bright_yellow]--------- Testing the PyQt GUI setup:')
+        if find_spec('tkinter'):                    # Not always installed (e.g. WSL2)
+            LOGGER.info('Opening a standard graphical window')
+            import tkinter as tk
             try:
                 root = tk.Tk()                      # Test opening a window using the TKinter standard library
                 root.after(200, root.destroy)   # Destroy after 200ms to prevent blocking
@@ -472,6 +466,7 @@ def test_bidscoin(bidsmapfile, options: dict=None, testplugins: bool=True, testg
                 LOGGER.error(f"Cannot open a graphical display on your system:\n{display_error}")
                 success = False
         try:
+            LOGGER.info('Opening a PyQt window')
             from PyQt6.QtWidgets import QApplication, QPushButton
             from PyQt6.QtCore import QTimer
             app = QApplication([])
@@ -486,7 +481,7 @@ def test_bidscoin(bidsmapfile, options: dict=None, testplugins: bool=True, testg
     # Test the DRMAA configuration (used by pydeface only)
     try:
         import pydeface
-        LOGGER.info('Testing the DRMAA setup:')
+        LOGGER.info('[bright_yellow]--------- Testing the DRMAA setup:')
         try:
             import drmaa
             with drmaa.Session() as s:
@@ -511,7 +506,7 @@ def test_bidscoin(bidsmapfile, options: dict=None, testplugins: bool=True, testg
                 errorcode = test_plugin(plugin.stem, bidsmap.plugins.get(plugin.stem, {}))
                 success   = not errorcode and success
                 if errorcode:
-                    LOGGER.warning(f"Failed test: {plugin.stem}")
+                    LOGGER.warning(f"Failed test: {plugin.stem}\nThis may be fine if you do not neend and did not install this plugin")
 
     if not success:
         LOGGER.warning('Not all tests finished successfully (this may be OK, but check the output above)')
@@ -538,7 +533,7 @@ def pulltutorialdata(tutorialfolder: str) -> None:
 
     # Download the data
     LOGGER.info(f"Downloading the tutorial dataset...")
-    with Progress(TextColumn('[bold blue]{task.fields[filename]}'), BarColumn(), DownloadColumn(), TransferSpeedColumn(), TimeRemainingColumn()) as progress:
+    with Progress(TextColumn('[blue bold]{task.fields[filename]}'), BarColumn(), DownloadColumn(), TransferSpeedColumn(), TimeRemainingColumn()) as progress:
         task = progress.add_task('[cyan]Download', filename=tutorialtargz.name, total=None)
         def reporthook(blocknum: int, blocksize: int, totalsize: int):
             if totalsize > 0 and progress.tasks[task].total is None:
@@ -597,6 +592,7 @@ def reset(delete: bool) -> None:
 
     if not delete: return
 
+    LOGGER.info(f"Resetting: {configdir}")
     shutil.rmtree(configdir)
 
 
@@ -658,7 +654,7 @@ def main():
 
     except Exception as error:
         trackusage('bidscoin_exception', error)
-        raise error
+        raise
 
 
 if __name__ == "__main__":

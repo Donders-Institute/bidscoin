@@ -63,7 +63,7 @@ def bidsmapper(sourcefolder: str, bidsfolder: str, bidsmap: str, template: str, 
             (bidscoinfolder/'bidsmapper.log').unlink(missing_ok=True)
         except (IOError, OSError) as unlinkerr:
             LOGGER.bcdebug(f"Could not delete: {bidscoinfolder/'bidsmapper.log'}\n{unlinkerr}")
-    bcoin.setup_logging(bidscoinfolder/'bidsmapper.log')
+    console = bcoin.setup_logging(bidscoinfolder/'bidsmapper.log')
     LOGGER.info('')
     LOGGER.info('-------------- START BIDSmapper ------------')
     LOGGER.info(f">>> bidsmapper sourcefolder={rawfolder} bidsfolder={bidsfolder} bidsmap={bidsmapfile} "
@@ -109,7 +109,7 @@ def bidsmapper(sourcefolder: str, bidsfolder: str, bidsmap: str, template: str, 
     # Loop over all subjects and sessions and built up the bidsmap entries
     if not (subjects := lsdirs(rawfolder, ('' if subprefix=='*' else subprefix) + '*')):
         LOGGER.warning(f"No subjects found in: {rawfolder/subprefix}*")
-    for n, subject in enumerate(track(subjects, description='[green]Subjects', transient=True), 1):
+    for n, subject in enumerate(track(subjects, description='[green]Subjects', console=console, transient=True), 1):
 
         sessions = lsdirs(subject, ('' if sesprefix=='*' else sesprefix) + '*')
         if not sessions or (subject/'DICOMDIR').is_file():
@@ -233,7 +233,7 @@ def main():
 
     except Exception as error:
         trackusage('bidsmapper_exception', error)
-        raise error
+        raise
 
 
 if __name__ == "__main__":
