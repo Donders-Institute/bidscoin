@@ -8,7 +8,7 @@
 
 ### Added
 - Make stripping the suffix from bids-values in run-items optional (GitHub issue #265)
-- Dynamic participants.tsv columns (GitHub issue #267)
+- Dynamic participants.tsv column names (GitHub issue #267)
 - A custom `PatientAgeDerived` "DICOM" tag (GitHub issue #267)
 
 ### Changed
