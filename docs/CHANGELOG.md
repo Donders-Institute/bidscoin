@@ -4,7 +4,7 @@
 
 ## [dev]
 
-## [4.6.2] - 2025-06-16
+## [4.6.2] - 2025-06-19
 
 ### Added
 - Make stripping the suffix from bids-values in run-items optional (GitHub issue #265)
@@ -21,7 +21,6 @@
 
 ### Fixed
 - A usability regression that could render a main window that is larger than the screen
-- The logging level in the terminal output -- looks much nicer now!
 
 ## [4.6.0] - 2025-03-25
 

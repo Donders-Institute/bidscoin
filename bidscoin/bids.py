@@ -1948,7 +1948,7 @@ def addmetadata(bidsses: Path):
                     jsondata['IntendedFor'] = None
 
             elif not (intendedfor or jsondata.get('B0FieldSource') or jsondata.get('B0FieldIdentifier')):
-                LOGGER.warning(f"Empty IntendedFor/B0FieldSource/B0FieldIdentifier field map values in {jsonfile.relative_to(jsonfile.parents[1])} (i.e. the field map may not be used)")
+                LOGGER.warning(f"Empty IntendedFor/B0FieldSource/B0FieldIdentifier values in {jsonfile.relative_to(jsonfile.parents[1])} (i.e. the field map may not be used)")
 
             # Work-around because the bids-validator (v1.8) cannot handle `null` values / unused IntendedFor fields
             if not jsondata.get('IntendedFor'):
