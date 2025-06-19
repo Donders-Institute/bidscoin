@@ -130,8 +130,8 @@ def slicer_append(inputimage: Path, operations: str, outlineimage: Path, mainopt
             jt.outputPath          = f"{os.getenv('HOSTNAME')}:{workdir if DEBUG else tempfile.gettempdir()}/{jt.jobName}.out"
             LOGGER.bcdebug(f"nativeSpecification: {cluster} -> {jt.nativeSpecification}")
             JOBIDS.append(pbatch.runJob(jt))
-            pbatch.deleteJobTemplate(jt)
             LOGGER.info(f"Your '{jt.jobName}' job has been submitted with ID: {JOBIDS[-1]}")
+            pbatch.deleteJobTemplate(jt)
 
     else:
         process = subprocess.run(command, shell=True, capture_output=True, text=True)
@@ -247,7 +247,7 @@ def slicereport(bidsfolder: str, pattern: str, outlinepattern: str, outlineimage
             if not images:
                 LOGGER.warning(f"Could not find images using: {session.relative_to(bidsdir)}/{pattern}")
                 continue
-            LOGGER.info(f"Processing {len(images)} images in: {session.relative_to(bidsdir)}")
+            LOGGER.info(f"Processing {len(images)} image(s) in: {session.relative_to(bidsdir)}")
             outlineimages = [''] * len(images)
             if outlinepattern:
                 outlinesession = outlinedir/session.relative_to(bidsdir)
