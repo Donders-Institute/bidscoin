@@ -1,10 +1,7 @@
 import json
 import shutil
 from pathlib import Path
-from bidscoin import bcoin
 from bidscoin.bidsapps.fixmeta import fixmeta
-
-bcoin.setup_logging()
 
 
 def test_fixmeta(tmp_path, test_data):

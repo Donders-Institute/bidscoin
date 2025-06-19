@@ -8,9 +8,10 @@ if find_spec('bidscoin') is None:
     import sys
     sys.path.append(str(Path(__file__).parents[2]))
 from bidscoin.utilities import dicomsort
+from bidscoin import bcoin
 
 Path('./.duecredit.p').unlink(missing_ok=True)
-
+bcoin.setup_logging()
 
 @pytest.fixture(scope='session')
 def raw_dicomdir(tmp_path_factory):

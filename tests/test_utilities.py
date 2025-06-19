@@ -9,8 +9,6 @@ from bidscoin import utilities
 from bidscoin.utilities import dicomsort, rawmapper, bidsparticipants
 from importlib.util import find_spec
 
-bcoin.setup_logging()
-
 
 @pytest.fixture(scope='module')
 def dcm_file():

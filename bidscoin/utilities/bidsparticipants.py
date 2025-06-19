@@ -34,10 +34,7 @@ def bidsparticipants(sourcefolder: str, bidsfolder: str, bidsmap: str='bidsmap.y
         raise SystemExit(f"\n[ERROR] Exiting the program because your bidsfolder argument '{bidsfolder}' was not found")
 
     # Start logging
-    if dryrun:
-        console = bcoin.setup_logging()
-    else:
-        console = bcoin.setup_logging(bidsfolder/'code'/'bidscoin'/'bidsparticipants.log')
+    console = bcoin.setup_logging(Path() if dryrun else bidsfolder/'code'/'bidscoin'/'bidsparticipants.log')
     LOGGER.info('')
     LOGGER.info(f"-------------- START bidsparticipants {__version__} ------------")
     LOGGER.info(f">>> bidsparticipants sourcefolder={rawfolder} bidsfolder={bidsfolder} bidsmap={bidsmap}")
@@ -73,7 +70,7 @@ def bidsparticipants(sourcefolder: str, bidsfolder: str, bidsmap: str='bidsmap.y
         LOGGER.info(f"------------------- Subject {n}/{len(subjects)} -------------------")
         personals = {}
         subject   = rawfolder/subject.name.replace('sub-', subprefix.replace('*',''))     # TODO: This assumes e.g. that the subject-ids in the rawfolder did not contain BIDS-invalid characters (such as '_')
-        sessions  = lsdirs(subject, ('' if sesprefix=='*' else sesprefix) + '*')
+        sessions  = lsdirs(subject, ('' if sesprefix == '*' else sesprefix) + '*')
         if not subject.is_dir():
             LOGGER.error(f"Could not find source-folder: {subject}")
             continue

@@ -10,8 +10,6 @@ from pydicom.data import get_testdata_file
 from bidscoin import bcoin, bids, bidsmap_template, bidscoinroot
 from bidscoin.bids import BidsMap, RunItem, DataSource, Plugin, Meta
 
-bcoin.setup_logging()
-
 
 @pytest.fixture(scope='module')
 def dcm_file():

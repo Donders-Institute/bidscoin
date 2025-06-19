@@ -51,12 +51,11 @@ The bidscoin command-line utility serves as a central starting point to test and
 
     examples:
       bidscoin -l
-      bidscoin -d data/bidscoin_tutorial
+      bidscoin -d data/bidscoin
       bidscoin -t
       bidscoin -t my_template_bidsmap
       bidscoin -b my_study_bidsmap
       bidscoin -i data/my_template_bidsmap.yaml downloads/my_plugin.py
-      bidscoin -c myproject/bids
       bidscoin -c myproject/bids format bibtex
       bidscoin --tracking show
 

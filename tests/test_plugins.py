@@ -9,7 +9,7 @@ import inspect
 import yaml
 from bidscoin import bcoin, bidsmap_template
 
-bcoin.setup_logging()
+
 with open(bidsmap_template) as fid:
     template = yaml.safe_load(fid)
 

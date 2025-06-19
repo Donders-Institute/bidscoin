@@ -1,9 +1,7 @@
 import jsonschema
 import json
 import yaml
-from bidscoin import bcoin, bidscoinroot
-
-bcoin.setup_logging()
+from bidscoin import bidscoinroot
 
 
 def test_jsonschema_validate_bidsmaps():

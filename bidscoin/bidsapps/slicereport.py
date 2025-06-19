@@ -4,7 +4,7 @@
 # NB: Set os.environ['DUECREDIT'] values as early as possible to capture all credits
 import os
 import sys
-if __name__ == "__main__" and os.getenv('DUECREDIT_ENABLE','').lower() not in ('1', 'yes', 'true') and len(sys.argv) > 1:    # Ideally the due state (`self.__active=True`) should also be checked (but that's impossible)
+if __name__ == "__main__" and os.getenv('DUECREDIT_ENABLE','').lower() not in ('1', 'yes', 'true') and len(sys.argv) > 1:    # Ideally, the due state (`self.__active=True`) should also be checked (but that's impossible)
     os.environ['DUECREDIT_ENABLE'] = 'yes'
     os.environ['DUECREDIT_FILE']   = os.path.join(sys.argv[1], 'code', 'bidscoin', '.duecredit_slicereport.p')   # NB: argv[1] = bidsfolder
 
@@ -43,6 +43,7 @@ a:active { color: Yellow; }
 """
 
 JOBIDS = []         # Collect JOBIDS to synchronize DRMAA jobs
+
 
 def parse_options(options: list) -> str:
     """Check the OPTIONS arguments and return them to a string that can be passed to slicer"""
@@ -88,7 +89,7 @@ def slicer_append(inputimage: Path, operations: str, outlineimage: Path, mainopt
     """Run fslmaths, slicer and pngappend (locally or on the cluster) to create a montage of the sliced images"""
 
     # Create a workdir and the shell command
-    workdir  = montage.parent/next(tempfile._get_candidate_names())
+    workdir  = montage.parent/f"work_{next(tempfile._get_candidate_names())}"
     workdir.mkdir()
     inputimg = nib.load(inputimage)
     reorient = ''
@@ -110,6 +111,7 @@ def slicer_append(inputimage: Path, operations: str, outlineimage: Path, mainopt
                f"pngappend {sliceroutput} {montage.name}\n" \
                f"mv {montage.name} {montage.parent}\n" \
                + (f"rm -r {workdir}" if not DEBUG else '')
+    LOGGER.bcdebug(f"Command: {command}")
 
     # Run the command on the HPC cluster or directly in the shell
     if cluster:
@@ -126,12 +128,12 @@ def slicer_append(inputimage: Path, operations: str, outlineimage: Path, mainopt
             jt.joinFiles           = True
             jt.jobName             = 'slicereport'
             jt.outputPath          = f"{os.getenv('HOSTNAME')}:{workdir if DEBUG else tempfile.gettempdir()}/{jt.jobName}.out"
+            LOGGER.bcdebug(f"nativeSpecification: {cluster} -> {jt.nativeSpecification}")
             JOBIDS.append(pbatch.runJob(jt))
             pbatch.deleteJobTemplate(jt)
-            LOGGER.verbose(f"Your '{jt.jobName}' job has been submitted with ID: {JOBIDS[-1]}")
+            LOGGER.info(f"Your '{jt.jobName}' job has been submitted with ID: {JOBIDS[-1]}")
 
     else:
-        LOGGER.bcdebug(f"Command: {command}")
         process = subprocess.run(command, shell=True, capture_output=True, text=True)
         if process.stderr or process.returncode != 0:
             LOGGER.warning(f"{command}\nErrorcode {process.returncode}:\n{process.stdout}\n{process.stderr}")
@@ -241,11 +243,11 @@ def slicereport(bidsfolder: str, pattern: str, outlinepattern: str, outlineimage
                     tsv_writer.writerow([str(session.relative_to(bidsdir))] + len(qcscores) * ['n/a'])
 
             # Search for the (nibabel supported) image(s) to report
-            LOGGER.info(f"Processing images in: {session.relative_to(bidsdir)}")
             images = sorted([match for match in session.glob(pattern) if match.suffixes[0] in valid_exts])
             if not images:
                 LOGGER.warning(f"Could not find images using: {session.relative_to(bidsdir)}/{pattern}")
                 continue
+            LOGGER.info(f"Processing {len(images)} images in: {session.relative_to(bidsdir)}")
             outlineimages = [''] * len(images)
             if outlinepattern:
                 outlinesession = outlinedir/session.relative_to(bidsdir)

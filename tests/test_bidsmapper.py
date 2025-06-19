@@ -2,8 +2,6 @@ import pytest
 import re
 from bidscoin import bcoin, bidsmapper, bidsmap_template
 
-bcoin.setup_logging()
-
 
 @pytest.mark.parametrize('subprefix', ['Doe', 'Doe^', '*'])
 @pytest.mark.parametrize('sesprefix', ['0', '*'])

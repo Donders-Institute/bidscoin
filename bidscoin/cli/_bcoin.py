@@ -44,12 +44,11 @@ def get_parser() -> argparse.ArgumentParser:
                                      description=textwrap.dedent(__doc__),
                                      epilog='examples:\n'
                                             '  bidscoin -l\n'
-                                            '  bidscoin -d data/bidscoin_tutorial\n'
+                                            '  bidscoin -d data/bidscoin\n'
                                             '  bidscoin -t\n'
                                             '  bidscoin -t my_template_bidsmap\n'
                                             '  bidscoin -b my_study_bidsmap\n'
                                             '  bidscoin -i data/my_template_bidsmap.yaml downloads/my_plugin.py\n'
-                                            '  bidscoin -c myproject/bids\n'
                                             '  bidscoin -c myproject/bids format bibtex\n'
                                             '  bidscoin --tracking show\n ')
     parser.add_argument('-l', '--list',        help='List all executables (i.e. the apps, bidsapps and utilities)', action='store_true')

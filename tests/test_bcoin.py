@@ -3,7 +3,6 @@ import bidscoin
 from bidscoin import bcoin
 from pathlib import Path
 
-bcoin.setup_logging()
 
 assert bidscoin.schemafolder.is_dir()
 assert bidscoin.templatefolder.is_dir()
