@@ -34,6 +34,7 @@ This document describes how to prepare a new BIDScoin release from within the DC
 4. Update the cli help texts and RTD files
 5. Update the version string everywhere (i.e. search without word matching) and COPYRIGHT
 6. Add and push a git version tag if everything is OK
+7. Increment version and append `.dev0`
 
 DCCN deployment
 ---------------
