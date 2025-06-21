@@ -16,30 +16,20 @@ BIDScoin: Coin your imaging data to BIDS
 
 BIDScoin is a user-friendly Python application suite that converts ("coins") source-level (raw) neuroimaging data sets to standardized data sets that are organized according to the Brain Imaging Data Structure (`BIDS <https://bids-specification.readthedocs.io>`__) specification. Rather than depending on complex programmatic logic for source data-type identification, BIDScoin uses a mapping approach to discover the different source data types in your repository and convert them into BIDS data types. Different runs of source data are uniquely identified by their file system properties (e.g. file name or size) and by their attributes (e.g. ``ProtocolName`` from the DICOM header). Mapping information can be pre-specified (e.g. per site), allowing BIDScoin to make intelligent first suggestions on how to classify and convert the data. While this command-line procedure exploits all information available on disk, BIDScoin offers a `Graphical User Interface (GUI) <./screenshots.html>`__ for researchers to check and edit these mappings -- bringing in the missing knowledge that often exists in their heads only. This interactive step can also be skipped for employment in fully automated dataflow pipelines.
 
-Data conversions are performed within plugins, such as plugins that employ `dcm2niix <https://github.com/rordenlab/dcm2niix>`__, `spec2nii <https://github.com/wtclarke/spec2nii>`__ or `nibabel <https://nipy.org/nibabel>`__.
-
 BIDScoin requires no programming knowledge in order to use it, but users can use regular expressions and plug-ins to further enhance BIDScoin's power and flexibility, and readily handle a wide variety of source data types.
 
 BIDScoin is developed at the `Donders Institute <https://www.ru.nl/donders/>`__ of the `Radboud University <https://www.ru.nl/en>`__.
 
-Features
---------
+Main features
+-------------
 
-* [x] DICOM source data
-* [x] PAR/REC source data (Philips)
-* [x] NIfTI source data
-* [x] Physiological logging data\*
-* [x] MR Spectroscopy data\*\*
-* [x] PET/CT data
-* [x] Field maps\*
-* [x] Multi-echo data\*
-* [x] Multi-coil data\*
-* [x] Plug-ins
-* [x] Stimulus/behavioural logfiles
-
-  ``*  = Only DICOM source data``
-
-  ``** = Only Twix, SDAT/SPAR and P-file source data``
+* MRI source data (DICOM, PAR/REC)
+* MRS source data (Twix, SDAT/SPAR and P-file)
+* NIfTI source data
+* Stimulus/behavioural source data (PsychoPy/Presentation)
+* Physiological source data (DICOM)
+* Plug-ins (`dcm2niix <https://github.com/rordenlab/dcm2niix>`__, `spec2nii <https://github.com/wtclarke/spec2nii>`__, `nibabel <https://nipy.org/nibabel>`__)
+* BIDS-apps (defacing, multi-echo combination, skull stripping, QC report generator)
 
 .. note::
 
