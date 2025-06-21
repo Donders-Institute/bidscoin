@@ -3,9 +3,9 @@ Play around
 
 Trying out BIDScoin in the cloud is just a few mouse clicks away! No need for registration or subscription, just launch a `Neurodesktop <https://play.neurodesk.org/>`__ on a server nearby:
 
-- `Europe <https://play-frankfurt.neurodesk.org/>`__
-- `North America <https://play-iowa.neurodesk.org/>`__
-- `Australia <https://play-sydney.neurodesk.org/>`__
+- `Europe <https://play-europe.neurodesk.org/>`__
+- `North America <https://play-america.neurodesk.org/>`__
+- `Australia <https://play.neurodesk.cloud.edu.au/>`__
 
 After a few seconds you will see a JupyterLab instance in your browser. In there, click on the ``Neurodesktop`` icon and on your interface of choice (e.g. RDP). If all goes well, you will get a fully functional Linux desktop interface running in your browser! As illustrated below, you can then launch a BIDScoin terminal and play around, for instance by running the `BIDScoin tutorial <./tutorial.html>`__.
 
