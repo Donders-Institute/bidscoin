@@ -82,6 +82,8 @@ Here is how to run the bidsmapper command:
                             tweaking it with the bidseditor
       -f, --force           Discard the previously saved bidsmap and log file, instead of reusing them
                             (use this option for a fresh start)
+      -w, --workdir PATH    Optional working directory for temporary unpacking of zipped or DICOMDIR data.
+                            Defaults to the system temporary folder if not specified
       --no-update           Do not update any sub-/ses-prefixes in or prepend the sourcefolder name to the
                             <<filepath:regex>> expression that extracts the subject/session labels. This
                             is normally done to make the extraction more robust, but could cause problems
@@ -263,6 +265,8 @@ Here is how to run the bidscoiner command:
                             compute (HPC) cluster. You can add an opaque DRMAA argument with native
                             specifications for your HPC resource manager (NB: Use quotes and include at
                             least one space character to prevent premature parsing -- see examples)
+      -w, --workdir PATH    Optional working directory for temporary unpacking of zipped or DICOMDIR data.
+                            Defaults to the system temporary folder if not specified
 
     ::
 

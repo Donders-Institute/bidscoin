@@ -44,7 +44,7 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument('-s','--store',       help='Store newly discovered data samples in the bidsfolder/code/provenance folder (useful for editing e.g. zipped or DICOMDIR datasets)', action='store_true')
     parser.add_argument('-a','--automated',   help='Save the automatically generated bidsmap to disk and without interactively tweaking it with the bidseditor', action='store_true')
     parser.add_argument('-f','--force',       help='Discard the previously saved bidsmap and log file, instead of reusing them (use this option for a fresh start)', action='store_true')
-    parser.add_argument('-w','--workdir',     help='Optional working directory for temporary unpacking of zipped or DICOMDIR data. Defaults to the system temporary folder if not specified', default='')
+    parser.add_argument('-w','--workdir',     help='Optional working directory for temporary unpacking of zipped or DICOMDIR data. Defaults to the system temporary folder if not specified', metavar='PATH', default='')
     parser.add_argument('--no-update',        help="Do not update any sub-/ses-prefixes in or prepend the sourcefolder name to the <<filepath:regex>> expression that extracts the subject/session labels. This is normally done to make the extraction more robust, but could cause problems for certain use cases", action='store_true')
 
     return parser
