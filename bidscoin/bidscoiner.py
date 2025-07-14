@@ -25,7 +25,7 @@ from bidscoin.utilities import unpack
 from bidscoin.plugins import EventsParser
 
 
-def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: bool=False, bidsmap: str= 'bidsmap.yaml', cluster: str= '') -> None:
+def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: bool=False, bidsmap: str= 'bidsmap.yaml', cluster: str= '', workdir: str='') -> None:
     """
     Main function that processes all the subjects and session in the sourcefolder and uses the
     bidsmap.yaml file in bidsfolder/code/bidscoin to cast the data into the BIDS folder.
@@ -36,7 +36,7 @@ def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: 
     :param force:        If True, participant will be processed, regardless of existing folders in the bidsfolder. Otherwise, existing folders will be skipped
     :param bidsmap:      The name of the bidsmap YAML-file. If the bidsmap pathname is just the base name (i.e. no "/" in the name) then it is assumed to be located in the current directory or in bidsfolder/code/bidscoin
     :param cluster:      Use the DRMAA library to submit the bidscoiner jobs to a high-performance compute (HPC) cluster with DRMAA native specifications for submitting bidscoiner jobs to the HPC cluster. See cli/_bidscoiner() for default
-    :return:             Nothing
+    :param workdir:      Working directory for temporary unpacking of zipped or DICOMDIR data. Defaults to the system temporary folder if not specified
     """
 
     # Input checking & defaults
@@ -263,7 +263,7 @@ def bidscoiner(sourcefolder: str, bidsfolder: str, participant: list=(), force: 
         for session in sessions:
 
             # Unpack the data in a temporary folder if it is tarballed/zipped and/or contains a DICOMDIR file
-            sesfolders, unpacked = unpack(session, bidsmap.options.get('unzip',''))
+            sesfolders, unpacked = unpack(session, bidsmap.options.get('unzip',''), workdir)
             for sesfolder in sesfolders:
 
                 # Run the bidscoiner plugins

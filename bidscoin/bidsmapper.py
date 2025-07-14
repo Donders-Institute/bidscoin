@@ -24,7 +24,7 @@ from bidscoin.utilities import unpack
 _, uptodate, versionmessage = check_version()
 
 
-def bidsmapper(sourcefolder: str, bidsfolder: str, bidsmap: str, template: str, plugins: list, subprefix: str, sesprefix: str, unzip: str, store: bool=False, automated: bool=False, force: bool=False, no_update: bool=False) -> BidsMap:
+def bidsmapper(sourcefolder: str, bidsfolder: str, bidsmap: str, template: str, plugins: list, subprefix: str, sesprefix: str, unzip: str, store: bool=False, automated: bool=False, force: bool=False, no_update: bool=False, workdir: str='') -> BidsMap:
     """
     Main function that processes all the subjects and session in the sourcefolder and that generates a fully filled-in bidsmap.yaml
     file in bidsfolder/code/bidscoin. Folders in sourcefolder are assumed to contain a single dataset.
@@ -39,8 +39,9 @@ def bidsmapper(sourcefolder: str, bidsfolder: str, bidsmap: str, template: str, 
     :param unzip:        Wildcard pattern to select tar/zip-files in the session folder. Leave empty to use the bidsmap value
     :param store:        If True, the provenance samples will be stored
     :param automated:    The bidseditor will not be launched if True
-    :param no_update:    Do not update any sub-/ses-prefixes in or prepend the sourcefolder name to the <<filepath:regex>> expression
     :param force:        If True, the previous bidsmap and logfiles will be deleted
+    :param no_update:    Do not update any sub-/ses-prefixes in or prepend the sourcefolder name to the <<filepath:regex>> expression
+    :param workdir:      Working directory for temporary unpacking of zipped or DICOMDIR data. Defaults to the system temporary folder if not specified
     :return:             The new bidsmap
     """
 
@@ -118,7 +119,7 @@ def bidsmapper(sourcefolder: str, bidsfolder: str, bidsmap: str, template: str, 
 
             # Unpack the data in a temporary folder if it is tarballed/zipped and/or contains a DICOMDIR file
             LOGGER.info(f"Mapping: {session} (subject {n}/{len(subjects)})")
-            sesfolders, unpacked = unpack(session, unzip)
+            sesfolders, unpacked = unpack(session, unzip, workdir)
             for sesfolder in sesfolders:
                 if store:
                     bidsmap_new.store = {'source': sesfolder.parent.parent.parent.parent if unpacked else rawfolder.parent,
