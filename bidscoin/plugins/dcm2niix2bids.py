@@ -107,7 +107,7 @@ class Interface(PluginInterface):
             # Parse custom "DICOM" tags
             if attribute == 'PatientAgeDerived':
                 try:
-                    acqdate   = datetime.strptime(get_dicomfield('AcquisitionDate',  sourcefile), '%Y%m%d')
+                    acqdate   = datetime.strptime(get_dicomfield('AcquisitionDate',  sourcefile) or get_dicomfield('AcquisitionDateTime',  sourcefile), '%Y%m%d')
                     birthdate = datetime.strptime(get_dicomfield('PatientBirthDate', sourcefile), '%Y%m%d')
                     return (acqdate - birthdate).days / 365.25
                 except Exception as dateerror:
