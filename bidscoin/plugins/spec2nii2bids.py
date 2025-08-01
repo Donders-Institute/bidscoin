@@ -208,7 +208,7 @@ class Interface(PluginInterface):
                 if dataformat == 'SPAR':
                     acq_time = attribute('scan_date')
                 elif dataformat == 'Twix':
-                    acq_time = f"{attribute('AcquisitionDate')}T{attribute('AcquisitionTime')}"
+                    acq_time = attribute('AcquisitionDateTime') or f"{attribute('AcquisitionDate')}T{attribute('AcquisitionTime')}"
                 elif dataformat == 'Pfile':
                     acq_time = f"{attribute('rhr_rh_scan_date')}T{attribute('rhr_rh_scan_time')}"
                 if not acq_time or acq_time == 'T':
