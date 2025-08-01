@@ -107,7 +107,7 @@ class Interface(PluginInterface):
             # Parse custom "DICOM" tags
             if attribute == 'PatientAgeDerived':
                 try:
-                    acqdate   = datetime.strptime(get_dicomfield('AcquisitionDate',  sourcefile) or get_dicomfield('AcquisitionDateTime',  sourcefile), '%Y%m%d')
+                    acqdate   = datetime.strptime(get_dicomfield('AcquisitionDate',  sourcefile) or get_dicomfield('StudyDate',  sourcefile), '%Y%m%d')
                     birthdate = datetime.strptime(get_dicomfield('PatientBirthDate', sourcefile), '%Y%m%d')
                     return (acqdate - birthdate).days / 365.25
                 except Exception as dateerror:
@@ -490,7 +490,7 @@ class Interface(PluginInterface):
                 if not ignore:
                     acq_time = ''
                     if dataformat == 'DICOM':
-                        acq_time = f"{run.datasource.attribute('AcquisitionDate')}T{run.datasource.attribute('AcquisitionTime')}"
+                        acq_time = f"{run.datasource.attribute('AcquisitionDateTime')}" or f"{run.datasource.attribute('AcquisitionDate')}T{run.datasource.attribute('AcquisitionTime')}"
                     elif dataformat == 'PAR':
                         acq_time = run.datasource.attribute('exam_date')
                     if not acq_time or acq_time == 'T':
