@@ -27,8 +27,8 @@ def dicomdir():
 
 
 @pytest.fixture(scope='module')
-def study_bidsmap(test_data: Path):
-    """The path to the study bidsmap `test_data/bidsmap.yaml`"""
+def dataset_bidsmap(test_data: Path):
+    """The path to the dataset bidsmap `test_data/bidsmap.yaml`"""
     return test_data/'bidsmap.yaml'
 
 
@@ -266,18 +266,18 @@ class TestDataFormat:
 class TestBidsMap:
     """Test the bids.BidsMap class"""
 
-    def test_init(self, study_bidsmap):
+    def test_init(self, dataset_bidsmap):
 
         # Test loading with standard arguments
-        bidsmap = BidsMap(Path(study_bidsmap.name), study_bidsmap.parent)
-        assert bidsmap.filepath == study_bidsmap
+        bidsmap = BidsMap(Path(dataset_bidsmap.name), dataset_bidsmap.parent)
+        assert bidsmap.filepath == dataset_bidsmap
         assert bidsmap.dataformat('DICOM').datatype('anat').runitems[0].provenance == '/Users/galassiae/Projects/bidscoin/bidscointutorial/raw/sub-001/ses-01/007-t1_mprage_sag_ipat2_1p0iso/00001_1.3.12.2.1107.5.2.43.66068.2020042808523182387402502.IMA'
         assert bidsmap.dataformat('DICOM').datatype('func').runitems[0].bids['part'] == ['', 'mag', 'phase', 'real', 'imag', 0]
         assert bidsmap.dataformat('DICOM').datatype('func').runitems[1].bids['part'] == ['', 'mag', 'phase', 'real', 'imag', 3]
         assert bidsmap.dataformat('DICOM').datatype('func').runitems[2].bids['part'] == ['', 'mag', 'phase', 'real', 'imag', 0]
 
         # Test loading with fullpath argument
-        bidsmap = BidsMap(study_bidsmap)
+        bidsmap = BidsMap(dataset_bidsmap)
         assert bidsmap.dataformat('DICOM').datatype('anat').runitems[0].provenance == '/Users/galassiae/Projects/bidscoin/bidscointutorial/raw/sub-001/ses-01/007-t1_mprage_sag_ipat2_1p0iso/00001_1.3.12.2.1107.5.2.43.66068.2020042808523182387402502.IMA'
 
         # Test loading with standard argument for the template bidsmap
@@ -319,10 +319,10 @@ class TestBidsMap:
     def test_remove_dataformat(self):
         pass
 
-    def test_validate(self, study_bidsmap):
+    def test_validate(self, dataset_bidsmap):
 
-        # Load a BIDS-valid study bidsmap
-        bidsmap = BidsMap(study_bidsmap)
+        # Load a BIDS-valid dataset bidsmap
+        bidsmap = BidsMap(dataset_bidsmap)
         assert bidsmap.validate() is True
 
         # Validate the bids-keys
@@ -349,11 +349,11 @@ class TestBidsMap:
         assert bidsmap.validate() is False
 
 
-    def test_check(self, study_bidsmap):
+    def test_check(self, dataset_bidsmap):
 
-        # Load a template and a study bidsmap
+        # Load a template and a dataset bidsmap
         templatebidsmap = BidsMap(bidsmap_template, checks=(True, True, False))
-        studybidsmap    = BidsMap(study_bidsmap)
+        datasetbidsmap  = BidsMap(dataset_bidsmap)
 
         # Test the output of the template bidsmap
         checks   = (True, True, False)              # Check keys and suffixes, but not the values (as that makes no sense for a template bidsmap)
@@ -363,18 +363,18 @@ class TestBidsMap:
             if check:
                 assert valid in (None, True)
 
-        # Test the output of the study bidsmap
-        checks   = (True, True, True)               # Check keys, suffixes and values (should all be checked for a study bidsmap)
-        is_valid = studybidsmap.check(checks)
+        # Test the output of the dataset bidsmap
+        checks   = (True, True, True)               # Check keys, suffixes and values (should all be checked for a dataset bidsmap)
+        is_valid = datasetbidsmap.check(checks)
         for valid, check in zip(is_valid, checks):
             assert valid in (None, True, False)
             if check:
                 assert valid is True
 
-    def test_find_run(self, study_bidsmap):
+    def test_find_run(self, dataset_bidsmap):
 
         # Load a bidsmap and create a duplicate dataformat section named PET
-        bidsmap = BidsMap(study_bidsmap)
+        bidsmap = BidsMap(dataset_bidsmap)
         dformat = copy.deepcopy(bidsmap.dataformat('DICOM'))
         dformat.dataformat = 'PET'
         bidsmap.add_dataformat(dformat)
@@ -403,10 +403,10 @@ class TestBidsMap:
         assert run.provenance == provtag
 
 
-    def test_delete_run(self, study_bidsmap):
+    def test_delete_run(self, dataset_bidsmap):
 
-        # Load a study bidsmap and delete one anat run
-        bidsmap    = BidsMap(study_bidsmap)
+        # Load a dataset bidsmap and delete one anat run
+        bidsmap    = BidsMap(dataset_bidsmap)
         nritems    = len(bidsmap.dataformat('DICOM').datatype('anat').runitems)
         provenance = bidsmap.dataformat('DICOM').datatype('anat').runitems[0].provenance
         bidsmap.delete_run(provenance)
@@ -415,10 +415,10 @@ class TestBidsMap:
         assert bidsmap.find_run(provenance) is None
 
 
-    def test_insert_run(self, study_bidsmap):
+    def test_insert_run(self, dataset_bidsmap):
 
-        # Load a study bidsmap and delete one anat run
-        bidsmap = BidsMap(study_bidsmap)
+        # Load a dataset bidsmap and delete one anat run
+        bidsmap = BidsMap(dataset_bidsmap)
 
         # Get and modify the first anat run-item
         runitem              = copy.deepcopy(bidsmap.dataformat('DICOM').datatype('anat').runitems[0])
@@ -442,10 +442,10 @@ class TestBidsMap:
         assert bidsmap.dataformat('Foo').datatype('Bar').runitems[1].bids['part'] == ['', 'mag', 'phase', 'real', 'imag', 3]
         assert bidsmap.dataformat('Foo').datatype('Bar').runitems[2].bids['part'] == ['', 'mag', 'phase', 'real', 'imag', 4]
 
-    def test_update_bidsmap(self, study_bidsmap):
+    def test_update_bidsmap(self, dataset_bidsmap):
 
-        # Load a study bidsmap and move the first run-item from func to anat
-        bidsmap = BidsMap(study_bidsmap)
+        # Load a dataset bidsmap and move the first run-item from func to anat
+        bidsmap = BidsMap(dataset_bidsmap)
 
         # Collect and modify the first func run-item
         runitem          = copy.deepcopy(bidsmap.dataformat('DICOM').datatype('func').runitems[0])
@@ -461,10 +461,10 @@ class TestBidsMap:
         bidsmap.update('anat', runitem)
         assert bidsmap.dataformat('DICOM').datatype('anat').runitems[-1].bids['foo'] == 'bar'
 
-    def test_exist_run(self, study_bidsmap):
+    def test_exist_run(self, dataset_bidsmap):
 
         # Load a bidsmap
-        bidsmap = BidsMap(study_bidsmap)
+        bidsmap = BidsMap(dataset_bidsmap)
 
         # Collect the first anat run-item
         runitem = copy.deepcopy(bidsmap.dataformat('DICOM').datatype('anat').runitems[0])

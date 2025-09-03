@@ -3,8 +3,8 @@ BIDScoin is a toolkit to convert and organize raw data-sets according to the Bra
 
 The basic workflow is to run these two command-line tools:
 
-  $ bidsmapper sourcefolder bidsfolder        # This produces a study bidsmap and launches a GUI
-  $ bidscoiner sourcefolder bidsfolder        # This converts your data to BIDS according to the study bidsmap
+  $ bidsmapper sourcefolder bidsfolder        # This produces a dataset bidsmap and launches a GUI
+  $ bidscoiner sourcefolder bidsfolder        # This converts your data to BIDS according to the dataset bidsmap
 
 The `bids` library module can be used to build plugins and interact with bidsmaps. The `bcoin` module can be
 used as a library as well from the command line to get help and perform generic management tasks.

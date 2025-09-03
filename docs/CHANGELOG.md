@@ -43,7 +43,7 @@
 ### Changed
 - The plugin programming interface is now implemented with abstract base classes
 - Stop saving data in the derivatives folder (i.e. this was not required by BIDS after all)
-- Comments in the study bidsmap are now removed due to recurrent issues with invalid (ruamel) yaml-files
+- Comments in the dataset bidsmap are now removed due to recurrent issues with invalid (ruamel) yaml-files
 - `anon` is now a bidscoin option instead of a plugin option
 - Original images are no longer removed in echocombine (when the input folder was also the output folder) 
 
@@ -164,7 +164,7 @@
 - A BIDSCOIN_DEBUG environment variable to run bidscoin in a more verbose debug mode
 - VERBOSE and SUCCESS logging levels
 - Checks using the bids-validator python module
-- Options to perform study/template bidsmap tests with `bidscoin -b / -t`
+- Options to perform dataset/template bidsmap tests with `bidscoin -b / -t`
 - Option to list and install template bidsmaps
 - Many bugfixes, user interface improvements and tweaks
 

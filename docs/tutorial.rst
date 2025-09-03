@@ -60,7 +60,7 @@ Let's begin with inspecting this new raw data collection:
 3. BIDS mapping
 ~~~~~~~~~~~~~~~
 
-Now we can make a study bidsmap, i.e. the mapping from DICOM source-files to BIDS target-files. To that end, scan all folders in the raw data collection by running the `bidsmapper <./workflow.html#step-1a-running-the-bidsmapper>`__ command:
+Now we can make a dataset bidsmap, i.e. the mapping from DICOM source-files to BIDS target-files. To that end, scan all folders in the raw data collection by running the `bidsmapper <./workflow.html#step-1a-running-the-bidsmapper>`__ command:
 
 .. code-block:: console
 

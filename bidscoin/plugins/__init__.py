@@ -104,8 +104,8 @@ class PluginInterface(ABC):
         bidsmap if a new run is discovered
 
         :param session:     The full-path name of the subject/session raw data source folder
-        :param bidsmap_new: The new study bidsmap that we are building
-        :param bidsmap_old: The previous study bidsmap that has precedence over the template bidsmap
+        :param bidsmap_new: The new dataset bidsmap that we are building
+        :param bidsmap_old: The previous dataset bidsmap that has precedence over the template bidsmap
         :param template:    The template bidsmap with the default heuristics
         """
 

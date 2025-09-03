@@ -41,7 +41,7 @@ If you have a previously converted BIDS data repository and you would like to re
       -p, --participant LABEL [LABEL ...]
                             Space separated list of sub-# identifiers to be processed (the sub-prefix can
                             be left out). If not specified then all participants will be processed
-      -b, --bidsmap NAME    Selects a custom study bidsmap file for extracting source data properties and
+      -b, --bidsmap NAME    Selects a custom dataset bidsmap file for extracting source data properties and
                             attributes. If the bidsmap filename is just the base name (i.e. no "/" in the
                             name) then it is assumed to be located in the current directory or in
                             bidsfolder/code/bidscoin. Default: bidsmap.yaml or else the template bidsmap

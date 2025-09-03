@@ -14,8 +14,8 @@ The bidscoin command-line utility serves as a central starting point to test and
 
     The basic workflow is to run these two tools:
 
-      $ bidsmapper sourcefolder bidsfolder     # This produces a study bidsmap and launches a GUI
-      $ bidscoiner sourcefolder bidsfolder     # This converts your data to BIDS according to the study bidsmap
+      $ bidsmapper sourcefolder bidsfolder     # This produces a dataset bidsmap and launches a GUI
+      $ bidscoiner sourcefolder bidsfolder     # This converts your data to BIDS according to the dataset bidsmap
 
     Default settings, plugins and template bidsmaps are stored in the `.bidscoin` configuration folder in your
     home directory (you can modify the configuration files to your needs with any plain text editor)
@@ -37,7 +37,7 @@ The bidscoin command-line utility serves as a central starting point to test and
       -d, --download FOLDER Download tutorial MRI data to the DOWNLOAD folder
       -t, --test [TEMPLATE] Test the bidscoin installation and template bidsmap
       -b, --bidsmaptest BIDSMAP
-                            Test the run-items and their bidsnames of all normal runs in the study
+                            Test the run-items and their bidsnames of all normal runs in the dataset
                             bidsmap. Provide the bids-folder or the bidsmap filepath
       -c, --credits OPTIONS [OPTIONS ...]
                             Show duecredit citations for your BIDS repository. You can also add duecredit
@@ -54,7 +54,7 @@ The bidscoin command-line utility serves as a central starting point to test and
       bidscoin -d data/bidscoin
       bidscoin -t
       bidscoin -t my_template_bidsmap
-      bidscoin -b my_study_bidsmap
+      bidscoin -b my_dataset_bidsmap
       bidscoin -i data/my_template_bidsmap.yaml downloads/my_plugin.py
       bidscoin -c myproject/bids format bibtex
       bidscoin --tracking show
@@ -180,13 +180,13 @@ The bidsparticipants tool is useful for (re-)generating a participants.tsv file 
     bidsfolder/code/bidscoin/bidsparticipants.log file.
 
     positional arguments:
-      sourcefolder          The study root folder containing the raw source data folders
+      sourcefolder          The dataset root folder containing the raw source data folders
       bidsfolder            The destination/output folder with the bids data
 
     options:
       -h, --help            show this help message and exit
       -d, --dryrun          Do not save anything, only print the participants info on screen
-      -b, --bidsmap NAME    The study bidsmap file with the mapping heuristics. If the bidsmap filename
+      -b, --bidsmap NAME    The dataset bidsmap file with the mapping heuristics. If the bidsmap filename
                             is just the base name (i.e. no "/" in the name) then it is assumed to be
                             located in the current directory or in bidsfolder/code/bidscoin. Default:
                             bidsmap.yaml

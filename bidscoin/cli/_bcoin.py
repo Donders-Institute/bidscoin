@@ -10,8 +10,8 @@ BIDScoin is a toolkit to convert raw data-sets according to the Brain Imaging Da
 
 The basic workflow is to run these two tools:
 
-  $ bidsmapper sourcefolder bidsfolder     # This produces a study bidsmap and launches a GUI
-  $ bidscoiner sourcefolder bidsfolder     # This converts your data to BIDS according to the study bidsmap
+  $ bidsmapper sourcefolder bidsfolder     # This produces a dataset bidsmap and launches a GUI
+  $ bidscoiner sourcefolder bidsfolder     # This converts your data to BIDS according to the dataset bidsmap
 
 Default settings, plugins and template bidsmaps are stored in the `.bidscoin` configuration folder in your
 home directory (you can modify the configuration files to your needs with any plain text editor)
@@ -47,7 +47,7 @@ def get_parser() -> argparse.ArgumentParser:
                                             '  bidscoin -d data/bidscoin\n'
                                             '  bidscoin -t\n'
                                             '  bidscoin -t my_template_bidsmap\n'
-                                            '  bidscoin -b my_study_bidsmap\n'
+                                            '  bidscoin -b my_dataset_bidsmap\n'
                                             '  bidscoin -i data/my_template_bidsmap.yaml downloads/my_plugin.py\n'
                                             '  bidscoin -c myproject/bids format bibtex\n'
                                             '  bidscoin --tracking show\n ')
@@ -57,7 +57,7 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument('-u', '--uninstall',   help='A list of template bidsmaps and/or bidscoin plugins to uninstall', nargs='+', metavar='NAME')
     parser.add_argument('-d', '--download',    help='Download tutorial MRI data to the DOWNLOAD folder', metavar='FOLDER')
     parser.add_argument('-t', '--test',        help='Test the bidscoin installation and template bidsmap', nargs='?', metavar='TEMPLATE', const=bidsmap_template)
-    parser.add_argument('-b', '--bidsmaptest', help='Test the run-items and their bidsnames of all normal runs in the study bidsmap. Provide the bids-folder or the bidsmap filepath', metavar='BIDSMAP')
+    parser.add_argument('-b', '--bidsmaptest', help='Test the run-items and their bidsnames of all normal runs in the dataset bidsmap. Provide the bids-folder or the bidsmap filepath', metavar='BIDSMAP')
     parser.add_argument('-c', '--credits',     help='Show duecredit citations for your BIDS repository. You can also add duecredit summary arguments (without dashes), e.g. `style {apa,harvard1}` or `format {text,bibtex}`.', metavar='OPTIONS', nargs='+')
     parser.add_argument('-r', '--reset',       help='Restore the settings, plugins and template bidsmaps in your home directory to their default values', action='store_true')
     parser.add_argument(      '--tracking',    help='Show the usage tracking info {show}, or set usage tracking to {yes} or {no}', choices=['yes','no','show'])

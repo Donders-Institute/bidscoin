@@ -125,8 +125,8 @@ class Interface(PluginInterface):
         bidsmap if a new run is discovered
 
         :param session:     The full-path name of the subject/session raw data source folder
-        :param bidsmap_new: The new study bidsmap that we are building
-        :param bidsmap_old: The previous study bidsmap that has precedence over the template bidsmap
+        :param bidsmap_new: The new dataset bidsmap that we are building
+        :param bidsmap_old: The previous dataset bidsmap that has precedence over the template bidsmap
         :param template:    The template bidsmap with the default heuristics
         """
 
@@ -167,7 +167,7 @@ class Interface(PluginInterface):
 
             # If not, see if we can find a matching run in the template
             if not oldmatch:
-                LOGGER.bcdebug('No match found in the study bidsmap, now trying the template bidsmap')
+                LOGGER.bcdebug('No match found in the dataset bidsmap, now trying the template bidsmap')
                 run, _ = template.get_matching_run(sourcefile, dataformat)
 
             # See if we have a proper matching run and if we already put it in the new bidsmap

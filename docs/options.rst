@@ -1,7 +1,7 @@
 Options
 =======
 
-BIDScoin has different options and settings (see below) that can be adjusted per study bidsmap or, when you want to customize the default, set as default in the `template bidsmap <./bidsmap_indepth.html>`__. There are separate settings for BIDScoin and for the individual plugins that can be edited by double clicking the corresponding fields. Installed plugins can be removed or added to extend BIDScoin's functionality.
+BIDScoin has different options and settings (see below) that can be adjusted per dataset bidsmap or, when you want to customize the default, set as default in the `template bidsmap <./bidsmap_indepth.html>`__. There are separate settings for BIDScoin and for the individual plugins that can be edited by double clicking the corresponding fields. Installed plugins can be removed or added to extend BIDScoin's functionality.
 
 .. figure:: ./_static/bidseditor_options.png
    :scale: 75%

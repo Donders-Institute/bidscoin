@@ -41,7 +41,7 @@ In short, the purpose of the plugin is to interact with the data, by providing m
 - **test()**: Optional. A test function for the plugin + its bidsmap options. Can be called by the user from the bidseditor and the bidscoin utility
 - **has_support()**: If given a source data file that the plugin supports, then report back the name of its data format, i.e. the name of the section in the bidsmap
 - **get_attribute()**: If given a source data file that the plugin supports, then report back its attribute value (e.g. from the header)
-- **bidsmapper()**: Optional. From a given session folder, identify the different runs (source datatypes) and, if they haven't been discovered yet, add them to the study bidsmap
+- **bidsmapper()**: Optional. From a given session folder, identify the different runs (source datatypes) and, if they haven't been discovered yet, add them to the dataset bidsmap
 - **bidscoiner()**: From a given session folder, identify the different runs (source datatypes) and convert them to BIDS output files using the mapping data specified in the runitem
 
 The plugin programming interface is further illustrated in the placeholder Python code below. For real-world examples, it's best to start by exploring the ``nibabel2bids`` or ``events2bids`` plugins, which provide clean and minimal implementations of the required functionality. A more advanced implementation, supporting multiple data formats, can be found in the ``spec2nii2bids`` plugin. Finally, the ``dcm2niix2bids`` plugin serves as the most complex example due to the additional logic required to handle special output files and various irregularities.

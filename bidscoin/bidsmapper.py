@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""A BIDScoin application to create a study bidsmap (See also cli/_bidsmapper.py)"""
+"""A BIDScoin application to create a dataset bidsmap (See also cli/_bidsmapper.py)"""
 
 # NB: Set os.environ['DUECREDIT'] values as early as possible to capture all credits
 import os
@@ -33,7 +33,7 @@ def bidsmapper(sourcefolder: str, bidsfolder: str, bidsmap: str, template: str, 
     :param bidsfolder:   The name of the BIDS root folder
     :param bidsmap:      The name of the bidsmap YAML-file
     :param template:     The name of the bidsmap template YAML-file
-    :param plugins:      Optional list of plugins that should be used (overrules the list in the study/template bidsmaps)
+    :param plugins:      Optional list of plugins that should be used (overrules the list in the dataset/template bidsmaps)
     :param subprefix:    The prefix common for all source subject-folders
     :param sesprefix:    The prefix common for all source session-folders
     :param unzip:        Wildcard pattern to select tar/zip-files in the session folder. Leave empty to use the bidsmap value
@@ -134,7 +134,7 @@ def bidsmapper(sourcefolder: str, bidsfolder: str, bidsmap: str, template: str, 
                 if unpacked:
                     shutil.rmtree(sesfolder)
 
-    # Save the new study bidsmap in the bidscoinfolder or launch the bidseditor UI_MainWindow
+    # Save the new dataset bidsmap in the bidscoinfolder or launch the bidseditor UI_MainWindow
     if automated:
         bidsmap_new.save()
 

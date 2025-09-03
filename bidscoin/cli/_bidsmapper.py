@@ -1,7 +1,7 @@
 """
 The bidsmapper scans your source data repository to identify different data types by matching
 them against the run-items in the template bidsmap. Once a match is found, a mapping to BIDS
-output data types is made and the run-item is added to the study bidsmap. You can check and
+output data types is made and the run-item is added to the dataset bidsmap. You can check and
 edit these generated bids-mappings to your needs with the (automatically launched) bidseditor.
 Re-run the bidsmapper whenever something was changed in your data acquisition protocol and
 edit the new data type to your needs (your existing bidsmap will be reused).
@@ -33,14 +33,14 @@ def get_parser() -> argparse.ArgumentParser:
                                             '  bidsmapper myproject/raw myproject/bids -p nibabel2bids    # Uses a plugin of choice\n'
                                             "  bidsmapper myproject/raw myproject/bids -n patient- -m '*' # Handles DICOMDIR datasets\n"
                                             "  bidsmapper myproject/raw myproject/bids -u '*.tar.gz'      # Unzip tarball source files\n ")
-    parser.add_argument('sourcefolder',       help='The study root folder containing the raw source data folders')
+    parser.add_argument('sourcefolder',       help='The dataset root folder containing the raw source data folders')
     parser.add_argument('bidsfolder',         help='The destination folder with the (future) bids data and the bidsfolder/code/bidscoin/bidsmap.yaml output file')
-    parser.add_argument('-b','--bidsmap',     help="The study bidsmap file with the mapping heuristics. If the bidsmap filename is just the base name (i.e. no '/' in the name) then it is assumed to be located in the current directory or in bidsfolder/code/bidscoin. Default: bidsmap.yaml", metavar='NAME', default='bidsmap.yaml')
+    parser.add_argument('-b','--bidsmap',     help="The dataset bidsmap file with the mapping heuristics. If the bidsmap filename is just the base name (i.e. no '/' in the name) then it is assumed to be located in the current directory or in bidsfolder/code/bidscoin. Default: bidsmap.yaml", metavar='NAME', default='bidsmap.yaml')
     parser.add_argument('-t','--template',    help=f"The bidsmap template file with the default heuristics (this could be provided by your institute). If the bidsmap filename is just the base name (i.e. no '/' in the name) then it is assumed to be located in the bidscoin config folder. Default: {bidsmap_template.stem}", metavar='NAME', default=bidsmap_template)
-    parser.add_argument('-p','--plugins',     help='List of plugins to be used. Default: the plugin list of the study/template bidsmap', nargs='+', metavar='NAME', default=[])
-    parser.add_argument('-n','--subprefix',   help="The prefix common for all the source subject-folders (e.g. 'Pt' is the subprefix if subject folders are named 'Pt018', 'Pt019', ...). Use '*' when your subject folders do not have a prefix. Default: the value of the study/template bidsmap, e.g. 'sub-'", metavar='PREFIX')
-    parser.add_argument('-m','--sesprefix',   help="The prefix common for all the source session-folders (e.g. 'M_' is the subprefix if session folders are named 'M_pre', 'M_post', ..). Use '*' when your session folders do not have a prefix. Default: the value of the study/template bidsmap, e.g. 'ses-'", metavar='PREFIX')
-    parser.add_argument('-u','--unzip',       help='Wildcard pattern to unpack tarball/zip-files in the sub/ses sourcefolder that need to be unzipped (in a tempdir) to make the data readable. Default: the value of the study/template bidsmap', metavar='PATTERN')
+    parser.add_argument('-p','--plugins',     help='List of plugins to be used. Default: the plugin list of the dataset/template bidsmap', nargs='+', metavar='NAME', default=[])
+    parser.add_argument('-n','--subprefix',   help="The prefix common for all the source subject-folders (e.g. 'Pt' is the subprefix if subject folders are named 'Pt018', 'Pt019', ...). Use '*' when your subject folders do not have a prefix. Default: the value of the dataset/template bidsmap, e.g. 'sub-'", metavar='PREFIX')
+    parser.add_argument('-m','--sesprefix',   help="The prefix common for all the source session-folders (e.g. 'M_' is the subprefix if session folders are named 'M_pre', 'M_post', ..). Use '*' when your session folders do not have a prefix. Default: the value of the dataset/template bidsmap, e.g. 'ses-'", metavar='PREFIX')
+    parser.add_argument('-u','--unzip',       help='Wildcard pattern to unpack tarball/zip-files in the sub/ses sourcefolder that need to be unzipped (in a tempdir) to make the data readable. Default: the value of the dataset/template bidsmap', metavar='PATTERN')
     parser.add_argument('-s','--store',       help='Store newly discovered data samples in the bidsfolder/code/provenance folder (useful for editing e.g. zipped or DICOMDIR datasets)', action='store_true')
     parser.add_argument('-a','--automated',   help='Save the automatically generated bidsmap to disk and without interactively tweaking it with the bidseditor', action='store_true')
     parser.add_argument('-f','--force',       help='Discard the previously saved bidsmap and log file, instead of reusing them (use this option for a fresh start)', action='store_true')

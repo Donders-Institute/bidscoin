@@ -918,7 +918,7 @@ class BidsMap:
 
         :param yamlfile: The full path or base name of the bidsmap yaml-file
         :param folder:   Used when yamlfile=basename and not in the pwd: yamlfile is then assumed to be in the (bids/code/bidscoin)folder. A bidsignore file in folder will be added to the bidsmap bidsignore items
-        :param plugins:  List of plugins to be used (with default options, overrules the plugin list in the study/template bidsmaps). Leave empty to use all plugins in the bidsmap
+        :param plugins:  List of plugins to be used (with default options, overrules the plugin list in the dataset/template bidsmaps). Leave empty to use all plugins in the bidsmap
         :param checks:   Booleans to check if all (bidskeys, bids-suffixes, bids-values) in the run are present according to the BIDS schema specifications
         """
 
