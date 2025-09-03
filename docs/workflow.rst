@@ -5,7 +5,7 @@ With a sufficiently `organized source data folder <./preparation.html>`__, the d
 
 .. figure:: ./_static/bidsmap_flow.png
 
-   Creation and application of a dataset bidsmap
+   To evolution of the template bidsmap into a provisional dataset bidsmap, into the final dataset bidsmap that is used to convert the data
 
 By default, when finished the bidsmapper automatically launches the bidseditor, so in its simplest form, all you need to do to convert your raw source data into BIDS is to run two simple shell commands, e.g.:
 
