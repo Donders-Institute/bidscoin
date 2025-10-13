@@ -49,7 +49,8 @@ COPY --from=builder /opt/fsl /opt/fsl
 ENV FSLDIR=/opt/fsl FSLOUTPUTTYPE=NIFTI_GZ \
     PATH=$PATH:/opt/fsl/bin \
     PIP_NO_CACHE_DIR=off \
-    CONTAINER=Docker
+    CONTAINER=Docker \
+    PYTHONNOUSERSITE=1
 
 # First install pyqt as Debian package to solve dependencies issues occurring when installed with pip
 # Then install the latest stable BIDScoin release (add build-essential for newer python:3-slim base images (pip needs gcc and wayland support is not yet provided for))

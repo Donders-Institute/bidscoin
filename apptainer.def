@@ -76,6 +76,7 @@ Stage: final
     export PATH=$PATH:/opt/fsl/bin
     export PIP_NO_CACHE_DIR=off
     export CONTAINER=Apptainer
+    export PYTHONNOUSERSITE=1
 
 %post
     # Install curl (sometimes needed by dcm2niix) and pigz (to speed up dcm2niix)
