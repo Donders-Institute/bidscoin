@@ -89,6 +89,7 @@ DICOM:
       ProtocolName:
       SeriesDescription:
       ImageType:
+      ImageTypeText:
       SequenceName:
       PulseSequenceName:
       SequenceVariant:
@@ -400,6 +401,7 @@ DICOM:
       ProtocolName:
       SeriesDescription:
       ImageType:
+      ImageTypeText:
       PixelSpacing:
       Rows:
       Columns:
@@ -418,6 +420,7 @@ DICOM:
       ProtocolName:
       SeriesDescription:
       ImageType:
+      ImageTypeText:
       SequenceName:
       PulseSequenceName:
       SequenceVariant:
@@ -517,6 +520,7 @@ DICOM:
       ProtocolName:
       SeriesDescription:
       ImageType:
+      ImageTypeText:
       SequenceName:
       PulseSequenceName:
       SequenceVariant:
@@ -597,6 +601,7 @@ DICOM:
       ProtocolName:
       SeriesDescription:
       ImageType:
+      ImageTypeText:
       SequenceName:
       PulseSequenceName:
       SequenceVariant:
@@ -666,6 +671,7 @@ DICOM:
       ProtocolName:
       SeriesDescription:
       ImageType:
+      ImageTypeText:
       SequenceName:
       PulseSequenceName:
       SequenceVariant:
@@ -893,6 +899,7 @@ DICOM:
       Radiopharmaceutical:
       ReconstructionMethod:
       ImageType:
+      ImageTypeText:
       NumberOfSlices:
       NumberOfTimeSlices:
       SliceThickness:
@@ -954,6 +961,7 @@ DICOM:
       ProtocolName:
       SeriesDescription:
       ImageType:
+      ImageTypeText:
       SequenceName:
       PulseSequenceName:
       SequenceVariant:
@@ -996,6 +1004,7 @@ DICOM:
       ProtocolName:
       SeriesDescription:
       ImageType:
+      ImageTypeText:
       SequenceName:
       PulseSequenceName:
       SequenceVariant:
@@ -2056,6 +2065,7 @@ Twix:
       ProtocolName:
       SeriesDescription:
       ImageType:
+      ImageTypeText:
       SequenceName:
       PulseSequenceName:
       SequenceVariant:
@@ -2191,6 +2201,7 @@ Nibabel:
       ProtocolName:
       SeriesDescription:
       ImageType:
+      ImageTypeText:
       SequenceName:
       PulseSequenceName:
       SequenceVariant:
