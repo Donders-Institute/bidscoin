@@ -14,6 +14,8 @@ import logging
 import numpy as np
 import matplotlib.pyplot as plt
 import dateutil.parser
+import gzip
+import sys
 from importlib.metadata import version
 from typing import Union
 from pydicom import dcmread, tag, multival
@@ -362,7 +364,7 @@ def readphysio(fn: Union[str,Path]) -> dict:
 
 def physio2tsv(physio: dict, tsvfile: Union[str, Path]):
     """
-    Saves the physiological traces to a BIDS-compliant [tsvfile].tsv.nii and a [tsvfile].log file
+    Saves the physiological traces to a BIDS-compliant [tsvfile].tsv.gz and a [tsvfile].log file
 
     :param physio:  Physio data dictionary from readphysio
     :param tsvfile: Fullpath name of the (BIDS) output .tsv.gz/.json file
@@ -380,7 +382,10 @@ def physio2tsv(physio: dict, tsvfile: Union[str, Path]):
     for key in physiotable:
         physiotable[key] = physio[key]
     LOGGER.verbose(f"Writing physiological traces to: '{tsvfile}'")
-    physiotable.to_csv(tsvfile, header=False, index=False, sep='\t', compression='infer')
+    # physiotable.to_csv(tsvfile, header=False, index=False, sep='\t', compression='infer')   # Note, though easier then the file-opening below, this gives this validator warning: GZIP_HEADER_MTIME The gzip header contains a non-zero timestamp (Github #284)
+    kwargs = {'compresslevel':9, 'mtime':0, 'name' if sys.version_info >= (3,12) else 'filename':''}
+    with gzip.open(tsvfile, 'wt', **kwargs) as fid:
+        physiotable.to_csv(fid, sep='\t', index=False, header=False)
 
     # Write a json side-car file
     try:
