@@ -24,29 +24,38 @@ The preferred way to contribute to the BIDScoin code base or documentation is to
 
 0. Fork the `project repository <https://github.com/Donders-Institute/bidscoin>`_ on GitHub, by clicking on the “Fork” button near the top of the page — this will create a personal copy of the repository.
 
-1. Set up a clone of the repository on your local machine and connect it to both the “official” and your copy of the repository on GitHub::
+1. Set up a clone of the repository on your local machine and connect it to both the “official” and your copy of the repository on GitHub:
 
-    git clone https://github.com/Donders-Institute/bidscoin.git
-    cd bidscoin
-    git remote rename origin official
-    git remote add origin git://github.com/[YOUR_GITHUB_USERNAME]/bidscoin
+   .. code-block:: bash
 
-2. Set up a virtual environment and install BIDScoin's dependencies::
+      $ git clone https://github.com/Donders-Institute/bidscoin.git
+      $ cd bidscoin
+      $ git remote rename origin official
+      $ git remote add origin git://github.com/[YOUR_GITHUB_USERNAME]/bidscoin
 
-    python -m venv venv         # Or use any other tool (such as conda)
-    source venv/bin/activate    # On Linux, see the documentation for other operating systems
-    pip install -e .[dev]
-    # NB: Install dcm2niix yourself (see the online installation instructions)
+2. Set up a virtual environment and install BIDScoin's dependencies:
 
-3. When you wish to start working on your contribution, create a new branch::
+   .. code-block:: bash
 
-    git checkout -b [topic_of_your_contribution]
+      $ python -m venv venv         # Or use any other tool (such as conda)
+      $ source venv/bin/activate    # On Linux, see the documentation for other operating systems
+      $ pip install -e .[dev]
+      $ # NB: Install dcm2niix yourself (see the online installation instructions)
 
-4. When you are done with coding, you should then test, commit and push your work to GitHub::
+3. When you wish to start working on your contribution, create a new branch:
 
-    tox                                                  # Run this command from the bidscoin directory (make sure the venv is activated)
-    git commit -am "A SHORT DESCRIPTION OF THE CHANGES"  # Run this command every time you have made a set of changes that belong together
-    git push -u origin topic_of_your_contribution        # Run this command when you are done and the tox tests are passing
+   .. code-block:: bash
+
+      $ git checkout -b [topic_of_your_contribution]
+
+4. When you are done with coding, you should then test, commit and push your work to GitHub:
+
+   .. code-block:: bash
+
+      $ tox                                                  # Run this command from the bidscoin directory (make sure the venv is activated)
+      $ docs/make html                                       # For the docs, run this to generate the files locally and open ``docs/_build/html/index.html``
+      $ git commit -am "A SHORT DESCRIPTION OF THE CHANGES"  # Run this command every time you have made a set of changes that belong together
+      $ git push -u origin topic_of_your_contribution        # Run this command when you are done and the tox tests are passing
 
 Git will provide you with a link which you can click to initiate a pull request (if any of the above seems overwhelming, you can look up the `Git <http://git-scm.com/documentation>`__ or `GitHub <https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request>`__ documentation on the web)
 

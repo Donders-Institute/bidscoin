@@ -23,6 +23,7 @@ def get_parser():
                                      epilog='examples:\n'
                                             '  skullstrip myproject/bids anat/*_T1w*\n'
                                             '  skullstrip myproject/bids anat/*_T1w* -p 001 003 -a " --no-csf"\n'
+                                            '  skullstrip myproject/bids anat/*_T1w* -c "-l walltime=0:05:00,mem=10gb"\n'
                                             '  skullstrip myproject/bids fmap/*_magnitude1* -m fmap/*_phasediff* -o extra_data fmap\n'
                                             '  skullstrip myproject/bids fmap/*_acq-mylabel*_magnitude1* -m fmap/*_acq-mylabel_* -o fmap\n ')
     parser.add_argument('bidsfolder',         help="The bids-directory with the subject data", type=str)
