@@ -372,7 +372,9 @@ def physio2tsv(physio: dict, tsvfile: Union[str, Path]):
     """
 
     # Check input
-    tsvfile = Path(tsvfile).resolve().with_suffix('').with_suffix('.tsv.gz')
+    tsvfile = Path(tsvfile).resolve()
+    if tsvfile.suffix == '.tsv':
+        tsvfile = tsvfile.with_suffix('.tsv.gz')
 
     # Set the clock at zero at the start of the MRI acquisition
     starttime = -physio['ACQ'].nonzero()[0][0] / physio['Freq']     # Assumes that the physiological acquisition always starts before the MRI acquisition

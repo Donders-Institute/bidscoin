@@ -268,7 +268,10 @@ class DataSource:
         :return:    The attribute key-value dictionary
         """
         attributes = {}
-        jsonfile   = self.path.with_suffix('').with_suffix('.json') if self.path.name else Path()
+        if not self.path.name:
+            jsonfile = Path()
+        else:
+            jsonfile = self.path.with_suffix('').with_suffix('.json') if self.path.suffix == '.gz' else self.path.with_suffix('.json')
         if jsonfile.is_file():
             LOGGER.bcdebug(f"Reading extended attributes from: {jsonfile}")
             with jsonfile.open('r') as json_fid:
