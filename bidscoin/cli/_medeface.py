@@ -28,8 +28,9 @@ def get_parser():
                                      epilog='examples:\n'
                                             '  medeface myproject/bids anat/*_T1w*\n'
                                             '  medeface myproject/bids anat/*_T1w* -p 001 003 -o derivatives\n'
-                                            '  medeface myproject/bids anat/*_T1w* -c -n "-l walltime=00:60:00,mem=4gb"\n'
+                                            '  medeface myproject/bids anat/*_T1w* -c "-l walltime=00:60:00,mem=4gb"\n'
                                             '  medeface myproject/bids anat/*acq-GRE* -m anat/*acq-GRE*magnitude*"\n'
+                                            '  medeface myproject/bids anat/*_MEGRE.nii* -m anat/*_flip-1_*part-mag_*_VFA.nii*"\n'
                                             '  medeface myproject/bids anat/*_FLAIR* -a \'{"cost": "corratio", "verbose": ""}\'\n ')
     parser.add_argument('bidsfolder',         help='The bids-directory with the (multi-echo) subject data')
     parser.add_argument('pattern',            help="Globlike search pattern (relative to the subject/session folder) to select the images that need to be defaced, e.g. 'anat/*_T2starw*'")

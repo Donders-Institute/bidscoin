@@ -146,7 +146,7 @@ Before sharing or pre-processing your data, you may want to deface your anatomic
     examples:
       deface myproject/bids anat/*_T1w*
       deface myproject/bids anat/*_T1w* -p 001 003 -o derivatives
-      deface myproject/bids anat/*_T1w* -c -n "-l walltime=00:60:00,mem=4gb"
+      deface myproject/bids anat/*_T1w* -c "-l walltime=00:60:00,mem=4gb"
       deface myproject/bids anat/*_T1w* -a '{"cost": "corratio", "verbose": ""}'
 
 Multi-echo defacing
@@ -202,8 +202,9 @@ This utility is very similar to the `deface <#defacing>`__ utility above, except
     examples:
       medeface myproject/bids anat/*_T1w*
       medeface myproject/bids anat/*_T1w* -p 001 003 -o derivatives
-      medeface myproject/bids anat/*_T1w* -c -n "-l walltime=00:60:00,mem=4gb"
+      medeface myproject/bids anat/*_T1w* -c "-l walltime=00:60:00,mem=4gb"
       medeface myproject/bids anat/*acq-GRE* -m anat/*acq-GRE*magnitude*"
+      medeface myproject/bids anat/*_MEGRE.nii* -m anat/*_flip-1_*part-mag_*_VFA.nii*"
       medeface myproject/bids anat/*_FLAIR* -a '{"cost": "corratio", "verbose": ""}'
 
 Skull-stripping
