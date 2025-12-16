@@ -19,14 +19,13 @@ if find_spec('bidscoin') is None:
 from bidscoin import bcoin, bids, lsdirs, trackusage, bidsmap_template
 
 
-def fixmeta(bidsfolder: str, pattern: str, metadata: dict, participant: list, bidsmap: str= ''):
+def fixmeta(bidsfolder: str, pattern: str, metadata: dict, participant: list, bidsmap: str = '') -> None:
     """
     :param bidsfolder:  The bids-directory with the subject data
-    :param pattern:     Globlike search pattern to select the targets in bidsfolder to be fixed, e.g. 'anat/*_T1w*'
+    :param pattern:     Glob-like search pattern to select the targets in bidsfolder to be fixed, e.g. 'anat/*_T1w*'
     :param metadata:    Dictionary with key-value pairs of metadata that need to be fixed. If value is a string, then it is taken as is, but if it is a list of `old`/`new` strings, i.e. `[old1, new1, old2, new2, etc]`, the existing metadata is used, with all occurrences of substring `old` replaced by `new`
     :param participant: Space separated list of sub-# identifiers to be processed (the sub-prefix can be left out). If not specified then all participants will be processed
     :param bidsmap:     The name of the bidsmap YAML-file. If the bidsmap pathname is just the base name (i.e. no "/" in the name) then it is assumed to be located in the current directory or in bidsfolder/code/bidscoin. Default: 'bidsmap.yaml' or the template bidsmap
-    :return:
     """
 
     # Input checking
@@ -52,7 +51,7 @@ def fixmeta(bidsfolder: str, pattern: str, metadata: dict, participant: list, bi
     LOGGER.info(f"Command: fixmeta {' '.join(sys.argv[1:])}")
 
     # Load the bidsmap data (-> plugins)
-    bidsmap = bids.BidsMap(Path(bidsmap or 'bidsmap.yaml'), bidsdir/'code'/'bidscoin', checks=(False, False, False))
+    bidsmap: bids.BidsMap = bids.BidsMap(Path(bidsmap or 'bidsmap.yaml'), bidsdir/'code'/'bidscoin', checks=(False, False, False))
     if not bidsmap.filepath.is_file():
         bidsmap = bids.BidsMap(bidsmap_template, checks=(False, False, False))
     plugins  = bidsmap.plugins

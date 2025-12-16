@@ -27,7 +27,7 @@ def get_parser():
                                      epilog='examples:\n'
                                             '  deface myproject/bids anat/*_T1w*\n'
                                             '  deface myproject/bids anat/*_T1w* -p 001 003 -o derivatives\n'
-                                            '  deface myproject/bids anat/*_T1w* -c -n "-l walltime=00:60:00,mem=4gb"\n'
+                                            '  deface myproject/bids anat/*_T1w* -c "-l walltime=00:60:00,mem=4gb"\n'
                                             '  deface myproject/bids anat/*_T1w* -a \'{"cost": "corratio", "verbose": ""}\'\n ')
     parser.add_argument('bidsfolder',         help='The bids-directory with the subject data')
     parser.add_argument('pattern',            help="Globlike search pattern (relative to the subject/session folder) to select the images that need to be defaced, e.g. 'anat/*_T1w*'")
