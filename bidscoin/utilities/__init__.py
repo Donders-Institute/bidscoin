@@ -251,6 +251,8 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
             if not DEBUG: warnings.simplefilter('ignore', UserWarning)
             from nibabel.nicom import csareader
             try:
+
+                # Load the DICOM data
                 if dicomfile != _DICOMFILE_CACHE:
                     if dicomfile.name == 'DICOMDIR':
                         LOGGER.bcdebug(f"Getting DICOM fields from {dicomfile} seems dysfunctional (will raise dcmread error below if pydicom => v3.0)")
@@ -260,6 +262,7 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
                 else:
                     dicomdata = _DICOMDICT_CACHE
 
+                # Parse the tagname and read the value
                 try:
                     tagpattern = r'\(?0x[\dA-F]+,?(0x)?[\dA-F]*\)?'                                 # Pattern for hexadecimal DICOM tags, e.g. '0x00200011', '0x20,0x11' or '(0x20,0x11)'
                     if re.fullmatch(rf"\[{tagpattern}](\[\d+]\[{tagpattern}])+", tagname):  # Pass bracketed nested tags directly to pydicom, e.g. [0x0008,0x1250][0][0x0008,0x1140][0][(0x0008,0x1155)]
@@ -278,20 +281,32 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
                             value = elem.value
                             break
 
+                # Try some heuristics to catch exceptional cases
                 if dicomdata.get('Modality') == 'MR':
 
                     # PhaseEncodingDirection patch (see https://neurostars.org/t/determining-bids-phaseencodingdirection-from-dicom/612/10)
                     if tagname == 'PhaseEncodingDirection' and not value:
-                        if 'SIEMENS' in dicomdata.get('Manufacturer').upper() and csareader.get_csa_header(dicomdata):
-                            csa = csareader.get_csa_header(dicomdata, 'Image')['tags']
-                            pos = csa.get('PhaseEncodingDirectionPositive',{}).get('items')     # = [0] or [1]
-                            dir = dicomdata.get('InPlanePhaseEncodingDirection')                # = ROW or COL
-                            if dir == 'COL' and pos:
-                                value = 'AP' if pos[0] else 'PA'
-                            elif dir == 'ROW' and pos:
-                                value = 'LR' if pos[0] else 'RL'
+
+                        if 'SIEMENS' in dicomdata.get('Manufacturer').upper():
+                            pepos = None
+                            pedir = ''
+                            for elem in dicomdata.iterall():
+                                if elem.tag == (0x0021, 0x111c):                                    # First try the private polarity tag (0021,111c) from the XA-line enhanced DICOM header
+                                    pepos = [int(elem.value)]                                       # elem.value = '0' or '1'
+                                if elem.keyword == 'InPlanePhaseEncodingDirection':
+                                    pedir = elem.value
+                                if pepos and pedir:
+                                    break
+                            if pepos is None and csareader.get_csa_header(dicomdata):               # Then try the old Image CSA header
+                                csa   = csareader.get_csa_header(dicomdata, 'Image')['tags']
+                                pepos = csa.get('PhaseEncodingDirectionPositive',{}).get('items')   # = [0] or [1]
+                            if pedir in ('COL','COLUMN') and pepos:                                 # Assumes images are standard. If the FOV is rotated the ImageOrientationPatient can be used to flip the direction (as implemented in dcm2niix)
+                                value = 'AP' if pepos[0] else 'PA'
+                            elif pedir == 'ROW' and pepos:
+                                value = 'LR' if pepos[0] else 'RL'
+
                         elif dicomdata.get('Manufacturer','').upper().startswith('GE'):
-                            value = dicomdata.get('RectilinearPhaseEncodeReordering')           # = LINEAR or REVERSE_LINEAR
+                            value = dicomdata.get('RectilinearPhaseEncodeReordering')               # = LINEAR or REVERSE_LINEAR
 
                     # XA enhanced DICOM hack: Catch missing EchoNumbers from the private ICE_Dims field (0x21, 0x1106)
                     if tagname in ('EchoNumber', 'EchoNumbers') and not value:

@@ -67,7 +67,7 @@ def test_get_dicomfield(dcm_file_csa):
     # -> The bracketed nested hexadecimal tags
     assert '1.3.12.2.1107.5.2.32.35119.2010011420070434054586384' == utilities.get_dicomfield('[(0x0008,0x1140)][0][0x8,0x1155]', dcm_file_csa)
 
-    # -> The special PhaseEncodingDirection tag
+    # -> The special PhaseEncodingDirection tag. TODO: add XA-line data
     value = utilities.get_dicomfield('PhaseEncodingDirection', dcm_file_csa)
     assert value == 'AP'
 
