@@ -2044,7 +2044,7 @@ def poolmetadata(datasource: DataSource, targetmeta: Path, usermeta: Meta, metae
 
     metapool = {}
     if not sourcemeta.name:
-        sourcemeta = datasource.path
+        sourcemeta = datasource.path if datasource.path.name else Path('no/sourcedata/available')
 
     # Add the target metadata to the metadict
     if targetmeta.is_file():

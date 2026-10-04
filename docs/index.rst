@@ -29,5 +29,6 @@
 
    tutorial
    troubleshooting
+   help
    screenshots
    CHANGELOG

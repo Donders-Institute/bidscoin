@@ -1,6 +1,7 @@
 *.pyc
 .idea
 *.IMA
+.duecredit.p
 dist
 build
 docs/_build
@@ -9,6 +10,7 @@ bidscoin.egg-info
 .coveragerc
 .vscode
 venv
+man
 .eggs
 htmlcov
 __pycache__
