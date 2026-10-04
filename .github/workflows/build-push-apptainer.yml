@@ -1,9 +1,10 @@
 name: Build and deploy Apptainer image
+
 on:
   workflow_run:
     workflows: ["Build and deploy PyPI package"]
     types: [completed]
-  workflow_dispatch:  # This allows manual triggering
+  workflow_dispatch:
 
 jobs:
   build-and-push:
@@ -17,17 +18,18 @@ jobs:
       options: --privileged
 
     name: Build and deploy container
+
     steps:
       - name: Install git
         run: |
           apk update
           apk add --no-cache git
-          git config --global --add safe.directory "$GITHUB_WORKSPACE"  # Ensure the workspace is safe
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
       - name: Check out the repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
-          fetch-depth: 0  # Fetch full history including all tags
+          fetch-depth: 0
           fetch-tags: true
 
       - name: Get latest tag from history
