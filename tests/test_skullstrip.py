@@ -1,6 +1,5 @@
 """Focused tests for local SynthStrip command construction."""
 from pathlib import Path
-from shlex import split
 from unittest.mock import patch
 
 from bidscoin.bidsapps import skullstrip
@@ -21,6 +20,6 @@ def test_skullstrip_literal_paths(tmp_path: Path):
          patch.object(skullstrip, 'run_command', return_value=1) as command:
         skullstrip.skullstrip(str(bidsdir), 'anat/*_T1w.nii.gz', ['01'], '', [], False, '--no-csf', '')
     command.assert_called_once()
-    assert split(command.call_args.args[0]) == [
+    assert [str(arg) for arg in command.call_args.args[0]] == [
         'mri_synthstrip', '-i', str(source), '-o', str(output), '-m', str(mask), '--no-csf'
     ]
