@@ -10,7 +10,6 @@ import dateutil.parser
 import pandas as pd
 import json
 import ast
-import shlex
 from datetime import datetime
 from bids_validator import BIDSValidator
 from typing import Union
@@ -321,12 +320,12 @@ class Interface(PluginInterface):
 
             # Convert the source-files in the run folder to NIfTI's in the BIDS-folder
             else:
-                command = '{command} {args} -f {filename} -o {outfolder} {source}'.format(
+                command = '{command} {args} -f "{filename}" -o "{outfolder}" "{source}"'.format(
                     command   = options['command'],
                     args      = options.get('args',''),
-                    filename  = shlex.quote(str(bidsname)),
-                    outfolder = shlex.quote(str(outfolder)),
-                    source    = shlex.quote(str(source)))
+                    filename  = bidsname,
+                    outfolder = outfolder,
+                    source    = source)
                 if run_command(command, shell=True) and not next(outfolder.glob(f"{bidsname}*"), None):
                     continue
 
