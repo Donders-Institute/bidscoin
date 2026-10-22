@@ -14,6 +14,7 @@ import csv
 import json
 import tempfile
 import nibabel as nib
+from shlex import quote
 from rich.progress import track
 from copy import copy
 from pathlib import Path
@@ -96,21 +97,21 @@ def slicer_append(inputimage: Path, operations: str, outlineimage: Path, mainopt
     fslext   = '.nii' if os.getenv('FSLOUTPUTTYPE') == 'NIFTI' else '.nii.gz'
     if '.nii' not in inputimage.suffixes:                               # Convert the input image to NIfTI
         inputimage = workdir/inputimage.with_suffix('').with_suffix(fslext).name
-        reorient  += f"fslreorient2std {inputimage} {inputimage}\n"
+        reorient  += f"fslreorient2std {quote(str(inputimage))} {quote(str(inputimage))}\n"
         nib.save(inputimg, inputimage)
     if outlineimage.name and '.nii' not in outlineimage.suffixes:       # Convert the outline image to NIfTI
         outlineimg   = nib.load(outlineimage)
         outlineimage = workdir/outlineimage.with_suffix('').with_suffix(fslext).name
-        reorient    += f"fslreorient2std {outlineimage} {outlineimage}\n"
+        reorient    += f"fslreorient2std {quote(str(outlineimage))} {quote(str(outlineimage))}\n"
         nib.save(outlineimg, outlineimage)
-    mathsimg = f"fslmaths {inputimage} {operations} mathsimg\n" if not (len(inputimg.header.get_data_shape())==3 and operations.strip()=='-Tmean') else ''
-    command  = f"cd {workdir}\n" \
+    mathsimg = f"fslmaths {quote(str(inputimage))} {operations} mathsimg\n" if not (len(inputimg.header.get_data_shape())==3 and operations.strip()=='-Tmean') else ''
+    command  = f"cd {quote(str(workdir))}\n" \
                f"{reorient}" \
                f"{mathsimg}" \
-               f"slicer {'mathsimg' if mathsimg else inputimage} {outlineimage if outlineimage.name else ''} {mainopts} {outputopts}\n" \
-               f"pngappend {sliceroutput} {montage.name}\n" \
-               f"mv {montage.name} {montage.parent}\n" \
-               + (f"rm -r {workdir}" if not DEBUG else '')
+               f"slicer {'mathsimg' if mathsimg else quote(str(inputimage))} {quote(str(outlineimage)) if outlineimage.name else ''} {mainopts} {outputopts}\n" \
+               f"pngappend {sliceroutput} {quote(str(montage.name))}\n" \
+               f"mv {quote(str(montage.name))} {quote(str(montage.parent))}\n" \
+               + (f"rm -r {quote(str(workdir))}" if not DEBUG else '')
     LOGGER.bcdebug(f"Command: {command}")
 
     # Run the command on the HPC cluster or directly in the shell

@@ -16,7 +16,7 @@ import nibabel as nib
 import tempfile
 from rich.progress import track
 from pathlib import Path
-from shlex import quote
+import shlex
 from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     sys.path.append(str(Path(__file__).parents[2]))
@@ -136,13 +136,14 @@ def skullstrip(bidsfolder: str, pattern: str, participant: list, masked: str, ou
                     # Skullstrip the image
                     maskimg = bidsdir/'derivatives'/'skullstrip'/subid/sesid/srcimg.parent.name/f"{srcent}_{derent}_mask{ext}"
                     maskimg.parent.mkdir(parents=True, exist_ok=True)
+                    cmd_args = ["-i", srcimg, "-o", outputimg, "-m", maskimg] + shlex.split(args)
                     if cluster:
-                        jt.args       = ['-i', srcimg, '-o', outputimg, '-m', maskimg] + args.split()
+                        jt.args       = cmd_args
                         jt.jobName    = f"skullstrip_{subid}_{sesid}"
                         jt.outputPath = f"{os.getenv('HOSTNAME')}:{Path.cwd() if DEBUG else tempfile.gettempdir()}/{jt.jobName}.out"
                         jobids.append(pbatch.runJob(jt))
                         LOGGER.info(f"Your '{jt.jobName}' job has been submitted with ID: {jobids[-1]}")
-                    elif run_command(f"mri_synthstrip -i {quote(str(srcimg))} -o {quote(str(outputimg))} -m {quote(str(maskimg))} {args}"):
+                    elif run_command(["mri_synthstrip"] + cmd_args):
                         continue
 
                     # Add a json sidecar-file with the "SkullStripped" field

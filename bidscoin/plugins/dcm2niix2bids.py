@@ -10,6 +10,7 @@ import dateutil.parser
 import pandas as pd
 import json
 import ast
+import shlex
 from datetime import datetime
 from bids_validator import BIDSValidator
 from typing import Union
@@ -59,7 +60,7 @@ class Interface(PluginInterface):
             LOGGER.warning(f"The expected 'args' key is not defined in the dcm2niix2bids options")
 
         # Test the dcm2niix installation
-        errorcode = run_command(f"{options.get('command', OPTIONS['command'])} -v", (0,3))
+        errorcode = run_command(f"{options.get('command', OPTIONS['command'])} -v", (0,3), shell=True)
 
         # Test reading an attribute from a PAR-file
         parfile = Path(data_path)/'phantom_EPI_asc_CLEAR_2_1.PAR'
@@ -320,13 +321,13 @@ class Interface(PluginInterface):
 
             # Convert the source-files in the run folder to NIfTI's in the BIDS-folder
             else:
-                command = '{command} {args} -f "{filename}" -o "{outfolder}" "{source}"'.format(
+                command = '{command} {args} -f {filename} -o {outfolder} {source}'.format(
                     command   = options['command'],
                     args      = options.get('args',''),
-                    filename  = bidsname,
-                    outfolder = outfolder,
-                    source    = source)
-                if run_command(command) and not next(outfolder.glob(f"{bidsname}*"), None):
+                    filename  = shlex.quote(str(bidsname)),
+                    outfolder = shlex.quote(str(outfolder)),
+                    source    = shlex.quote(str(source)))
+                if run_command(command, shell=True) and not next(outfolder.glob(f"{bidsname}*"), None):
                     continue
 
                 # Collect the bidsname

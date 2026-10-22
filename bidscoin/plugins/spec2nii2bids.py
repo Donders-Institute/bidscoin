@@ -18,8 +18,7 @@ from bidscoin.utilities import is_dicomfile, get_twixfield, get_sparfield, get_p
 LOGGER = logging.getLogger(__name__)
 
 # The default options that are set when installing the plugin
-OPTIONS = Plugin({'command': 'spec2nii',    # Command to run spec2nii, e.g. "module add spec2nii; spec2nii" or "PATH=/opt/spec2nii/bin:$PATH; spec2nii" or /opt/spec2nii/bin/spec2nii or 'C:\"Program Files"\spec2nii\spec2nii.exe' (note the quotes to deal with the whitespace)
-                  'args': None,             # Argument string that is passed to spec2nii (see spec2nii -h for more information)
+OPTIONS = Plugin({'args': None,             # Argument string that is passed to spec2nii (see spec2nii -h for more information)
                   'meta': ['.json', '.tsv', '.tsv.gz'],  # The file extensions of the equally named metadata source files that are copied over as BIDS sidecar files
                   'multiraid': 2})          # The mapVBVD argument for selecting the multiraid Twix file to load (default = 2, i.e. 2nd file)
 
@@ -36,14 +35,11 @@ class Interface(PluginInterface):
 
         LOGGER.info('Testing the spec2nii2bids installation:')
 
-        if 'command' not in {**OPTIONS, **options}:
-            LOGGER.error(f"The expected 'command' key is not defined in the spec2nii2bids options")
-            return 1
         if 'args' not in {**OPTIONS, **options}:
             LOGGER.warning(f"The expected 'args' key is not defined in the spec2nii2bids options")
 
         # Test the spec2nii installation
-        return run_command(f"{options.get('command',OPTIONS['command'])} -v")
+        return run_command("spec2nii -v")
 
     def has_support(self, sourcefile: Path, dataformat: Union[DataFormat, str]= '') -> str:
         """
@@ -177,7 +173,7 @@ class Interface(PluginInterface):
             args = options.get('args', OPTIONS['args']) or ''
             if dataformat == 'SPAR':
                 dformat = 'philips'
-                arg     = f'"{sourcefile.with_suffix(".SDAT")}"'
+                arg     = sourcefile.with_suffix(".SDAT")
             elif dataformat == 'Twix':
                 dformat = 'twix'
                 arg     = '-e image'
@@ -186,8 +182,7 @@ class Interface(PluginInterface):
             else:
                 LOGGER.error(f"Unsupported dataformat: {dataformat}")
                 return
-            command = options.get('command', 'spec2nii')
-            errcode = run_command(f'{command} {dformat} -j -f "{bidsname}" -o "{outfolder}" {args} {arg} "{sourcefile}"')
+            errcode = run_command(['spec2nii', dformat, '-j', '-f', bidsname, '-o', outfolder, args, arg, sourcefile])
             bids.bidsprov(bidsses, sourcefile, run, [target] if target.is_file() else [])
             if not target.is_file():
                 if not errcode:
