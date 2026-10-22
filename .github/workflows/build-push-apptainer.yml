@@ -8,6 +8,7 @@ on:
 
 jobs:
   build-and-push:
+    name: Build and deploy container
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -16,8 +17,6 @@ jobs:
     container:
       image: kaczmarj/apptainer:latest
       options: --privileged
-
-    name: Build and deploy container
 
     steps:
       - name: Install git
@@ -39,7 +38,7 @@ jobs:
             echo "::error::Latest tag not found in repository"
             exit 1
           fi
-          echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_ENV
+          echo "LATEST_TAG=$LATEST_TAG" >> "$GITHUB_OUTPUT"
 
       - name: Build SIF image
         run: |
@@ -47,6 +46,6 @@ jobs:
 
       - name: Login and deploy container
         run: |
-          echo "${{ secrets.GITHUB_TOKEN }}" | apptainer registry login -u "${{ github.actor }}" --password-stdin oras://ghcr.io
-          apptainer push bidscoin.sif oras://ghcr.io/donders-institute/bidscoin:${{ env.LATEST_TAG }}
+          echo "${{ github.token }}" | apptainer registry login -u "${{ github.actor }}" --password-stdin oras://ghcr.io
+          apptainer push bidscoin.sif oras://ghcr.io/donders-institute/bidscoin:${{ steps.tag.outputs.LATEST_TAG }}
           apptainer push bidscoin.sif oras://ghcr.io/donders-institute/bidscoin:latest

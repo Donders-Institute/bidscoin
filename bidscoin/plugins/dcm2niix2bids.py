@@ -59,7 +59,7 @@ class Interface(PluginInterface):
             LOGGER.warning(f"The expected 'args' key is not defined in the dcm2niix2bids options")
 
         # Test the dcm2niix installation
-        errorcode = run_command(f"{options.get('command', OPTIONS['command'])} -v", (0,3))
+        errorcode = run_command(f"{options.get('command', OPTIONS['command'])} -v", (0,3), shell=True)
 
         # Test reading an attribute from a PAR-file
         parfile = Path(data_path)/'phantom_EPI_asc_CLEAR_2_1.PAR'
@@ -326,7 +326,7 @@ class Interface(PluginInterface):
                     filename  = bidsname,
                     outfolder = outfolder,
                     source    = source)
-                if run_command(command) and not next(outfolder.glob(f"{bidsname}*"), None):
+                if run_command(command, shell=True) and not next(outfolder.glob(f"{bidsname}*"), None):
                     continue
 
                 # Collect the bidsname

@@ -23,6 +23,7 @@ import hashlib
 import shelve
 import datetime
 import shutil
+import shlex
 import warnings
 import tempfile
 import subprocess
@@ -155,17 +156,28 @@ def lsdirs(folder: Path, wildcard: str='*') -> list[Path]:
     return sorted([item for item in sorted(folder.glob(wildcard)) if item.is_dir() and not is_hidden(item.relative_to(folder))])
 
 
-def run_command(command: str, success: tuple=(0,None)) -> int:
+def run_command(command: Union[str,list], success: tuple=(0,None), shell: bool=False) -> int:
     """
     Runs a command in a shell using subprocess.run(command, ..)
 
     :param command: The command that is executed
     :param success: The return codes for successful operation (e,g, for dcm2niix it is (0,3))
+    :param shell:   If True, the command will be executed through the shell (e.g. bash). Useful for piped commands, or for commands that are not in the PATH
+                    When False, shell features (pipes, redirections, wildcards) are NOT available, but it's more secure.
     :return:        The return code (e.g. 0 if the command was successfully executed (no errors), > 0 otherwise)
     """
 
     LOGGER.verbose(f"Command:\n{command}")
-    process = subprocess.run(command, shell=True, capture_output=True, text=True)
+    
+    # When shell=False, split the command string into a list of arguments
+    if not shell and isinstance(command, str):
+        command = shlex.split(command)
+
+    try:
+        process = subprocess.run(command, shell=shell, capture_output=True, text=True)
+    except OSError as error:
+        LOGGER.error(f"Failed to run:\n{command}\n{error}")
+        return 1
     if (process.stderr and 'spec2nii' not in command) or process.returncode not in success:
         LOGGER.error(f"Failed to run:\n{command}\nErrorcode {process.returncode}:\n{process.stdout}\n{process.stderr}")
     else:
