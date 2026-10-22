@@ -173,7 +173,11 @@ def run_command(command: Union[str,list], success: tuple=(0,None), shell: bool=F
     if not shell and isinstance(command, str):
         command = shlex.split(command)
 
-    process = subprocess.run(command, shell=shell, capture_output=True, text=True)
+    try:
+        process = subprocess.run(command, shell=shell, capture_output=True, text=True)
+    except OSError as error:
+        LOGGER.error(f"Failed to run:\n{command}\n{error}")
+        return 1
     if (process.stderr and 'spec2nii' not in command) or process.returncode not in success:
         LOGGER.error(f"Failed to run:\n{command}\nErrorcode {process.returncode}:\n{process.stdout}\n{process.stderr}")
     else:
