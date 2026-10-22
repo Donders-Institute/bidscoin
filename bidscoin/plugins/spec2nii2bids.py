@@ -7,6 +7,7 @@ import logging
 import json
 import pandas as pd
 import dateutil.parser
+import shlex
 from typing import Union
 from bids_validator import BIDSValidator
 from pathlib import Path
@@ -182,7 +183,7 @@ class Interface(PluginInterface):
             else:
                 LOGGER.error(f"Unsupported dataformat: {dataformat}")
                 return
-            errcode = run_command(['spec2nii', dformat, '-j', '-f', bidsname, '-o', outfolder, args, arg, sourcefile])
+            errcode = run_command(['spec2nii', dformat, '-j', '-f', bidsname, '-o', outfolder, *shlex.split(args), *shlex.split(arg), sourcefile])
             bids.bidsprov(bidsses, sourcefile, run, [target] if target.is_file() else [])
             if not target.is_file():
                 if not errcode:
